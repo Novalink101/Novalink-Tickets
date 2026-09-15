@@ -1,0 +1,1355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#0a0f14" />
+<meta name="description" content="Novalink - Secure digital event cards, instant door scanning, transparent pricing." />
+<title>Novalink - Digital Event Cards</title>
+
+<script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
+
+<style>
+:root{
+  --cyan-50:#ecfeff;--cyan-100:#cffafe;--cyan-200:#a5f3fc;--cyan-300:#67e8f9;
+  --cyan-400:#22d3ee;--cyan-500:#06b6d4;--cyan-600:#0891b2;--cyan-700:#0e7490;
+  --bg:#ffffff;--bg-2:#f6f8fb;--surface:#ffffff;--surface-2:#f1f4f8;
+  --border:#e4e9f0;--border-2:#d3dbe5;
+  --text:#0a0f14;--text-2:#2b3644;--text-muted:#6b7787;
+  --radius:14px;--max-width:1180px;
+  --font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --danger:#dc2626;--danger-soft:#fef2f2;--danger-border:#fecaca;
+  --navy:#1e2f4d;--navy-deep:#152238;--cyan-logo:#7dd3e8;
+  --card-silver:#e2e8f0;--card-teal:#00a3c4;--card-gold:#ecc94b;--card-black:#1a202c;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+img{max-width:100%;display:block}
+a{color:inherit;text-decoration:none}
+button{font:inherit;font-family:inherit;touch-action:manipulation}
+body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column}
+.container{max-width:var(--max-width);margin:0 auto;padding:0 24px;width:100%}
+h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-0.02em}
+h1{font-size:clamp(2rem,4.5vw,3.5rem)}
+h2{font-size:clamp(1.4rem,2.4vw,1.85rem);margin-bottom:8px}
+h3{font-size:1.2rem}
+.lead{color:var(--text-muted);font-size:clamp(1rem,1.5vw,1.1rem);max-width:640px}
+
+/* ---------- LOGO ---------- */
+.novalink-logo{display:inline-flex;align-items:center;gap:10px;cursor:default;user-select:none;-webkit-user-select:none;flex-shrink:0;margin-left:12px;padding-left:4px}
+.novalink-logo .mark{width:36px;height:44px;flex-shrink:0;display:block}
+.novalink-logo .wordmark{font-family:'Inter',system-ui,sans-serif;font-weight:800;font-size:1.15rem;letter-spacing:0.02em;color:var(--navy);line-height:1}
+.novalink-logo.on-dark .wordmark{color:#ffffff}
+.novalink-logo.on-dark .mark .link-navy{fill:#3a5a8c}
+.novalink-logo.on-dark .mark .link-cyan{fill:#7dd3e8}
+@media (max-width:480px){
+  .novalink-logo{margin-left:16px}
+  .novalink-logo .mark{width:32px;height:39px}
+  .novalink-logo .wordmark{font-size:1.05rem}
+}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:12px;font-weight:600;font-size:14px;border:1px solid transparent;cursor:pointer;transition:all .12s ease;white-space:nowrap;font-family:inherit}
+.btn svg,.btn i{width:17px;height:17px}
+.btn:disabled{opacity:0.5;cursor:not-allowed}
+.btn-primary{background:#0a0f14;color:#fff}
+.btn-primary:hover:not(:disabled){background:#1a2129;transform:translateY(-1px)}
+.btn-accent{background:linear-gradient(135deg,var(--cyan-400),var(--cyan-600));color:#04161c}
+.btn-accent:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 24px rgba(6,182,212,0.35)}
+.btn-ghost{background:transparent;color:var(--text-2);border:1px solid var(--border-2)}
+.btn-ghost:hover:not(:disabled){background:var(--surface-2);border-color:var(--cyan-500);color:var(--cyan-700)}
+.btn-danger-solid{background:var(--danger);color:#fff}
+.btn-danger-solid:hover:not(:disabled){background:#b91c1c;transform:translateY(-1px)}
+.btn-block{width:100%}
+.btn-sm{padding:8px 12px;font-size:13px}
+.btn-lg{padding:15px 26px;font-size:15px}
+
+.site-header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,0.92);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--border)}
+.header-inner{display:flex;align-items:center;justify-content:space-between;padding:12px 0;gap:12px;flex-wrap:wrap}
+
+.nav{display:none;gap:6px;align-items:center}
+.nav a{color:var(--text-2);font-size:13.5px;font-weight:500;padding:7px 10px;border-radius:8px;transition:all .12s ease}
+.nav a:hover{color:var(--cyan-700);background:var(--surface-2)}
+@media (min-width:1100px){.nav{display:flex}}
+
+.header-actions{display:flex;gap:8px;align-items:center;margin-left:auto;position:relative;padding-right:12px}
+@media (max-width:480px){.header-actions{padding-right:16px}}
+
+.user-menu-btn{display:none;align-items:center;gap:8px;padding:5px 12px 5px 5px;background:var(--surface-2);border:1px solid var(--border);border-radius:99px;cursor:pointer;font-family:inherit}
+.user-menu-btn:hover{border-color:var(--cyan-500)}
+.user-menu-btn .avatar{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--cyan-400),var(--cyan-600));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;color:#04161c;flex-shrink:0}
+.user-menu-btn .name{font-size:13px;font-weight:600;color:var(--text)}
+.user-menu-btn .caret{width:14px;height:14px;color:var(--text-muted)}
+.user-menu-btn .admin-badge{background:#fef3c7;color:#92400e;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;padding:2px 8px;border-radius:99px}
+
+.user-dropdown{position:absolute;top:calc(100% + 8px);right:0;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 20px 60px rgba(10,15,20,0.15);min-width:280px;padding:8px;display:none;z-index:60;overflow:hidden}
+.user-dropdown.open{display:block}
+.user-dropdown-header{padding:14px 16px;border-bottom:1px solid var(--border);margin-bottom:6px}
+.user-dropdown-header .name{font-weight:700;font-size:14.5px;color:var(--text)}
+.user-dropdown-header .email{font-size:12.5px;color:var(--text-muted);word-break:break-all}
+.user-dropdown-header .admin-badge{display:inline-block;background:#fef3c7;color:#92400e;font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;padding:2px 7px;border-radius:99px;margin-top:6px}
+.user-dropdown-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:9px;cursor:pointer;font-size:13.5px;font-weight:500;color:var(--text-2);transition:all .12s ease;border:none;background:transparent;width:100%;font-family:inherit;text-align:left}
+.user-dropdown-item:hover{background:var(--surface-2);color:var(--text)}
+.user-dropdown-item i{width:16px;height:16px;color:var(--text-muted);flex-shrink:0}
+.user-dropdown-item:hover i{color:var(--cyan-600)}
+.user-dropdown-item.danger{color:var(--danger)}
+.user-dropdown-item.danger i{color:var(--danger)}
+.user-dropdown-item.danger:hover{background:var(--danger-soft)}
+.user-dropdown-separator{height:1px;background:var(--border);margin:6px 8px}
+
+/* HERO */
+.hero-carousel{position:relative;min-height:480px;overflow:hidden;background:#0a0f14;color:#fff;display:flex;align-items:center}
+@media (min-width:1024px){.hero-carousel{min-height:520px}}
+.carousel-slides{position:absolute;inset:0}
+.carousel-slide{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity 1.2s ease;animation:carouselZoom 8s ease-out infinite alternate}
+.carousel-slide.active{opacity:1}
+.carousel-slide::before{content:'';position:absolute;inset:0;background:linear-gradient(135deg,rgba(10,15,20,0.85) 0%,rgba(10,15,20,0.55) 45%,rgba(6,182,212,0.35) 100%);z-index:1}
+.carousel-slide-1{background-image:url('https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1920&q=80')}
+.carousel-slide-2{background-image:url('https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=1920&q=80')}
+.carousel-slide-3{background-image:url('https://images.unsplash.com/photo-1540575467063-178a50c2df87?w=1920&q=80')}
+.carousel-slide-4{background-image:url('https://images.unsplash.com/photo-1519671482749-fd09be7ccebf?w=1920&q=80')}
+.hero-content{position:relative;z-index:2;padding:56px 0;width:100%}
+@media (min-width:1024px){.hero-content{padding:72px 0}}
+.hero-badge{display:inline-flex;align-items:center;gap:8px;padding:6px 14px;background:rgba(6,182,212,0.2);border:1px solid rgba(34,211,238,0.4);border-radius:99px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:0.08em;color:#67e8f9;margin-bottom:16px;backdrop-filter:blur(8px)}
+.hero-badge i{width:14px;height:14px}
+.hero-carousel h1{color:#fff;margin-bottom:14px;max-width:820px;text-shadow:0 4px 24px rgba(0,0,0,0.4)}
+.hero-carousel h1 .accent{background:linear-gradient(135deg,#67e8f9,#22d3ee,#06b6d4);-webkit-background-clip:text;background-clip:text;color:transparent}
+.hero-carousel .lead{color:rgba(255,255,255,0.9);margin-bottom:26px;max-width:560px}
+.hero-cta{display:flex;flex-wrap:wrap;gap:12px}
+.hero-stats{display:flex;gap:32px;margin-top:28px;flex-wrap:wrap}
+.hero-stat{display:flex;flex-direction:column;gap:2px}
+.hero-stat-num{font-size:24px;font-weight:800;color:#fff}
+.hero-stat-label{font-size:11px;color:rgba(255,255,255,0.7);text-transform:uppercase;letter-spacing:0.05em}
+.carousel-dots{position:absolute;bottom:24px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:3}
+.carousel-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.3);border:none;cursor:pointer;padding:0;transition:all .2s ease}
+.carousel-dot.active{background:#22d3ee;width:24px;border-radius:99px}
+
+.section{padding:48px 0}
+@media (min-width:1024px){.section{padding:60px 0}}
+.section.alt{background:var(--bg-2)}
+.section-header{margin-bottom:24px}
+.section-header.center{text-align:center;max-width:640px;margin-left:auto;margin-right:auto}
+.section-header p{color:var(--text-muted);margin-top:6px}
+
+/* TABS */
+.tabs-nav{
+  display:flex;
+  gap:6px;
+  overflow-x:auto;
+  scrollbar-width:none;
+  -webkit-overflow-scrolling:touch;
+  padding:6px;
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:99px;
+  margin-bottom:26px;
+  position:sticky;
+  top:64px;
+  z-index:20;
+  box-shadow:0 6px 18px rgba(10,15,20,0.06);
+}
+.tabs-nav::-webkit-scrollbar{display:none}
+.tab-btn{
+  flex:0 0 auto;
+  padding:9px 16px;
+  border-radius:99px;
+  border:none;
+  background:transparent;
+  color:var(--text-muted);
+  font-size:13.5px;
+  font-weight:700;
+  cursor:pointer;
+  white-space:nowrap;
+  font-family:inherit;
+  transition:all .15s ease;
+  display:inline-flex;
+  align-items:center;
+  gap:7px;
+}
+.tab-btn i{width:15px;height:15px}
+.tab-btn:hover{background:var(--surface-2);color:var(--text)}
+.tab-btn.active{background:#0a0f14;color:#fff}
+.tab-btn.active i{color:#22d3ee}
+.tab-panel{display:none}
+.tab-panel.active{display:block;animation:fadeUp .25s ease}
+@keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+
+/* HORIZONTAL SCROLL */
+.carousel-wrap{position:relative;margin-bottom:16px}
+.horizontal-scroll{
+  display:flex;gap:16px;overflow-x:auto;padding:4px 24px 18px;
+  scroll-snap-type:x mandatory;-webkit-overflow-scrolling:touch;
+  scrollbar-width:none;margin:0 -24px;
+  scroll-padding-left:24px;
+}
+.horizontal-scroll::-webkit-scrollbar{display:none}
+
+.compact-grid{
+  display:grid;
+  gap:14px;
+  grid-template-columns:repeat(auto-fill,minmax(260px,1fr));
+}
+
+.event-card{flex:0 0 280px;scroll-snap-align:start;background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);transition:transform .2s,box-shadow .2s;display:flex;flex-direction:column}
+.event-card:hover{transform:translateY(-4px);box-shadow:0 12px 24px rgba(10,15,20,0.1);border-color:var(--cyan-500)}
+.event-card-img{height:150px;background-size:cover;background-position:center;position:relative}
+.event-card-badge{position:absolute;top:12px;left:12px;background:#0a0f14;color:#fff;padding:4px 10px;border-radius:6px;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em}
+.event-card-body{padding:14px;display:flex;flex-direction:column;gap:7px;flex:1}
+.event-card-body h3{font-size:15px;font-weight:800;line-height:1.3;color:var(--text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.event-card-meta{display:flex;align-items:center;gap:6px;font-size:12.5px;color:var(--text-muted)}
+.event-card-meta i{width:13px;height:13px}
+.event-card-price{margin-top:auto;padding-top:6px;font-size:13.5px;font-weight:700;color:#0f172a}
+.event-card-price span{color:var(--cyan-600)}
+
+.package-card{flex:0 0 280px;scroll-snap-align:start;background:var(--surface);border:2px solid var(--border);border-radius:var(--radius);padding:22px 20px;display:flex;flex-direction:column;gap:12px;transition:all .2s ease;position:relative;overflow:hidden}
+.package-card:hover{border-color:var(--cyan-500);transform:translateY(-3px);box-shadow:0 12px 32px rgba(6,182,212,0.12)}
+.package-card.featured{border-color:var(--cyan-500);background:linear-gradient(180deg,var(--cyan-50),#fff)}
+.package-card.featured::before{content:'Most popular';position:absolute;top:14px;right:-34px;background:var(--cyan-500);color:#fff;font-size:10px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;padding:5px 40px;transform:rotate(45deg);z-index:2}
+.package-name{font-weight:800;font-size:16px;letter-spacing:-0.01em}
+.package-rate{display:flex;align-items:baseline;gap:6px}
+.package-rate .num{font-size:30px;font-weight:800;color:var(--cyan-700);line-height:1;letter-spacing:-0.03em}
+.package-rate .pct{font-size:13px;font-weight:700;color:var(--cyan-700)}
+.package-rate .note{font-size:11.5px;color:var(--text-muted);margin-left:4px}
+.package-desc{font-size:12.5px;color:var(--text-muted);line-height:1.5;min-height:38px}
+.package-list{list-style:none;padding:0;display:flex;flex-direction:column;gap:6px;flex:1}
+.package-list li{display:flex;gap:8px;align-items:flex-start;font-size:12.5px;color:var(--text-2);line-height:1.45}
+.package-list li i{width:14px;height:14px;color:var(--cyan-600);flex-shrink:0;margin-top:2px}
+.package-cta{margin-top:auto;padding-top:6px}
+
+.value-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px 20px;display:flex;flex-direction:column;gap:10px}
+.value-card .icon{width:44px;height:44px;border-radius:12px;background:linear-gradient(135deg,var(--cyan-100),var(--cyan-200));display:flex;align-items:center;justify-content:center;color:var(--cyan-700)}
+.value-card .icon i{width:22px;height:22px}
+.value-card h3{margin-bottom:2px;font-size:1.05rem}
+.value-card p{color:var(--text-muted);font-size:13.5px;flex:1;line-height:1.6}
+
+.do-card,.dont-card{border-radius:var(--radius);padding:24px 22px;display:flex;flex-direction:column;gap:14px}
+.do-card{background:#ecfdf5;border:1px solid #a7f3d0}
+.dont-card{background:#fef2f2;border:1px solid #fecaca}
+.do-card h3{color:#065f46;display:flex;align-items:center;gap:10px;font-size:1.05rem;margin:0}
+.dont-card h3{color:#991b1b;display:flex;align-items:center;gap:10px;font-size:1.05rem;margin:0}
+.do-card h3 i,.dont-card h3 i{width:19px;height:19px}
+.do-card ul,.dont-card ul{list-style:none;padding:0;display:flex;flex-direction:column;gap:9px;margin:0}
+.do-card li{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;line-height:1.5;color:#065f46}
+.dont-card li{display:flex;gap:10px;align-items:flex-start;font-size:13.5px;line-height:1.5;color:#991b1b}
+.do-card li i,.dont-card li i{width:15px;height:15px;flex-shrink:0;margin-top:3px}
+
+.contact-item{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--surface);border:1px solid var(--border);border-radius:12px;transition:all .15s ease}
+.contact-item:hover{border-color:var(--cyan-500);background:var(--surface-2)}
+.contact-item .icon{width:38px;height:38px;border-radius:10px;background:var(--cyan-50);display:flex;align-items:center;justify-content:center;color:var(--cyan-700);flex-shrink:0}
+.contact-item .icon i{width:18px;height:18px}
+.contact-item .label{font-size:11px;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em}
+.contact-item .value{font-size:13.5px;font-weight:600;word-break:break-word}
+
+.rate-table{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);overflow:hidden}
+.rate-row{display:grid;grid-template-columns:1fr auto;gap:16px;padding:13px 20px;border-bottom:1px solid var(--border);align-items:center}
+.rate-row:last-child{border-bottom:none}
+.rate-row.head{background:var(--surface-2);font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted)}
+.rate-row .what{font-weight:600;font-size:13.5px}
+.rate-row .sub{font-size:11.5px;color:var(--text-muted)}
+.rate-row .cost{font-weight:800;color:var(--cyan-700);text-align:right;white-space:nowrap}
+
+.disclosure{background:#fffbeb;border:1px solid #fde68a;border-radius:var(--radius);overflow:hidden}
+.disclosure > summary{cursor:pointer;list-style:none;padding:16px 20px;display:flex;align-items:center;justify-content:space-between;gap:12px;font-weight:800;color:#78350f;font-size:14px}
+.disclosure > summary::-webkit-details-marker{display:none}
+.disclosure > summary i{width:18px;height:18px;transition:transform .2s ease}
+.disclosure[open] > summary i.chev{transform:rotate(180deg)}
+.disclosure .disc-body{padding:0 20px 20px;display:grid;gap:12px;grid-template-columns:1fr}
+@media (min-width:768px){.disclosure .disc-body{grid-template-columns:repeat(2,1fr)}}
+.disclaimer-item{background:#fff;border:1px solid #fde68a;border-radius:12px;padding:14px 16px;font-size:12.5px;line-height:1.55;color:#78350f}
+.disclaimer-item strong{display:block;margin-bottom:4px;color:#92400e;font-size:11.5px;text-transform:uppercase;letter-spacing:0.05em}
+
+.site-footer{background:#0a0f14;color:#c9d2dd;padding:40px 0 26px;margin-top:auto}
+.footer-grid{display:grid;gap:28px;grid-template-columns:1fr}
+@media (min-width:640px){.footer-grid{grid-template-columns:2fr 1fr 1fr}}
+.footer-brand{display:flex;align-items:center;gap:10px;font-weight:800;font-size:1.1rem;color:#fff;margin-bottom:12px}
+.footer-col h4{font-size:12px;text-transform:uppercase;letter-spacing:0.05em;margin-bottom:12px;color:#fff}
+.footer-col a{display:block;color:#8a96a4;font-size:13px;padding:3px 0}
+.footer-col a:hover{color:#22d3ee}
+.footer-bottom{margin-top:28px;padding-top:18px;border-top:1px solid #1f2937;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;font-size:12px;color:#6b7787}
+
+.whatsapp-float{position:fixed;bottom:22px;right:22px;width:52px;height:52px;border-radius:50%;background:#25D366;display:flex;align-items:center;justify-content:center;box-shadow:0 8px 22px rgba(37,211,102,0.45);z-index:90;transition:transform .2s ease}
+.whatsapp-float:hover{transform:scale(1.05)}
+.whatsapp-float svg{width:25px;height:25px;fill:#fff}
+
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(120%);background:#0a0f14;color:#fff;padding:12px 18px;border-radius:12px;font-size:13.5px;z-index:200;transition:transform .25s ease;max-width:calc(100vw - 40px);display:flex;align-items:center;gap:10px;pointer-events:none}
+.toast.show{transform:translateX(-50%) translateY(0)}
+.toast.success{background:#065f46}
+.toast.error{background:#991b1b}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(10,15,20,0.6);backdrop-filter:blur(8px);display:none;align-items:flex-start;justify-content:center;z-index:100;padding:24px 20px;overflow-y:auto}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;max-width:520px;width:100%;padding:30px 26px;position:relative;margin:auto}
+.modal-close{position:absolute;top:14px;right:14px;background:var(--surface-2);border:1px solid var(--border);color:var(--text-2);cursor:pointer;padding:6px;border-radius:10px;display:flex;align-items:center;justify-content:center}
+.modal h3{margin-bottom:6px;font-size:1.35rem}
+.modal .modal-subtitle{color:var(--text-muted);font-size:14px;margin-bottom:22px}
+.form-group{margin-bottom:16px}
+.form-group label{display:block;font-size:12px;font-weight:700;color:var(--text-2);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em}
+.form-group input{width:100%;padding:11px 14px;background:var(--bg);border:1px solid var(--border-2);border-radius:10px;color:var(--text);font-size:14.5px;font-family:inherit}
+.form-group input:focus{outline:none;border-color:var(--cyan-500);box-shadow:0 0 0 3px rgba(6,182,212,0.15)}
+.divider{display:flex;align-items:center;gap:12px;margin:20px 0;color:var(--text-muted);font-size:11px;text-transform:uppercase}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.btn-google{background:#fff;color:#1f2937;border:1.5px solid #e5e7eb}
+.btn-google:hover{background:#f9fafb}
+.btn-google svg{width:18px;height:18px}
+.auth-tabs{display:flex;gap:6px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:4px;margin-bottom:22px}
+.auth-tab{flex:1;padding:10px;background:transparent;border:none;border-radius:9px;color:var(--text-muted);font-size:13.5px;font-weight:700;cursor:pointer;text-transform:uppercase;font-family:inherit;transition:all .15s ease}
+.auth-tab.active{background:#0a0f14;color:#fff}
+
+.danger-box{background:var(--danger-soft);border:1.5px solid var(--danger-border);border-radius:14px;padding:18px;display:flex;flex-direction:column;gap:12px}
+.danger-box .head{display:flex;align-items:center;gap:10px;font-weight:800;color:var(--danger);font-size:15px}
+.danger-box .head i{width:20px;height:20px}
+.danger-box p{font-size:13.5px;color:#7f1d1d;line-height:1.6}
+.danger-box .warn-list{list-style:none;padding:0;display:flex;flex-direction:column;gap:6px}
+.danger-box .warn-list li{font-size:13px;color:#991b1b;padding-left:20px;position:relative;line-height:1.5}
+.danger-box .warn-list li::before{content:'';position:absolute;left:0;top:7px;width:8px;height:8px;border-radius:50%;background:var(--danger)}
+.danger-box .confirm-row{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+.danger-box input{width:100%;padding:11px 14px;background:#fff;border:1.5px solid var(--danger-border);border-radius:10px;color:var(--text);font-size:14.5px;font-family:ui-monospace,monospace;letter-spacing:0.1em;text-align:center;text-transform:uppercase}
+.danger-box input:focus{outline:none;border-color:var(--danger);box-shadow:0 0 0 3px rgba(220,38,38,0.15)}
+.danger-box .actions{display:flex;gap:10px;margin-top:6px;flex-wrap:wrap}
+.danger-box .actions .btn{flex:1;min-width:140px}
+
+.spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* PREMIUM TICKETS PROMO */
+.promo-container{max-width:600px;margin:0 auto;width:100%;text-align:center;display:flex;flex-direction:column;align-items:center}
+.promo-logo{display:flex;flex-direction:column;align-items:center;margin-bottom:12px}
+.promo-logo .link-chain{width:32px;height:20px;border:4px solid #3182ce;border-radius:12px;transform:rotate(-45deg);position:relative}
+.promo-logo .link-chain::after{content:'';position:absolute;width:32px;height:20px;border:4px solid #4fd1c5;border-radius:12px;top:-12px;left:4px}
+.promo-logo .logo-text{font-size:1.25rem;font-weight:800;letter-spacing:2px;color:var(--navy);margin-top:14px}
+.promo-logo .logo-text span{color:#718096;font-weight:400}
+.promo-headline{font-size:clamp(1.8rem,4vw,2.5rem);font-weight:900;color:var(--navy);text-transform:uppercase;letter-spacing:1px;margin-bottom:32px}
+.cards-stack{position:relative;width:100%;max-width:420px;height:420px;margin-bottom:24px}
+.ticket-card{position:absolute;width:260px;height:160px;border-radius:12px;padding:16px;text-align:left;box-shadow:0 10px 25px rgba(0,0,0,0.15);display:flex;flex-direction:column;justify-content:space-between}
+.ticket-header{display:flex;justify-content:space-between;font-size:0.55rem;font-weight:bold;letter-spacing:0.5px;text-transform:uppercase}
+.ticket-body{display:flex;justify-content:space-between;align-items:flex-end;margin-top:auto}
+.ticket-info{font-size:0.45rem;line-height:1.5}
+.ticket-cutout{width:75px;height:60px;background-color:#fff;border-radius:6px;box-shadow:inset 0 2px 5px rgba(0,0,0,0.1)}
+.card-1{background-color:var(--card-silver);color:#4a5568;top:0;left:6%;z-index:1}
+.card-2{background-color:var(--card-teal);color:#ffffff;top:80px;left:22%;z-index:2}
+.card-3{background-color:var(--card-gold);color:#744210;top:160px;left:34%;z-index:3}
+.card-4{background-color:var(--card-black);color:#ffffff;top:240px;left:44%;z-index:4}
+.promo-footer-title{font-size:1.1rem;font-weight:700;color:var(--navy);margin-bottom:8px}
+.promo-divider{width:120px;height:2px;background:linear-gradient(90deg,transparent,#3182ce,transparent);margin:8px auto}
+.promo-footer-subtitle{font-size:0.85rem;color:#3182ce;font-weight:600;letter-spacing:0.5px}
+
+/* SEATING TIERS */
+.seat-tiers{max-width:900px;margin:0 auto}
+.seat-tiers .st-hero{display:flex;align-items:center;gap:10px;margin-bottom:16px}
+.seat-tiers .st-logo{width:26px;height:26px;border:3.5px solid var(--navy);border-radius:6px;transform:rotate(45deg);position:relative}
+.seat-tiers .st-logo::after{content:'';position:absolute;width:13px;height:13px;background:#4dd0e1;top:-7px;right:-7px;border-radius:3px}
+.seat-tiers .st-brand{font-weight:800;letter-spacing:1.5px;color:var(--navy)}
+.seat-tiers .st-title{font-size:clamp(1.8rem,4vw,2.6rem);font-weight:900;color:#0b3c7b;text-transform:uppercase;text-align:center;margin:6px 0;letter-spacing:.5px}
+.seat-tiers .st-sub{text-align:center;color:#0b3c7b;font-size:1.05rem;margin-bottom:28px}
+.seat-tiers .st-grid-top{display:grid;grid-template-columns:1.2fr .8fr;gap:20px;margin-bottom:24px}
+.seat-tiers .st-card{background:#fff;border:1px solid var(--border);border-radius:16px;padding:20px;box-shadow:0 4px 20px rgba(0,0,0,.02)}
+.seat-tiers .st-card-title{font-size:.85rem;font-weight:700;text-transform:uppercase;letter-spacing:.5px;margin-bottom:16px;color:var(--navy)}
+.seat-tiers .bus-grid{display:grid;grid-template-columns:repeat(10,1fr);gap:6px;padding:15px;border:2px solid #cbd5e1;border-radius:40px 16px 16px 40px}
+.seat-tiers .seat{aspect-ratio:1;border-radius:4px;display:block}
+.seat-tiers .driver{grid-column:1/2;grid-row:1/3;border:2px dashed #94a3b8;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:1rem}
+.seat-tiers .coach{display:flex;align-items:center;gap:10px;background:#f8fafc;border:1px solid var(--border);padding:8px 12px;border-radius:6px;margin-bottom:8px}
+.seat-tiers .coach:last-child{margin-bottom:0}
+.seat-tiers .coach-label{font-size:.7rem;font-weight:700;background:#3182ce;color:#fff;padding:4px 8px;border-radius:4px;width:70px;text-align:center}
+.seat-tiers .mini{display:flex;gap:3px;flex-wrap:wrap}
+.seat-tiers .mini span{width:14px;height:14px;border-radius:2px;display:block}
+.seat-tiers .st-grid-bottom{display:grid;grid-template-columns:1fr 1fr;gap:20px;margin-bottom:24px}
+.seat-tiers .abstract{min-height:180px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:4px}
+.seat-tiers .row{display:flex;justify-content:center;gap:2px;width:100%}
+.seat-tiers .row span{width:10px;height:10px;border-radius:2px;display:block}
+.seat-tiers .stadium{width:200px;height:160px;border:15px solid #4dd0e1;border-top-color:#fcc419;border-bottom-color:#adb5bd;border-radius:50%;display:flex;align-items:center;justify-content:center}
+.seat-tiers .stadium .stage{width:70px;height:50px;background:#1a202c;color:#fff;font-weight:700;font-size:.65rem;letter-spacing:1px;display:flex;align-items:center;justify-content:center;transform:rotate(-90deg);border-radius:4px}
+.seat-tiers .st-legend{display:flex;justify-content:center;gap:30px;flex-wrap:wrap;padding:18px 0;border-top:1px solid #edf2f7;margin-top:6px}
+.seat-tiers .st-legend .item{display:flex;align-items:center;gap:10px;font-size:1rem;font-weight:600;color:var(--navy)}
+.seat-tiers .st-legend .dot{width:22px;height:22px;border-radius:50%}
+.seat-tiers .st-tagline{text-align:center;color:#0b3c7b;font-weight:500;margin-top:10px}
+.bg-elite{background:#000}
+.bg-gold{background:#fcc419}
+.bg-silver{background:#adb5bd}
+.bg-cyan{background:#4dd0e1}
+
+@media (max-width:768px){
+  .seat-tiers .st-grid-top,.seat-tiers .st-grid-bottom{grid-template-columns:1fr}
+}
+
+@media (max-width:480px){
+  .cards-stack{height:380px;max-width:340px}
+  .ticket-card{width:230px;height:145px}
+  .ticket-cutout{width:65px;height:52px}
+  .card-1{left:0}
+  .card-2{left:14%}
+  .card-3{left:26%}
+  .card-4{left:36%}
+}
+
+@media (max-width:640px){
+  .package-rate .num{font-size:26px}
+  .hero-carousel{min-height:440px}
+  .hero-stats{gap:20px;margin-top:22px}
+  .hero-stat-num{font-size:20px}
+  .header-actions{padding-right:16px}
+  .tabs-nav{top:60px}
+  .event-card,.package-card{flex:0 0 250px}
+}
+@media (prefers-reduced-motion: reduce){
+  .carousel-slide{animation:none}
+}
+</style>
+</head>
+
+<body>
+
+<header class="site-header">
+  <div class="container header-inner">
+    <span class="novalink-logo" aria-label="Novalink">
+      <svg class="mark" viewBox="0 0 60 74" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+        <path class="link-navy" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/>
+        <path class="link-cyan" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/>
+        <path class="link-cyan" d="M32 33.5c0 1.6-1.3 2.9-2.9 2.9s-2.9-1.3-2.9-2.9v-3.4c0-1.6 1.3-2.9 2.9-2.9s2.9 1.3 2.9 2.9v3.4z"/>
+        <path class="link-navy" d="M32 40.5c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4z"/>
+      </svg>
+      <span class="wordmark">NOVALINK</span>
+    </span>
+    <nav class="nav">
+      <a href="#explore">Explore</a>
+      <a href="#pricing">Pricing</a>
+      <a href="#company">Company</a>
+      <a href="#support">Support</a>
+    </nav>
+    <div class="header-actions">
+      <button id="signInBtn" class="btn btn-primary btn-sm"><i data-lucide="log-in"></i> Sign in</button>
+      <button id="userMenuBtn" class="user-menu-btn">
+        <span class="avatar" id="userAvatar">?</span>
+        <span class="name" id="userName">User</span>
+        <span class="admin-badge" id="adminBadge" style="display:none">Admin</span>
+        <i data-lucide="chevron-down" class="caret"></i>
+      </button>
+
+      <div class="user-dropdown" id="userDropdown">
+        <div class="user-dropdown-header">
+          <div class="name" id="ddName">User</div>
+          <div class="email" id="ddEmail">-</div>
+          <span class="admin-badge" id="ddAdminBadge" style="display:none">Admin</span>
+        </div>
+        <button class="user-dropdown-item" id="ddMyEvents"><i data-lucide="calendar"></i> My events</button>
+        <button class="user-dropdown-item" id="ddCreateEvent"><i data-lucide="plus-circle"></i> Create an event</button>
+        <button class="user-dropdown-item" id="ddMyCards"><i data-lucide="ticket"></i> My cards</button>
+        <div class="user-dropdown-separator"></div>
+        <button class="user-dropdown-item" id="ddSignOut"><i data-lucide="log-out"></i> Sign out</button>
+        <button class="user-dropdown-item danger" id="ddDeleteAccount"><i data-lucide="trash-2"></i> Delete my account</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<!-- HERO -->
+<section class="hero-carousel">
+  <div class="carousel-slides" id="carouselSlides">
+    <div class="carousel-slide carousel-slide-1 active"></div>
+    <div class="carousel-slide carousel-slide-2"></div>
+    <div class="carousel-slide carousel-slide-3"></div>
+    <div class="carousel-slide carousel-slide-4"></div>
+  </div>
+  <div class="hero-content">
+    <div class="container">
+      <span class="hero-badge"><i data-lucide="sparkles"></i> Secure event cards</span>
+      <h1>Events, <span class="accent">ticketed in seconds.</span></h1>
+      <p class="lead">Create your event, add tickets, generate a card for every guest, scan them at the door. From small gatherings to long-distance trips.</p>
+      <div class="hero-cta">
+        <a href="create-event.html" class="btn btn-accent btn-lg"><i data-lucide="plus-circle"></i> Create an event</a>
+        <a href="create-event.html?type=trip" class="btn btn-accent btn-lg"><i data-lucide="map"></i> Create a trip</a>
+      </div>
+      <div class="hero-stats">
+        <div class="hero-stat"><span class="hero-stat-num">1 sec</span><span class="hero-stat-label">Scan time</span></div>
+        <div class="hero-stat"><span class="hero-stat-num">4</span><span class="hero-stat-label">Card tiers</span></div>
+        <div class="hero-stat"><span class="hero-stat-num">0</span><span class="hero-stat-label">Apps to install</span></div>
+      </div>
+    </div>
+  </div>
+  <div class="carousel-dots" id="carouselDots">
+    <button class="carousel-dot active" data-slide="0" aria-label="Slide 1"></button>
+    <button class="carousel-dot" data-slide="1" aria-label="Slide 2"></button>
+    <button class="carousel-dot" data-slide="2" aria-label="Slide 3"></button>
+    <button class="carousel-dot" data-slide="3" aria-label="Slide 4"></button>
+  </div>
+</section>
+
+<!-- TABS -->
+<section id="explore" class="section alt" style="padding-bottom:24px">
+  <div class="container">
+
+    <div class="tabs-nav" role="tablist">
+      <button class="tab-btn active" data-tab="tab-events"><i data-lucide="calendar"></i> Featured events</button>
+      <button class="tab-btn" data-tab="tab-cards"><i data-lucide="credit-card"></i> Premium cards</button>
+      <button class="tab-btn" data-tab="tab-seating"><i data-lucide="layout-grid"></i> Seating tiers</button>
+      <button class="tab-btn" data-tab="tab-pricing"><i data-lucide="tag"></i> Packages &amp; rates</button>
+      <button class="tab-btn" data-tab="tab-company"><i data-lucide="building-2"></i> Company</button>
+      <button class="tab-btn" data-tab="tab-practices"><i data-lucide="list-checks"></i> What we do</button>
+      <button class="tab-btn" data-tab="tab-trips"><i data-lucide="map"></i> Trips</button>
+      <button class="tab-btn" data-tab="tab-advertise"><i data-lucide="megaphone"></i> Advertise</button>
+      <button class="tab-btn" data-tab="tab-support"><i data-lucide="life-buoy"></i> Support</button>
+    </div>
+
+    <!-- TAB: FEATURED EVENTS -->
+    <div class="tab-panel active" id="tab-events">
+      <div class="section-header" style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:8px">
+        <div>
+          <h2>Featured events</h2>
+          <p>Hand-picked events happening now and soon.</p>
+        </div>
+        <a href="events.html" style="color:var(--cyan-600);font-weight:700;font-size:13.5px">See all events →</a>
+      </div>
+      <div class="carousel-wrap">
+        <div class="horizontal-scroll">
+          <div class="event-card">
+            <div class="event-card-img" style="background-image:url('https://images.unsplash.com/photo-1540541338287-41700207dee6?w=600&q=80')">
+              <span class="event-card-badge">FEATURED</span>
+            </div>
+            <div class="event-card-body">
+              <h3>Escape to Sun City for the Day</h3>
+              <div class="event-card-meta"><i data-lucide="calendar"></i> Dec 01, 2025 - Dec 31, 2026</div>
+              <div class="event-card-meta"><i data-lucide="map-pin"></i> Sun City Resort • Rustenburg</div>
+              <div class="event-card-price">Weekdays R305 - R415 · Weekend R370 - R470</div>
+            </div>
+          </div>
+          <div class="event-card">
+            <div class="event-card-img" style="background-image:url('https://images.unsplash.com/photo-1540747913346-19e32dc3e97e?w=600&q=80')">
+              <span class="event-card-badge">FEATURED</span>
+            </div>
+            <div class="event-card-body">
+              <h3>2026/27 Cricket Season</h3>
+              <div class="event-card-meta"><i data-lucide="calendar"></i> May 13, 2026 - May 15, 2026</div>
+              <div class="event-card-meta"><i data-lucide="map-pin"></i> Various Venues</div>
+              <div class="event-card-price">From R30</div>
+            </div>
+          </div>
+          <div class="event-card">
+            <div class="event-card-img" style="background-image:url('https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=600&q=80')">
+              <span class="event-card-badge">FEATURED</span>
+            </div>
+            <div class="event-card-body">
+              <h3>Lovers &amp; Friends Fest 2026</h3>
+              <div class="event-card-meta"><i data-lucide="calendar"></i> Oct 09, 2026 - Oct 11, 2026</div>
+              <div class="event-card-meta"><i data-lucide="map-pin"></i> Massive Weekend In East</div>
+              <div class="event-card-price">From R450</div>
+            </div>
+          </div>
+          <div class="event-card">
+            <div class="event-card-img" style="background-image:url('https://images.unsplash.com/photo-1470229722913-7c0e2dbbafd3?w=600&q=80')">
+              <span class="event-card-badge">FEATURED</span>
+            </div>
+            <div class="event-card-body">
+              <h3>Afro Soul &amp; Jazz Experience</h3>
+              <div class="event-card-meta"><i data-lucide="calendar"></i> Nov 15, 2026</div>
+              <div class="event-card-meta"><i data-lucide="map-pin"></i> Johannesburg</div>
+              <div class="event-card-price">From R250</div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: PREMIUM CARDS -->
+    <div class="tab-panel" id="tab-cards">
+      <div class="promo-container">
+        <div class="promo-logo">
+          <div class="link-chain"></div>
+          <div class="logo-text">NOVA<span>LINK</span></div>
+        </div>
+
+        <h2 class="promo-headline">Here We Go!</h2>
+
+        <div class="cards-stack">
+          <div class="ticket-card card-1">
+            <div class="ticket-header"><span>★ Premium Pass</span><span>No. 001</span></div>
+            <div class="ticket-body">
+              <div class="ticket-info">Access: All Zones<br>Type: Digital Verification<br>Status: Confirmed</div>
+              <div class="ticket-cutout"></div>
+            </div>
+          </div>
+          <div class="ticket-card card-2">
+            <div class="ticket-header"><span>★ Premium Pass</span><span>No. 002</span></div>
+            <div class="ticket-body">
+              <div class="ticket-info">Access: All Zones<br>Type: Digital Verification<br>Status: Confirmed</div>
+              <div class="ticket-cutout"></div>
+            </div>
+          </div>
+          <div class="ticket-card card-3">
+            <div class="ticket-header"><span>★ Premium Pass</span><span>No. 003</span></div>
+            <div class="ticket-body">
+              <div class="ticket-info">Access: All Zones<br>Type: Digital Verification<br>Status: Confirmed</div>
+              <div class="ticket-cutout"></div>
+            </div>
+          </div>
+          <div class="ticket-card card-4">
+            <div class="ticket-header"><span>★ Premium Pass</span><span>No. 004</span></div>
+            <div class="ticket-body">
+              <div class="ticket-info">Access: All Zones<br>Type: Digital Verification<br>Status: Confirmed</div>
+              <div class="ticket-cutout"></div>
+            </div>
+          </div>
+        </div>
+
+        <p class="promo-footer-title">4 Premium Digital Ticket Designs</p>
+        <div class="promo-divider"></div>
+        <p class="promo-footer-subtitle">Fully Digital Invite Cards</p>
+      </div>
+    </div>
+
+    <!-- TAB: SEATING TIERS -->
+    <div class="tab-panel" id="tab-seating">
+      <div class="seat-tiers">
+        <div class="st-hero">
+          <div class="st-logo"></div>
+          <div class="st-brand">NOVALINK</div>
+        </div>
+
+        <h2 class="st-title">Dynamic Seating Tiers</h2>
+        <p class="st-sub">Tailored Pricing Zones for Any Venue</p>
+
+        <div class="st-grid-top">
+          <!-- Train -->
+          <div class="st-card">
+            <div class="st-card-title">Train Layout</div>
+            <div class="coach">
+              <div class="coach-label">Coach E</div>
+              <div class="mini">
+                <span class="bg-elite"></span><span class="bg-elite"></span>
+                <span class="bg-gold"></span><span class="bg-gold"></span>
+                <span class="bg-silver"></span><span class="bg-silver"></span>
+                <span class="bg-cyan"></span><span class="bg-cyan"></span>
+              </div>
+            </div>
+            <div class="coach">
+              <div class="coach-label">Coach D</div>
+              <div class="mini">
+                <span class="bg-elite"></span><span class="bg-elite"></span>
+                <span class="bg-gold"></span><span class="bg-gold"></span>
+                <span class="bg-cyan"></span><span class="bg-cyan"></span>
+              </div>
+            </div>
+            <div class="coach">
+              <div class="coach-label">Coach C</div>
+              <div class="mini">
+                <span class="bg-silver"></span><span class="bg-silver"></span>
+                <span class="bg-silver"></span><span class="bg-silver"></span>
+                <span class="bg-cyan"></span><span class="bg-cyan"></span>
+                <span class="bg-cyan"></span><span class="bg-cyan"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bus -->
+          <div class="st-card">
+            <div class="st-card-title">Bus Layout</div>
+            <div class="bus-grid">
+              <div class="driver">🚌</div>
+              <span class="seat bg-elite"></span><span class="seat bg-elite"></span>
+              <span class="seat bg-gold"></span><span class="seat bg-gold"></span>
+              <span class="seat bg-silver"></span><span class="seat bg-silver"></span>
+              <span class="seat bg-cyan"></span><span class="seat bg-cyan"></span>
+              <span class="seat bg-cyan"></span><span class="seat bg-cyan"></span>
+
+              <span class="seat bg-elite"></span><span class="seat bg-elite"></span>
+              <span class="seat bg-gold"></span><span class="seat bg-gold"></span>
+              <span class="seat bg-silver"></span><span class="seat bg-silver"></span>
+              <span class="seat bg-cyan"></span><span class="seat bg-cyan"></span>
+              <span class="seat bg-cyan"></span><span class="seat bg-cyan"></span>
+
+              <span class="seat bg-elite"></span><span class="seat bg-elite"></span>
+              <span class="seat bg-gold"></span><span class="seat bg-gold"></span>
+              <span class="seat bg-silver"></span><span class="seat bg-silver"></span>
+              <span class="seat bg-cyan"></span><span class="seat bg-cyan"></span>
+              <span class="seat bg-cyan"></span><span class="seat bg-cyan"></span>
+            </div>
+          </div>
+        </div>
+
+        <div class="st-grid-bottom">
+          <!-- Auditorium -->
+          <div class="st-card">
+            <div class="st-card-title">Auditorium Layout</div>
+            <div class="abstract">
+              <div class="row">
+                <span class="bg-elite"></span><span class="bg-elite"></span><span class="bg-elite"></span><span class="bg-elite"></span>
+                <span class="bg-elite"></span><span class="bg-elite"></span><span class="bg-elite"></span><span class="bg-elite"></span>
+                <span class="bg-elite"></span><span class="bg-elite"></span>
+              </div>
+              <div class="row">
+                <span class="bg-gold"></span><span class="bg-gold"></span><span class="bg-gold"></span><span class="bg-gold"></span>
+                <span class="bg-gold"></span><span class="bg-gold"></span><span class="bg-gold"></span><span class="bg-gold"></span>
+                <span class="bg-gold"></span><span class="bg-gold"></span><span class="bg-gold"></span>
+              </div>
+              <div class="row">
+                <span class="bg-silver"></span><span class="bg-silver"></span><span class="bg-silver"></span><span class="bg-silver"></span>
+                <span class="bg-silver"></span><span class="bg-silver"></span><span class="bg-silver"></span><span class="bg-silver"></span>
+                <span class="bg-silver"></span><span class="bg-silver"></span><span class="bg-silver"></span><span class="bg-silver"></span>
+              </div>
+              <div class="row">
+                <span class="bg-cyan"></span><span class="bg-cyan"></span><span class="bg-cyan"></span><span class="bg-cyan"></span>
+                <span class="bg-cyan"></span><span class="bg-cyan"></span><span class="bg-cyan"></span><span class="bg-cyan"></span>
+                <span class="bg-cyan"></span><span class="bg-cyan"></span><span class="bg-cyan"></span><span class="bg-cyan"></span>
+                <span class="bg-cyan"></span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Stadium -->
+          <div class="st-card">
+            <div class="st-card-title">Stadium Layout</div>
+            <div class="abstract">
+              <div class="stadium">
+                <div class="stage">STAGE</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="st-legend">
+          <div class="item"><span class="dot bg-elite"></span> Elite</div>
+          <div class="item"><span class="dot bg-gold"></span> Gold</div>
+          <div class="item"><span class="dot bg-silver"></span> Silver</div>
+          <div class="item"><span class="dot bg-cyan"></span> Cyan</div>
+        </div>
+
+        <p class="st-tagline">Tailored Pricing Zones for Any Venue</p>
+      </div>
+    </div>
+
+    <!-- TAB: PRICING -->
+    <div class="tab-panel" id="tab-pricing">
+      <div class="section-header center">
+        <h2>Packages and rates</h2>
+        <p>Rates apply to ticket sales only. No monthly fees. If you sell nothing, you owe nothing.</p>
+      </div>
+
+      <div class="carousel-wrap">
+        <div class="horizontal-scroll">
+          <div class="package-card">
+            <div class="package-name">Basic</div>
+            <div class="package-rate"><span class="num">5</span><span class="pct">%</span><span class="note">per ticket</span></div>
+            <p class="package-desc">Perfect for small gatherings, church suppers and community events.</p>
+            <ul class="package-list">
+              <li><i data-lucide="check"></i> Up to 100 tickets</li>
+              <li><i data-lucide="check"></i> QR code scanning</li>
+              <li><i data-lucide="check"></i> Standard card colours</li>
+              <li><i data-lucide="check"></i> 2 scanner staff</li>
+            </ul>
+            <div class="package-cta"><a href="create-event.html?package=basic" class="btn btn-ghost btn-block">Get started</a></div>
+          </div>
+
+          <div class="package-card featured">
+            <div class="package-name">Standard</div>
+            <div class="package-rate"><span class="num">7</span><span class="pct">%</span><span class="note">per ticket</span></div>
+            <p class="package-desc">Most popular for conferences, galas and mid-size events.</p>
+            <ul class="package-list">
+              <li><i data-lucide="check"></i> Up to 500 tickets</li>
+              <li><i data-lucide="check"></i> QR code and barcode</li>
+              <li><i data-lucide="check"></i> All standard colours + background image</li>
+              <li><i data-lucide="check"></i> 5 scanner staff + priority support</li>
+            </ul>
+            <div class="package-cta"><a href="create-event.html?package=standard" class="btn btn-accent btn-block">Get started</a></div>
+          </div>
+
+          <div class="package-card">
+            <div class="package-name">Premium</div>
+            <div class="package-rate"><span class="num">10</span><span class="pct">%</span><span class="note">per ticket</span></div>
+            <p class="package-desc">For large events that need custom design and video.</p>
+            <ul class="package-list">
+              <li><i data-lucide="check"></i> Up to 2,000 tickets</li>
+              <li><i data-lucide="check"></i> QR, barcode and vertical barcode</li>
+              <li><i data-lucide="check"></i> Restricted colours + event video &amp; gallery</li>
+              <li><i data-lucide="check"></i> 15 scanner staff + dedicated support</li>
+            </ul>
+            <div class="package-cta"><a href="create-event.html?package=premium" class="btn btn-ghost btn-block">Get started</a></div>
+          </div>
+
+          <div class="package-card">
+            <div class="package-name">Enterprise</div>
+            <div class="package-rate"><span class="num">12</span><span class="pct">%</span><span class="note">per ticket</span></div>
+            <p class="package-desc">Festivals, stadium events, multi-day trips and long-term partners.</p>
+            <ul class="package-list">
+              <li><i data-lucide="check"></i> Unlimited tickets</li>
+              <li><i data-lucide="check"></i> Everything in Premium</li>
+              <li><i data-lucide="check"></i> White-label + multi-day trip cards</li>
+              <li><i data-lucide="check"></i> Unlimited scanners + account manager</li>
+            </ul>
+            <div class="package-cta"><a href="https://wa.me/message/HHM76GQU6PKGI1?text=Hi%20Novalink%2C%20I%27m%20interested%20in%20the%20Enterprise%20package" target="_blank" rel="noopener" class="btn btn-ghost btn-block">Talk to us</a></div>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:20px;max-width:820px;margin-left:auto;margin-right:auto">
+        <div class="rate-table">
+          <div class="rate-row head"><span>What</span><span>Cost</span></div>
+          <div class="rate-row"><div><div class="what">Creating an event</div><div class="sub">Design card, add tickets, manage attendees</div></div><div class="cost">Free</div></div>
+          <div class="rate-row"><div><div class="what">Card generation</div><div class="sub">Unlimited cards per event</div></div><div class="cost">Free</div></div>
+          <div class="rate-row"><div><div class="what">Door scanning</div><div class="sub">QR and barcode, unlimited scans</div></div><div class="cost">Free</div></div>
+          <div class="rate-row"><div><div class="what">Processing fee</div><div class="sub">Charged at checkout, paid by buyer</div></div><div class="cost">Included</div></div>
+          <div class="rate-row"><div><div class="what">Edit within 12 hours of event</div><div class="sub">Per field changed</div></div><div class="cost">R20</div></div>
+          <div class="rate-row"><div><div class="what">Cancel within 12 hours of event</div><div class="sub">Full event cancellation</div></div><div class="cost">R150</div></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: COMPANY -->
+    <div class="tab-panel" id="tab-company">
+      <div class="section-header center">
+        <h2>Who we are</h2>
+        <p>Novalink exists to make events secure, simple and honest — for organisers and guests alike.</p>
+      </div>
+      <div class="compact-grid">
+        <div class="value-card">
+          <div class="icon"><i data-lucide="info"></i></div>
+          <h3>About us</h3>
+          <p>Novalink is a South African digital ticketing platform. We design event cards, verify every guest at the door, and handle the payment flow between buyers, organisers and our own systems — cleanly and transparently.</p>
+        </div>
+        <div class="value-card">
+          <div class="icon"><i data-lucide="target"></i></div>
+          <h3>Our mission</h3>
+          <p>To eliminate ticket fraud, lost revenue and gate chaos in African events. Every card we generate is unique, every scan is logged, and every organiser gets paid what they earned.</p>
+        </div>
+        <div class="value-card">
+          <div class="icon"><i data-lucide="eye"></i></div>
+          <h3>Our vision</h3>
+          <p>A continent where any organiser — from a 30-person church supper to a 50,000-person festival, from a local party to a multi-day trip — can run a fully digital, secure, verified event with the same tools the biggest venues use.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: WHAT WE DO / DON'T -->
+    <div class="tab-panel" id="tab-practices">
+      <div class="section-header center">
+        <h2>What we do, what we don't</h2>
+        <p>Clarity matters. Here is exactly where we operate and where we do not.</p>
+      </div>
+      <div class="compact-grid">
+        <div class="do-card">
+          <h3><i data-lucide="check-circle"></i> What we do</h3>
+          <ul>
+            <li><i data-lucide="check"></i> Design and generate digital event cards</li>
+            <li><i data-lucide="check"></i> Verify every guest at the door with QR and barcode</li>
+            <li><i data-lucide="check"></i> Revoke cards on duplicate scans — no double entry</li>
+            <li><i data-lucide="check"></i> Handle payments from buyers to organisers via PayPal</li>
+            <li><i data-lucide="check"></i> Provide attendance lists and no-show flagging</li>
+            <li><i data-lucide="check"></i> Support long-distance trips with destination cards</li>
+            <li><i data-lucide="check"></i> Match card colours to the event theme</li>
+            <li><i data-lucide="check"></i> Log every scan for audit and dispute resolution</li>
+          </ul>
+        </div>
+        <div class="dont-card">
+          <h3><i data-lucide="x-circle"></i> What we don't do</h3>
+          <ul>
+            <li><i data-lucide="x"></i> We do not issue physical tickets or print cards</li>
+            <li><i data-lucide="x"></i> We do not allow card downloads — cards stay in your account</li>
+            <li><i data-lucide="x"></i> We do not handle bookings on WhatsApp — bookings happen on the site</li>
+            <li><i data-lucide="x"></i> We do not store card or banking details — PayPal handles that</li>
+            <li><i data-lucide="x"></i> We do not sell or share your personal data</li>
+            <li><i data-lucide="x"></i> We do not refund flagged no-shows</li>
+            <li><i data-lucide="x"></i> We do not support cash payments</li>
+            <li><i data-lucide="x"></i> We do not accept events without a named organiser</li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: TRIPS -->
+    <div class="tab-panel" id="tab-trips">
+      <div class="section-header center">
+        <h2>Long-distance trips</h2>
+        <p>Trip cards are built for journeys that span days or weeks. Each card carries images of the destination, a description, departure and return dates.</p>
+      </div>
+      <div class="compact-grid">
+        <div class="value-card">
+          <div class="icon"><i data-lucide="image"></i></div>
+          <h3>Destination images</h3>
+          <p>Upload photos of the destination so travellers know what to expect. Images appear on the card and on the event page.</p>
+        </div>
+        <div class="value-card">
+          <div class="icon"><i data-lucide="calendar"></i></div>
+          <h3>Multi-day dates</h3>
+          <p>Set departure and return dates separately. Trip cards display the full span, not just a single day.</p>
+        </div>
+        <div class="value-card">
+          <div class="icon"><i data-lucide="file-text"></i></div>
+          <h3>Full description</h3>
+          <p>Itinerary, packing notes, meeting points, transport details — all stored on the trip card and visible to the traveller.</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: ADVERTISE -->
+    <div class="tab-panel" id="tab-advertise">
+      <div class="section-header center">
+        <h2>Advertise with Novalink</h2>
+        <p>Reach organisers, promoters and guests across South Africa.</p>
+      </div>
+      <div class="compact-grid">
+        <div class="value-card">
+          <div class="icon"><i data-lucide="award"></i></div>
+          <h3>Featured placement</h3>
+          <p>Top-of-page banner on the Novalink homepage. Seen by every visitor, every event.</p>
+          <a href="https://wa.me/message/HHM76GQU6PKGI1?text=Hi%20Novalink%2C%20I%27m%20interested%20in%20advertising" target="_blank" rel="noopener" class="btn btn-accent btn-block" style="margin-top:8px"><i data-lucide="message-circle"></i> Enquire</a>
+        </div>
+        <div class="value-card">
+          <div class="icon"><i data-lucide="sparkles"></i></div>
+          <h3>Event sponsorship</h3>
+          <p>Place your brand on attendee cards, scanner screens, and event-day banners.</p>
+          <a href="https://wa.me/message/HHM76GQU6PKGI1?text=Hi%20Novalink%2C%20I%27m%20interested%20in%20event%20sponsorship" target="_blank" rel="noopener" class="btn btn-ghost btn-block" style="margin-top:8px"><i data-lucide="message-circle"></i> Enquire</a>
+        </div>
+        <div class="value-card">
+          <div class="icon"><i data-lucide="handshake"></i></div>
+          <h3>Partnership</h3>
+          <p>Venues, planners, promoters, photographers — let's build together.</p>
+          <a href="https://wa.me/message/HHM76GQU6PKGI1?text=Hi%20Novalink%2C%20I%27m%20interested%20in%20partnership" target="_blank" rel="noopener" class="btn btn-ghost btn-block" style="margin-top:8px"><i data-lucide="message-circle"></i> Enquire</a>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB: SUPPORT -->
+    <div class="tab-panel" id="tab-support">
+      <div class="section-header center">
+        <h2>Support</h2>
+        <p>WhatsApp and email are for support only. Bookings happen on the site.</p>
+      </div>
+      <div class="compact-grid">
+        <a href="https://wa.me/message/HHM76GQU6PKGI1" target="_blank" rel="noopener" class="contact-item">
+          <div class="icon"><i data-lucide="message-circle"></i></div>
+          <div><div class="label">WhatsApp support</div><div class="value">Message us</div></div>
+        </a>
+        <a href="mailto:customerservicesnovalink@gmail.com" class="contact-item">
+          <div class="icon"><i data-lucide="mail"></i></div>
+          <div><div class="label">Support email</div><div class="value">customerservicesnovalink@gmail.com</div></div>
+        </a>
+        <a href="https://instagram.com/novalink101" target="_blank" rel="noopener" class="contact-item">
+          <div class="icon"><i data-lucide="camera"></i></div>
+          <div><div class="label">Instagram</div><div class="value">@novalink101</div></div>
+        </a>
+        <a href="tel:+27696835184" class="contact-item">
+          <div class="icon"><i data-lucide="phone"></i></div>
+          <div><div class="label">Phone</div><div class="value">069 683 5184</div></div>
+        </a>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- DISCLAIMERS -->
+<section class="section" style="padding-top:0">
+  <div class="container">
+    <details class="disclosure">
+      <summary>
+        <span style="display:inline-flex;align-items:center;gap:10px"><i data-lucide="alert-triangle"></i> Important disclaimers</span>
+        <i data-lucide="chevron-down" class="chev"></i>
+      </summary>
+      <div class="disc-body">
+        <div class="disclaimer-item"><strong>Payment processing</strong>Ticket payments are processed by PayPal in USD. The ZAR price is displayed for reference and is converted at the current rate at the time of checkout.</div>
+        <div class="disclaimer-item"><strong>Processing fee</strong>A processing fee is added at checkout. This fee covers payment processing, currency conversion and bank withdrawal costs. It does not affect the organiser's revenue.</div>
+        <div class="disclaimer-item"><strong>Editing and cancellation</strong>Events can be edited freely until 12 hours before the event starts. Within the last 12 hours, R20 per field changed applies. Cancellation within 12 hours carries a R150 flat fee.</div>
+        <div class="disclaimer-item"><strong>Flagged cards</strong>Attendees flagged as not attending are not refundable. This is set by the organiser and recorded on the card.</div>
+        <div class="disclaimer-item"><strong>Refunds</strong>Refunds are investigated per reference number and card number. If a Novalink system failure caused the issue, a partial or full refund is issued. All refund decisions are made after investigation.</div>
+        <div class="disclaimer-item"><strong>Screenshot prevention</strong>Novalink cannot prevent screenshots of a card on a device. Cards revoke on the second scan at the door. Sharing a screenshot will not allow entry.</div>
+        <div class="disclaimer-item"><strong>Scanned cards</strong>Once a card is scanned at the door it is marked as checked-in. A second scan revokes the card. All scans are logged with a timestamp and cannot be edited or deleted.</div>
+        <div class="disclaimer-item"><strong>Card ownership</strong>Every card belongs to the person named on it. Cards cannot be transferred, sold or reassigned. Cards are issued per ticket, not per person.</div>
+        <div class="disclaimer-item"><strong>Data and privacy</strong>Card and attendee data is stored on Firebase. Organisers can see only their own events. Admin access is limited to the registered admin account. No personal data is sold or shared with third parties.</div>
+        <div class="disclaimer-item"><strong>Account and event deletion</strong>Deleting an event removes it permanently along with all its attendee cards. Deleting your account removes all events you own and all cards issued under them. This action cannot be undone.</div>
+        <div class="disclaimer-item"><strong>Platform availability</strong>Novalink runs on Render and Firebase. In the unlikely event of an outage, entry is handled manually using the scanned card list. We are not liable for delays caused by third-party service interruptions.</div>
+      </div>
+    </details>
+  </div>
+</section>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-grid">
+      <div>
+        <div class="footer-brand">
+          <span class="novalink-logo on-dark" aria-label="Novalink">
+            <svg class="mark" viewBox="0 0 60 74" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+              <path class="link-navy" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/>
+              <path class="link-cyan" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/>
+              <path class="link-cyan" d="M32 33.5c0 1.6-1.3 2.9-2.9 2.9s-2.9-1.3-2.9-2.9v-3.4c0-1.6 1.3-2.9 2.9-2.9s2.9 1.3 2.9 2.9v3.4z"/>
+              <path class="link-navy" d="M32 40.5c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4z"/>
+            </svg>
+            <span class="wordmark">NOVALINK</span>
+          </span>
+        </div>
+        <p style="font-size:13px;color:#8a96a4;max-width:360px;line-height:1.7">Secure digital event cards, instant door scanning, and payment flow built for South African organisers.</p>
+      </div>
+      <div class="footer-col">
+        <h4>Product</h4>
+        <a href="create-event.html">Create an event</a>
+        <a href="event.html">Event page</a>
+        <a href="event-cards.html">Attendees</a>
+        <a href="event-day.html">Event day</a>
+        <a href="view-card.html">View a card</a>
+      </div>
+      <div class="footer-col">
+        <h4>Support</h4>
+        <a href="https://wa.me/message/HHM76GQU6PKGI1" target="_blank" rel="noopener">WhatsApp</a>
+        <a href="https://instagram.com/novalink101" target="_blank" rel="noopener">Instagram</a>
+        <a href="mailto:customerservicesnovalink@gmail.com">Email</a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; <span id="year"></span> Novalink. All rights reserved.</span>
+      <span>Johannesburg, South Africa</span>
+    </div>
+  </div>
+</footer>
+
+<a href="https://wa.me/message/HHM76GQU6PKGI1" class="whatsapp-float" target="_blank" rel="noopener" aria-label="WhatsApp support">
+  <svg viewBox="0 0 24 24"><path d="M20.5 3.5A11.8 11.8 0 0 0 12 0C5.4 0 0 5.4 0 12c0 2.1.5 4.1 1.6 5.9L0 24l6.3-1.6c1.7.9 3.7 1.4 5.7 1.4 6.6 0 12-5.4 12-12 0-3.2-1.2-6.2-3.5-8.3zM12 22c-1.8 0-3.5-.5-5-1.4l-.4-.2-3.7 1 1-3.6-.3-.4A9.9 9.9 0 0 1 2 12c0-5.5 4.5-10 10-10s10 4.5 10 10-4.5 10-10 10z"/></svg>
+</a>
+
+<!-- AUTH MODAL -->
+<div class="modal-overlay" id="authModal">
+  <div class="modal">
+    <button class="modal-close" id="authClose"><i data-lucide="x"></i></button>
+    <div style="text-align:center;margin-bottom:18px">
+      <span class="novalink-logo" style="margin:0;padding:0;justify-content:center">
+        <svg class="mark" viewBox="0 0 60 74" xmlns="http://www.w3.org/2000/svg" aria-hidden="true" style="width:52px;height:64px">
+          <path class="link-navy" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/>
+          <path class="link-cyan" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/>
+          <path class="link-cyan" d="M32 33.5c0 1.6-1.3 2.9-2.9 2.9s-2.9-1.3-2.9-2.9v-3.4c0-1.6 1.3-2.9 2.9-2.9s2.9 1.3 2.9 2.9v3.4z"/>
+          <path class="link-navy" d="M32 40.5c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4z"/>
+        </svg>
+      </span>
+    </div>
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-mode="signin">Sign in</button>
+      <button class="auth-tab" data-mode="signup">Create account</button>
+    </div>
+    <h3 id="authTitle" style="text-align:center">Welcome back</h3>
+    <p class="modal-subtitle" id="authSubtitle" style="text-align:center">Sign in to continue.</p>
+    <button class="btn btn-google btn-block" id="googleBtn">
+      <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Continue with Google
+    </button>
+    <div class="divider">or</div>
+    <form id="authForm" novalidate>
+      <div class="form-group" id="nameGroup" style="display:none"><label for="authName">Full name</label><input type="text" id="authName" autocomplete="name" /></div>
+      <div class="form-group"><label for="authEmail">Email</label><input type="email" id="authEmail" autocomplete="email" required /></div>
+      <div class="form-group"><label for="authPassword">Password</label><input type="password" id="authPassword" autocomplete="current-password" required minlength="6" /></div>
+      <button type="submit" class="btn btn-accent btn-block" id="authSubmit"><i data-lucide="log-in"></i> Sign in</button>
+    </form>
+  </div>
+</div>
+
+<!-- DELETE ACCOUNT MODAL -->
+<div class="modal-overlay" id="deleteAccountModal">
+  <div class="modal">
+    <button class="modal-close" id="deleteAccountClose"><i data-lucide="x"></i></button>
+    <h3>Delete account</h3>
+    <p class="modal-subtitle">You are about to permanently delete your Novalink account.</p>
+    <div class="danger-box">
+      <div class="head"><i data-lucide="alert-triangle"></i> This cannot be undone</div>
+      <p>When you delete your account, the following will be removed permanently:</p>
+      <ul class="warn-list">
+        <li>Your profile, name and email</li>
+        <li>Every event you own and organise</li>
+        <li>Every card issued under those events</li>
+        <li>All scan logs and orders linked to your account</li>
+      </ul>
+      <p>If you have outstanding payouts or pending refunds, resolve them with support before deleting.</p>
+      <div class="confirm-row">
+        <label style="font-size:11.5px;font-weight:700;color:#7f1d1d;text-transform:uppercase;letter-spacing:0.05em">Type DELETE MY ACCOUNT to confirm</label>
+        <input type="text" id="deleteAccountConfirmInput" placeholder="DELETE MY ACCOUNT" maxlength="20" autocomplete="off" style="font-size:13px" />
+      </div>
+      <div class="actions">
+        <button class="btn btn-ghost" id="deleteAccountCancelBtn">Cancel</button>
+        <button class="btn btn-danger-solid" id="deleteAccountConfirmBtn" disabled><i data-lucide="trash-2"></i> Delete account</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
+
+<script>
+(function(){
+'use strict';
+
+var FIREBASE = {
+  apiKey: "AIzaSyBdb-NEf2kwzF-rzIyPnEYV9YoSZ9OdyoI",
+  authDomain: "novalink-5e3c3.firebaseapp.com",
+  projectId: "novalink-5e3c3",
+  storageBucket: "novalink-5e3c3.firebasestorage.app",
+  messagingSenderId: "483408592364",
+  appId: "1:483408592364:web:c150c0d7e3c908fd1354c9"
+};
+
+var auth = null, db = null, fbReady = false;
+try {
+  firebase.initializeApp(FIREBASE);
+  auth = firebase.auth();
+  db = firebase.firestore();
+  fbReady = true;
+} catch(e){ console.error("Firebase init failed", e); }
+
+var currentUser = null;
+var isAdmin = false;
+var authMode = "signin";
+var carouselTimer = null;
+var carouselIndex = 0;
+
+function $(id){ return document.getElementById(id); }
+function icon(n){ return '<i data-lucide="'+n+'"></i>'; }
+function refreshIcons(){ if(window.lucide) lucide.createIcons(); }
+function esc(s){ return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function initialsFrom(name,email){
+  if(name && name.trim()){ var p = name.trim().split(/\s+/); if(p.length>=2) return (p[0][0]+p[1][0]).toUpperCase(); return p[0].slice(0,2).toUpperCase(); }
+  if(email) return email.slice(0,2).toUpperCase();
+  return "??";
+}
+function showToast(msg,type,ms){
+  type = type || "info"; ms = ms || 3000;
+  var t = $("toast");
+  var i = type === "error" ? "alert-circle" : (type === "success" ? "check-circle" : "info");
+  t.className = "toast " + type;
+  t.innerHTML = icon(i) + "<span>" + esc(msg) + "</span>";
+  refreshIcons();
+  requestAnimationFrame(function(){ t.classList.add("show"); });
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(function(){ t.classList.remove("show"); }, ms);
+}
+
+function startCarousel(){
+  var slides = document.querySelectorAll(".carousel-slide");
+  var dots = document.querySelectorAll(".carousel-dot");
+  if(!slides.length) return;
+  function show(idx){
+    carouselIndex = idx;
+    slides.forEach(function(s, i){ s.classList.toggle("active", i === idx); });
+    dots.forEach(function(d, i){ d.classList.toggle("active", i === idx); });
+  }
+  dots.forEach(function(dot){
+    dot.addEventListener("click", function(){
+      show(parseInt(dot.dataset.slide, 10));
+      if(carouselTimer) clearInterval(carouselTimer);
+      carouselTimer = setInterval(function(){
+        carouselIndex = (carouselIndex + 1) % slides.length;
+        show(carouselIndex);
+      }, 6000);
+    });
+  });
+  if(carouselTimer) clearInterval(carouselTimer);
+  carouselTimer = setInterval(function(){
+    carouselIndex = (carouselIndex + 1) % slides.length;
+    show(carouselIndex);
+  }, 6000);
+}
+
+function initTabs(){
+  var buttons = document.querySelectorAll(".tab-btn");
+  var panels = document.querySelectorAll(".tab-panel");
+  buttons.forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var target = btn.dataset.tab;
+      buttons.forEach(function(b){ b.classList.toggle("active", b === btn); });
+      panels.forEach(function(p){ p.classList.toggle("active", p.id === target); });
+      refreshIcons();
+    });
+  });
+}
+
+$("signInBtn").addEventListener("click", function(){
+  $("authModal").classList.add("open");
+  document.body.style.overflow = "hidden";
+});
+$("authClose").addEventListener("click", function(){
+  $("authModal").classList.remove("open");
+  document.body.style.overflow = "";
+});
+$("authModal").addEventListener("click", function(e){
+  if(e.target === this) {
+    this.classList.remove("open");
+    document.body.style.overflow = "";
+  }
+});
+document.querySelectorAll(".auth-tab").forEach(function(tab){
+  tab.addEventListener("click", function(){
+    authMode = tab.dataset.mode;
+    document.querySelectorAll(".auth-tab").forEach(function(t){ t.classList.toggle("active", t === tab); });
+    if(authMode === "signup"){
+      $("authTitle").textContent = "Create account";
+      $("authSubtitle").textContent = "Join Novalink to start ticketing.";
+      $("nameGroup").style.display = "block";
+      $("authSubmit").innerHTML = icon("user-plus") + " Create account";
+      $("authPassword").autocomplete = "new-password";
+    } else {
+      $("authTitle").textContent = "Welcome back";
+      $("authSubtitle").textContent = "Sign in to continue.";
+      $("nameGroup").style.display = "none";
+      $("authSubmit").innerHTML = icon("log-in") + " Sign in";
+      $("authPassword").autocomplete = "current-password";
+    }
+    refreshIcons();
+  });
+});
+
+$("authForm").addEventListener("submit", async function(e){
+  e.preventDefault();
+  var email = $("authEmail").value.trim();
+  var password = $("authPassword").value;
+  var name = $("authName").value.trim();
+  if(!email || !password) { showToast("Please fill in all fields", "error"); return; }
+  $("authSubmit").disabled = true;
+  $("authSubmit").innerHTML = '<span class="spinner"></span> Processing...';
+  try {
+    if(authMode === "signup"){
+      var cred = await auth.createUserWithEmailAndPassword(email, password);
+      if(name) await cred.user.updateProfile({ displayName: name });
+      await db.collection("users").doc(cred.user.uid).set({
+        name: name || email.split("@")[0],
+        email: email,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      showToast("Account created successfully", "success");
+    } else {
+      await auth.signInWithEmailAndPassword(email, password);
+      showToast("Signed in successfully", "success");
+    }
+    $("authModal").classList.remove("open");
+    document.body.style.overflow = "";
+  } catch(err){
+    console.error(err);
+    showToast(err.message, "error");
+  } finally {
+    $("authSubmit").disabled = false;
+    if(authMode === "signup") $("authSubmit").innerHTML = icon("user-plus") + " Create account";
+    else $("authSubmit").innerHTML = icon("log-in") + " Sign in";
+    refreshIcons();
+  }
+});
+
+$("googleBtn").addEventListener("click", async function(){
+  var provider = new firebase.auth.GoogleAuthProvider();
+  try {
+    var result = await auth.signInWithPopup(provider);
+    var user = result.user;
+    var docRef = db.collection("users").doc(user.uid);
+    var doc = await docRef.get();
+    if(!doc.exists){
+      await docRef.set({
+        name: user.displayName || user.email.split("@")[0],
+        email: user.email,
+        createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+    }
+    showToast("Signed in with Google", "success");
+    $("authModal").classList.remove("open");
+    document.body.style.overflow = "";
+  } catch(err){
+    console.error(err);
+    if(err.code !== 'auth/popup-closed-by-user') showToast(err.message, "error");
+  }
+});
+
+if(fbReady){
+  auth.onAuthStateChanged(async function(user){
+    currentUser = user;
+    if(user){
+      try {
+        var tokenResult = await user.getIdTokenResult();
+        isAdmin = tokenResult.claims.admin === true;
+      } catch(e){ isAdmin = false; }
+      
+      $("signInBtn").style.display = "none";
+      $("userMenuBtn").style.display = "inline-flex";
+      $("userName").textContent = user.displayName || user.email.split("@")[0];
+      $("userAvatar").textContent = initialsFrom(user.displayName, user.email);
+      $("ddName").textContent = user.displayName || user.email.split("@")[0];
+      $("ddEmail").textContent = user.email;
+      if(isAdmin){
+        $("adminBadge").style.display = "inline-block";
+        $("ddAdminBadge").style.display = "inline-block";
+      } else {
+        $("adminBadge").style.display = "none";
+        $("ddAdminBadge").style.display = "none";
+      }
+    } else {
+      isAdmin = false;
+      currentUser = null;
+      $("signInBtn").style.display = "inline-flex";
+      $("userMenuBtn").style.display = "none";
+      $("adminBadge").style.display = "none";
+      $("ddAdminBadge").style.display = "none";
+      $("userDropdown").classList.remove("open");
+    }
+  });
+}
+
+$("userMenuBtn").addEventListener("click", function(e){
+  e.stopPropagation();
+  $("userDropdown").classList.toggle("open");
+});
+document.addEventListener("click", function(){
+  $("userDropdown").classList.remove("open");
+});
+$("ddSignOut").addEventListener("click", async function(){
+  try {
+    await auth.signOut();
+    showToast("Signed out", "success");
+  } catch(err){ showToast(err.message, "error"); }
+});
+$("ddMyEvents").addEventListener("click", function(){
+  window.location.href = "events.html";
+  $("userDropdown").classList.remove("open");
+});
+$("ddCreateEvent").addEventListener("click", function(){
+  window.location.href = "create-event.html";
+});
+$("ddMyCards").addEventListener("click", function(){
+  window.location.href = "view-card.html";
+});
+$("ddDeleteAccount").addEventListener("click", function(){
+  $("deleteAccountModal").classList.add("open");
+  document.body.style.overflow = "hidden";
+  $("deleteAccountConfirmInput").value = "";
+  $("deleteAccountConfirmBtn").disabled = true;
+  $("userDropdown").classList.remove("open");
+});
+
+$("deleteAccountClose").addEventListener("click", function(){
+  $("deleteAccountModal").classList.remove("open");
+  document.body.style.overflow = "";
+});
+$("deleteAccountCancelBtn").addEventListener("click", function(){
+  $("deleteAccountModal").classList.remove("open");
+  document.body.style.overflow = "";
+});
+$("deleteAccountModal").addEventListener("click", function(e){
+  if(e.target === this) {
+    this.classList.remove("open");
+    document.body.style.overflow = "";
+  }
+});
+$("deleteAccountConfirmInput").addEventListener("input", function(e){
+  $("deleteAccountConfirmBtn").disabled = e.target.value.trim().toUpperCase() !== "DELETE MY ACCOUNT";
+});
+$("deleteAccountConfirmBtn").addEventListener("click", async function(){
+  if(!confirm("Are you absolutely sure? This action cannot be undone.")) return;
+  try {
+    showToast("Account deletion requires admin approval. Please contact support.", "info", 6000);
+    $("deleteAccountModal").classList.remove("open");
+    document.body.style.overflow = "";
+  } catch(err){
+    showToast(err.message, "error");
+  }
+});
+
+document.addEventListener("DOMContentLoaded", function(){
+  $("year").textContent = new Date().getFullYear();
+  startCarousel();
+  initTabs();
+  refreshIcons();
+});
+
+})();
+</script>
+</body>
+  </html>
