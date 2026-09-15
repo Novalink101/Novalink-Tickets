@@ -115,7 +115,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 /* --- SEATING PLAN PREVIEW STYLES --- */
 .seating-plan-preview {
   background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-  padding: 20px; max-height: 450px; overflow-y: auto; box-shadow: 0 10px 20px rgba(10,15,20,0.05);
+  padding: 20px; max-height: 500px; overflow-y: auto; box-shadow: 0 10px 20px rgba(10,15,20,0.05);
 }
 .seating-plan-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 16px; text-align: center; }
 .blocks-wrapper { display: flex; flex-direction: column; gap: 24px; }
@@ -129,15 +129,54 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .seat.gold { background: #ecc94b; }
 .seat.black { background: #1a202c; }
 
-.tables-wrapper { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 12px; }
-.table { background: var(--bg-2); border: 1px solid var(--border-2); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
-.table-label { font-size: 11px; font-weight: 800; color: var(--cyan-700); }
-.chairs-wrapper { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; justify-items: center; }
-.chair { width: 10px; height: 10px; border-radius: 50%; transition: background 0.2s; }
-.chair.cyan { background: #22d3ee; }
-.chair.silver { background: #cbd5e1; }
-.chair.gold { background: #ecc94b; }
-.chair.black { background: #1a202c; }
+/* --- CIRCULAR TABLES WITH CHAIRS AROUND --- */
+.tables-wrapper { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 20px; padding: 10px 0; }
+.circular-table-container {
+  position: relative;
+  width: 100px;
+  height: 100px;
+  margin: 0 auto;
+}
+.circular-table {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: var(--bg-2);
+  border: 2px solid var(--border-2);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 10px;
+  font-weight: 800;
+  color: var(--cyan-700);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.08);
+  z-index: 2;
+}
+.chair-around {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  margin: -7px 0 0 -7px;
+  transition: background 0.2s;
+}
+.chair-around.cyan { background: #22d3ee; }
+.chair-around.silver { background: #cbd5e1; }
+.chair-around.gold { background: #ecc94b; }
+.chair-around.black { background: #1a202c; }
+.table-number-label {
+  text-align: center;
+  font-size: 10px;
+  font-weight: 700;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
 </style>
 </head>
 <body>
@@ -213,6 +252,28 @@ h1,h2,h3{line-height:1.15;font-weight:700}
             <option value="hall" selected>Hall</option>
             <option value="theater">Theater</option>
             <option value="auditorium">Auditorium</option>
+          </select>
+        </div>
+
+        <!-- Stadium Sub-Type Dropdown (only appears when Stadium is selected) -->
+        <div class="form-group" id="stadiumTypeGroup" style="display:none;">
+          <label for="stadiumSubType">Stadium Layout Type</label>
+          <select id="stadiumSubType">
+            <option value="horseshoe">Horseshoe</option>
+            <option value="rectangular">Rectangular</option>
+            <option value="one_stand">1 Stand</option>
+            <option value="arena">Arena</option>
+            <option value="octagonal">Octagonal</option>
+          </select>
+        </div>
+
+        <!-- Auditorium Sub-Type Dropdown (only appears when Auditorium is selected) -->
+        <div class="form-group" id="auditoriumTypeGroup" style="display:none;">
+          <label for="auditoriumSubType">Auditorium Layout Type</label>
+          <select id="auditoriumSubType">
+            <option value="traverse">Traverse / Alley Layout</option>
+            <option value="continental">Continental Seating Layout</option>
+            <option value="straight">Straight Row Layout</option>
           </select>
         </div>
 
@@ -320,25 +381,14 @@ h1,h2,h3{line-height:1.15;font-weight:700}
   </div>
 </main>
 
+<script src="routing-engine.js"></script>
 <script>
 (function(){
 'use strict';
 
 function $(id){ return document.getElementById(id); }
 
-// === DYNAMIC ROUTING ENGINE (EVENT MODE ONLY) ===
-const DynamicRoutingEngine = {
-  "stadium":    { label1: "Stand / Block",   label2: "Row",          label3: "Seat",   requiresCalculation: true },
-  "arena":      { label1: "Tier / Section",  label2: "Row",          label3: "Seat",   requiresCalculation: true },
-  "theater":    { label1: "Zone / Level",    label2: "Row",          label3: "Seat",   requiresCalculation: true },
-  "auditorium": { label1: "Balcony / Stalls",label2: "Row",          label3: "Seat",   requiresCalculation: true },
-  "hall": {
-    "seat_types":    { label1: "Section", label2: "Row", label3: "Seat",  requiresCalculation: true },
-    "tables_chairs": { label1: "Table",   label2: null,  label3: "Chair", requiresCalculation: true }
-  }
-};
-
-// Current resolved config (label1, label2, label3, mode)
+// Resolved config from the shared routing engine
 var currentConfig = { label1: "Section", label2: "Row", label3: "Seat", mode: "seat_types" };
 
 document.addEventListener("DOMContentLoaded", function(){
@@ -351,24 +401,21 @@ document.addEventListener("DOMContentLoaded", function(){
   function resolveConfig() {
     var venue = $("venueType").value;
     var isTablesMode = $("hallLayoutToggle").checked;
-
-    if (venue === "hall") {
-      if (isTablesMode) {
-        currentConfig = Object.assign({}, DynamicRoutingEngine.hall.tables_chairs, { mode: "tables_chairs" });
-      } else {
-        currentConfig = Object.assign({}, DynamicRoutingEngine.hall.seat_types, { mode: "seat_types" });
-      }
-    } else {
-      currentConfig = Object.assign({}, DynamicRoutingEngine[venue], { mode: "seat_types" });
-    }
+    currentConfig = NovalinkRoutingEngine.resolveEventConfig(venue, isTablesMode);
   }
 
   // --- UPDATE UI BASED ON CONFIG ---
   function updateSeatingUI() {
     resolveConfig();
 
+    var venue = $("venueType").value;
+
+    // Toggle visibility of sub-type dropdowns
+    $("stadiumTypeGroup").style.display = (venue === "stadium") ? "block" : "none";
+    $("auditoriumTypeGroup").style.display = (venue === "auditorium") ? "block" : "none";
+
     // Toggle visibility of Hall sub-toggle
-    if ($("venueType").value === "hall") {
+    if (venue === "hall") {
       $("hallToggleGroup").style.display = "flex";
     } else {
       $("hallToggleGroup").style.display = "none";
@@ -403,15 +450,10 @@ document.addEventListener("DOMContentLoaded", function(){
   }
 
   function calculateCapacity() {
-    var l1 = parseInt($("totalLevel1").value) || 0;
-    var l2 = currentConfig.label2 === null ? 1 : (parseInt($("totalLevel2").value) || 0);
-    var l3 = parseInt($("totalLevel3").value) || 0;
-
-    if (currentConfig.mode === "tables_chairs") {
-      $("totalCapacity").value = l1 * l3; // Tables * Chairs
-    } else {
-      $("totalCapacity").value = l1 * l2 * l3; // Sections * Rows * Seats
-    }
+    var l1 = $("totalLevel1").value;
+    var l2 = $("totalLevel2").value;
+    var l3 = $("totalLevel3").value;
+    $("totalCapacity").value = NovalinkRoutingEngine.calculateEventCapacity(currentConfig, l1, l2, l3);
   }
 
   // --- SEATING PLAN RENDERER ---
@@ -432,25 +474,54 @@ document.addEventListener("DOMContentLoaded", function(){
     var wrapper = document.createElement("div");
 
     if (currentConfig.mode === "tables_chairs") {
+      // ===== CIRCULAR TABLES WITH CHAIRS AROUND =====
       wrapper.className = "tables-wrapper";
-      var renderTables = Math.min(l1, 50);
+      var renderTables = Math.min(l1, 12);
       var renderChairs = Math.min(l3, 12);
 
       for (var t = 0; t < renderTables; t++) {
-        var tableDiv = document.createElement("div");
-        tableDiv.className = "table";
-        tableDiv.innerHTML = '<div class="table-label">Table ' + (t + 1) + '</div>';
-        var chairsWrapper = document.createElement("div");
-        chairsWrapper.className = "chairs-wrapper";
+        var tableContainer = document.createElement("div");
+        tableContainer.className = "circular-table-container";
+
+        // The circular table in the middle
+        var tableEl = document.createElement("div");
+        tableEl.className = "circular-table";
+        tableEl.textContent = "T" + (t + 1);
+        tableContainer.appendChild(tableEl);
+
+        // Chairs positioned around the table using trig
+        var radius = 35; // distance from center of container to chair
         for (var c = 0; c < renderChairs; c++) {
-          var chairDiv = document.createElement("div");
-          chairDiv.className = "chair " + tier;
-          chairsWrapper.appendChild(chairDiv);
+          var angle = (2 * Math.PI * c) / renderChairs - (Math.PI / 2);
+          var cx = 50 + radius * Math.cos(angle);
+          var cy = 50 + radius * Math.sin(angle);
+
+          var chairEl = document.createElement("div");
+          chairEl.className = "chair-around " + tier;
+          chairEl.style.left = cx + "%";
+          chairEl.style.top = cy + "%";
+          chairContainerAppend(tableContainer, chairEl);
         }
-        tableDiv.appendChild(chairsWrapper);
-        wrapper.appendChild(tableDiv);
+
+        // Label under the table
+        var labelEl = document.createElement("div");
+        labelEl.className = "table-number-label";
+        labelEl.textContent = "Table " + (t + 1);
+        var wrapperInner = document.createElement("div");
+        wrapperInner.appendChild(tableContainer);
+        wrapperInner.appendChild(labelEl);
+        wrapper.appendChild(wrapperInner);
       }
+
+      if (l1 > 12) {
+        var note = document.createElement("p");
+        note.style.cssText = "font-size:11px; color:var(--text-muted); text-align:center; margin-top:10px; grid-column: 1 / -1;";
+        note.textContent = "Note: Displaying first 12 tables for performance.";
+        wrapper.appendChild(note);
+      }
+
     } else {
+      // ===== BLOCKS / ROWS / SEATS =====
       wrapper.className = "blocks-wrapper";
       var renderBlocks = Math.min(l1, 10);
       var renderRows = Math.min(l2, 20);
@@ -480,13 +551,11 @@ document.addEventListener("DOMContentLoaded", function(){
     }
 
     container.appendChild(wrapper);
+  }
 
-    if (l1 > (currentConfig.mode === "tables_chairs" ? 50 : 10) || l2 > 20 || l3 > (currentConfig.mode === "tables_chairs" ? 12 : 25)) {
-      var note = document.createElement("p");
-      note.style.cssText = "font-size:11px; color:var(--text-muted); text-align:center; margin-top:10px;";
-      note.textContent = "Note: Displaying a truncated view for performance.";
-      container.appendChild(note);
-    }
+  // Helper to append chair (keeps code readable)
+  function chairContainerAppend(parent, child) {
+    parent.appendChild(child);
   }
 
   // --- TICKET PREVIEW UPDATER ---
@@ -536,6 +605,14 @@ document.addEventListener("DOMContentLoaded", function(){
 
   $("hallLayoutToggle").addEventListener("change", function() {
     updateSeatingUI(); updateTicketPreview(); renderSeatingPlan();
+  });
+
+  $("stadiumSubType").addEventListener("change", function() {
+    renderSeatingPlan();
+  });
+
+  $("auditoriumSubType").addEventListener("change", function() {
+    renderSeatingPlan();
   });
 
   // --- INIT ---
