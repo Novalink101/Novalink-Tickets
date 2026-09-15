@@ -75,10 +75,9 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .tier-dist-summary{font-size:11.5px;color:var(--text-muted);margin-top:8px;font-style:italic;}
 .tier-dist-summary.error{color:#b91c1c;font-weight:700;}
 
-/* ===== PER-SECTION / PER-ROW OVERRIDES ===== */
 .row-overrides-section{margin-top:12px;padding:12px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:10px;}
 .row-overrides-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px;flex-wrap:wrap;}
-.section-tabs{display:flex;gap:6px;flex-wrap:wrap;}
+.section-tabs{display:flex;gap:6px;flex-wrap:wrap;flex:1;}
 .section-tab{
   padding:6px 12px;border-radius:8px;border:1px solid var(--border-2);
   background:var(--surface);font-size:11.5px;font-weight:700;cursor:pointer;
@@ -91,7 +90,9 @@ h1,h2,h3{line-height:1.15;font-weight:700}
   background:transparent;font-size:11px;font-weight:700;cursor:pointer;
   font-family:inherit;color:var(--text-muted);
 }
-.btn-mini:hover{border-color:#dc2626;color:#dc2626;}
+.btn-mini:hover{border-color:var(--cyan-500);color:var(--cyan-700);}
+.btn-mini.fs-btn{background:#0a0f14;color:#22d3ee;border-color:#0a0f14;}
+.btn-mini.fs-btn:hover{background:#1a2129;border-color:#1a2129;color:#22d3ee;}
 .row-overrides-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;max-height:240px;overflow-y:auto;}
 .row-override-item{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border-2);border-radius:8px;padding:6px 8px;}
 .row-override-label{font-size:11px;font-weight:800;color:var(--text-2);letter-spacing:0.5px;flex:1;}
@@ -210,6 +211,208 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .layout-legend .lg-swatch.gold { background: #ecc94b; }
 .layout-legend .lg-swatch.silver { background: #cbd5e1; }
 .layout-legend .lg-swatch.cyan { background: #22d3ee; }
+
+/* ===== FULL SCREEN OVERLAY ===== */
+.fullscreen-overlay {
+  position: fixed;
+  inset: 0;
+  background: #0a0f14;
+  z-index: 9999;
+  display: none;
+  flex-direction: column;
+  padding: 20px;
+}
+.fullscreen-overlay.open { display: flex; }
+.fs-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+  color: #fff;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.fs-header h2 {
+  color: #fff;
+  font-size: 1.2rem;
+  font-weight: 800;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+}
+.fs-header h2 span { color: #22d3ee; }
+.fs-actions { display: flex; gap: 8px; }
+.fs-btn-close {
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  color: #fff;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 12px;
+}
+.fs-btn-close:hover { background: #dc2626; border-color: #dc2626; }
+
+.fs-canvas {
+  flex: 1;
+  position: relative;
+  background:
+    radial-gradient(circle at 50% 0%, rgba(34,211,238,0.08), transparent 60%),
+    #f6f8fb;
+  border-radius: 12px;
+  overflow: auto;
+  padding: 40px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 30px;
+}
+.fs-stage {
+  display: inline-block;
+  padding: 14px 50px;
+  background: linear-gradient(135deg, #1e2f4d, #2a4365);
+  color: #fff;
+  font-weight: 800;
+  letter-spacing: 5px;
+  font-size: 14px;
+  border-radius: 8px;
+  text-transform: uppercase;
+  box-shadow: 0 8px 24px rgba(30,47,77,0.35);
+  flex-shrink: 0;
+}
+.fs-sections-row {
+  display: flex;
+  gap: 40px;
+  align-items: flex-start;
+  justify-content: center;
+  flex-wrap: wrap;
+  width: 100%;
+}
+.fs-section-frame {
+  transition: transform 0.35s ease;
+  transform-origin: center center;
+  flex-shrink: 0;
+}
+.fs-section-inner {
+  background: #fff;
+  border: 2px solid #e4e9f0;
+  border-radius: 12px;
+  padding: 14px;
+  min-width: 280px;
+  box-shadow: 0 6px 18px rgba(10,15,20,0.06);
+}
+.fs-section-title {
+  font-size: 12px;
+  font-weight: 900;
+  color: #0e7490;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+  text-align: center;
+}
+.fs-section-stage {
+  text-align: center;
+  font-size: 9px;
+  font-weight: 800;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: #fff;
+  background: linear-gradient(135deg, #1e2f4d, #2a4365);
+  padding: 6px;
+  border-radius: 5px;
+  margin-bottom: 10px;
+}
+.fs-row {
+  display: grid;
+  grid-template-columns: 46px 1fr 52px;
+  align-items: center;
+  gap: 5px;
+  margin-bottom: 3px;
+}
+.fs-row-label {
+  font-size: 9px;
+  font-weight: 800;
+  color: #6b7787;
+  text-align: right;
+  text-transform: uppercase;
+}
+.fs-row-seats {
+  display: flex;
+  gap: 2px;
+  justify-content: center;
+}
+.fs-seat {
+  width: 16px;
+  height: 16px;
+  border-radius: 2px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: ui-monospace, monospace;
+  font-size: 7px;
+  font-weight: 800;
+}
+.fs-seat.black { background: #1a202c; color: #fff; }
+.fs-seat.gold { background: #ecc94b; color: #744210; }
+.fs-seat.silver { background: #cbd5e1; color: #4a5568; }
+.fs-seat.cyan { background: #22d3ee; color: #04161c; }
+.fs-tier-tag {
+  font-size: 8px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+.fs-tier-tag.black { color: #1a202c; }
+.fs-tier-tag.gold { color: #92700c; }
+.fs-tier-tag.silver { color: #4a5568; }
+.fs-tier-tag.cyan { color: #0e7490; }
+
+.fs-controls {
+  margin-top: 16px;
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+}
+.fs-rotation-control {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: #fff;
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 700;
+}
+.fs-rotation-control input {
+  width: 60px;
+  padding: 5px 6px;
+  text-align: center;
+  background: rgba(255,255,255,0.12);
+  border: 1px solid rgba(255,255,255,0.25);
+  color: #fff;
+  border-radius: 6px;
+  font-family: ui-monospace, monospace;
+  font-weight: 800;
+  font-size: 12px;
+}
+.fs-rotation-control input:focus { outline: none; border-color: #22d3ee; }
+.fs-preset {
+  background: rgba(255,255,255,0.08);
+  border: 1px solid rgba(255,255,255,0.18);
+  color: #fff;
+  padding: 6px 10px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 11px;
+}
+.fs-preset:hover { background: #22d3ee; color: #04161c; border-color: #22d3ee; }
 </style>
 </head>
 <body>
@@ -278,9 +481,9 @@ h1,h2,h3{line-height:1.15;font-weight:700}
         </div>
 
         <div class="form-row">
-          <div class="form-group"><label id="label-level1" for="totalLevel1">Sections / Blocks</label><input type="number" id="totalLevel1" min="1" max="26" value="2" /></div>
+          <div class="form-group"><label id="label-level1" for="totalLevel1">Sections / Blocks</label><input type="number" id="totalLevel1" min="1" max="26" value="3" /></div>
           <div class="form-group" id="group-level2"><label id="label-level2" for="totalLevel2">Rows per Section</label><input type="number" id="totalLevel2" min="1" max="52" value="6" /></div>
-          <div class="form-group"><label id="label-level3" for="totalLevel3">Default Seats per Row (min 4, max 90)</label><input type="number" id="totalLevel3" min="4" max="90" value="10" /></div>
+          <div class="form-group"><label id="label-level3" for="totalLevel3">Default Seats per Row (min 4, max 90)</label><input type="number" id="totalLevel3" min="4" max="90" value="8" /></div>
         </div>
 
         <div class="form-group" id="rowOverridesGroup">
@@ -288,6 +491,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
           <div class="row-overrides-section">
             <div class="row-overrides-header">
               <div class="section-tabs" id="sectionTabs"></div>
+              <button type="button" class="btn-mini fs-btn" id="openFullscreen">⛶ Full Screen</button>
               <button type="button" class="btn-mini" id="clearAllOverrides">Clear All</button>
             </div>
             <div class="row-overrides-hint">Each section can have its own row seat counts. Pick a section tab, then customise its rows.</div>
@@ -382,6 +586,21 @@ h1,h2,h3{line-height:1.15;font-weight:700}
   </div>
 </main>
 
+<!-- FULL SCREEN OVERLAY -->
+<div class="fullscreen-overlay" id="fullscreenOverlay">
+  <div class="fs-header">
+    <h2>Full Layout View · <span id="fsStageName">STAGE</span></h2>
+    <div class="fs-actions">
+      <button type="button" class="fs-btn-close" id="closeFullscreen">✕ Close</button>
+    </div>
+  </div>
+  <div class="fs-canvas" id="fsCanvas">
+    <div class="fs-stage" id="fsStageLabel">STAGE</div>
+    <div class="fs-sections-row" id="fsSectionsRow"></div>
+  </div>
+  <div class="fs-controls" id="fsControls"></div>
+</div>
+
 <script src="routing-engine.js"></script>
 <script>
 (function(){
@@ -389,8 +608,8 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 
 function $(id){ return document.getElementById(id); }
 
-// { sectionIdx: { rowIdx: seatCount } }
-var sectionRowOverrides = {};
+var sectionRowOverrides = {}; // { sectionIdx: { rowIdx: seatCount } }
+var sectionRotations = {};    // { sectionIdx: degrees }
 var currentEditingSection = 0;
 
 document.addEventListener("DOMContentLoaded", function(){
@@ -485,6 +704,7 @@ document.addEventListener("DOMContentLoaded", function(){
           else sectionRowOverrides[sIdx][rIdx] = Math.max(4, Math.min(90, val));
           calculateCapacity();
           renderSeatingPlan();
+          if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
         });
       })(currentEditingSection, r, inp);
       item.appendChild(lbl);
@@ -497,6 +717,9 @@ document.addEventListener("DOMContentLoaded", function(){
     var sectionData = sectionRowOverrides[sectionIdx];
     if (sectionData && sectionData[rowIdx] !== undefined) return sectionData[rowIdx];
     return parseInt($("totalLevel3").value) || 10;
+  }
+  function getRotation(sectionIdx) {
+    return sectionRotations[sectionIdx] !== undefined ? sectionRotations[sectionIdx] : 0;
   }
 
   function updateSeatingUI() {
@@ -671,6 +894,108 @@ document.addEventListener("DOMContentLoaded", function(){
     renderStandardLayout(container, Math.min(l1, 6), Math.min(l2, 52));
   }
 
+  // ============ FULL SCREEN VIEW ============
+  function renderFullscreen() {
+    var sections = parseInt($("totalLevel1").value) || 0;
+    var rows = parseInt($("totalLevel2").value) || 0;
+    var map = buildRowTierMap(rows);
+    var stageName = ($("stageName").value || "STAGE").trim().toUpperCase();
+
+    $("fsStageName").textContent = stageName;
+    $("fsStageLabel").textContent = stageName;
+
+    var row = $("fsSectionsRow");
+    row.innerHTML = "";
+
+    for (var b = 0; b < sections; b++) {
+      var frame = document.createElement("div");
+      frame.className = "fs-section-frame";
+      frame.style.transform = "rotate(" + getRotation(b) + "deg)";
+
+      var inner = document.createElement("div");
+      inner.className = "fs-section-inner";
+
+      var title = document.createElement("div");
+      title.className = "fs-section-title";
+      title.textContent = "Section " + blockLabel(b);
+      inner.appendChild(title);
+
+      var stageLbl = document.createElement("div");
+      stageLbl.className = "fs-section-stage";
+      stageLbl.textContent = stageName;
+      inner.appendChild(stageLbl);
+
+      for (var r = 0; r < rows; r++) {
+        var tier = map[r] || "cyan";
+        var seatCount = getSeatsForRow(b, r);
+        seatCount = Math.max(4, Math.min(90, seatCount));
+
+        var rowEl = document.createElement("div");
+        rowEl.className = "fs-row";
+
+        var rl = document.createElement("div");
+        rl.className = "fs-row-label";
+        rl.textContent = "Row " + rowLabel(r);
+        rowEl.appendChild(rl);
+
+        var seatsWrap = document.createElement("div");
+        seatsWrap.className = "fs-row-seats";
+        for (var s = 0; s < seatCount; s++) {
+          var seat = document.createElement("div");
+          seat.className = "fs-seat " + tier;
+          seat.textContent = (s + 1);
+          seatsWrap.appendChild(seat);
+        }
+        rowEl.appendChild(seatsWrap);
+
+        var tt = document.createElement("div");
+        tt.className = "fs-tier-tag " + tier;
+        tt.textContent = tierTagText(tier);
+        rowEl.appendChild(tt);
+
+        inner.appendChild(rowEl);
+      }
+      frame.appendChild(inner);
+      row.appendChild(frame);
+    }
+
+    // Controls
+    var controls = $("fsControls");
+    controls.innerHTML = "";
+    for (var b2 = 0; b2 < sections; b2++) {
+      (function(idx) {
+        var c = document.createElement("div");
+        c.className = "fs-rotation-control";
+        c.innerHTML = "Section " + blockLabel(idx) + " ↻";
+        var inp = document.createElement("input");
+        inp.type = "number";
+        inp.min = -360;
+        inp.max = 360;
+        inp.step = 5;
+        inp.value = getRotation(idx);
+        inp.addEventListener("input", function() {
+          var v = parseInt(inp.value);
+          if (isNaN(v)) v = 0;
+          sectionRotations[idx] = v;
+          renderFullscreen();
+        });
+        c.appendChild(inp);
+        c.appendChild(document.createTextNode("°"));
+        controls.appendChild(c);
+      })(b2);
+    }
+  }
+
+  function openFullscreen() {
+    $("fullscreenOverlay").classList.add("open");
+    document.body.style.overflow = "hidden";
+    renderFullscreen();
+  }
+  function closeFullscreen() {
+    $("fullscreenOverlay").classList.remove("open");
+    document.body.style.overflow = "";
+  }
+
   // ============ TICKET PREVIEW ============
   function updateTicketPreview() {
     $("prevEventName").textContent = $("eventName").value || "EVENT NAME";
@@ -701,21 +1026,13 @@ document.addEventListener("DOMContentLoaded", function(){
   $("venueType").addEventListener("change", function() { updateSeatingUI(); renderSeatingPlan(); });
   $("hallLayoutToggle").addEventListener("change", function() { updateSeatingUI(); renderSeatingPlan(); });
   $("tableShape").addEventListener("change", function() { updateTableShapeHint(); renderSeatingPlan(); });
-  $("stageName").addEventListener("input", function() { renderSeatingPlan(); });
-
-  // Section count changes → rebuild tabs + capacity
-  $("totalLevel1").addEventListener("input", function() {
-    rebuildSectionTabs();
-    calculateCapacity(); renderSeatingPlan();
+  $("stageName").addEventListener("input", function() {
+    renderSeatingPlan();
+    if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
   });
 
-  // Row count changes → rebuild grid + capacity
-  $("totalLevel2").addEventListener("input", function() {
-    rebuildRowOverrides();
-    calculateCapacity(); renderSeatingPlan();
-  });
-
-  // Base seat count changes → refresh displayed defaults
+  $("totalLevel1").addEventListener("input", function() { rebuildSectionTabs(); calculateCapacity(); renderSeatingPlan(); });
+  $("totalLevel2").addEventListener("input", function() { rebuildRowOverrides(); calculateCapacity(); renderSeatingPlan(); });
   $("totalLevel3").addEventListener("change", function() {
     var v = parseInt(this.value) || 10;
     v = Math.max(4, Math.min(90, v));
@@ -724,7 +1041,6 @@ document.addEventListener("DOMContentLoaded", function(){
     calculateCapacity(); renderSeatingPlan();
   });
 
-  // Clear all overrides
   $("clearAllOverrides").addEventListener("click", function() {
     if (!confirm("Clear all per-section row overrides?")) return;
     sectionRowOverrides = {};
@@ -733,6 +1049,14 @@ document.addEventListener("DOMContentLoaded", function(){
     rebuildRowOverrides();
     calculateCapacity();
     renderSeatingPlan();
+  });
+
+  $("openFullscreen").addEventListener("click", openFullscreen);
+  $("closeFullscreen").addEventListener("click", closeFullscreen);
+
+  // ESC to close fullscreen
+  document.addEventListener("keydown", function(e) {
+    if (e.key === "Escape" && $("fullscreenOverlay").classList.contains("open")) closeFullscreen();
   });
 
   // INIT
