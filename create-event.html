@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -324,17 +325,37 @@ h1,h2,h3{line-height:1.15;font-weight:700}
   flex-shrink: 0;
 }
 .fs-sections-row {
+  position: relative;
   display: flex;
   gap: 40px;
   align-items: flex-start;
   justify-content: center;
   flex-wrap: wrap;
   width: 100%;
+  min-height: 200px;
 }
 .fs-section-frame {
-  transition: transform 0.2s ease;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
   transform-origin: center center;
   flex-shrink: 0;
+  cursor: grab;
+  user-select: none;
+  position: relative;
+}
+.fs-section-frame:active { cursor: grabbing; }
+.fs-section-frame:hover .fs-section-inner {
+  border-color: #22d3ee;
+  box-shadow: 0 10px 28px rgba(34,211,238,0.25);
+}
+.fs-section-frame.dragging {
+  cursor: grabbing;
+  z-index: 500;
+  transition: none;
+}
+.fs-section-frame.dragging .fs-section-inner {
+  border-color: #22d3ee;
+  box-shadow: 0 20px 50px rgba(34,211,238,0.5);
+  transform: scale(1.02);
 }
 .fs-section-inner {
   background: #fff;
@@ -343,7 +364,23 @@ h1,h2,h3{line-height:1.15;font-weight:700}
   padding: 14px;
   min-width: 300px;
   box-shadow: 0 6px 18px rgba(10,15,20,0.06);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease, transform 0.15s ease;
   position: relative;
+}
+.fs-drag-handle {
+  position: absolute;
+  top: -10px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #1e2f4d;
+  color: #22d3ee;
+  font-size: 10px;
+  font-weight: 800;
+  padding: 2px 10px;
+  border-radius: 99px;
+  letter-spacing: 2px;
+  pointer-events: none;
+  box-shadow: 0 2px 8px rgba(30,47,77,0.3);
 }
 .fs-section-title {
   font-size: 12px;
@@ -377,33 +414,6 @@ h1,h2,h3{line-height:1.15;font-weight:700}
   margin-bottom: 3px;
   padding: 3px;
   border-radius: 5px;
-  position: relative;
-  transition: background 0.15s;
-  cursor: grab;
-  user-select: none;
-}
-.fs-row:hover { background: rgba(34,211,238,0.08); }
-.fs-row.dragging {
-  cursor: grabbing;
-  background: rgba(34,211,238,0.18);
-  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
-  z-index: 100;
-}
-.fs-row .drag-handle {
-  position: absolute;
-  left: -20px;
-  top: 50%;
-  transform: translateY(-50%);
-  width: 14px;
-  height: 14px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #b9c5d3;
-  font-size: 12px;
-  font-weight: 800;
-  letter-spacing: -2px;
-  pointer-events: none;
 }
 .fs-row-label {
   font-size: 9px;
@@ -661,11 +671,11 @@ h1,h2,h3{line-height:1.15;font-weight:700}
   <div class="fs-header">
     <h2>Full Layout View · <span id="fsStageName">STAGE</span></h2>
     <div class="fs-actions">
-      <button type="button" class="fs-btn" id="resetRowPositions">↺ Reset Row Positions</button>
+      <button type="button" class="fs-btn" id="resetSectionPositions">↺ Reset Section Positions</button>
       <button type="button" class="fs-btn fs-btn-close" id="closeFullscreen">✕ Close</button>
     </div>
   </div>
-  <div class="fs-hint">💡 Drag any row to reposition it inside its section. Rotation is applied to the whole section.</div>
+  <div class="fs-hint">💡 Drag any section to reposition it anywhere on the canvas. Rotation is applied per section using the controls below.</div>
   <div class="fs-canvas" id="fsCanvas">
     <div class="fs-stage" id="fsStageLabel">STAGE</div>
     <div class="fs-sections-row" id="fsSectionsRow"></div>
@@ -683,7 +693,7 @@ function $(id){ return document.getElementById(id); }
 var sectionRowOverrides = {}; // { sectionIdx: { rowIdx: seatCount } }
 var sectionRowCounts = {};    // { sectionIdx: rowCount }
 var sectionRotations = {};    // { sectionIdx: degrees }
-var rowOffsets = {};          // { sectionIdx: { rowIdx: {x, y} } }
+var sectionPositions = {};    // { sectionIdx: { x, y } } — absolute positions on canvas
 var currentEditingSection = 0;
 
 document.addEventListener("DOMContentLoaded", function(){
@@ -808,13 +818,12 @@ document.addEventListener("DOMContentLoaded", function(){
   function getRotation(sectionIdx) {
     return sectionRotations[sectionIdx] !== undefined ? sectionRotations[sectionIdx] : 0;
   }
-  function getRowOffset(sectionIdx, rowIdx) {
-    if (rowOffsets[sectionIdx] && rowOffsets[sectionIdx][rowIdx]) return rowOffsets[sectionIdx][rowIdx];
-    return { x: 0, y: 0 };
+  function getSectionPosition(sectionIdx) {
+    if (sectionPositions[sectionIdx]) return sectionPositions[sectionIdx];
+    return null; // null = use default flex layout
   }
-  function setRowOffset(sectionIdx, rowIdx, x, y) {
-    if (!rowOffsets[sectionIdx]) rowOffsets[sectionIdx] = {};
-    rowOffsets[sectionIdx][rowIdx] = { x: x, y: y };
+  function setSectionPosition(sectionIdx, x, y) {
+    sectionPositions[sectionIdx] = { x: x, y: y };
   }
 
   function updateSeatingUI() {
@@ -973,8 +982,8 @@ document.addEventListener("DOMContentLoaded", function(){
     renderStandardLayout(container, Math.min(l1, 6));
   }
 
-  // ============ FULL SCREEN VIEW with DRAGGABLE ROWS ============
-  var dragState = null; // { sectionIdx, rowIdx, startX, startY, origX, origY, el }
+  // ============ FULL SCREEN VIEW with DRAGGABLE SECTIONS ============
+  var dragState = null;
 
   function renderFullscreen() {
     var sections = parseInt($("totalLevel1").value) || 0;
@@ -992,10 +1001,34 @@ document.addEventListener("DOMContentLoaded", function(){
 
       var frame = document.createElement("div");
       frame.className = "fs-section-frame";
-      frame.style.transform = "rotate(" + getRotation(b) + "deg)";
+      frame.dataset.section = b;
+
+      // Rotation applied via transform
+      var rotation = getRotation(b);
+      var position = getSectionPosition(b);
+
+      var transformParts = [];
+      if (position) transformParts.push("translate(" + position.x + "px, " + position.y + "px)");
+      if (rotation) transformParts.push("rotate(" + rotation + "deg)");
+      frame.style.transform = transformParts.join(" ") || "none";
+
+      // If position is set, take it out of flex flow
+      if (position) {
+        frame.style.position = "absolute";
+        frame.style.left = "50%";
+        frame.style.top = "50%";
+        frame.style.marginLeft = "0";
+      } else {
+        frame.style.position = "relative";
+      }
 
       var inner = document.createElement("div");
       inner.className = "fs-section-inner";
+
+      var handle = document.createElement("div");
+      handle.className = "fs-drag-handle";
+      handle.textContent = "⋮⋮ DRAG";
+      inner.appendChild(handle);
 
       var title = document.createElement("div");
       title.className = "fs-section-title";
@@ -1009,7 +1042,6 @@ document.addEventListener("DOMContentLoaded", function(){
 
       var rowsArea = document.createElement("div");
       rowsArea.className = "fs-rows-area";
-      rowsArea.style.minHeight = (rowCount * 22) + "px";
 
       for (var r = 0; r < rowCount; r++) {
         var tier = map[r] || "cyan";
@@ -1018,13 +1050,6 @@ document.addEventListener("DOMContentLoaded", function(){
 
         var rowEl = document.createElement("div");
         rowEl.className = "fs-row";
-        rowEl.dataset.section = b;
-        rowEl.dataset.row = r;
-
-        var handle = document.createElement("div");
-        handle.className = "drag-handle";
-        handle.textContent = "⋮⋮";
-        rowEl.appendChild(handle);
 
         var rl = document.createElement("div");
         rl.className = "fs-row-label";
@@ -1046,21 +1071,15 @@ document.addEventListener("DOMContentLoaded", function(){
         tt.textContent = tierTagText(tier);
         rowEl.appendChild(tt);
 
-        // Apply saved offset
-        var off = getRowOffset(b, r);
-        rowEl.style.transform = "translate(" + off.x + "px, " + off.y + "px)";
-        rowEl.style.position = "relative";
-        rowEl.style.zIndex = 1;
-
-        // Attach drag handlers
-        attachRowDrag(rowEl, b, r);
-
         rowsArea.appendChild(rowEl);
       }
 
       inner.appendChild(rowsArea);
       frame.appendChild(inner);
       row.appendChild(frame);
+
+      // Attach section drag handler
+      attachSectionDrag(frame, b);
     }
 
     var controls = $("fsControls");
@@ -1080,9 +1099,15 @@ document.addEventListener("DOMContentLoaded", function(){
           var v = parseInt(inp.value);
           if (isNaN(v)) v = 0;
           sectionRotations[idx] = v;
-          // Only update the transform, don't re-render (to keep drag state)
-          var frames = document.querySelectorAll(".fs-section-frame");
-          if (frames[idx]) frames[idx].style.transform = "rotate(" + v + "deg)";
+          // Only update this section's transform (preserve other state)
+          var frame = document.querySelector('.fs-section-frame[data-section="' + idx + '"]');
+          if (frame) {
+            var position = getSectionPosition(idx);
+            var parts = [];
+            if (position) parts.push("translate(" + position.x + "px, " + position.y + "px)");
+            if (v) parts.push("rotate(" + v + "deg)");
+            frame.style.transform = parts.join(" ") || "none";
+          }
         });
         c.appendChild(inp);
         c.appendChild(document.createTextNode("°"));
@@ -1091,24 +1116,30 @@ document.addEventListener("DOMContentLoaded", function(){
     }
   }
 
-  // ===== Drag handlers =====
-  function attachRowDrag(el, sectionIdx, rowIdx) {
+  function attachSectionDrag(el, sectionIdx) {
     el.addEventListener("pointerdown", function(e) {
       // Ignore right/middle click
       if (e.button !== 0 && e.pointerType === "mouse") return;
+      // Ignore if user is clicking the rotation input inside the section (none here, but be safe)
+      if (e.target.tagName === "INPUT") return;
+
       e.preventDefault();
-      var off = getRowOffset(sectionIdx, rowIdx);
+
+      var rect = el.getBoundingClientRect();
+      var startX = e.clientX;
+      var startY = e.clientY;
+      var existing = getSectionPosition(sectionIdx);
+
       dragState = {
         sectionIdx: sectionIdx,
-        rowIdx: rowIdx,
-        startX: e.clientX,
-        startY: e.clientY,
-        origX: off.x,
-        origY: off.y,
+        startX: startX,
+        startY: startY,
+        origX: existing ? existing.x : 0,
+        origY: existing ? existing.y : 0,
         el: el
       };
+
       el.classList.add("dragging");
-      el.style.zIndex = 200;
       el.setPointerCapture(e.pointerId);
     });
 
@@ -1118,7 +1149,13 @@ document.addEventListener("DOMContentLoaded", function(){
       var dy = e.clientY - dragState.startY;
       var newX = dragState.origX + dx;
       var newY = dragState.origY + dy;
-      el.style.transform = "translate(" + newX + "px, " + newY + "px)";
+
+      // Apply live transform
+      var rotation = getRotation(dragState.sectionIdx);
+      var parts = [];
+      if (newX || newY) parts.push("translate(" + newX + "px, " + newY + "px)");
+      if (rotation) parts.push("rotate(" + rotation + "deg)");
+      el.style.transform = parts.join(" ") || "none";
     });
 
     el.addEventListener("pointerup", function(e) {
@@ -1127,19 +1164,32 @@ document.addEventListener("DOMContentLoaded", function(){
       var dy = e.clientY - dragState.startY;
       var newX = dragState.origX + dx;
       var newY = dragState.origY + dy;
-      setRowOffset(sectionIdx, rowIdx, newX, newY);
+
+      setSectionPosition(dragState.sectionIdx, newX, newY);
+
+      // Reapply transform (also converts from flex to absolute the first time)
+      var rotation = getRotation(dragState.sectionIdx);
+      el.style.position = "absolute";
+      el.style.left = "50%";
+      el.style.top = "50%";
+      var parts = [];
+      if (newX || newY) parts.push("translate(" + newX + "px, " + newY + "px)");
+      if (rotation) parts.push("rotate(" + rotation + "deg)");
+      el.style.transform = parts.join(" ") || "none";
+
       el.classList.remove("dragging");
-      el.style.zIndex = 1;
-      el.style.transform = "translate(" + newX + "px, " + newY + "px)";
       dragState = null;
     });
 
     el.addEventListener("pointercancel", function() {
       if (dragState && dragState.el === el) {
         el.classList.remove("dragging");
-        el.style.zIndex = 1;
-        var off = getRowOffset(sectionIdx, rowIdx);
-        el.style.transform = "translate(" + off.x + "px, " + off.y + "px)";
+        var existing = getSectionPosition(sectionIdx);
+        var rotation = getRotation(sectionIdx);
+        var parts = [];
+        if (existing && (existing.x || existing.y)) parts.push("translate(" + existing.x + "px, " + existing.y + "px)");
+        if (rotation) parts.push("rotate(" + rotation + "deg)");
+        el.style.transform = parts.join(" ") || "none";
         dragState = null;
       }
     });
@@ -1155,13 +1205,12 @@ document.addEventListener("DOMContentLoaded", function(){
     document.body.style.overflow = "";
     dragState = null;
   }
-  function resetRowPositions() {
-    if (!confirm("Reset all row positions to default?")) return;
-    rowOffsets = {};
+  function resetSectionPositions() {
+    if (!confirm("Reset all section positions to default?")) return;
+    sectionPositions = {};
     renderFullscreen();
   }
 
-  // ============ TICKET PREVIEW ============
   function updateTicketPreview() {
     $("prevEventName").textContent = $("eventName").value || "EVENT NAME";
     $("prevDateVenue").textContent = ($("startDate").value || "DATE") + " · " + ($("venueAddress").value || "VENUE");
@@ -1232,10 +1281,10 @@ document.addEventListener("DOMContentLoaded", function(){
   });
 
   $("clearAllOverrides").addEventListener("click", function() {
-    if (!confirm("Clear all per-section overrides (row counts, seat counts, row positions)?")) return;
+    if (!confirm("Clear all per-section overrides (row counts, seat counts, section positions)?")) return;
     sectionRowOverrides = {};
     sectionRowCounts = {};
-    rowOffsets = {};
+    sectionPositions = {};
     currentEditingSection = 0;
     rebuildSectionTabs();
     refreshSectionRowsInput();
@@ -1246,7 +1295,7 @@ document.addEventListener("DOMContentLoaded", function(){
 
   $("openFullscreen").addEventListener("click", openFullscreen);
   $("closeFullscreen").addEventListener("click", closeFullscreen);
-  $("resetRowPositions").addEventListener("click", resetRowPositions);
+  $("resetSectionPositions").addEventListener("click", resetSectionPositions);
 
   document.addEventListener("keydown", function(e) {
     if (e.key === "Escape" && $("fullscreenOverlay").classList.contains("open")) closeFullscreen();
