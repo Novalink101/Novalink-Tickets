@@ -1,7 +1,6 @@
 /* ==========================================================================
    NOVALINK — DYNAMIC ROUTING ENGINE
    ========================================================================== */
-
 (function (global) {
   'use strict';
 
@@ -95,40 +94,21 @@
       var remaining = Math.max(0, total - (short * 2));
       var topCount = Math.ceil(remaining / 2);
       var bottomCount = Math.floor(remaining / 2);
-      return {
-        shape: "rectangular",
-        top: topCount, bottom: bottomCount, left: short, right: short,
-        total: short * 2 + topCount + bottomCount,
-        requested: total,
-        capped: false
-      };
+      return { shape: "rectangular", top: topCount, bottom: bottomCount, left: short, right: short, total: short * 2 + topCount + bottomCount, requested: total, capped: false };
     }
     if (shape === "square") {
       var capped = Math.min(total, 8);
       var perSide = Math.floor(capped / 4);
       var extra = capped % 4;
-      return {
-        shape: "square",
-        top:    perSide + (extra > 0 ? 1 : 0),
-        right:  perSide + (extra > 1 ? 1 : 0),
-        bottom: perSide + (extra > 2 ? 1 : 0),
-        left:   perSide,
-        total: capped, requested: total, capped: total > 8
-      };
+      return { shape: "square", top: perSide + (extra > 0 ? 1 : 0), right: perSide + (extra > 1 ? 1 : 0), bottom: perSide + (extra > 2 ? 1 : 0), left: perSide, total: capped, requested: total, capped: total > 8 };
     }
     return { shape: "circular", count: Math.min(total, 10), requested: total, total: Math.min(total, 10), capped: total > 10 };
   }
 
-  /* -----------------------------------------------------------------------
-     NEW: SEAT CODE BUILDER
-     Combines block letter + row letter + seat number into a code like "AA 1"
-     ----------------------------------------------------------------------- */
   function buildSeatCode(block, row, seat) {
     var b = (block || "").toString().trim().toUpperCase();
     var r = (row || "").toString().trim().toUpperCase();
     var n = (seat || "").toString().trim();
-
-    // Standard format: BlockLetter + RowLetter + " " + Number
     var letters = (b + r).trim();
     if (!letters && !n) return "";
     if (!n) return letters;
@@ -136,10 +116,6 @@
     return letters + " " + n;
   }
 
-  /* -----------------------------------------------------------------------
-     NEW: TABLE CHAIR CODE BUILDER
-     Combines table number + chair number into "T1 C1"
-     ----------------------------------------------------------------------- */
   function buildTableChairCode(tableNum, chairNum) {
     var t = (tableNum || "").toString().trim();
     var c = (chairNum || "").toString().trim();
