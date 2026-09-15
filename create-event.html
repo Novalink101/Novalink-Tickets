@@ -260,7 +260,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  margin-bottom: 12px;
   color: #fff;
   gap: 12px;
   flex-wrap: wrap;
@@ -273,8 +273,8 @@ h1,h2,h3{line-height:1.15;font-weight:700}
   text-transform: uppercase;
 }
 .fs-header h2 span { color: #22d3ee; }
-.fs-actions { display: flex; gap: 8px; }
-.fs-btn-close {
+.fs-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.fs-btn {
   background: rgba(255,255,255,0.1);
   border: 1px solid rgba(255,255,255,0.2);
   color: #fff;
@@ -285,7 +285,16 @@ h1,h2,h3{line-height:1.15;font-weight:700}
   font-weight: 700;
   font-size: 12px;
 }
-.fs-btn-close:hover { background: #dc2626; border-color: #dc2626; }
+.fs-btn:hover { background: #22d3ee; color: #04161c; border-color: #22d3ee; }
+.fs-btn-close:hover { background: #dc2626; color: #fff; border-color: #dc2626; }
+.fs-hint {
+  text-align: center;
+  color: rgba(255,255,255,0.5);
+  font-size: 11px;
+  font-style: italic;
+  margin-bottom: 12px;
+  padding: 6px;
+}
 
 .fs-canvas {
   flex: 1;
@@ -323,7 +332,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
   width: 100%;
 }
 .fs-section-frame {
-  transition: transform 0.35s ease;
+  transition: transform 0.2s ease;
   transform-origin: center center;
   flex-shrink: 0;
 }
@@ -332,8 +341,9 @@ h1,h2,h3{line-height:1.15;font-weight:700}
   border: 2px solid #e4e9f0;
   border-radius: 12px;
   padding: 14px;
-  min-width: 280px;
+  min-width: 300px;
   box-shadow: 0 6px 18px rgba(10,15,20,0.06);
+  position: relative;
 }
 .fs-section-title {
   font-size: 12px;
@@ -355,12 +365,45 @@ h1,h2,h3{line-height:1.15;font-weight:700}
   border-radius: 5px;
   margin-bottom: 10px;
 }
+.fs-rows-area {
+  position: relative;
+  min-height: 60px;
+}
 .fs-row {
   display: grid;
   grid-template-columns: 46px 1fr 52px;
   align-items: center;
   gap: 5px;
   margin-bottom: 3px;
+  padding: 3px;
+  border-radius: 5px;
+  position: relative;
+  transition: background 0.15s;
+  cursor: grab;
+  user-select: none;
+}
+.fs-row:hover { background: rgba(34,211,238,0.08); }
+.fs-row.dragging {
+  cursor: grabbing;
+  background: rgba(34,211,238,0.18);
+  box-shadow: 0 6px 18px rgba(0,0,0,0.15);
+  z-index: 100;
+}
+.fs-row .drag-handle {
+  position: absolute;
+  left: -20px;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 14px;
+  height: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #b9c5d3;
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: -2px;
+  pointer-events: none;
 }
 .fs-row-label {
   font-size: 9px;
@@ -402,7 +445,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .fs-tier-tag.cyan { color: #0e7490; }
 
 .fs-controls {
-  margin-top: 16px;
+  margin-top: 12px;
   display: flex;
   gap: 10px;
   flex-wrap: wrap;
@@ -516,7 +559,6 @@ h1,h2,h3{line-height:1.15;font-weight:700}
               <button type="button" class="btn-mini" id="clearAllOverrides">Clear All</button>
             </div>
 
-            <!-- Section-level rows override -->
             <div class="section-rows-row">
               <label for="sectionRowsInput">Rows in this section</label>
               <span class="section-rows-badge" id="sectionRowsBadge">6 rows</span>
@@ -619,9 +661,11 @@ h1,h2,h3{line-height:1.15;font-weight:700}
   <div class="fs-header">
     <h2>Full Layout View · <span id="fsStageName">STAGE</span></h2>
     <div class="fs-actions">
-      <button type="button" class="fs-btn-close" id="closeFullscreen">✕ Close</button>
+      <button type="button" class="fs-btn" id="resetRowPositions">↺ Reset Row Positions</button>
+      <button type="button" class="fs-btn fs-btn-close" id="closeFullscreen">✕ Close</button>
     </div>
   </div>
+  <div class="fs-hint">💡 Drag any row to reposition it inside its section. Rotation is applied to the whole section.</div>
   <div class="fs-canvas" id="fsCanvas">
     <div class="fs-stage" id="fsStageLabel">STAGE</div>
     <div class="fs-sections-row" id="fsSectionsRow"></div>
@@ -639,6 +683,7 @@ function $(id){ return document.getElementById(id); }
 var sectionRowOverrides = {}; // { sectionIdx: { rowIdx: seatCount } }
 var sectionRowCounts = {};    // { sectionIdx: rowCount }
 var sectionRotations = {};    // { sectionIdx: degrees }
+var rowOffsets = {};          // { sectionIdx: { rowIdx: {x, y} } }
 var currentEditingSection = 0;
 
 document.addEventListener("DOMContentLoaded", function(){
@@ -683,7 +728,6 @@ document.addEventListener("DOMContentLoaded", function(){
     else s.textContent = "Tier sum: " + sum + " rows (applied per section, extras ignored).";
   }
 
-  // ===== Section row count helpers =====
   function getRowCount(sectionIdx) {
     if (sectionRowCounts[sectionIdx] !== undefined) return sectionRowCounts[sectionIdx];
     return parseInt($("totalLevel2").value) || 6;
@@ -693,7 +737,6 @@ document.addEventListener("DOMContentLoaded", function(){
     sectionRowCounts[sectionIdx] = v;
   }
 
-  // ===== Section tabs =====
   function rebuildSectionTabs() {
     var sections = parseInt($("totalLevel1").value) || 1;
     if (currentEditingSection >= sections) currentEditingSection = 0;
@@ -716,14 +759,12 @@ document.addEventListener("DOMContentLoaded", function(){
     }
   }
 
-  // ===== Section rows input =====
   function refreshSectionRowsInput() {
     var v = getRowCount(currentEditingSection);
     $("sectionRowsInput").value = v;
     $("sectionRowsBadge").textContent = v + " rows";
   }
 
-  // ===== Row overrides grid for current section =====
   function rebuildRowOverrides() {
     var rowCount = getRowCount(currentEditingSection);
     var baseSeats = parseInt($("totalLevel3").value) || 10;
@@ -766,6 +807,14 @@ document.addEventListener("DOMContentLoaded", function(){
   }
   function getRotation(sectionIdx) {
     return sectionRotations[sectionIdx] !== undefined ? sectionRotations[sectionIdx] : 0;
+  }
+  function getRowOffset(sectionIdx, rowIdx) {
+    if (rowOffsets[sectionIdx] && rowOffsets[sectionIdx][rowIdx]) return rowOffsets[sectionIdx][rowIdx];
+    return { x: 0, y: 0 };
+  }
+  function setRowOffset(sectionIdx, rowIdx, x, y) {
+    if (!rowOffsets[sectionIdx]) rowOffsets[sectionIdx] = {};
+    rowOffsets[sectionIdx][rowIdx] = { x: x, y: y };
   }
 
   function updateSeatingUI() {
@@ -816,49 +865,37 @@ document.addEventListener("DOMContentLoaded", function(){
     return legend;
   }
 
-  // ============ STANDARD LAYOUT ============
   function renderStandardLayout(container, sections) {
     var stageName = ($("stageName").value || "STAGE").trim().toUpperCase();
-
     for (var b = 0; b < sections; b++) {
       var rowCount = getRowCount(b);
       var map = buildRowTierMap(rowCount);
-
       var blockEl = document.createElement("div");
       blockEl.className = "block";
-
       var bl = document.createElement("div");
       bl.className = "block-label";
       bl.textContent = "Section " + blockLabel(b) + " · " + rowCount + " rows";
       blockEl.appendChild(bl);
-
       var stageLine = document.createElement("div");
       stageLine.className = "stage-line";
       stageLine.textContent = stageName;
       blockEl.appendChild(stageLine);
-
       var rowsStack = document.createElement("div");
       rowsStack.className = "rows-stack";
-
       for (var r = 0; r < rowCount; r++) {
         var tier = map[r] || "cyan";
         var seatCount = getSeatsForRow(b, r);
         seatCount = Math.max(4, Math.min(90, seatCount));
-
         var rowEl = document.createElement("div");
         rowEl.className = "horizontal-row";
-
         var rl = document.createElement("div");
         rl.className = "row-label";
         rl.textContent = "Row " + rowLabel(r);
         rowEl.appendChild(rl);
-
         var seatsWrap = document.createElement("div");
         seatsWrap.className = "row-seats";
-
         var seatsInner = document.createElement("div");
         seatsInner.className = "row-seats-inner";
-
         for (var s = 0; s < seatCount; s++) {
           var seat = document.createElement("div");
           seat.className = "row-seat " + tier;
@@ -868,12 +905,10 @@ document.addEventListener("DOMContentLoaded", function(){
         }
         seatsWrap.appendChild(seatsInner);
         rowEl.appendChild(seatsWrap);
-
         var tt = document.createElement("div");
         tt.className = "row-tier-tag " + tier;
         tt.textContent = tierTagText(tier);
         rowEl.appendChild(tt);
-
         rowsStack.appendChild(rowEl);
       }
       blockEl.appendChild(rowsStack);
@@ -882,7 +917,6 @@ document.addEventListener("DOMContentLoaded", function(){
     container.appendChild(buildLegend());
   }
 
-  // ============ TABLES & CHAIRS (UNTOUCHED) ============
   function renderTablesLayout(container, l1, l3) {
     var tier = $("tierColor").value;
     var wrapper = document.createElement("div"); wrapper.className = "tables-wrapper";
@@ -926,13 +960,11 @@ document.addEventListener("DOMContentLoaded", function(){
     chair.style.left = (cx - 7) + "px"; chair.style.top = (cy - 7) + "px"; parent.appendChild(chair);
   }
 
-  // ============ MAIN ROUTER ============
   function renderSeatingPlan() {
     var container = $("seatingPlanPreview");
     container.innerHTML = "";
     var l1 = parseInt($("totalLevel1").value) || 0;
     var l3 = parseInt($("totalLevel3").value) || 0;
-
     if (l1 === 0 || l3 === 0) {
       container.innerHTML = '<div class="seating-plan-title">Enter seating details to generate layout</div>';
       return;
@@ -941,7 +973,9 @@ document.addEventListener("DOMContentLoaded", function(){
     renderStandardLayout(container, Math.min(l1, 6));
   }
 
-  // ============ FULL SCREEN VIEW ============
+  // ============ FULL SCREEN VIEW with DRAGGABLE ROWS ============
+  var dragState = null; // { sectionIdx, rowIdx, startX, startY, origX, origY, el }
+
   function renderFullscreen() {
     var sections = parseInt($("totalLevel1").value) || 0;
     var stageName = ($("stageName").value || "STAGE").trim().toUpperCase();
@@ -973,6 +1007,10 @@ document.addEventListener("DOMContentLoaded", function(){
       stageLbl.textContent = stageName;
       inner.appendChild(stageLbl);
 
+      var rowsArea = document.createElement("div");
+      rowsArea.className = "fs-rows-area";
+      rowsArea.style.minHeight = (rowCount * 22) + "px";
+
       for (var r = 0; r < rowCount; r++) {
         var tier = map[r] || "cyan";
         var seatCount = getSeatsForRow(b, r);
@@ -980,6 +1018,13 @@ document.addEventListener("DOMContentLoaded", function(){
 
         var rowEl = document.createElement("div");
         rowEl.className = "fs-row";
+        rowEl.dataset.section = b;
+        rowEl.dataset.row = r;
+
+        var handle = document.createElement("div");
+        handle.className = "drag-handle";
+        handle.textContent = "⋮⋮";
+        rowEl.appendChild(handle);
 
         var rl = document.createElement("div");
         rl.className = "fs-row-label";
@@ -1001,8 +1046,19 @@ document.addEventListener("DOMContentLoaded", function(){
         tt.textContent = tierTagText(tier);
         rowEl.appendChild(tt);
 
-        inner.appendChild(rowEl);
+        // Apply saved offset
+        var off = getRowOffset(b, r);
+        rowEl.style.transform = "translate(" + off.x + "px, " + off.y + "px)";
+        rowEl.style.position = "relative";
+        rowEl.style.zIndex = 1;
+
+        // Attach drag handlers
+        attachRowDrag(rowEl, b, r);
+
+        rowsArea.appendChild(rowEl);
       }
+
+      inner.appendChild(rowsArea);
       frame.appendChild(inner);
       row.appendChild(frame);
     }
@@ -1024,13 +1080,69 @@ document.addEventListener("DOMContentLoaded", function(){
           var v = parseInt(inp.value);
           if (isNaN(v)) v = 0;
           sectionRotations[idx] = v;
-          renderFullscreen();
+          // Only update the transform, don't re-render (to keep drag state)
+          var frames = document.querySelectorAll(".fs-section-frame");
+          if (frames[idx]) frames[idx].style.transform = "rotate(" + v + "deg)";
         });
         c.appendChild(inp);
         c.appendChild(document.createTextNode("°"));
         controls.appendChild(c);
       })(b2);
     }
+  }
+
+  // ===== Drag handlers =====
+  function attachRowDrag(el, sectionIdx, rowIdx) {
+    el.addEventListener("pointerdown", function(e) {
+      // Ignore right/middle click
+      if (e.button !== 0 && e.pointerType === "mouse") return;
+      e.preventDefault();
+      var off = getRowOffset(sectionIdx, rowIdx);
+      dragState = {
+        sectionIdx: sectionIdx,
+        rowIdx: rowIdx,
+        startX: e.clientX,
+        startY: e.clientY,
+        origX: off.x,
+        origY: off.y,
+        el: el
+      };
+      el.classList.add("dragging");
+      el.style.zIndex = 200;
+      el.setPointerCapture(e.pointerId);
+    });
+
+    el.addEventListener("pointermove", function(e) {
+      if (!dragState || dragState.el !== el) return;
+      var dx = e.clientX - dragState.startX;
+      var dy = e.clientY - dragState.startY;
+      var newX = dragState.origX + dx;
+      var newY = dragState.origY + dy;
+      el.style.transform = "translate(" + newX + "px, " + newY + "px)";
+    });
+
+    el.addEventListener("pointerup", function(e) {
+      if (!dragState || dragState.el !== el) return;
+      var dx = e.clientX - dragState.startX;
+      var dy = e.clientY - dragState.startY;
+      var newX = dragState.origX + dx;
+      var newY = dragState.origY + dy;
+      setRowOffset(sectionIdx, rowIdx, newX, newY);
+      el.classList.remove("dragging");
+      el.style.zIndex = 1;
+      el.style.transform = "translate(" + newX + "px, " + newY + "px)";
+      dragState = null;
+    });
+
+    el.addEventListener("pointercancel", function() {
+      if (dragState && dragState.el === el) {
+        el.classList.remove("dragging");
+        el.style.zIndex = 1;
+        var off = getRowOffset(sectionIdx, rowIdx);
+        el.style.transform = "translate(" + off.x + "px, " + off.y + "px)";
+        dragState = null;
+      }
+    });
   }
 
   function openFullscreen() {
@@ -1041,6 +1153,12 @@ document.addEventListener("DOMContentLoaded", function(){
   function closeFullscreen() {
     $("fullscreenOverlay").classList.remove("open");
     document.body.style.overflow = "";
+    dragState = null;
+  }
+  function resetRowPositions() {
+    if (!confirm("Reset all row positions to default?")) return;
+    rowOffsets = {};
+    renderFullscreen();
   }
 
   // ============ TICKET PREVIEW ============
@@ -1075,12 +1193,16 @@ document.addEventListener("DOMContentLoaded", function(){
   $("tableShape").addEventListener("change", function() { updateTableShapeHint(); renderSeatingPlan(); });
   $("stageName").addEventListener("input", function() {
     renderSeatingPlan();
-    if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+    if ($("fullscreenOverlay").classList.contains("open")) {
+      var stageName = ($("stageName").value || "STAGE").trim().toUpperCase();
+      $("fsStageName").textContent = stageName;
+      $("fsStageLabel").textContent = stageName;
+      document.querySelectorAll(".fs-section-stage").forEach(function(el) { el.textContent = stageName; });
+    }
   });
 
   $("totalLevel1").addEventListener("input", function() { rebuildSectionTabs(); refreshSectionRowsInput(); rebuildRowOverrides(); calculateCapacity(); renderSeatingPlan(); });
 
-  // Global default rows changed → reset all per-section row overrides that didn't exist and refresh input
   $("totalLevel2").addEventListener("change", function() {
     var v = parseInt(this.value) || 6;
     v = Math.max(1, Math.min(52, v));
@@ -1098,7 +1220,6 @@ document.addEventListener("DOMContentLoaded", function(){
     calculateCapacity(); renderSeatingPlan();
   });
 
-  // Section rows input change → set row count for current section
   $("sectionRowsInput").addEventListener("input", function() {
     var v = parseInt(this.value);
     if (isNaN(v)) return;
@@ -1111,9 +1232,10 @@ document.addEventListener("DOMContentLoaded", function(){
   });
 
   $("clearAllOverrides").addEventListener("click", function() {
-    if (!confirm("Clear all per-section overrides (row counts and seat counts)?")) return;
+    if (!confirm("Clear all per-section overrides (row counts, seat counts, row positions)?")) return;
     sectionRowOverrides = {};
     sectionRowCounts = {};
+    rowOffsets = {};
     currentEditingSection = 0;
     rebuildSectionTabs();
     refreshSectionRowsInput();
@@ -1124,12 +1246,12 @@ document.addEventListener("DOMContentLoaded", function(){
 
   $("openFullscreen").addEventListener("click", openFullscreen);
   $("closeFullscreen").addEventListener("click", closeFullscreen);
+  $("resetRowPositions").addEventListener("click", resetRowPositions);
 
   document.addEventListener("keydown", function(e) {
     if (e.key === "Escape" && $("fullscreenOverlay").classList.contains("open")) closeFullscreen();
   });
 
-  // INIT
   updateSeatingUI();
   rebuildSectionTabs();
   refreshSectionRowsInput();
