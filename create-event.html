@@ -154,7 +154,6 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .layout-legend .lg-swatch.gold { background: #ecc94b; }
 .layout-legend .lg-swatch.silver { background: #cbd5e1; }
 .layout-legend .lg-swatch.cyan { background: #22d3ee; }
-.svg-venue { display: block; width: 100%; height: auto; background: var(--bg-2); border: 2px solid var(--border-2); border-radius: 12px; }
 </style>
 </head>
 <body>
@@ -173,7 +172,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
     <div class="form-card">
       <div class="form-header">
         <h1>Event Studio</h1>
-        <p>Design your venue layout and generate a live security pass.</p>
+        <p>Design your seating layout and generate a live security pass.</p>
       </div>
 
       <form id="createEventForm">
@@ -193,28 +192,13 @@ h1,h2,h3{line-height:1.15;font-weight:700}
         <div class="form-group"><label for="eventName">Event Name</label><input type="text" id="eventName" placeholder="e.g., Neon Nights Live" required /></div>
         <div class="form-group"><label for="venueAddress">Venue Name & Address</label><input type="text" id="venueAddress" placeholder="e.g., Grand Amphitheatre, 123 Main Rd" required /></div>
 
-        <div class="section-divider"><span>Structural Layout</span></div>
-
+        <div class="section-divider"><span>Layout Configuration</span></div>
         <div class="form-group">
-          <label for="venueType">Venue Layout Profile</label>
+          <label for="venueType">Venue Type</label>
           <select id="venueType" required>
-            <option value="one_stand">1-Stand (Linear)</option>
-            <option value="horseshoe" selected>Horseshoe Stadium</option>
-            <option value="octagonal">Octagonal Arena</option>
-            <option value="theater">Theater / Auditorium (Fan)</option>
+            <option value="event" selected>Event (Standard Layout)</option>
             <option value="hall">Hall (Tables &amp; Chairs)</option>
           </select>
-        </div>
-
-        <div class="form-group" id="standAlignmentGroup" style="display:none;">
-          <label for="standAlignment">Stand Alignment</label>
-          <select id="standAlignment">
-            <option value="north" selected>North — Stand faces down toward stage</option>
-            <option value="south">South — Stand faces up toward stage</option>
-            <option value="east">East — Stand faces left toward stage</option>
-            <option value="west">West — Stand faces right toward stage</option>
-          </select>
-          <p class="form-hint">Directional orientation of the seating bank relative to the performance area.</p>
         </div>
 
         <div id="hallToggleGroup" class="toggle-row" style="display:none;">
@@ -331,51 +315,24 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 'use strict';
 
 function $(id){ return document.getElementById(id); }
-var currentConfig = { label1: "Section", label2: "Row", label3: "Seat", mode: "seat_types" };
-var SVGNS = "http://www.w3.org/2000/svg";
-
-function svgEl(tag, attrs) { var el = document.createElementNS(SVGNS, tag); for (var k in attrs) el.setAttribute(k, attrs[k]); return el; }
-function tierColor(t) { return t === "black" ? "#1a202c" : t === "gold" ? "#ecc94b" : t === "silver" ? "#cbd5e1" : "#22d3ee"; }
-function tierTagText(t) { return t === "black" ? "Elite" : t === "gold" ? "Gold" : t === "silver" ? "Silver" : "Cyan"; }
-function rowLabel(index) { var n = index, label = ""; do { label = String.fromCharCode(65 + (n % 26)) + label; n = Math.floor(n / 26) - 1; } while (n >= 0); return label; }
-
-// === PER-VENUE LABEL MATRIX ===
-var VENUE_LABELS = {
-  one_stand: { label1: "Section", label2: "Row", label3: "Seat", mode: "seat_types" },
-  horseshoe: { label1: "Stand",   label2: "Row", label3: "Seat", mode: "seat_types" },
-  octagonal: { label1: "Section", label2: "Row", label3: "Seat", mode: "seat_types" },
-  theater:   { label1: "Zone",    label2: "Row", label3: "Seat", mode: "seat_types" },
-  hall:      { label1: "Section", label2: "Row", label3: "Seat", mode: "seat_types" }
-};
 
 document.addEventListener("DOMContentLoaded", function(){
   if(window.lucide) lucide.createIcons();
   var liveRef = "NL-" + Math.random().toString(36).substring(2, 8).toUpperCase();
   $("prevRef").textContent = "Ref: " + liveRef;
 
-  function resolveConfig() {
-    var venue = $("venueType").value;
-    var isTablesMode = venue === "hall" && $("hallLayoutToggle").checked;
-    if (isTablesMode) {
-      currentConfig = { label1: "Table", label2: null, label3: "Chair", mode: "tables_chairs" };
-    } else {
-      currentConfig = Object.assign({}, VENUE_LABELS[venue] || VENUE_LABELS.hall);
-    }
-  }
-
+  function isTablesMode() { return $("venueType").value === "hall" && $("hallLayoutToggle").checked; }
   function buildCurrentSeatCode() {
-    if (currentConfig.mode === "tables_chairs") return NovalinkRoutingEngine.buildTableChairCode($("tableNum").value, $("chairNum").value);
+    if (isTablesMode()) return NovalinkRoutingEngine.buildTableChairCode($("tableNum").value, $("chairNum").value);
     return NovalinkRoutingEngine.buildSeatCode($("seatBlock").value, $("seatRow").value, $("seatNum").value);
   }
-
   function refreshSeatPreview() {
     var code = buildCurrentSeatCode();
     var display = $("seatPreviewDisplay");
     if (code) { display.textContent = code; display.classList.remove("empty"); }
-    else { display.textContent = currentConfig.mode === "tables_chairs" ? "Enter table and chair numbers" : "Enter block, row and seat to preview"; display.classList.add("empty"); }
+    else { display.textContent = isTablesMode() ? "Enter table and chair numbers" : "Enter block, row and seat to preview"; display.classList.add("empty"); }
     updateTicketPreview();
   }
-
   function buildRowTierMap(totalRows) {
     var e = parseInt($("tierRowsElite").value)||0, g = parseInt($("tierRowsGold").value)||0, s = parseInt($("tierRowsSilver").value)||0, c = parseInt($("tierRowsCyan").value)||0;
     var map = [];
@@ -386,7 +343,6 @@ document.addEventListener("DOMContentLoaded", function(){
     while (map.length < totalRows) map.push("cyan");
     return map;
   }
-
   function updateTierDistributionSummary() {
     var totalRows = parseInt($("totalLevel2").value) || 0;
     var sum = (parseInt($("tierRowsElite").value)||0) + (parseInt($("tierRowsGold").value)||0) + (parseInt($("tierRowsSilver").value)||0) + (parseInt($("tierRowsCyan").value)||0);
@@ -395,29 +351,16 @@ document.addEventListener("DOMContentLoaded", function(){
     else if (sum < totalRows) { s.className = "tier-dist-summary"; s.textContent = "You've assigned " + sum + " rows. Remaining " + (totalRows - sum) + " will default to Cyan."; }
     else { s.className = "tier-dist-summary error"; s.textContent = "⚠ You've assigned " + sum + " rows but only " + totalRows + " exist. Extra will be ignored."; }
   }
-
   function updateSeatingUI() {
-    resolveConfig();
-    var venue = $("venueType").value;
-    var isTablesMode = currentConfig.mode === "tables_chairs";
-
-    // Show/hide Stand Alignment (only for 1-Stand)
-    $("standAlignmentGroup").style.display = (venue === "one_stand") ? "block" : "none";
-
-    // Show/hide Hall tables toggle
-    if (venue === "hall") { $("hallToggleGroup").style.display = "flex"; }
+    var tablesMode = isTablesMode();
+    if ($("venueType").value === "hall") { $("hallToggleGroup").style.display = "flex"; }
     else { $("hallToggleGroup").style.display = "none"; $("hallLayoutToggle").checked = false; }
-
-    // Show/hide Table Shape (only in tables mode)
-    if (isTablesMode) { $("tableShapeGroup").style.display = "block"; updateTableShapeHint(); }
+    if (tablesMode) { $("tableShapeGroup").style.display = "block"; updateTableShapeHint(); }
     else { $("tableShapeGroup").style.display = "none"; }
-
-    // Row tier only makes sense for seat layouts
-    if (isTablesMode) { $("rowTierGroup").style.display = "none"; }
+    if (tablesMode) { $("rowTierGroup").style.display = "none"; }
     else { $("rowTierGroup").style.display = "block"; updateTierDistributionSummary(); }
 
-    // Seat builder switcher
-    if (isTablesMode) {
+    if (tablesMode) {
       $("seatBuilderStandard").style.display = "none"; $("seatBuilderTables").style.display = "flex";
       $("seatLabel").textContent = "Table & Chair (Preview)";
       $("seatHint").innerHTML = 'Format: <strong>T</strong>[table] + <strong>C</strong>[chair]. E.g., <code>T1 C4</code>.';
@@ -426,19 +369,14 @@ document.addEventListener("DOMContentLoaded", function(){
       $("seatLabel").textContent = "Seat Identifier (Preview)";
       $("seatHint").innerHTML = 'Format: <strong>Block</strong> + <strong>Row</strong> + space + <strong>Seat</strong>. E.g., <code>AA 1</code>.';
     }
-
-    // Dynamic labels
-    $("label-level1").textContent = currentConfig.label1 || "Section";
-    $("label-level3").textContent = currentConfig.label3 || "Seat";
-    if (currentConfig.label2 === null) { $("group-level2").style.display = "none"; }
-    else { $("group-level2").style.display = "block"; $("label-level2").textContent = currentConfig.label2; }
-
     calculateCapacity();
     refreshSeatPreview();
   }
-
   function updateTableShapeHint() { var meta = NovalinkRoutingEngine.resolveTableShape($("tableShape").value); $("tableShapeHint").textContent = meta.description; }
-  function calculateCapacity() { $("totalCapacity").value = NovalinkRoutingEngine.calculateEventCapacity(currentConfig, $("totalLevel1").value, $("totalLevel2").value, $("totalLevel3").value); }
+  function calculateCapacity() { $("totalCapacity").value = NovalinkRoutingEngine.calculateEventCapacity({ mode: isTablesMode() ? "tables_chairs" : "seat_types" }, $("totalLevel1").value, $("totalLevel2").value, $("totalLevel3").value); }
+
+  function rowLabel(index) { var n = index, label = ""; do { label = String.fromCharCode(65 + (n % 26)) + label; n = Math.floor(n / 26) - 1; } while (n >= 0); return label; }
+  function tierTagText(t) { return t === "black" ? "Elite" : t === "gold" ? "Gold" : t === "silver" ? "Silver" : "Cyan"; }
 
   function buildLegend() {
     var legend = document.createElement("div"); legend.className = "layout-legend";
@@ -448,231 +386,12 @@ document.addEventListener("DOMContentLoaded", function(){
     });
     return legend;
   }
-  function makeTitle(t, sub) {
-    var frag = document.createDocumentFragment();
-    var title = document.createElement("div"); title.className = "seating-plan-title"; title.textContent = t; frag.appendChild(title);
-    if (sub) { var s = document.createElement("div"); s.className = "layout-subtitle"; s.textContent = sub; frag.appendChild(s); }
-    return frag;
-  }
-  function drawSeat(svg, x, y, tier, size) {
-    size = size || 6;
-    svg.appendChild(svgEl("rect", { x: (x - size/2).toFixed(2), y: (y - size/2).toFixed(2), width: size, height: size, fill: tierColor(tier), rx: "1" }));
-  }
 
-  // ============================================================
-  // 1-STAND (LINEAR) — Directional alignment
-  // ============================================================
-  function renderOneStand(container, l1, l2, l3) {
-    var alignment = $("standAlignment").value;
-    var rows = Math.min(l2, 15);
-    var seats = Math.min(l3, 22);
-    var map = buildRowTierMap(rows);
-    var VW = 700, VH = 520;
-    var svg = svgEl("svg", { viewBox: "0 0 " + VW + " " + VH, class: "svg-venue" });
-
-    var stageW = 220, stageH = 46;
-    var standW, standH, standX, standY;
-    var stageX, stageY;
-    var pad = 40;
-
-    if (alignment === "north") {
-      standW = 500; standH = 320;
-      standX = (VW - standW) / 2; standY = pad;
-      stageX = (VW - stageW) / 2; stageY = VH - stageH - pad;
-    } else if (alignment === "south") {
-      standW = 500; standH = 320;
-      standX = (VW - standW) / 2; standY = VH - standH - pad;
-      stageX = (VW - stageW) / 2; stageY = pad;
-    } else if (alignment === "east") {
-      standW = 320; standH = 400;
-      standX = VW - standW - pad; standY = (VH - standH) / 2;
-      stageX = pad; stageY = (VH - stageH) / 2;
-    } else { // west
-      standW = 320; standH = 400;
-      standX = pad; standY = (VH - standH) / 2;
-      stageX = VW - stageW - pad; stageY = (VH - stageH) / 2;
-    }
-
-    // Draw stand bounding box
-    svg.appendChild(svgEl("rect", { x: standX, y: standY, width: standW, height: standH, fill: "none", stroke: "#cbd5e1", "stroke-dasharray": "4 3", rx: "6" }));
-
-    // Draw seats — Row A closest to stage
-    for (var r = 0; r < rows; r++) {
-      var tier = map[r] || "cyan";
-      for (var s = 0; s < seats; s++) {
-        var x, y;
-        if (alignment === "north") {
-          // Stage at bottom, Row A nearest bottom of stand
-          var rowY = standY + standH - ((r + 1) * (standH / (rows + 1)));
-          var seatX = standX + ((s + 1) * (standW / (seats + 1)));
-          x = seatX; y = rowY;
-        } else if (alignment === "south") {
-          var rowY = standY + ((r + 1) * (standH / (rows + 1)));
-          var seatX = standX + ((s + 1) * (standW / (seats + 1)));
-          x = seatX; y = rowY;
-        } else if (alignment === "east") {
-          var rowX = standX + ((r + 1) * (standW / (rows + 1)));
-          var seatY = standY + ((s + 1) * (standH / (seats + 1)));
-          x = rowX; y = seatY;
-        } else { // west
-          var rowX = standX + standW - ((r + 1) * (standW / (rows + 1)));
-          var seatY = standY + ((s + 1) * (standH / (seats + 1)));
-          x = rowX; y = seatY;
-        }
-        drawSeat(svg, x, y, tier, 6);
-      }
-    }
-
-    // Draw stage
-    svg.appendChild(svgEl("rect", { x: stageX, y: stageY, width: stageW, height: stageH, fill: "#1e2f4d", rx: "4" }));
-    var stg = svgEl("text", { x: stageX + stageW/2, y: stageY + stageH/2 + 4, "text-anchor": "middle", fill: "#fff", "font-weight": "800", "font-size": "12", "letter-spacing": "4" });
-    stg.textContent = "STAGE";
-    svg.appendChild(stg);
-
-    var alignLabel = alignment.charAt(0).toUpperCase() + alignment.slice(1);
-    container.appendChild(makeTitle("1-Stand Layout — " + alignLabel + " Aligned", "Single rectangular seating bank · Row A nearest the stage"));
-    container.appendChild(svg);
-    container.appendChild(buildLegend());
-  }
-
-  // ============================================================
-  // HORSESHOE — U-shape with 3 stands around the stage
-  // ============================================================
-  function renderHorseshoe(container, l1, l2, l3) {
-    var rows = Math.min(l2, 8);
-    var seatsHint = Math.min(l3, 20);
-    var map = buildRowTierMap(rows);
-    var VW = 700, VH = 520;
-    var cx = VW/2, cy = VH/2 + 10;
-    var svg = svgEl("svg", { viewBox: "0 0 " + VW + " " + VH, class: "svg-venue" });
-
-    // Central stage
-    svg.appendChild(svgEl("ellipse", { cx: cx, cy: cy, rx: 90, ry: 55, fill: "#1e2f4d" }));
-    var stg = svgEl("text", { x: cx, y: cy + 4, "text-anchor": "middle", fill: "#fff", "font-weight": "800", "font-size": "11", "letter-spacing": "3" });
-    stg.textContent = "STAGE";
-    svg.appendChild(stg);
-
-    // 240° arc — open at top
-    var startAngle = -Math.PI / 6;
-    var endAngle = Math.PI * 7 / 6;
-    for (var r = 0; r < rows; r++) {
-      var tier = map[r] || "cyan";
-      var radius = 130 + r * 32;
-      var seatCount = Math.min(seatsHint * 2, Math.floor(radius * 0.28));
-      for (var s = 0; s < seatCount; s++) {
-        var t = seatCount === 1 ? 0.5 : s / (seatCount - 1);
-        var angle = startAngle + (endAngle - startAngle) * t;
-        drawSeat(svg, cx + radius * Math.cos(angle), cy + radius * Math.sin(angle), tier, 5.5);
-      }
-    }
-
-    container.appendChild(makeTitle("Horseshoe Stadium", "U-shape seating flanking three sides · Open end faces the stage entrance"));
-    container.appendChild(svg);
-    container.appendChild(buildLegend());
-  }
-
-  // ============================================================
-  // OCTAGONAL ARENA — 8-sided boundary around central field
-  // ============================================================
-  function renderOctagonal(container, l1, l2, l3) {
-    var rows = Math.min(l2, 6);
-    var seatsHint = Math.min(l3, 10);
-    var map = buildRowTierMap(rows);
-    var VW = 700, VH = 520;
-    var cx = VW/2, cy = VH/2;
-    var svg = svgEl("svg", { viewBox: "0 0 " + VW + " " + VH, class: "svg-venue" });
-
-    // Octagonal field
-    var fieldR = 120;
-    var pts = [];
-    for (var i = 0; i < 8; i++) {
-      var a = (Math.PI / 4) * i + Math.PI / 8;
-      pts.push((cx + fieldR * Math.cos(a)).toFixed(1) + "," + (cy + fieldR * Math.sin(a)).toFixed(1));
-    }
-    svg.appendChild(svgEl("polygon", { points: pts.join(" "), fill: "#2d5c30", stroke: "#1e4620", "stroke-width": "2" }));
-    var f = svgEl("text", { x: cx, y: cy + 4, "text-anchor": "middle", fill: "#fff", "font-weight": "800", "font-size": "12", "letter-spacing": "3" });
-    f.textContent = "FIELD";
-    svg.appendChild(f);
-
-    // 8 stands
-    var positions = [
-      { a: -Math.PI / 2 }, { a: -Math.PI / 4 }, { a: 0 }, { a: Math.PI / 4 },
-      { a: Math.PI / 2 }, { a: 3 * Math.PI / 4 }, { a: Math.PI }, { a: 5 * Math.PI / 4 }
-    ];
-    positions.forEach(function(p) {
-      for (var r = 0; r < rows; r++) {
-        var tier = map[r] || "cyan";
-        var radius = 145 + r * 28;
-        for (var s = 0; s < seatsHint; s++) {
-          var t = (s - (seatsHint - 1) / 2) * 15;
-          var x = cx + radius * Math.cos(p.a) - t * Math.sin(p.a);
-          var y = cy + radius * Math.sin(p.a) + t * Math.cos(p.a);
-          drawSeat(svg, x, y, tier, 5);
-        }
-      }
-    });
-
-    container.appendChild(makeTitle("Octagonal Arena", "Symmetric 8-sided boundary · 8 sections surround a central field"));
-    container.appendChild(svg);
-    container.appendChild(buildLegend());
-  }
-
-  // ============================================================
-  // THEATER / AUDITORIUM — Radial fan facing the stage
-  // ============================================================
-  function renderTheater(container, l1, l2, l3) {
-    var rows = Math.min(l2, 10);
-    var seatsHint = Math.min(l3, 30);
-    var map = buildRowTierMap(rows);
-    var VW = 700, VH = 520;
-    var svg = svgEl("svg", { viewBox: "0 0 " + VW + " " + VH, class: "svg-venue" });
-
-    // Stage
-    svg.appendChild(svgEl("rect", { x: 250, y: 20, width: 200, height: 44, fill: "#1e2f4d", rx: "4" }));
-    var stg = svgEl("text", { x: 350, y: 48, "text-anchor": "middle", fill: "#fff", "font-weight": "800", "font-size": "12", "letter-spacing": "4" });
-    stg.textContent = "STAGE";
-    svg.appendChild(stg);
-
-    // Radial arcs from a focal point below the stage
-    var acx = 350, acy = 74;
-    var startAngle = Math.PI * 0.13;
-    var endAngle = Math.PI * 0.87;
-    for (var r = 0; r < rows; r++) {
-      var tier = map[r] || "cyan";
-      var radius = 150 + r * 32;
-      var seatCount = Math.min(seatsHint, Math.floor(radius * 0.25));
-      for (var s = 0; s < seatCount; s++) {
-        var t = seatCount === 1 ? 0.5 : s / (seatCount - 1);
-        var angle = startAngle + (endAngle - startAngle) * t;
-        drawSeat(svg, acx + radius * Math.cos(angle), acy + radius * Math.sin(angle), tier, 6);
-      }
-    }
-
-    container.appendChild(makeTitle("Theater / Auditorium — Fan", "Concentric widening arcs radiating outward from the stage"));
-    container.appendChild(svg);
-    container.appendChild(buildLegend());
-  }
-
-  // ============================================================
-  // HALL — Straight row blocks (seat mode)
-  // ============================================================
-  function renderHall(container, l1, l2, l3) {
-    var wrapper = document.createElement("div"); wrapper.className = "blocks-wrapper";
-    var blocks = Math.min(l1, 6); var rows = Math.min(l2, 20); var seats = Math.min(l3, 16);
-    var map = buildRowTierMap(rows);
-    for (var b = 0; b < blocks; b++) {
-      wrapper.appendChild(buildRowBlock({ rows: rows, seats: seats, rowTierMap: map, label: (currentConfig.label1 || "Section") + " " + String.fromCharCode(65 + b), stageText: "STAGE" }));
-    }
-    container.appendChild(makeTitle("Hall Layout", "Sections facing a stage"));
-    container.appendChild(wrapper);
-    container.appendChild(buildLegend());
-  }
-
-  function buildRowBlock(opts) {
-    var rows = opts.rows, seats = opts.seats, map = opts.rowTierMap;
+  // ============ STANDARD BLOCK LAYOUT (matches screenshot exactly) ============
+  function buildRowBlock(rows, seats, map, label, stageText) {
     var block = document.createElement("div"); block.className = "block";
-    if (opts.label) { var bh = document.createElement("div"); bh.className = "block-label"; bh.textContent = opts.label; block.appendChild(bh); }
-    if (opts.stageText) { var sl = document.createElement("div"); sl.className = "stage-line"; sl.textContent = opts.stageText; block.appendChild(sl); }
+    if (label) { var bh = document.createElement("div"); bh.className = "block-label"; bh.textContent = label; block.appendChild(bh); }
+    if (stageText) { var sl = document.createElement("div"); sl.className = "stage-line"; sl.textContent = stageText; block.appendChild(sl); }
     var stack = document.createElement("div"); stack.className = "rows-stack";
     for (var r = 0; r < rows; r++) {
       var tier = map[r] || "cyan";
@@ -692,9 +411,18 @@ document.addEventListener("DOMContentLoaded", function(){
     return block;
   }
 
-  // ============================================================
-  // TABLES & CHAIRS (UNTOUCHED)
-  // ============================================================
+  function renderStandardLayout(container, l1, l2, l3) {
+    var blocks = Math.min(l1, 6), rows = Math.min(l2, 25), seats = Math.min(l3, 24);
+    var map = buildRowTierMap(rows);
+    var wrapper = document.createElement("div"); wrapper.className = "blocks-wrapper";
+    for (var b = 0; b < blocks; b++) {
+      wrapper.appendChild(buildRowBlock(rows, seats, map, "Section " + String.fromCharCode(65 + b), "STAGE"));
+    }
+    container.appendChild(wrapper);
+    container.appendChild(buildLegend());
+  }
+
+  // ============ TABLES & CHAIRS (UNTOUCHED) ============
   function renderTablesLayout(container, l1, l3) {
     var tier = $("tierColor").value;
     var wrapper = document.createElement("div"); wrapper.className = "tables-wrapper";
@@ -738,46 +466,37 @@ document.addEventListener("DOMContentLoaded", function(){
     chair.style.left = (cx - 7) + "px"; chair.style.top = (cy - 7) + "px"; parent.appendChild(chair);
   }
 
-  // ============================================================
-  // MAIN ROUTER
-  // ============================================================
+  // ============ MAIN ROUTER ============
   function renderSeatingPlan() {
     var container = $("seatingPlanPreview");
     container.innerHTML = "";
     var l1 = parseInt($("totalLevel1").value) || 0;
-    var l2 = currentConfig.label2 === null ? 1 : (parseInt($("totalLevel2").value) || 0);
+    var l2 = parseInt($("totalLevel2").value) || 0;
     var l3 = parseInt($("totalLevel3").value) || 0;
-    if (l1 === 0 || l3 === 0 || (currentConfig.label2 !== null && l2 === 0)) {
+
+    if (l1 === 0 || l3 === 0 || (l2 === 0 && !isTablesMode())) {
       container.innerHTML = '<div class="seating-plan-title">Enter seating details to generate layout</div>';
       return;
     }
-    if (currentConfig.mode === "tables_chairs") { renderTablesLayout(container, l1, l3); return; }
-    var venue = $("venueType").value;
-    if (venue === "one_stand") return renderOneStand(container, l1, l2, l3);
-    if (venue === "horseshoe") return renderHorseshoe(container, l1, l2, l3);
-    if (venue === "octagonal") return renderOctagonal(container, l1, l2, l3);
-    if (venue === "theater") return renderTheater(container, l1, l2, l3);
-    return renderHall(container, l1, l2, l3);
+
+    if (isTablesMode()) { renderTablesLayout(container, l1, l3); return; }
+    renderStandardLayout(container, l1, l2, l3);
   }
 
-  // ============================================================
-  // TICKET PREVIEW
-  // ============================================================
+  // ============ TICKET PREVIEW ============
   function updateTicketPreview() {
     $("prevEventName").textContent = $("eventName").value || "EVENT NAME";
     $("prevDateVenue").textContent = ($("startDate").value || "DATE") + " · " + ($("venueAddress").value || "VENUE");
     $("prevGuestName").textContent = $("guestName").value || "GUEST NAME";
     var seatCode = buildCurrentSeatCode();
     if (seatCode) $("prevSeat").textContent = seatCode;
-    else $("prevSeat").textContent = currentConfig.mode === "tables_chairs" ? "Table not assigned" : currentConfig.label3 + " not assigned";
+    else $("prevSeat").textContent = isTablesMode() ? "Table not assigned" : "Seat not assigned";
     $("prevVenueLocation").textContent = $("venueAddress").value || "VENUE";
     $("prevTierBadge").textContent = $("tierColor").value.toUpperCase();
     $("dynamicTicket").className = "ticket-card " + $("tierColor").value;
   }
 
-  // ============================================================
-  // LISTENERS
-  // ============================================================
+  // ============ LISTENERS ============
   var formInputs = document.querySelectorAll("#createEventForm input, #createEventForm select");
   formInputs.forEach(function(input) {
     input.addEventListener("input", function() { updateTicketPreview(); calculateCapacity(); renderSeatingPlan(); updateTierDistributionSummary(); });
@@ -791,7 +510,6 @@ document.addEventListener("DOMContentLoaded", function(){
     });
   });
   $("venueType").addEventListener("change", function() { updateSeatingUI(); renderSeatingPlan(); });
-  $("standAlignment").addEventListener("change", function() { renderSeatingPlan(); });
   $("hallLayoutToggle").addEventListener("change", function() { updateSeatingUI(); renderSeatingPlan(); });
   $("tableShape").addEventListener("change", function() { updateTableShapeHint(); renderSeatingPlan(); });
 
@@ -808,4 +526,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-    </html>
+</html>
