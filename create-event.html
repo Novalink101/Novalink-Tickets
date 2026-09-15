@@ -44,6 +44,8 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .form-group input, .form-group select, .form-group textarea{width:100%;padding:12px 16px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:10px;color:var(--text);font-size:14.5px;font-family:inherit;transition:border-color 0.2s, box-shadow 0.2s}
 .form-group input:focus, .form-group select:focus, .form-group textarea:focus{outline:none;border-color:var(--cyan-500);box-shadow:0 0 0 3px rgba(6,182,212,0.15);background:#fff}
 
+.form-hint{font-size:11.5px;color:var(--text-muted);margin-top:6px;line-height:1.5;font-style:italic;}
+
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
 @media (max-width:600px){.form-row{grid-template-columns:1fr}}
 
@@ -129,22 +131,20 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .seat.gold { background: #ecc94b; }
 .seat.black { background: #1a202c; }
 
-/* --- CIRCULAR TABLES WITH CHAIRS AROUND --- */
-.tables-wrapper { display: grid; grid-template-columns: repeat(auto-fill, minmax(110px, 1fr)); gap: 20px; padding: 10px 0; }
-.circular-table-container {
+/* --- TABLE SHAPES WITH CHAIRS --- */
+.tables-wrapper { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 20px; padding: 10px 0; }
+.table-item { display: flex; flex-direction: column; align-items: center; }
+.table-shape-container {
   position: relative;
-  width: 100px;
-  height: 100px;
+  width: 120px;
+  height: 120px;
   margin: 0 auto;
 }
-.circular-table {
+.table-shape {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 50px;
-  height: 50px;
-  border-radius: 50%;
   background: var(--bg-2);
   border: 2px solid var(--border-2);
   display: flex;
@@ -156,26 +156,39 @@ h1,h2,h3{line-height:1.15;font-weight:700}
   box-shadow: 0 2px 6px rgba(0,0,0,0.08);
   z-index: 2;
 }
+.table-shape.circular { width: 50px; height: 50px; border-radius: 50%; }
+.table-shape.rectangular { width: 80px; height: 40px; border-radius: 6px; }
+.table-shape.square { width: 50px; height: 50px; border-radius: 6px; }
+
 .chair-around {
   position: absolute;
-  top: 50%;
-  left: 50%;
   width: 14px;
   height: 14px;
-  border-radius: 50%;
-  margin: -7px 0 0 -7px;
   transition: background 0.2s;
+  z-index: 1;
 }
+.chair-around.circular { border-radius: 50%; }
+.chair-around.rectangular { border-radius: 3px; }
+.chair-around.square { border-radius: 3px; }
+
 .chair-around.cyan { background: #22d3ee; }
 .chair-around.silver { background: #cbd5e1; }
 .chair-around.gold { background: #ecc94b; }
 .chair-around.black { background: #1a202c; }
+
 .table-number-label {
   text-align: center;
   font-size: 10px;
   font-weight: 700;
   color: var(--text-muted);
+  margin-top: 6px;
+}
+.cap-warning {
+  font-size: 10px;
+  color: #b91c1c;
+  text-align: center;
   margin-top: 4px;
+  font-style: italic;
 }
 </style>
 </head>
@@ -255,7 +268,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
           </select>
         </div>
 
-        <!-- Stadium Sub-Type Dropdown (only appears when Stadium is selected) -->
+        <!-- Stadium Sub-Type -->
         <div class="form-group" id="stadiumTypeGroup" style="display:none;">
           <label for="stadiumSubType">Stadium Layout Type</label>
           <select id="stadiumSubType">
@@ -267,7 +280,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
           </select>
         </div>
 
-        <!-- Auditorium Sub-Type Dropdown (only appears when Auditorium is selected) -->
+        <!-- Auditorium Sub-Type -->
         <div class="form-group" id="auditoriumTypeGroup" style="display:none;">
           <label for="auditoriumSubType">Auditorium Layout Type</label>
           <select id="auditoriumSubType">
@@ -284,6 +297,17 @@ h1,h2,h3{line-height:1.15;font-weight:700}
             <input type="checkbox" id="hallLayoutToggle" />
             <span class="toggle-slider"></span>
           </label>
+        </div>
+
+        <!-- Table Shape Dropdown (Only appears when Tables & Chairs is active) -->
+        <div class="form-group" id="tableShapeGroup" style="display:none;">
+          <label for="tableShape">Table Type</label>
+          <select id="tableShape">
+            <option value="circular">Circular Table (Max 10 chairs around)</option>
+            <option value="rectangular">Rectangular Table (Max 1 chair on short sides)</option>
+            <option value="square">Square Table (Max 2 chairs each side)</option>
+          </select>
+          <p class="form-hint" id="tableShapeHint">Up to 10 chairs placed evenly around the table.</p>
         </div>
 
         <!-- Dynamic Seating Inputs -->
@@ -388,7 +412,6 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 
 function $(id){ return document.getElementById(id); }
 
-// Resolved config from the shared routing engine
 var currentConfig = { label1: "Section", label2: "Row", label3: "Seat", mode: "seat_types" };
 
 document.addEventListener("DOMContentLoaded", function(){
@@ -397,7 +420,6 @@ document.addEventListener("DOMContentLoaded", function(){
   var liveRef = "NL-" + Math.random().toString(36).substring(2, 8).toUpperCase();
   $("prevRef").textContent = "Ref: " + liveRef;
 
-  // --- RESOLVE CURRENT ROUTING CONFIG ---
   function resolveConfig() {
     var venue = $("venueType").value;
     var isTablesMode = $("hallLayoutToggle").checked;
@@ -407,14 +429,14 @@ document.addEventListener("DOMContentLoaded", function(){
   // --- UPDATE UI BASED ON CONFIG ---
   function updateSeatingUI() {
     resolveConfig();
-
     var venue = $("venueType").value;
+    var isTablesMode = currentConfig.mode === "tables_chairs";
 
-    // Toggle visibility of sub-type dropdowns
+    // Stadium / Auditorium sub-drops
     $("stadiumTypeGroup").style.display = (venue === "stadium") ? "block" : "none";
     $("auditoriumTypeGroup").style.display = (venue === "auditorium") ? "block" : "none";
 
-    // Toggle visibility of Hall sub-toggle
+    // Hall sub-toggle
     if (venue === "hall") {
       $("hallToggleGroup").style.display = "flex";
     } else {
@@ -422,11 +444,18 @@ document.addEventListener("DOMContentLoaded", function(){
       $("hallLayoutToggle").checked = false;
     }
 
-    // Apply labels
+    // Table Shape dropdown — ONLY visible in tables_chairs mode
+    if (isTablesMode) {
+      $("tableShapeGroup").style.display = "block";
+      updateTableShapeHint();
+    } else {
+      $("tableShapeGroup").style.display = "none";
+    }
+
+    // Labels
     $("label-level1").textContent = currentConfig.label1 || "Section";
     $("label-level3").textContent = currentConfig.label3 || "Seat";
 
-    // Hide Row group if label2 is null (Tables & Chairs)
     if (currentConfig.label2 === null) {
       $("group-level2").style.display = "none";
       $("label-level2").textContent = "";
@@ -435,10 +464,10 @@ document.addEventListener("DOMContentLoaded", function(){
       $("label-level2").textContent = currentConfig.label2;
     }
 
-    // Update preview placeholders
+    // Seat placeholder
     var seatInput = $("seatNumber");
     var seatLabel = $("seatLabel");
-    if (currentConfig.mode === "tables_chairs") {
+    if (isTablesMode) {
       seatInput.placeholder = "e.g., Table 14, Chair 6";
       seatLabel.textContent = "Table / Chair (Preview)";
     } else {
@@ -447,6 +476,12 @@ document.addEventListener("DOMContentLoaded", function(){
     }
 
     calculateCapacity();
+  }
+
+  function updateTableShapeHint() {
+    var shape = $("tableShape").value;
+    var meta = NovalinkRoutingEngine.resolveTableShape(shape);
+    $("tableShapeHint").textContent = meta.description;
   }
 
   function calculateCapacity() {
@@ -474,43 +509,88 @@ document.addEventListener("DOMContentLoaded", function(){
     var wrapper = document.createElement("div");
 
     if (currentConfig.mode === "tables_chairs") {
-      // ===== CIRCULAR TABLES WITH CHAIRS AROUND =====
+      // ===== TABLE RENDERING (Circular / Rectangular / Square) =====
       wrapper.className = "tables-wrapper";
+      var shape = $("tableShape").value;
       var renderTables = Math.min(l1, 12);
-      var renderChairs = Math.min(l3, 12);
+      var distribution = NovalinkRoutingEngine.distributeChairs(shape, l3);
 
       for (var t = 0; t < renderTables; t++) {
-        var tableContainer = document.createElement("div");
-        tableContainer.className = "circular-table-container";
+        var item = document.createElement("div");
+        item.className = "table-item";
 
-        // The circular table in the middle
+        var containerEl = document.createElement("div");
+        containerEl.className = "table-shape-container";
+
+        // The table shape itself
         var tableEl = document.createElement("div");
-        tableEl.className = "circular-table";
+        tableEl.className = "table-shape " + shape;
         tableEl.textContent = "T" + (t + 1);
-        tableContainer.appendChild(tableEl);
+        containerEl.appendChild(tableEl);
 
-        // Chairs positioned around the table using trig
-        var radius = 35; // distance from center of container to chair
-        for (var c = 0; c < renderChairs; c++) {
-          var angle = (2 * Math.PI * c) / renderChairs - (Math.PI / 2);
-          var cx = 50 + radius * Math.cos(angle);
-          var cy = 50 + radius * Math.sin(angle);
-
-          var chairEl = document.createElement("div");
-          chairEl.className = "chair-around " + tier;
-          chairEl.style.left = cx + "%";
-          chairEl.style.top = cy + "%";
-          chairContainerAppend(tableContainer, chairEl);
+        // Place chairs based on shape distribution
+        if (shape === "circular") {
+          var n = distribution.count;
+          var radius = 42;
+          for (var c = 0; c < n; c++) {
+            var angle = (2 * Math.PI * c) / n - (Math.PI / 2);
+            var cx = 60 + radius * Math.cos(angle);
+            var cy = 60 + radius * Math.sin(angle);
+            placeChair(containerEl, shape, cx, cy, tier);
+          }
+        } else if (shape === "rectangular") {
+          // Top row
+          for (var i = 0; i < distribution.top; i++) {
+            var x = 20 + (80 / (distribution.top + 1)) * (i + 1);
+            placeChair(containerEl, shape, x, 15, tier);
+          }
+          // Bottom row
+          for (var i = 0; i < distribution.bottom; i++) {
+            var x = 20 + (80 / (distribution.bottom + 1)) * (i + 1);
+            placeChair(containerEl, shape, x, 105, tier);
+          }
+          // Left short side
+          if (distribution.left > 0) placeChair(containerEl, shape, 12, 60, tier);
+          // Right short side
+          if (distribution.right > 0) placeChair(containerEl, shape, 108, 60, tier);
+        } else if (shape === "square") {
+          // Top (max 2)
+          for (var i = 0; i < distribution.top; i++) {
+            var x = distribution.top === 1 ? 60 : (45 + i * 30);
+            placeChair(containerEl, shape, x, 18, tier);
+          }
+          // Bottom
+          for (var i = 0; i < distribution.bottom; i++) {
+            var x = distribution.bottom === 1 ? 60 : (45 + i * 30);
+            placeChair(containerEl, shape, x, 102, tier);
+          }
+          // Left
+          for (var i = 0; i < distribution.left; i++) {
+            var y = distribution.left === 1 ? 60 : (45 + i * 30);
+            placeChair(containerEl, shape, 18, y, tier);
+          }
+          // Right
+          for (var i = 0; i < distribution.right; i++) {
+            var y = distribution.right === 1 ? 60 : (45 + i * 30);
+            placeChair(containerEl, shape, 102, y, tier);
+          }
         }
 
-        // Label under the table
-        var labelEl = document.createElement("div");
-        labelEl.className = "table-number-label";
-        labelEl.textContent = "Table " + (t + 1);
-        var wrapperInner = document.createElement("div");
-        wrapperInner.appendChild(tableContainer);
-        wrapperInner.appendChild(labelEl);
-        wrapper.appendChild(wrapperInner);
+        item.appendChild(containerEl);
+
+        var label = document.createElement("div");
+        label.className = "table-number-label";
+        label.textContent = "Table " + (t + 1) + " · " + distribution.total + " chairs";
+        item.appendChild(label);
+
+        if (distribution.capped) {
+          var warn = document.createElement("div");
+          warn.className = "cap-warning";
+          warn.textContent = "Capped at max for this shape (" + (shape === "circular" ? 10 : 8) + ")";
+          item.appendChild(warn);
+        }
+
+        wrapper.appendChild(item);
       }
 
       if (l1 > 12) {
@@ -553,9 +633,12 @@ document.addEventListener("DOMContentLoaded", function(){
     container.appendChild(wrapper);
   }
 
-  // Helper to append chair (keeps code readable)
-  function chairContainerAppend(parent, child) {
-    parent.appendChild(child);
+  function placeChair(parent, shape, cx, cy, tier) {
+    var chair = document.createElement("div");
+    chair.className = "chair-around " + shape + " " + tier;
+    chair.style.left = (cx - 7) + "px";
+    chair.style.top = (cy - 7) + "px";
+    parent.appendChild(chair);
   }
 
   // --- TICKET PREVIEW UPDATER ---
@@ -607,13 +690,12 @@ document.addEventListener("DOMContentLoaded", function(){
     updateSeatingUI(); updateTicketPreview(); renderSeatingPlan();
   });
 
-  $("stadiumSubType").addEventListener("change", function() {
-    renderSeatingPlan();
+  $("tableShape").addEventListener("change", function() {
+    updateTableShapeHint(); renderSeatingPlan();
   });
 
-  $("auditoriumSubType").addEventListener("change", function() {
-    renderSeatingPlan();
-  });
+  $("stadiumSubType").addEventListener("change", function() { renderSeatingPlan(); });
+  $("auditoriumSubType").addEventListener("change", function() { renderSeatingPlan(); });
 
   // --- INIT ---
   updateSeatingUI();
@@ -629,4 +711,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-</html>
+          </html>
