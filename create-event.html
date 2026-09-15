@@ -65,18 +65,10 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .preview-column { position: sticky; top: 40px; display: flex; flex-direction: column; gap: 24px; }
 .preview-label { text-align: center; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
 .ticket-card {
-  border-radius: 18px;
-  padding: 24px;
-  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-  display: flex;
-  flex-direction: column;
-  gap: 20px;
-  position: relative;
-  overflow: hidden;
-  border: 1px solid rgba(0,0,0,0.05);
-  transition: all 0.4s ease;
+  border-radius: 18px; padding: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+  display: flex; flex-direction: column; gap: 20px; position: relative; overflow: hidden;
+  border: 1px solid rgba(0,0,0,0.05); transition: all 0.4s ease;
 }
-/* Tier Colors */
 .ticket-card.cyan { background: linear-gradient(135deg, #ecfeff, #cffafe); color: #0a0f14; }
 .ticket-card.silver { background: linear-gradient(135deg, #f1f4f8, #cbd5e1); color: #0a0f14; }
 .ticket-card.gold { background: linear-gradient(135deg, #fef9c3, #ecc94b); color: #0a0f14; }
@@ -106,23 +98,16 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .ticket-card.black .ref-meta { color: rgba(255,255,255,0.5); }
 
 .ticket-qr-box { width: 70px; height: 70px; background: #fff; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); flex-shrink: 0; }
-
 .ticket-location-row { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: rgba(0,0,0,0.6); }
 .location-text { text-transform: uppercase; letter-spacing: 0.5px; }
-
 .ticket-barcode-wrap { background: #fff; border-radius: 6px; padding: 8px; display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: 4px; }
 .barcode { width: 100%; height: 30px; background: repeating-linear-gradient(to right, #000 0px, #000 2px, #fff 2px, #fff 4px, #000 4px, #000 6px, #fff 6px, #fff 10px, #000 10px, #000 12px, #fff 12px, #fff 16px); }
 .barcode-num { font-family: monospace; font-size: 10px; font-weight: 700; color: #000; letter-spacing: 2px; }
 
-/* --- NEW SEATING PLAN PREVIEW STYLES --- */
+/* --- SEATING PLAN PREVIEW STYLES --- */
 .seating-plan-preview {
-  background: var(--surface);
-  border: 1px solid var(--border);
-  border-radius: var(--radius);
-  padding: 20px;
-  max-height: 450px;
-  overflow-y: auto;
-  box-shadow: 0 10px 20px rgba(10,15,20,0.05);
+  background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+  padding: 20px; max-height: 450px; overflow-y: auto; box-shadow: 0 10px 20px rgba(10,15,20,0.05);
 }
 .seating-plan-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 16px; text-align: center; }
 .blocks-wrapper { display: flex; flex-direction: column; gap: 24px; }
@@ -213,23 +198,22 @@ h1,h2,h3{line-height:1.15;font-weight:700}
         <div class="form-group">
           <label for="seatingPlanType">Seating Plan Type</label>
           <select id="seatingPlanType" required>
-            <option value="blocks">Blocks, Rows & Seats (e.g., Theater, Stadium)</option>
-            <option value="tables">Tables & Chairs (e.g., Gala, Banquet, Wedding)</option>
+            <option value="stadium">Stadium / Theater (Stand/Block, Row, Seat)</option>
+            <option value="banquet">Gala / Banquet (Table, Chair)</option>
+            <option value="train">Train / Bus (Carriage/Coach, Row, Seat)</option>
           </select>
         </div>
 
-        <!-- Dynamic Seating Inputs -->
-        <div id="blocksConfig" class="form-row">
-          <div class="form-group"><label for="totalBlocks">Total Blocks</label><input type="number" id="totalBlocks" min="1" value="1" /></div>
-          <div class="form-group"><label for="rowsPerBlock">Rows per Block</label><input type="number" id="rowsPerBlock" min="1" value="1" /></div>
-          <div class="form-group"><label for="seatsPerRow">Seats per Row</label><input type="number" id="seatsPerRow" min="1" value="1" /></div>
-          <div class="form-group"><label>Total Attendees</label><input type="text" id="totalCapacity" readonly value="1" style="background:var(--surface-2);font-weight:bold;color:var(--cyan-700);" /></div>
+        <!-- Dynamic Seating Inputs (Universal 3-tier structure) -->
+        <div class="form-row">
+          <div class="form-group"><label id="label-level1" for="totalLevel1">Stand / Block</label><input type="number" id="totalLevel1" min="1" value="1" /></div>
+          <div class="form-group" id="group-level2"><label id="label-level2" for="totalLevel2">Rows per Block</label><input type="number" id="totalLevel2" min="1" value="1" /></div>
+          <div class="form-group"><label id="label-level3" for="totalLevel3">Seats per Row</label><input type="number" id="totalLevel3" min="1" value="1" /></div>
         </div>
 
-        <div id="tablesConfig" class="form-row" style="display:none;">
-          <div class="form-group"><label for="totalTables">Total Tables</label><input type="number" id="totalTables" min="1" value="1" /></div>
-          <div class="form-group"><label for="chairsPerTable">Chairs / Seats per Table</label><input type="number" id="chairsPerTable" min="1" value="1" /></div>
-          <div class="form-group" style="grid-column: span 2;"><label>Total Attendees</label><input type="text" id="totalCapacityTables" readonly value="1" style="background:var(--surface-2);font-weight:bold;color:var(--cyan-700);" /></div>
+        <div class="form-group">
+          <label>Total Attendees (Auto-calculated)</label>
+          <input type="text" id="totalCapacity" readonly value="1" style="background:var(--surface-2);font-weight:bold;color:var(--cyan-700);" />
         </div>
 
         <div class="section-divider"><span>Ticket Design & Allocation</span></div>
@@ -250,7 +234,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
           </div>
           <div class="form-group">
             <label for="seatNumber" id="seatLabel">Seat Number (Preview)</label>
-            <input type="text" id="seatNumber" placeholder="e.g., Block A, Row 12, Seat 04" />
+            <input type="text" id="seatNumber" placeholder="e.g., East Stand, Block B, Row MM, Seat 102" />
           </div>
         </div>
 
@@ -296,7 +280,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
         </div>
       </div>
 
-      <!-- NEW SEATING PLAN PREVIEW -->
+      <!-- SEATING PLAN PREVIEW -->
       <div>
         <div class="preview-label">Seating Plan Preview</div>
         <div class="seating-plan-preview" id="seatingPlanPreview">
@@ -322,68 +306,99 @@ document.addEventListener("DOMContentLoaded", function(){
   // --- SEATING LOGIC ---
   function updateSeatingUI() {
     var type = $("seatingPlanType").value;
+    var level2Group = $("group-level2");
+    var label1 = $("label-level1");
+    var label2 = $("label-level2");
+    var label3 = $("label-level3");
     var seatInput = $("seatNumber");
     var seatLabel = $("seatLabel");
-    var prevSeatText = $("prevSeat");
 
-    if (type === "blocks") {
-      $("blocksConfig").style.display = "grid";
-      $("tablesConfig").style.display = "none";
-      seatInput.placeholder = "e.g., Block A, Row 12, Seat 04";
+    if (type === "stadium") {
+      level2Group.style.display = "block";
+      label1.textContent = "Stand / Block";
+      label2.textContent = "Rows per Block";
+      label3.textContent = "Seats per Row";
+      seatInput.placeholder = "e.g., East Stand, Block B, Row MM, Seat 102";
       seatLabel.textContent = "Seat Number (Preview)";
-    } else {
-      $("blocksConfig").style.display = "none";
-      $("tablesConfig").style.display = "grid";
-      seatInput.placeholder = "e.g., Table 4, Chair 02";
+    } else if (type === "banquet") {
+      level2Group.style.display = "none"; // Hide Row for banquets
+      label1.textContent = "Total Tables";
+      label3.textContent = "Chairs per Table";
+      seatInput.placeholder = "e.g., Table 14, Chair 6";
       seatLabel.textContent = "Table/Chair (Preview)";
+    } else if (type === "train") {
+      level2Group.style.display = "block";
+      label1.textContent = "Carriage / Coach";
+      label2.textContent = "Rows per Coach";
+      label3.textContent = "Seats per Row";
+      seatInput.placeholder = "e.g., Coach D, Row 5, Seat A (Window)";
+      seatLabel.textContent = "Seat Number (Preview)";
     }
     calculateCapacity();
   }
 
   function calculateCapacity() {
     var type = $("seatingPlanType").value;
-    if (type === "blocks") {
-      var blocks = parseInt($("totalBlocks").value) || 0;
-      var rows = parseInt($("rowsPerBlock").value) || 0;
-      var seats = parseInt($("seatsPerRow").value) || 0;
-      $("totalCapacity").value = blocks * rows * seats;
+    var l1 = parseInt($("totalLevel1").value) || 0;
+    var l2 = type === "banquet" ? 1 : (parseInt($("totalLevel2").value) || 0);
+    var l3 = parseInt($("totalLevel3").value) || 0;
+    
+    if (type === "banquet") {
+      $("totalCapacity").value = l1 * l3; // Tables * Chairs
     } else {
-      var tables = parseInt($("totalTables").value) || 0;
-      var chairs = parseInt($("chairsPerTable").value) || 0;
-      $("totalCapacityTables").value = tables * chairs;
+      $("totalCapacity").value = l1 * l2 * l3; // Blocks * Rows * Seats
     }
   }
 
-  // --- NEW SEATING PLAN RENDERER ---
+  // --- SEATING PLAN RENDERER ---
   function renderSeatingPlan() {
     var type = $("seatingPlanType").value;
     var tier = $("tierColor").value;
     var container = $("seatingPlanPreview");
     
-    container.innerHTML = ""; // Clear previous layout
+    container.innerHTML = ""; 
 
-    if (type === "blocks") {
-      var blocks = parseInt($("totalBlocks").value) || 0;
-      var rows = parseInt($("rowsPerBlock").value) || 0;
-      var seats = parseInt($("seatsPerRow").value) || 0;
+    var l1 = parseInt($("totalLevel1").value) || 0;
+    var l2 = type === "banquet" ? 1 : (parseInt($("totalLevel2").value) || 0);
+    var l3 = parseInt($("totalLevel3").value) || 0;
 
-      if (blocks === 0 || rows === 0 || seats === 0) {
-        container.innerHTML = '<div class="seating-plan-title">Enter block details to see layout</div>';
-        return;
+    if (l1 === 0 || l3 === 0 || (type !== "banquet" && l2 === 0)) {
+      container.innerHTML = '<div class="seating-plan-title">Enter seating details to generate layout</div>';
+      return;
+    }
+
+    var wrapper = document.createElement("div");
+    
+    if (type === "banquet") {
+      wrapper.className = "tables-wrapper";
+      var renderTables = Math.min(l1, 50);
+      var renderChairs = Math.min(l3, 12);
+
+      for (var t = 0; t < renderTables; t++) {
+        var tableDiv = document.createElement("div");
+        tableDiv.className = "table";
+        tableDiv.innerHTML = '<div class="table-label">Table ' + (t + 1) + '</div>';
+        var chairsWrapper = document.createElement("div");
+        chairsWrapper.className = "chairs-wrapper";
+        for (var c = 0; c < renderChairs; c++) {
+          var chairDiv = document.createElement("div");
+          chairDiv.className = "chair " + tier;
+          chairsWrapper.appendChild(chairDiv);
+        }
+        tableDiv.appendChild(chairsWrapper);
+        wrapper.appendChild(tableDiv);
       }
-
-      // Limit rendering to prevent browser freeze
-      var renderBlocks = Math.min(blocks, 10);
-      var renderRows = Math.min(rows, 20);
-      var renderSeats = Math.min(seats, 25);
-
-      var wrapper = document.createElement("div");
+    } else {
       wrapper.className = "blocks-wrapper";
+      var renderBlocks = Math.min(l1, 10);
+      var renderRows = Math.min(l2, 20);
+      var renderSeats = Math.min(l3, 25);
 
       for (var b = 0; b < renderBlocks; b++) {
         var blockDiv = document.createElement("div");
         blockDiv.className = "block";
-        blockDiv.innerHTML = '<div class="block-label">Block ' + String.fromCharCode(65 + b) + '</div>';
+        var blockName = type === "train" ? "Coach " + String.fromCharCode(65 + b) : "Block " + String.fromCharCode(65 + b);
+        blockDiv.innerHTML = '<div class="block-label">' + blockName + '</div>';
         
         var rowsWrapper = document.createElement("div");
         rowsWrapper.className = "rows-wrapper";
@@ -401,54 +416,15 @@ document.addEventListener("DOMContentLoaded", function(){
         blockDiv.appendChild(rowsWrapper);
         wrapper.appendChild(blockDiv);
       }
-      container.appendChild(wrapper);
-      
-      if (blocks > renderBlocks || rows > renderRows || seats > renderSeats) {
-        var note = document.createElement("p");
-        note.style.cssText = "font-size:11px; color:var(--text-muted); text-align:center; margin-top:10px;";
-        note.textContent = "Note: Displaying a truncated view for performance.";
-        container.appendChild(note);
-      }
+    }
+    
+    container.appendChild(wrapper);
 
-    } else {
-      var tables = parseInt($("totalTables").value) || 0;
-      var chairs = parseInt($("chairsPerTable").value) || 0;
-
-      if (tables === 0 || chairs === 0) {
-        container.innerHTML = '<div class="seating-plan-title">Enter table details to see layout</div>';
-        return;
-      }
-
-      var renderTables = Math.min(tables, 50);
-      var renderChairs = Math.min(chairs, 12);
-
-      var wrapper = document.createElement("div");
-      wrapper.className = "tables-wrapper";
-
-      for (var t = 0; t < renderTables; t++) {
-        var tableDiv = document.createElement("div");
-        tableDiv.className = "table";
-        tableDiv.innerHTML = '<div class="table-label">Table ' + (t + 1) + '</div>';
-        
-        var chairsWrapper = document.createElement("div");
-        chairsWrapper.className = "chairs-wrapper";
-
-        for (var c = 0; c < renderChairs; c++) {
-          var chairDiv = document.createElement("div");
-          chairDiv.className = "chair " + tier;
-          chairsWrapper.appendChild(chairDiv);
-        }
-        tableDiv.appendChild(chairsWrapper);
-        wrapper.appendChild(tableDiv);
-      }
-      container.appendChild(wrapper);
-
-      if (tables > renderTables || chairs > renderChairs) {
-        var note = document.createElement("p");
-        note.style.cssText = "font-size:11px; color:var(--text-muted); text-align:center; margin-top:10px;";
-        note.textContent = "Note: Displaying a truncated view for performance.";
-        container.appendChild(note);
-      }
+    if (l1 > (type === "banquet" ? 50 : 10) || l2 > 20 || l3 > (type === "banquet" ? 12 : 25)) {
+      var note = document.createElement("p");
+      note.style.cssText = "font-size:11px; color:var(--text-muted); text-align:center; margin-top:10px;";
+      note.textContent = "Note: Displaying a truncated view for performance.";
+      container.appendChild(note);
     }
   }
 
@@ -469,7 +445,7 @@ document.addEventListener("DOMContentLoaded", function(){
     if (seatNumber) {
       $("prevSeat").textContent = seatNumber;
     } else {
-      $("prevSeat").textContent = $("seatingPlanType").value === "tables" ? "Table not assigned" : "Seat not assigned";
+      $("prevSeat").textContent = $("seatingPlanType").value === "banquet" ? "Table not assigned" : "Seat not assigned";
     }
     
     $("prevVenueLocation").textContent = venue;
@@ -479,7 +455,7 @@ document.addEventListener("DOMContentLoaded", function(){
     ticketEl.className = "ticket-card " + tierColor;
   }
 
-  // Attach event listeners to all inputs
+  // Attach event listeners
   var formInputs = document.querySelectorAll("#createEventForm input, #createEventForm select");
   formInputs.forEach(function(input) {
     input.addEventListener("input", function() {
@@ -494,14 +470,12 @@ document.addEventListener("DOMContentLoaded", function(){
     });
   });
 
-  // Specific listener for the seating type to toggle fields
   $("seatingPlanType").addEventListener("change", function() {
     updateSeatingUI();
     updateTicketPreview();
     renderSeatingPlan();
   });
 
-  // Run once on load
   updateSeatingUI();
   updateTicketPreview();
   renderSeatingPlan();
