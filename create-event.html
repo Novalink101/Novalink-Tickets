@@ -176,6 +176,30 @@ h1,h2,h3{line-height:1.15;font-weight:700}
           <input type="text" id="venueAddress" placeholder="e.g., Grand Amphitheatre, 123 Main Rd" required />
         </div>
 
+        <div class="section-divider"><span>Seating Configuration</span></div>
+        
+        <div class="form-group">
+          <label for="seatingPlanType">Seating Plan Type</label>
+          <select id="seatingPlanType" required>
+            <option value="blocks">Blocks, Rows & Seats (e.g., Theater, Stadium)</option>
+            <option value="tables">Tables & Chairs (e.g., Gala, Banquet, Wedding)</option>
+          </select>
+        </div>
+
+        <!-- Dynamic Seating Inputs -->
+        <div id="blocksConfig" class="form-row">
+          <div class="form-group"><label for="totalBlocks">Total Blocks</label><input type="number" id="totalBlocks" min="1" value="1" /></div>
+          <div class="form-group"><label for="rowsPerBlock">Rows per Block</label><input type="number" id="rowsPerBlock" min="1" value="1" /></div>
+          <div class="form-group"><label for="seatsPerRow">Seats per Row</label><input type="number" id="seatsPerRow" min="1" value="1" /></div>
+          <div class="form-group"><label>Total Attendees</label><input type="text" id="totalCapacity" readonly value="1" style="background:var(--surface-2);font-weight:bold;color:var(--cyan-700);" /></div>
+        </div>
+
+        <div id="tablesConfig" class="form-row" style="display:none;">
+          <div class="form-group"><label for="totalTables">Total Tables</label><input type="number" id="totalTables" min="1" value="1" /></div>
+          <div class="form-group"><label for="chairsPerTable">Chairs / Seats per Table</label><input type="number" id="chairsPerTable" min="1" value="1" /></div>
+          <div class="form-group" style="grid-column: span 2;"><label>Total Attendees</label><input type="text" id="totalCapacityTables" readonly value="1" style="background:var(--surface-2);font-weight:bold;color:var(--cyan-700);" /></div>
+        </div>
+
         <div class="section-divider"><span>Ticket Design & Allocation</span></div>
 
         <div class="form-group">
@@ -193,7 +217,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
             <input type="text" id="guestName" placeholder="e.g., Jane Smith" />
           </div>
           <div class="form-group">
-            <label for="seatNumber">Seat Number (Preview)</label>
+            <label for="seatNumber" id="seatLabel">Seat Number (Preview)</label>
             <input type="text" id="seatNumber" placeholder="e.g., Block A, Row 12, Seat 04" />
           </div>
         </div>
@@ -254,20 +278,64 @@ document.addEventListener("DOMContentLoaded", function(){
   var liveRef = "NL-" + Math.random().toString(36).substring(2, 8).toUpperCase();
   $("prevRef").textContent = "Ref: " + liveRef;
 
+  // --- SEATING LOGIC ---
+  function updateSeatingUI() {
+    var type = $("seatingPlanType").value;
+    var seatInput = $("seatNumber");
+    var seatLabel = $("seatLabel");
+    var prevSeatText = $("prevSeat");
+
+    if (type === "blocks") {
+      $("blocksConfig").style.display = "grid";
+      $("tablesConfig").style.display = "none";
+      seatInput.placeholder = "e.g., Block A, Row 12, Seat 04";
+      seatLabel.textContent = "Seat Number (Preview)";
+      prevSeatText.textContent = "Seat not assigned";
+    } else {
+      $("blocksConfig").style.display = "none";
+      $("tablesConfig").style.display = "grid";
+      seatInput.placeholder = "e.g., Table 4, Chair 02";
+      seatLabel.textContent = "Table/Chair (Preview)";
+      prevSeatText.textContent = "Table not assigned";
+    }
+    calculateCapacity();
+  }
+
+  function calculateCapacity() {
+    var type = $("seatingPlanType").value;
+    if (type === "blocks") {
+      var blocks = parseInt($("totalBlocks").value) || 0;
+      var rows = parseInt($("rowsPerBlock").value) || 0;
+      var seats = parseInt($("seatsPerRow").value) || 0;
+      $("totalCapacity").value = blocks * rows * seats;
+    } else {
+      var tables = parseInt($("totalTables").value) || 0;
+      var chairs = parseInt($("chairsPerTable").value) || 0;
+      $("totalCapacityTables").value = tables * chairs;
+    }
+  }
+
   // The Live Update Function
   function updateTicketPreview() {
     var eventName = $("eventName").value || "EVENT NAME";
     var date = $("startDate").value;
     var venue = $("venueAddress").value || "VENUE";
     var guestName = $("guestName").value || "GUEST NAME";
-    var seatNumber = $("seatNumber").value || "Seat not assigned";
+    var seatNumber = $("seatNumber").value;
     var tierColor = $("tierColor").value;
 
     $("prevEventName").textContent = eventName;
     var dateStr = date ? date : "DATE";
     $("prevDateVenue").textContent = dateStr + " · " + venue;
     $("prevGuestName").textContent = guestName;
-    $("prevSeat").textContent = seatNumber;
+    
+    // Only update seat text if there is a value, otherwise use the default
+    if (seatNumber) {
+      $("prevSeat").textContent = seatNumber;
+    } else {
+      $("prevSeat").textContent = $("seatingPlanType").value === "tables" ? "Table not assigned" : "Seat not assigned";
+    }
+    
     $("prevVenueLocation").textContent = venue;
     $("prevTierBadge").textContent = tierColor.toUpperCase();
 
@@ -275,14 +343,27 @@ document.addEventListener("DOMContentLoaded", function(){
     ticketEl.className = "ticket-card " + tierColor;
   }
 
-  // Attach event listeners
+  // Attach event listeners to all inputs
   var formInputs = document.querySelectorAll("#createEventForm input, #createEventForm select");
   formInputs.forEach(function(input) {
-    input.addEventListener("input", updateTicketPreview);
-    input.addEventListener("change", updateTicketPreview);
+    input.addEventListener("input", function() {
+      updateTicketPreview();
+      calculateCapacity();
+    });
+    input.addEventListener("change", function() {
+      updateTicketPreview();
+      calculateCapacity();
+    });
+  });
+
+  // Attach specific listeners for the seating type to toggle fields and update preview
+  $("seatingPlanType").addEventListener("change", function() {
+    updateSeatingUI();
+    updateTicketPreview(); // Ensure the default text updates immediately
   });
 
   // Run once on load
+  updateSeatingUI();
   updateTicketPreview();
 
   $("createEventForm").addEventListener("submit", function(e){
@@ -294,4 +375,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-        </html>
+</html>
