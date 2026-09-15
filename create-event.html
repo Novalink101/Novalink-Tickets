@@ -62,7 +62,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .form-actions{margin-top:28px;display:flex;flex-direction:column;gap:12px}
 
 /* --- LIVE TICKET PREVIEW STYLES --- */
-.preview-column { position: sticky; top: 40px; }
+.preview-column { position: sticky; top: 40px; display: flex; flex-direction: column; gap: 24px; }
 .preview-label { text-align: center; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
 .ticket-card {
   border-radius: 18px;
@@ -113,6 +113,38 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .ticket-barcode-wrap { background: #fff; border-radius: 6px; padding: 8px; display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: 4px; }
 .barcode { width: 100%; height: 30px; background: repeating-linear-gradient(to right, #000 0px, #000 2px, #fff 2px, #fff 4px, #000 4px, #000 6px, #fff 6px, #fff 10px, #000 10px, #000 12px, #fff 12px, #fff 16px); }
 .barcode-num { font-family: monospace; font-size: 10px; font-weight: 700; color: #000; letter-spacing: 2px; }
+
+/* --- NEW SEATING PLAN PREVIEW STYLES --- */
+.seating-plan-preview {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 20px;
+  max-height: 450px;
+  overflow-y: auto;
+  box-shadow: 0 10px 20px rgba(10,15,20,0.05);
+}
+.seating-plan-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 16px; text-align: center; }
+.blocks-wrapper { display: flex; flex-direction: column; gap: 24px; }
+.block { background: var(--bg-2); padding: 12px; border-radius: 10px; border: 1px solid var(--border-2); }
+.block-label { font-size: 12px; font-weight: 800; margin-bottom: 10px; color: var(--cyan-700); }
+.rows-wrapper { display: flex; flex-direction: column; gap: 6px; }
+.row { display: flex; gap: 4px; flex-wrap: wrap; }
+.seat { width: 12px; height: 12px; border-radius: 3px; transition: background 0.2s; }
+.seat.cyan { background: #22d3ee; }
+.seat.silver { background: #cbd5e1; }
+.seat.gold { background: #ecc94b; }
+.seat.black { background: #1a202c; }
+
+.tables-wrapper { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 12px; }
+.table { background: var(--bg-2); border: 1px solid var(--border-2); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
+.table-label { font-size: 11px; font-weight: 800; color: var(--cyan-700); }
+.chairs-wrapper { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; justify-items: center; }
+.chair { width: 10px; height: 10px; border-radius: 50%; transition: background 0.2s; }
+.chair.cyan { background: #22d3ee; }
+.chair.silver { background: #cbd5e1; }
+.chair.gold { background: #ecc94b; }
+.chair.black { background: #1a202c; }
 </style>
 </head>
 <body>
@@ -234,31 +266,41 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 
     <!-- LIVE PREVIEW COLUMN -->
     <div class="preview-column">
-      <div class="preview-label">Live Preview</div>
-      <div class="ticket-card cyan" id="dynamicTicket">
-        <div class="ticket-header-row">
-          <div class="ticket-logo">NOVALINK</div>
-          <div class="ticket-badges">
-            <span class="badge-public">PUBLIC</span>
-            <span class="badge-tier" id="prevTierBadge">CYAN</span>
+      <div>
+        <div class="preview-label">Live Ticket Preview</div>
+        <div class="ticket-card cyan" id="dynamicTicket">
+          <div class="ticket-header-row">
+            <div class="ticket-logo">NOVALINK</div>
+            <div class="ticket-badges">
+              <span class="badge-public">PUBLIC</span>
+              <span class="badge-tier" id="prevTierBadge">CYAN</span>
+            </div>
+          </div>
+          <div class="ticket-body-row">
+            <div class="ticket-info-left">
+              <div class="event-title" id="prevEventName">EVENT NAME</div>
+              <div class="event-meta" id="prevDateVenue">DATE · VENUE</div>
+              <div class="guest-title" id="prevGuestName">GUEST NAME</div>
+              <div class="guest-meta" id="prevSeat">Seat not assigned</div>
+              <div class="ref-meta" id="prevRef">Ref: NL-XXXXXX</div>
+            </div>
+            <div class="ticket-qr-box"></div>
+          </div>
+          <div class="ticket-location-row">
+            <i data-lucide="map-pin" style="width:12px;height:12px;"></i> <span class="location-text" id="prevVenueLocation">VENUE</span>
+          </div>
+          <div class="ticket-barcode-wrap">
+             <div class="barcode"></div>
+             <div class="barcode-num">0000 0000 0000 0000</div>
           </div>
         </div>
-        <div class="ticket-body-row">
-          <div class="ticket-info-left">
-            <div class="event-title" id="prevEventName">EVENT NAME</div>
-            <div class="event-meta" id="prevDateVenue">DATE · VENUE</div>
-            <div class="guest-title" id="prevGuestName">GUEST NAME</div>
-            <div class="guest-meta" id="prevSeat">Seat not assigned</div>
-            <div class="ref-meta" id="prevRef">Ref: NL-XXXXXX</div>
-          </div>
-          <div class="ticket-qr-box"></div>
-        </div>
-        <div class="ticket-location-row">
-          <i data-lucide="map-pin" style="width:12px;height:12px;"></i> <span class="location-text" id="prevVenueLocation">VENUE</span>
-        </div>
-        <div class="ticket-barcode-wrap">
-           <div class="barcode"></div>
-           <div class="barcode-num">0000 0000 0000 0000</div>
+      </div>
+
+      <!-- NEW SEATING PLAN PREVIEW -->
+      <div>
+        <div class="preview-label">Seating Plan Preview</div>
+        <div class="seating-plan-preview" id="seatingPlanPreview">
+          <div class="seating-plan-title">Enter seating details to generate layout</div>
         </div>
       </div>
     </div>
@@ -274,7 +316,6 @@ function $(id){ return document.getElementById(id); }
 document.addEventListener("DOMContentLoaded", function(){
   if(window.lucide) lucide.createIcons();
 
-  // Generate a static reference number for the live preview
   var liveRef = "NL-" + Math.random().toString(36).substring(2, 8).toUpperCase();
   $("prevRef").textContent = "Ref: " + liveRef;
 
@@ -290,13 +331,11 @@ document.addEventListener("DOMContentLoaded", function(){
       $("tablesConfig").style.display = "none";
       seatInput.placeholder = "e.g., Block A, Row 12, Seat 04";
       seatLabel.textContent = "Seat Number (Preview)";
-      prevSeatText.textContent = "Seat not assigned";
     } else {
       $("blocksConfig").style.display = "none";
       $("tablesConfig").style.display = "grid";
       seatInput.placeholder = "e.g., Table 4, Chair 02";
       seatLabel.textContent = "Table/Chair (Preview)";
-      prevSeatText.textContent = "Table not assigned";
     }
     calculateCapacity();
   }
@@ -315,6 +354,104 @@ document.addEventListener("DOMContentLoaded", function(){
     }
   }
 
+  // --- NEW SEATING PLAN RENDERER ---
+  function renderSeatingPlan() {
+    var type = $("seatingPlanType").value;
+    var tier = $("tierColor").value;
+    var container = $("seatingPlanPreview");
+    
+    container.innerHTML = ""; // Clear previous layout
+
+    if (type === "blocks") {
+      var blocks = parseInt($("totalBlocks").value) || 0;
+      var rows = parseInt($("rowsPerBlock").value) || 0;
+      var seats = parseInt($("seatsPerRow").value) || 0;
+
+      if (blocks === 0 || rows === 0 || seats === 0) {
+        container.innerHTML = '<div class="seating-plan-title">Enter block details to see layout</div>';
+        return;
+      }
+
+      // Limit rendering to prevent browser freeze
+      var renderBlocks = Math.min(blocks, 10);
+      var renderRows = Math.min(rows, 20);
+      var renderSeats = Math.min(seats, 25);
+
+      var wrapper = document.createElement("div");
+      wrapper.className = "blocks-wrapper";
+
+      for (var b = 0; b < renderBlocks; b++) {
+        var blockDiv = document.createElement("div");
+        blockDiv.className = "block";
+        blockDiv.innerHTML = '<div class="block-label">Block ' + String.fromCharCode(65 + b) + '</div>';
+        
+        var rowsWrapper = document.createElement("div");
+        rowsWrapper.className = "rows-wrapper";
+
+        for (var r = 0; r < renderRows; r++) {
+          var rowDiv = document.createElement("div");
+          rowDiv.className = "row";
+          for (var s = 0; s < renderSeats; s++) {
+            var seatDiv = document.createElement("div");
+            seatDiv.className = "seat " + tier;
+            rowDiv.appendChild(seatDiv);
+          }
+          rowsWrapper.appendChild(rowDiv);
+        }
+        blockDiv.appendChild(rowsWrapper);
+        wrapper.appendChild(blockDiv);
+      }
+      container.appendChild(wrapper);
+      
+      if (blocks > renderBlocks || rows > renderRows || seats > renderSeats) {
+        var note = document.createElement("p");
+        note.style.cssText = "font-size:11px; color:var(--text-muted); text-align:center; margin-top:10px;";
+        note.textContent = "Note: Displaying a truncated view for performance.";
+        container.appendChild(note);
+      }
+
+    } else {
+      var tables = parseInt($("totalTables").value) || 0;
+      var chairs = parseInt($("chairsPerTable").value) || 0;
+
+      if (tables === 0 || chairs === 0) {
+        container.innerHTML = '<div class="seating-plan-title">Enter table details to see layout</div>';
+        return;
+      }
+
+      var renderTables = Math.min(tables, 50);
+      var renderChairs = Math.min(chairs, 12);
+
+      var wrapper = document.createElement("div");
+      wrapper.className = "tables-wrapper";
+
+      for (var t = 0; t < renderTables; t++) {
+        var tableDiv = document.createElement("div");
+        tableDiv.className = "table";
+        tableDiv.innerHTML = '<div class="table-label">Table ' + (t + 1) + '</div>';
+        
+        var chairsWrapper = document.createElement("div");
+        chairsWrapper.className = "chairs-wrapper";
+
+        for (var c = 0; c < renderChairs; c++) {
+          var chairDiv = document.createElement("div");
+          chairDiv.className = "chair " + tier;
+          chairsWrapper.appendChild(chairDiv);
+        }
+        tableDiv.appendChild(chairsWrapper);
+        wrapper.appendChild(tableDiv);
+      }
+      container.appendChild(wrapper);
+
+      if (tables > renderTables || chairs > renderChairs) {
+        var note = document.createElement("p");
+        note.style.cssText = "font-size:11px; color:var(--text-muted); text-align:center; margin-top:10px;";
+        note.textContent = "Note: Displaying a truncated view for performance.";
+        container.appendChild(note);
+      }
+    }
+  }
+
   // The Live Update Function
   function updateTicketPreview() {
     var eventName = $("eventName").value || "EVENT NAME";
@@ -329,7 +466,6 @@ document.addEventListener("DOMContentLoaded", function(){
     $("prevDateVenue").textContent = dateStr + " · " + venue;
     $("prevGuestName").textContent = guestName;
     
-    // Only update seat text if there is a value, otherwise use the default
     if (seatNumber) {
       $("prevSeat").textContent = seatNumber;
     } else {
@@ -349,22 +485,26 @@ document.addEventListener("DOMContentLoaded", function(){
     input.addEventListener("input", function() {
       updateTicketPreview();
       calculateCapacity();
+      renderSeatingPlan();
     });
     input.addEventListener("change", function() {
       updateTicketPreview();
       calculateCapacity();
+      renderSeatingPlan();
     });
   });
 
-  // Attach specific listeners for the seating type to toggle fields and update preview
+  // Specific listener for the seating type to toggle fields
   $("seatingPlanType").addEventListener("change", function() {
     updateSeatingUI();
-    updateTicketPreview(); // Ensure the default text updates immediately
+    updateTicketPreview();
+    renderSeatingPlan();
   });
 
   // Run once on load
   updateSeatingUI();
   updateTicketPreview();
+  renderSeatingPlan();
 
   $("createEventForm").addEventListener("submit", function(e){
     e.preventDefault();
