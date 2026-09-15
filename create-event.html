@@ -99,6 +99,40 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .row-override-item input{width:56px;padding:5px 6px;text-align:center;font-size:13px;}
 .row-overrides-hint{font-size:11px;color:var(--text-muted);margin-bottom:8px;font-style:italic;}
 
+.section-rows-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border-2);
+  border-radius: 8px;
+}
+.section-rows-row label {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex: 1;
+}
+.section-rows-row input {
+  width: 80px;
+  padding: 6px 8px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+.section-rows-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--cyan-700);
+  background: var(--cyan-50);
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+
 .preview-column { position: sticky; top: 40px; display: flex; flex-direction: column; gap: 24px; }
 .preview-label { text-align: center; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
 .ticket-card { border-radius: 18px; padding: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); display: flex; flex-direction: column; gap: 20px; position: relative; overflow: hidden; border: 1px solid rgba(0,0,0,0.05); transition: all 0.4s ease; }
@@ -212,7 +246,6 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .layout-legend .lg-swatch.silver { background: #cbd5e1; }
 .layout-legend .lg-swatch.cyan { background: #22d3ee; }
 
-/* ===== FULL SCREEN OVERLAY ===== */
 .fullscreen-overlay {
   position: fixed;
   inset: 0;
@@ -401,18 +434,6 @@ h1,h2,h3{line-height:1.15;font-weight:700}
   font-size: 12px;
 }
 .fs-rotation-control input:focus { outline: none; border-color: #22d3ee; }
-.fs-preset {
-  background: rgba(255,255,255,0.08);
-  border: 1px solid rgba(255,255,255,0.18);
-  color: #fff;
-  padding: 6px 10px;
-  border-radius: 6px;
-  cursor: pointer;
-  font-family: inherit;
-  font-weight: 700;
-  font-size: 11px;
-}
-.fs-preset:hover { background: #22d3ee; color: #04161c; border-color: #22d3ee; }
 </style>
 </head>
 <body>
@@ -482,25 +503,33 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 
         <div class="form-row">
           <div class="form-group"><label id="label-level1" for="totalLevel1">Sections / Blocks</label><input type="number" id="totalLevel1" min="1" max="26" value="3" /></div>
-          <div class="form-group" id="group-level2"><label id="label-level2" for="totalLevel2">Rows per Section</label><input type="number" id="totalLevel2" min="1" max="52" value="6" /></div>
+          <div class="form-group" id="group-level2"><label id="label-level2" for="totalLevel2">Default Rows per Section</label><input type="number" id="totalLevel2" min="1" max="52" value="6" /></div>
           <div class="form-group"><label id="label-level3" for="totalLevel3">Default Seats per Row (min 4, max 90)</label><input type="number" id="totalLevel3" min="4" max="90" value="8" /></div>
         </div>
 
         <div class="form-group" id="rowOverridesGroup">
-          <label>Per-Section Row Seat Counts (Optional)</label>
+          <label>Per-Section Configuration</label>
           <div class="row-overrides-section">
             <div class="row-overrides-header">
               <div class="section-tabs" id="sectionTabs"></div>
               <button type="button" class="btn-mini fs-btn" id="openFullscreen">⛶ Full Screen</button>
               <button type="button" class="btn-mini" id="clearAllOverrides">Clear All</button>
             </div>
-            <div class="row-overrides-hint">Each section can have its own row seat counts. Pick a section tab, then customise its rows.</div>
+
+            <!-- Section-level rows override -->
+            <div class="section-rows-row">
+              <label for="sectionRowsInput">Rows in this section</label>
+              <span class="section-rows-badge" id="sectionRowsBadge">6 rows</span>
+              <input type="number" id="sectionRowsInput" min="1" max="52" value="6" />
+            </div>
+
+            <div class="row-overrides-hint">Each section has its own row count and seat counts. Switch tabs to configure each section independently.</div>
             <div class="row-overrides-grid" id="rowOverridesGrid"></div>
           </div>
         </div>
 
         <div class="form-group" id="rowTierGroup">
-          <label>Row Tier Distribution (applies to all sections)</label>
+          <label>Row Tier Distribution (applies front-to-back per section)</label>
           <p class="form-hint" style="margin-top:0;margin-bottom:8px;">Assign tiers to rows (front to back). Any leftover rows default to Cyan.</p>
           <div class="tier-dist-grid">
             <div class="tier-dist-item"><div class="swatch elite"></div><label for="tierRowsElite">Elite (Black)</label><input type="number" id="tierRowsElite" min="0" value="2" /></div>
@@ -586,7 +615,6 @@ h1,h2,h3{line-height:1.15;font-weight:700}
   </div>
 </main>
 
-<!-- FULL SCREEN OVERLAY -->
 <div class="fullscreen-overlay" id="fullscreenOverlay">
   <div class="fs-header">
     <h2>Full Layout View · <span id="fsStageName">STAGE</span></h2>
@@ -609,6 +637,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 function $(id){ return document.getElementById(id); }
 
 var sectionRowOverrides = {}; // { sectionIdx: { rowIdx: seatCount } }
+var sectionRowCounts = {};    // { sectionIdx: rowCount }
 var sectionRotations = {};    // { sectionIdx: degrees }
 var currentEditingSection = 0;
 
@@ -645,15 +674,26 @@ document.addEventListener("DOMContentLoaded", function(){
     return map;
   }
   function updateTierDistributionSummary() {
-    var totalRows = parseInt($("totalLevel2").value) || 0;
+    var defaultRows = parseInt($("totalLevel2").value) || 0;
     var sum = (parseInt($("tierRowsElite").value)||0) + (parseInt($("tierRowsGold").value)||0) + (parseInt($("tierRowsSilver").value)||0) + (parseInt($("tierRowsCyan").value)||0);
     var s = $("tierDistSummary");
-    if (sum === totalRows) { s.className = "tier-dist-summary"; s.textContent = "✓ Perfect — " + sum + " rows assigned (" + totalRows + " total)."; }
-    else if (sum < totalRows) { s.className = "tier-dist-summary"; s.textContent = "You've assigned " + sum + " rows. Remaining " + (totalRows - sum) + " will default to Cyan."; }
-    else { s.className = "tier-dist-summary error"; s.textContent = "⚠ You've assigned " + sum + " rows but only " + totalRows + " exist. Extra will be ignored."; }
+    s.className = "tier-dist-summary";
+    if (sum === defaultRows) s.textContent = "✓ Perfect — " + sum + " rows assigned (default per section).";
+    else if (sum < defaultRows) s.textContent = "Tier sum: " + sum + ". Rows beyond this in each section default to Cyan.";
+    else s.textContent = "Tier sum: " + sum + " rows (applied per section, extras ignored).";
   }
 
-  // ==== SECTION TABS ====
+  // ===== Section row count helpers =====
+  function getRowCount(sectionIdx) {
+    if (sectionRowCounts[sectionIdx] !== undefined) return sectionRowCounts[sectionIdx];
+    return parseInt($("totalLevel2").value) || 6;
+  }
+  function setRowCount(sectionIdx, v) {
+    v = Math.max(1, Math.min(52, v));
+    sectionRowCounts[sectionIdx] = v;
+  }
+
+  // ===== Section tabs =====
   function rebuildSectionTabs() {
     var sections = parseInt($("totalLevel1").value) || 1;
     if (currentEditingSection >= sections) currentEditingSection = 0;
@@ -664,11 +704,11 @@ document.addEventListener("DOMContentLoaded", function(){
       btn.type = "button";
       btn.className = "section-tab" + (i === currentEditingSection ? " active" : "");
       btn.textContent = "Section " + blockLabel(i);
-      btn.dataset.section = i;
       (function(idx) {
         btn.addEventListener("click", function() {
           currentEditingSection = idx;
           rebuildSectionTabs();
+          refreshSectionRowsInput();
           rebuildRowOverrides();
         });
       })(i);
@@ -676,16 +716,22 @@ document.addEventListener("DOMContentLoaded", function(){
     }
   }
 
-  // ==== PER-ROW OVERRIDES (current section) ====
+  // ===== Section rows input =====
+  function refreshSectionRowsInput() {
+    var v = getRowCount(currentEditingSection);
+    $("sectionRowsInput").value = v;
+    $("sectionRowsBadge").textContent = v + " rows";
+  }
+
+  // ===== Row overrides grid for current section =====
   function rebuildRowOverrides() {
-    var totalRows = parseInt($("totalLevel2").value) || 0;
+    var rowCount = getRowCount(currentEditingSection);
     var baseSeats = parseInt($("totalLevel3").value) || 10;
     var container = $("rowOverridesGrid");
     container.innerHTML = "";
-    if (totalRows <= 0) return;
+    if (rowCount <= 0) return;
     var sectionData = sectionRowOverrides[currentEditingSection] || {};
-    var display = Math.min(totalRows, 52);
-    for (var r = 0; r < display; r++) {
+    for (var r = 0; r < rowCount; r++) {
       var item = document.createElement("div");
       item.className = "row-override-item";
       var lbl = document.createElement("div");
@@ -753,9 +799,9 @@ document.addEventListener("DOMContentLoaded", function(){
       return;
     }
     var sections = parseInt($("totalLevel1").value) || 0;
-    var rows = parseInt($("totalLevel2").value) || 0;
     var total = 0;
     for (var s = 0; s < sections; s++) {
+      var rows = getRowCount(s);
       for (var r = 0; r < rows; r++) total += getSeatsForRow(s, r);
     }
     $("totalCapacity").value = total;
@@ -771,17 +817,19 @@ document.addEventListener("DOMContentLoaded", function(){
   }
 
   // ============ STANDARD LAYOUT ============
-  function renderStandardLayout(container, sections, rows) {
-    var map = buildRowTierMap(rows);
+  function renderStandardLayout(container, sections) {
     var stageName = ($("stageName").value || "STAGE").trim().toUpperCase();
 
     for (var b = 0; b < sections; b++) {
+      var rowCount = getRowCount(b);
+      var map = buildRowTierMap(rowCount);
+
       var blockEl = document.createElement("div");
       blockEl.className = "block";
 
       var bl = document.createElement("div");
       bl.className = "block-label";
-      bl.textContent = "Section " + blockLabel(b);
+      bl.textContent = "Section " + blockLabel(b) + " · " + rowCount + " rows";
       blockEl.appendChild(bl);
 
       var stageLine = document.createElement("div");
@@ -792,7 +840,7 @@ document.addEventListener("DOMContentLoaded", function(){
       var rowsStack = document.createElement("div");
       rowsStack.className = "rows-stack";
 
-      for (var r = 0; r < rows; r++) {
+      for (var r = 0; r < rowCount; r++) {
         var tier = map[r] || "cyan";
         var seatCount = getSeatsForRow(b, r);
         seatCount = Math.max(4, Math.min(90, seatCount));
@@ -883,22 +931,19 @@ document.addEventListener("DOMContentLoaded", function(){
     var container = $("seatingPlanPreview");
     container.innerHTML = "";
     var l1 = parseInt($("totalLevel1").value) || 0;
-    var l2 = parseInt($("totalLevel2").value) || 0;
     var l3 = parseInt($("totalLevel3").value) || 0;
 
-    if (l1 === 0 || l3 === 0 || (l2 === 0 && !isTablesMode())) {
+    if (l1 === 0 || l3 === 0) {
       container.innerHTML = '<div class="seating-plan-title">Enter seating details to generate layout</div>';
       return;
     }
     if (isTablesMode()) { renderTablesLayout(container, l1, l3); return; }
-    renderStandardLayout(container, Math.min(l1, 6), Math.min(l2, 52));
+    renderStandardLayout(container, Math.min(l1, 6));
   }
 
   // ============ FULL SCREEN VIEW ============
   function renderFullscreen() {
     var sections = parseInt($("totalLevel1").value) || 0;
-    var rows = parseInt($("totalLevel2").value) || 0;
-    var map = buildRowTierMap(rows);
     var stageName = ($("stageName").value || "STAGE").trim().toUpperCase();
 
     $("fsStageName").textContent = stageName;
@@ -908,6 +953,9 @@ document.addEventListener("DOMContentLoaded", function(){
     row.innerHTML = "";
 
     for (var b = 0; b < sections; b++) {
+      var rowCount = getRowCount(b);
+      var map = buildRowTierMap(rowCount);
+
       var frame = document.createElement("div");
       frame.className = "fs-section-frame";
       frame.style.transform = "rotate(" + getRotation(b) + "deg)";
@@ -917,7 +965,7 @@ document.addEventListener("DOMContentLoaded", function(){
 
       var title = document.createElement("div");
       title.className = "fs-section-title";
-      title.textContent = "Section " + blockLabel(b);
+      title.textContent = "Section " + blockLabel(b) + " · " + rowCount + " rows";
       inner.appendChild(title);
 
       var stageLbl = document.createElement("div");
@@ -925,7 +973,7 @@ document.addEventListener("DOMContentLoaded", function(){
       stageLbl.textContent = stageName;
       inner.appendChild(stageLbl);
 
-      for (var r = 0; r < rows; r++) {
+      for (var r = 0; r < rowCount; r++) {
         var tier = map[r] || "cyan";
         var seatCount = getSeatsForRow(b, r);
         seatCount = Math.max(4, Math.min(90, seatCount));
@@ -959,7 +1007,6 @@ document.addEventListener("DOMContentLoaded", function(){
       row.appendChild(frame);
     }
 
-    // Controls
     var controls = $("fsControls");
     controls.innerHTML = "";
     for (var b2 = 0; b2 < sections; b2++) {
@@ -1031,8 +1078,18 @@ document.addEventListener("DOMContentLoaded", function(){
     if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
   });
 
-  $("totalLevel1").addEventListener("input", function() { rebuildSectionTabs(); calculateCapacity(); renderSeatingPlan(); });
-  $("totalLevel2").addEventListener("input", function() { rebuildRowOverrides(); calculateCapacity(); renderSeatingPlan(); });
+  $("totalLevel1").addEventListener("input", function() { rebuildSectionTabs(); refreshSectionRowsInput(); rebuildRowOverrides(); calculateCapacity(); renderSeatingPlan(); });
+
+  // Global default rows changed → reset all per-section row overrides that didn't exist and refresh input
+  $("totalLevel2").addEventListener("change", function() {
+    var v = parseInt(this.value) || 6;
+    v = Math.max(1, Math.min(52, v));
+    this.value = v;
+    refreshSectionRowsInput();
+    rebuildRowOverrides();
+    calculateCapacity(); renderSeatingPlan();
+  });
+
   $("totalLevel3").addEventListener("change", function() {
     var v = parseInt(this.value) || 10;
     v = Math.max(4, Math.min(90, v));
@@ -1041,11 +1098,25 @@ document.addEventListener("DOMContentLoaded", function(){
     calculateCapacity(); renderSeatingPlan();
   });
 
+  // Section rows input change → set row count for current section
+  $("sectionRowsInput").addEventListener("input", function() {
+    var v = parseInt(this.value);
+    if (isNaN(v)) return;
+    v = Math.max(1, Math.min(52, v));
+    setRowCount(currentEditingSection, v);
+    $("sectionRowsBadge").textContent = v + " rows";
+    rebuildRowOverrides();
+    calculateCapacity(); renderSeatingPlan();
+    if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+  });
+
   $("clearAllOverrides").addEventListener("click", function() {
-    if (!confirm("Clear all per-section row overrides?")) return;
+    if (!confirm("Clear all per-section overrides (row counts and seat counts)?")) return;
     sectionRowOverrides = {};
+    sectionRowCounts = {};
     currentEditingSection = 0;
     rebuildSectionTabs();
+    refreshSectionRowsInput();
     rebuildRowOverrides();
     calculateCapacity();
     renderSeatingPlan();
@@ -1054,7 +1125,6 @@ document.addEventListener("DOMContentLoaded", function(){
   $("openFullscreen").addEventListener("click", openFullscreen);
   $("closeFullscreen").addEventListener("click", closeFullscreen);
 
-  // ESC to close fullscreen
   document.addEventListener("keydown", function(e) {
     if (e.key === "Escape" && $("fullscreenOverlay").classList.contains("open")) closeFullscreen();
   });
@@ -1062,6 +1132,7 @@ document.addEventListener("DOMContentLoaded", function(){
   // INIT
   updateSeatingUI();
   rebuildSectionTabs();
+  refreshSectionRowsInput();
   rebuildRowOverrides();
   updateTicketPreview();
   renderSeatingPlan();
