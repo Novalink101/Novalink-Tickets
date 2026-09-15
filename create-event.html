@@ -63,6 +63,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 
 /* --- LIVE TICKET PREVIEW STYLES --- */
 .preview-column { position: sticky; top: 40px; }
+.preview-label { text-align: center; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
 .ticket-card {
   border-radius: 18px;
   padding: 24px;
@@ -180,10 +181,10 @@ h1,h2,h3{line-height:1.15;font-weight:700}
         <div class="form-group">
           <label for="tierColor">Card Colour Tier</label>
           <select id="tierColor" required>
-            <option value="cyan">Cyan (Standard)</option>
+            <option value="cyan" selected>Cyan (Standard)</option>
             <option value="silver">Silver (Mid Seating)</option>
             <option value="gold">Gold (VIP)</option>
-            <option value="black" selected>Black (Elite)</option>
+            <option value="black">Black (Elite)</option>
           </select>
         </div>
         <div class="form-row">
@@ -209,12 +210,13 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 
     <!-- LIVE PREVIEW COLUMN -->
     <div class="preview-column">
-      <div class="ticket-card black" id="dynamicTicket">
+      <div class="preview-label">Live Preview</div>
+      <div class="ticket-card cyan" id="dynamicTicket">
         <div class="ticket-header-row">
           <div class="ticket-logo">NOVALINK</div>
           <div class="ticket-badges">
             <span class="badge-public">PUBLIC</span>
-            <span class="badge-tier" id="prevTierBadge">BLACK</span>
+            <span class="badge-tier" id="prevTierBadge">CYAN</span>
           </div>
         </div>
         <div class="ticket-body-row">
@@ -254,7 +256,6 @@ document.addEventListener("DOMContentLoaded", function(){
 
   // The Live Update Function
   function updateTicketPreview() {
-    // 1. Get current values
     var eventName = $("eventName").value || "EVENT NAME";
     var date = $("startDate").value;
     var venue = $("venueAddress").value || "VENUE";
@@ -262,37 +263,30 @@ document.addEventListener("DOMContentLoaded", function(){
     var seatNumber = $("seatNumber").value || "Seat not assigned";
     var tierColor = $("tierColor").value;
 
-    // 2. Update text elements
     $("prevEventName").textContent = eventName;
-    
-    // Only show date if it exists to prevent awkward formatting
     var dateStr = date ? date : "DATE";
     $("prevDateVenue").textContent = dateStr + " · " + venue;
-    
     $("prevGuestName").textContent = guestName;
     $("prevSeat").textContent = seatNumber;
     $("prevVenueLocation").textContent = venue;
     $("prevTierBadge").textContent = tierColor.toUpperCase();
 
-    // 3. Update the ticket colour based on tier
     var ticketEl = $("dynamicTicket");
     ticketEl.className = "ticket-card " + tierColor;
   }
 
-  // 4. Attach event listeners to every input field
+  // Attach event listeners
   var formInputs = document.querySelectorAll("#createEventForm input, #createEventForm select");
   formInputs.forEach(function(input) {
     input.addEventListener("input", updateTicketPreview);
     input.addEventListener("change", updateTicketPreview);
   });
 
-  // Run once on load to set initial state
+  // Run once on load
   updateTicketPreview();
 
-  // 5. Handle Form Submission (Saving)
   $("createEventForm").addEventListener("submit", function(e){
     e.preventDefault();
-    // You can trigger a success toast or save to Firebase here.
     alert("Event Saved! Your ticket design is locked in.");
   });
 });
@@ -300,4 +294,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-</html>
+        </html>
