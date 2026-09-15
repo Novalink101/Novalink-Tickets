@@ -129,10 +129,20 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 /* Row grid: [row label] [scrollable seats] [tier tag] */
 .horizontal-row { display: grid; grid-template-columns: 52px 1fr 58px; align-items: center; gap: 6px; }
 .row-label { font-size: 10px; font-weight: 800; color: var(--text-muted); text-align: right; letter-spacing: 0.5px; text-transform: uppercase; }
-.row-seats { display: flex; gap: 3px; overflow-x: auto; overflow-y: hidden; padding-bottom: 4px; scrollbar-width: thin; }
+
+/* SCROLLABLE ROW — seats center inside a wider inner wrapper */
+.row-seats { overflow-x: auto; overflow-y: hidden; padding-bottom: 4px; scrollbar-width: thin; }
 .row-seats::-webkit-scrollbar { height: 5px; }
 .row-seats::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 3px; }
 .row-seats::-webkit-scrollbar-track { background: transparent; }
+.row-seats-inner {
+  display: flex;
+  gap: 3px;
+  justify-content: center;
+  width: max-content;
+  min-width: 100%;
+  margin: 0 auto;
+}
 
 /* ===== SEAT WITH NUMBER ===== */
 .row-seat {
@@ -363,7 +373,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 
 function $(id){ return document.getElementById(id); }
 
-var rowSeatOverrides = {}; // { 0: 8, 1: 12, ... }
+var rowSeatOverrides = {};
 
 document.addEventListener("DOMContentLoaded", function(){
   if(window.lucide) lucide.createIcons();
@@ -385,7 +395,6 @@ document.addEventListener("DOMContentLoaded", function(){
   }
   function rowLabel(index) { var n = index, label = ""; do { label = String.fromCharCode(65 + (n % 26)) + label; n = Math.floor(n / 26) - 1; } while (n >= 0); return label; }
   function tierTagText(t) { return t === "black" ? "Elite" : t === "gold" ? "Gold" : t === "silver" ? "Silver" : "Cyan"; }
-  function tierColor(t) { return t === "black" ? "#1a202c" : t === "gold" ? "#ecc94b" : t === "silver" ? "#cbd5e1" : "#22d3ee"; }
 
   function buildRowTierMap(totalRows) {
     var e = parseInt($("tierRowsElite").value)||0, g = parseInt($("tierRowsGold").value)||0, s = parseInt($("tierRowsSilver").value)||0, c = parseInt($("tierRowsCyan").value)||0;
@@ -406,7 +415,6 @@ document.addEventListener("DOMContentLoaded", function(){
     else { s.className = "tier-dist-summary error"; s.textContent = "⚠ You've assigned " + sum + " rows but only " + totalRows + " exist. Extra will be ignored."; }
   }
 
-  // ===== ROW OVERRIDES BUILDER =====
   function rebuildRowOverrides() {
     var totalRows = parseInt($("totalLevel2").value) || 0;
     var baseSeats = parseInt($("totalLevel3").value) || 10;
@@ -442,7 +450,6 @@ document.addEventListener("DOMContentLoaded", function(){
   }
   function resetRowOverrides() { rowSeatOverrides = {}; rebuildRowOverrides(); }
 
-  // ===== SEAT COUNT FOR A ROW =====
   function getSeatsForRow(rowIdx) {
     if (rowSeatOverrides[rowIdx] !== undefined) return rowSeatOverrides[rowIdx];
     return parseInt($("totalLevel3").value) || 10;
@@ -494,7 +501,7 @@ document.addEventListener("DOMContentLoaded", function(){
     return legend;
   }
 
-  // ============ STANDARD LAYOUT — matches reference ============
+  // ============ STANDARD LAYOUT ============
   function renderStandardLayout(container, blocks, rows) {
     var map = buildRowTierMap(rows);
     var stageName = ($("stageName").value || "STAGE").trim().toUpperCase();
@@ -533,13 +540,17 @@ document.addEventListener("DOMContentLoaded", function(){
         var seatsWrap = document.createElement("div");
         seatsWrap.className = "row-seats";
 
+        var seatsInner = document.createElement("div");
+        seatsInner.className = "row-seats-inner";
+
         for (var s = 0; s < seatCount; s++) {
           var seat = document.createElement("div");
           seat.className = "row-seat " + tier;
           seat.textContent = (s + 1);
           seat.title = "Block " + (blockLetters[b] || "A") + " · Row " + rowLabel(r) + " · Seat " + (s + 1);
-          seatsWrap.appendChild(seat);
+          seatsInner.appendChild(seat);
         }
+        seatsWrap.appendChild(seatsInner);
         rowEl.appendChild(seatsWrap);
 
         var tt = document.createElement("div");
@@ -647,17 +658,9 @@ document.addEventListener("DOMContentLoaded", function(){
   $("tableShape").addEventListener("change", function() { updateTableShapeHint(); renderSeatingPlan(); });
   $("stageName").addEventListener("input", function() { renderSeatingPlan(); });
 
-  // Rebuild row overrides when row count or base seat count changes
-  $("totalLevel2").addEventListener("change", function() {
-    resetRowOverrides();
-    calculateCapacity(); renderSeatingPlan();
-  });
-  $("totalLevel2").addEventListener("input", function() {
-    resetRowOverrides();
-    calculateCapacity(); renderSeatingPlan();
-  });
+  $("totalLevel2").addEventListener("change", function() { resetRowOverrides(); calculateCapacity(); renderSeatingPlan(); });
+  $("totalLevel2").addEventListener("input", function() { resetRowOverrides(); calculateCapacity(); renderSeatingPlan(); });
   $("totalLevel3").addEventListener("change", function() {
-    // Clamp base value
     var v = parseInt(this.value) || 10;
     v = Math.max(4, Math.min(90, v));
     this.value = v;
@@ -665,7 +668,6 @@ document.addEventListener("DOMContentLoaded", function(){
     calculateCapacity(); renderSeatingPlan();
   });
 
-  // INIT
   updateSeatingUI();
   rebuildRowOverrides();
   updateTicketPreview();
@@ -680,4 +682,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-          </html>
+</html>
