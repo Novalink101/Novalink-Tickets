@@ -26,8 +26,6 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .novalink-logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none}
 .novalink-logo .mark{width:32px;height:39px}
 .novalink-logo .wordmark{font-weight:800;font-size:1.1rem;color:var(--navy)}
-.back-link{color:var(--text-muted);font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px;text-decoration:none;transition:color 0.2s}
-.back-link:hover{color:var(--cyan-600)}
 .studio-badge{background:#0a0f14;color:#22d3ee;font-size:11px;font-weight:800;padding:4px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:0.05em}
 
 .form-wrapper{flex:1;padding:40px 0;display:flex;align-items:flex-start}
@@ -51,6 +49,16 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 
 .section-divider{margin:24px 0;border-top:1px dashed var(--border);position:relative;text-align:center}
 .section-divider span{background:var(--surface);padding:0 12px;font-size:11px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;position:relative;top:-10px}
+
+/* Toggle Switch */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:10px;margin-bottom:10px}
+.toggle-row .toggle-label{font-size:13px;font-weight:600;color:var(--text)}
+.toggle-switch{position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;cursor:pointer;inset:0;background:#cbd5e1;transition:.3s;border-radius:34px}
+.toggle-slider:before{position:absolute;content:"";height:18px;width:18px;left:3px;bottom:3px;background:white;transition:.3s;border-radius:50%}
+.toggle-switch input:checked + .toggle-slider{background:var(--cyan-500)}
+.toggle-switch input:checked + .toggle-slider:before{transform:translateX(20px)}
 
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 24px;border-radius:12px;font-weight:700;font-size:15px;border:1px solid transparent;cursor:pointer;transition:all 0.2s ease;font-family:inherit;width:100%;text-decoration:none}
 .btn-accent{background:linear-gradient(135deg,var(--cyan-400),var(--cyan-600));color:#04161c}
@@ -120,16 +128,6 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .seat.silver { background: #cbd5e1; }
 .seat.gold { background: #ecc94b; }
 .seat.black { background: #1a202c; }
-
-.tables-wrapper { display: grid; grid-template-columns: repeat(auto-fill, minmax(80px, 1fr)); gap: 12px; }
-.table { background: var(--bg-2); border: 1px solid var(--border-2); border-radius: 12px; padding: 10px; display: flex; flex-direction: column; align-items: center; gap: 8px; }
-.table-label { font-size: 11px; font-weight: 800; color: var(--cyan-700); }
-.chairs-wrapper { display: grid; grid-template-columns: repeat(4, 1fr); gap: 4px; justify-items: center; }
-.chair { width: 10px; height: 10px; border-radius: 50%; transition: background 0.2s; }
-.chair.cyan { background: #22d3ee; }
-.chair.silver { background: #cbd5e1; }
-.chair.gold { background: #ecc94b; }
-.chair.black { background: #1a202c; }
 </style>
 </head>
 <body>
@@ -148,11 +146,13 @@ h1,h2,h3{line-height:1.15;font-weight:700}
     <!-- FORM COLUMN -->
     <div class="form-card">
       <div class="form-header">
-        <h1>Ticket & Security Card Studio</h1>
-        <p>Fill in the details to see your travel pass come to life.</p>
+        <h1>Trip Studio</h1>
+        <p>Design your vehicle layout and generate a live travel pass.</p>
       </div>
 
       <form id="createTripForm">
+        <div class="section-divider"><span>Organiser Details</span></div>
+
         <div class="form-group">
           <label for="hostName">Host Name</label>
           <input type="text" id="hostName" placeholder="e.g., Jane Smith" required />
@@ -198,34 +198,60 @@ h1,h2,h3{line-height:1.15;font-weight:700}
             <input type="time" id="returnTime" required />
           </div>
         </div>
+
+        <div class="section-divider"><span>Vehicle & Layout</span></div>
+
         <div class="form-group">
-          <label for="vehicleType">Vehicle Type & Transport Details</label>
+          <label for="vehicleType">Vehicle Type</label>
           <select id="vehicleType" required>
-            <option value="Personal Vehicle">Personal Vehicle</option>
-            <option value="Shuttle">Shuttle</option>
-            <option value="Chartered Bus">Chartered Bus</option>
-            <option value="Flight">Flight</option>
-            <option value="Train">Train</option>
-            <option value="Other">Other</option>
+            <option value="bus" selected>Bus</option>
+            <option value="plane">Plane</option>
+            <option value="train">Train</option>
+            <option value="shuttle">Shuttle</option>
           </select>
         </div>
 
-        <div class="section-divider"><span>Seating Configuration</span></div>
-        
-        <div class="form-group">
-          <label for="seatingPlanType">Seating Plan Type</label>
-          <select id="seatingPlanType" required>
-            <option value="stadium">Stadium / Theater (Stand/Block, Row, Seat)</option>
-            <option value="banquet">Gala / Banquet (Table, Chair)</option>
-            <option value="train">Train / Bus (Carriage/Coach, Row, Seat)</option>
-          </select>
+        <!-- Dynamic Component Toggles (Coach / Carriage / Row / Seat) -->
+        <div id="coachToggleRow" class="toggle-row" style="display:none;">
+          <span class="toggle-label">Enable Coach grouping</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="useCoach" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div id="carriageToggleRow" class="toggle-row" style="display:none;">
+          <span class="toggle-label">Enable Carriage grouping</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="useCarriage" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+        <div id="rowToggleRow" class="toggle-row" style="display:none;">
+          <span class="toggle-label">Enable Row layout</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="useRow" />
+            <span class="toggle-slider"></span>
+          </label>
         </div>
 
         <!-- Dynamic Seating Inputs -->
         <div class="form-row">
-          <div class="form-group"><label id="label-level1" for="totalLevel1">Stand / Block</label><input type="number" id="totalLevel1" min="1" value="1" /></div>
-          <div class="form-group" id="group-level2"><label id="label-level2" for="totalLevel2">Rows per Block</label><input type="number" id="totalLevel2" min="1" value="1" /></div>
-          <div class="form-group"><label id="label-level3" for="totalLevel3">Seats per Row</label><input type="number" id="totalLevel3" min="1" value="1" /></div>
+          <div class="form-group" id="group-carriage" style="display:none;">
+            <label id="label-carriage" for="totalCarriage">Carriage</label>
+            <input type="number" id="totalCarriage" min="1" value="1" />
+          </div>
+          <div class="form-group" id="group-coach" style="display:none;">
+            <label id="label-coach" for="totalCoach">Coach</label>
+            <input type="number" id="totalCoach" min="1" value="1" />
+          </div>
+          <div class="form-group" id="group-row">
+            <label id="label-row" for="totalRow">Row</label>
+            <input type="number" id="totalRow" min="1" value="1" />
+          </div>
+          <div class="form-group">
+            <label id="label-seat" for="totalSeat">Seat</label>
+            <input type="number" id="totalSeat" min="1" value="1" />
+          </div>
         </div>
 
         <div class="form-group">
@@ -297,11 +323,10 @@ h1,h2,h3{line-height:1.15;font-weight:700}
         </div>
       </div>
 
-      <!-- SEATING PLAN PREVIEW -->
       <div>
-        <div class="preview-label">Seating Plan Preview</div>
+        <div class="preview-label">Layout Preview</div>
         <div class="seating-plan-preview" id="seatingPlanPreview">
-          <div class="seating-plan-title">Enter seating details to generate layout</div>
+          <div class="seating-plan-title">Enter vehicle details to generate layout</div>
         </div>
       </div>
     </div>
@@ -314,138 +339,170 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 
 function $(id){ return document.getElementById(id); }
 
+// === DYNAMIC ROUTING ENGINE (TRIP MODE ONLY) ===
+const TripRoutingEngine = {
+  "bus":     { term_coach: false, term_carriage: false, term_row: true,  term_seat: true },
+  "plane":   { term_coach: false, term_carriage: false, term_row: true,  term_seat: true },
+  "train":   { term_coach: true,  term_carriage: true,  term_row: true,  term_seat: true },
+  "shuttle": { term_coach: false, term_carriage: false, term_row: false, term_seat: true }
+};
+
 document.addEventListener("DOMContentLoaded", function(){
   if(window.lucide) lucide.createIcons();
 
   var liveRef = "NL-" + Math.random().toString(36).substring(2, 8).toUpperCase();
   $("prevRef").textContent = "Ref: " + liveRef;
 
-  // --- SEATING LOGIC ---
-  function updateSeatingUI() {
-    var type = $("seatingPlanType").value;
-    var level2Group = $("group-level2");
-    var label1 = $("label-level1");
-    var label2 = $("label-level2");
-    var label3 = $("label-level3");
-    var seatInput = $("seatNumber");
-    var seatLabel = $("seatLabel");
+  // --- UPDATE UI BASED ON VEHICLE TYPE ---
+  function updateTripUI() {
+    var vehicle = $("vehicleType").value;
+    var rules = TripRoutingEngine[vehicle];
 
-    if (type === "stadium") {
-      level2Group.style.display = "block";
-      label1.textContent = "Stand / Block";
-      label2.textContent = "Rows per Block";
-      label3.textContent = "Seats per Row";
-      seatInput.placeholder = "e.g., East Stand, Block B, Row MM, Seat 102";
-      seatLabel.textContent = "Seat Number (Preview)";
-    } else if (type === "banquet") {
-      level2Group.style.display = "none"; // Hide Row for banquets
-      label1.textContent = "Total Tables";
-      label3.textContent = "Chairs per Table";
-      seatInput.placeholder = "e.g., Table 14, Chair 6";
-      seatLabel.textContent = "Table/Chair (Preview)";
-    } else if (type === "train") {
-      level2Group.style.display = "block";
-      label1.textContent = "Carriage / Coach";
-      label2.textContent = "Rows per Coach";
-      label3.textContent = "Seats per Row";
-      seatInput.placeholder = "e.g., Coach D, Row 5, Seat A (Window)";
-      seatLabel.textContent = "Seat Number (Preview)";
+    // Show/hide toggle rows based on available terms
+    $("coachToggleRow").style.display = rules.term_coach ? "flex" : "none";
+    $("carriageToggleRow").style.display = rules.term_carriage ? "flex" : "none";
+    $("rowToggleRow").style.display = rules.term_row ? "flex" : "none";
+
+    // Auto-enable toggles when vehicle changes (except Shuttle which has no rows)
+    if (vehicle === "train") {
+      $("useCoach").checked = true;
+      $("useCarriage").checked = true;
+      $("useRow").checked = true;
+    } else if (vehicle === "plane" || vehicle === "bus") {
+      $("useCoach").checked = false;
+      $("useCarriage").checked = false;
+      $("useRow").checked = true;
+    } else if (vehicle === "shuttle") {
+      $("useCoach").checked = false;
+      $("useCarriage").checked = false;
+      $("useRow").checked = false;
     }
+
+    applyToggles();
+  }
+
+  // --- APPLY TOGGLE VISIBILITY ---
+  function applyToggles() {
+    var vehicle = $("vehicleType").value;
+
+    // Carriage visibility
+    if ($("useCarriage").checked) {
+      $("group-carriage").style.display = "block";
+    } else {
+      $("group-carriage").style.display = "none";
+    }
+
+    // Coach visibility
+    if ($("useCoach").checked) {
+      $("group-coach").style.display = "block";
+    } else {
+      $("group-coach").style.display = "none";
+    }
+
+    // Row visibility
+    if ($("useRow").checked) {
+      $("group-row").style.display = "block";
+    } else {
+      $("group-row").style.display = "none";
+    }
+
+    // Update placeholders
+    updateSeatPlaceholder();
     calculateCapacity();
   }
 
-  function calculateCapacity() {
-    var type = $("seatingPlanType").value;
-    var l1 = parseInt($("totalLevel1").value) || 0;
-    var l2 = type === "banquet" ? 1 : (parseInt($("totalLevel2").value) || 0);
-    var l3 = parseInt($("totalLevel3").value) || 0;
-    
-    if (type === "banquet") {
-      $("totalCapacity").value = l1 * l3; // Tables * Chairs
-    } else {
-      $("totalCapacity").value = l1 * l2 * l3; // Blocks * Rows * Seats
-    }
+  function updateSeatPlaceholder() {
+    var vehicle = $("vehicleType").value;
+    var seatInput = $("seatNumber");
+    var seatLabel = $("seatLabel");
+
+    var parts = [];
+    if ($("useCarriage").checked) parts.push("Carriage D");
+    if ($("useCoach").checked) parts.push("Coach 2");
+    if ($("useRow").checked) parts.push("Row 5");
+    parts.push("Seat A");
+
+    seatInput.placeholder = "e.g., " + parts.join(", ");
+    seatLabel.textContent = "Seat Identifier (Preview)";
   }
 
-  // --- SEATING PLAN RENDERER ---
-  function renderSeatingPlan() {
-    var type = $("seatingPlanType").value;
+  function calculateCapacity() {
+    var carriage = $("useCarriage").checked ? (parseInt($("totalCarriage").value) || 1) : 1;
+    var coach = $("useCoach").checked ? (parseInt($("totalCoach").value) || 1) : 1;
+    var row = $("useRow").checked ? (parseInt($("totalRow").value) || 1) : 1;
+    var seat = parseInt($("totalSeat").value) || 1;
+
+    $("totalCapacity").value = carriage * coach * row * seat;
+  }
+
+  // --- LAYOUT RENDERER ---
+  function renderLayout() {
     var tier = $("tierColor").value;
     var container = $("seatingPlanPreview");
-    
-    container.innerHTML = ""; 
+    container.innerHTML = "";
 
-    var l1 = parseInt($("totalLevel1").value) || 0;
-    var l2 = type === "banquet" ? 1 : (parseInt($("totalLevel2").value) || 0);
-    var l3 = parseInt($("totalLevel3").value) || 0;
+    var carriage = $("useCarriage").checked ? (parseInt($("totalCarriage").value) || 0) : 0;
+    var coach = $("useCoach").checked ? (parseInt($("totalCoach").value) || 0) : 0;
+    var row = $("useRow").checked ? (parseInt($("totalRow").value) || 0) : 0;
+    var seat = parseInt($("totalSeat").value) || 0;
 
-    if (l1 === 0 || l3 === 0 || (type !== "banquet" && l2 === 0)) {
-      container.innerHTML = '<div class="seating-plan-title">Enter seating details to generate layout</div>';
+    if (seat === 0) {
+      container.innerHTML = '<div class="seating-plan-title">Enter vehicle details to generate layout</div>';
       return;
     }
 
-    var wrapper = document.createElement("div");
-    
-    if (type === "banquet") {
-      wrapper.className = "tables-wrapper";
-      var renderTables = Math.min(l1, 50);
-      var renderChairs = Math.min(l3, 12);
+    // Determine number of top-level groups
+    var topLevelGroups = 1;
+    var topLabel = "";
 
-      for (var t = 0; t < renderTables; t++) {
-        var tableDiv = document.createElement("div");
-        tableDiv.className = "table";
-        tableDiv.innerHTML = '<div class="table-label">Table ' + (t + 1) + '</div>';
-        var chairsWrapper = document.createElement("div");
-        chairsWrapper.className = "chairs-wrapper";
-        for (var c = 0; c < renderChairs; c++) {
-          var chairDiv = document.createElement("div");
-          chairDiv.className = "chair " + tier;
-          chairsWrapper.appendChild(chairDiv);
-        }
-        tableDiv.appendChild(chairsWrapper);
-        wrapper.appendChild(tableDiv);
-      }
+    if (carriage > 0 && coach > 0) {
+      topLevelGroups = Math.min(carriage, 5);
+      topLabel = "Carriage";
+    } else if (carriage > 0) {
+      topLevelGroups = Math.min(carriage, 5);
+      topLabel = "Carriage";
+    } else if (coach > 0) {
+      topLevelGroups = Math.min(coach, 10);
+      topLabel = "Coach";
     } else {
-      wrapper.className = "blocks-wrapper";
-      var renderBlocks = Math.min(l1, 10);
-      var renderRows = Math.min(l2, 20);
-      var renderSeats = Math.min(l3, 25);
+      topLevelGroups = 1;
+      topLabel = "";
+    }
 
-      for (var b = 0; b < renderBlocks; b++) {
-        var blockDiv = document.createElement("div");
-        blockDiv.className = "block";
-        var blockName = type === "train" ? "Coach " + String.fromCharCode(65 + b) : "Block " + String.fromCharCode(65 + b);
-        blockDiv.innerHTML = '<div class="block-label">' + blockName + '</div>';
-        
-        var rowsWrapper = document.createElement("div");
-        rowsWrapper.className = "rows-wrapper";
+    var renderRows = row > 0 ? Math.min(row, 20) : 1;
+    var renderSeats = Math.min(seat, 25);
 
-        for (var r = 0; r < renderRows; r++) {
-          var rowDiv = document.createElement("div");
-          rowDiv.className = "row";
-          for (var s = 0; s < renderSeats; s++) {
-            var seatDiv = document.createElement("div");
-            seatDiv.className = "seat " + tier;
-            rowDiv.appendChild(seatDiv);
-          }
-          rowsWrapper.appendChild(rowDiv);
+    var wrapper = document.createElement("div");
+    wrapper.className = "blocks-wrapper";
+
+    for (var g = 0; g < topLevelGroups; g++) {
+      var groupDiv = document.createElement("div");
+      groupDiv.className = "block";
+
+      var groupName = topLabel ? topLabel + " " + String.fromCharCode(65 + g) : "Vehicle Layout";
+      groupDiv.innerHTML = '<div class="block-label">' + groupName + '</div>';
+
+      var rowsWrapper = document.createElement("div");
+      rowsWrapper.className = "rows-wrapper";
+
+      for (var r = 0; r < renderRows; r++) {
+        var rowDiv = document.createElement("div");
+        rowDiv.className = "row";
+        for (var s = 0; s < renderSeats; s++) {
+          var seatDiv = document.createElement("div");
+          seatDiv.className = "seat " + tier;
+          rowDiv.appendChild(seatDiv);
         }
-        blockDiv.appendChild(rowsWrapper);
-        wrapper.appendChild(blockDiv);
+        rowsWrapper.appendChild(rowDiv);
       }
+      groupDiv.appendChild(rowsWrapper);
+      wrapper.appendChild(groupDiv);
     }
-    
-    container.appendChild(wrapper);
 
-    if (l1 > (type === "banquet" ? 50 : 10) || l2 > 20 || l3 > (type === "banquet" ? 12 : 25)) {
-      var note = document.createElement("p");
-      note.style.cssText = "font-size:11px; color:var(--text-muted); text-align:center; margin-top:10px;";
-      note.textContent = "Note: Displaying a truncated view for performance.";
-      container.appendChild(note);
-    }
+    container.appendChild(wrapper);
   }
 
-  // The Live Update Function
+  // --- TICKET PREVIEW UPDATER ---
   function updateTicketPreview() {
     var tripName = $("tripName").value || "TRIP NAME";
     var date = $("startDate").value;
@@ -458,44 +515,36 @@ document.addEventListener("DOMContentLoaded", function(){
     var dateStr = date ? date : "DATE";
     $("prevDateVenue").textContent = dateStr + " · " + city;
     $("prevGuestName").textContent = guestName;
-    
-    if (seatNumber) {
-      $("prevSeat").textContent = seatNumber;
-    } else {
-      $("prevSeat").textContent = $("seatingPlanType").value === "banquet" ? "Table not assigned" : "Seat not assigned";
-    }
-    
+    $("prevSeat").textContent = seatNumber || "Seat not assigned";
     $("prevVenueLocation").textContent = city;
     $("prevTierBadge").textContent = tierColor.toUpperCase();
 
-    var ticketEl = $("dynamicTicket");
-    ticketEl.className = "ticket-card " + tierColor;
+    $("dynamicTicket").className = "ticket-card " + tierColor;
   }
 
-  // Attach event listeners
+  // --- ATTACH LISTENERS ---
   var formInputs = document.querySelectorAll("#createTripForm input, #createTripForm select");
   formInputs.forEach(function(input) {
     input.addEventListener("input", function() {
-      updateTicketPreview();
-      calculateCapacity();
-      renderSeatingPlan();
+      updateTicketPreview(); calculateCapacity(); renderLayout();
     });
     input.addEventListener("change", function() {
-      updateTicketPreview();
-      calculateCapacity();
-      renderSeatingPlan();
+      updateTicketPreview(); calculateCapacity(); renderLayout();
     });
   });
 
-  $("seatingPlanType").addEventListener("change", function() {
-    updateSeatingUI();
-    updateTicketPreview();
-    renderSeatingPlan();
+  $("vehicleType").addEventListener("change", function() {
+    updateTripUI(); updateTicketPreview(); renderLayout();
   });
 
-  updateSeatingUI();
+  $("useCarriage").addEventListener("change", function() { applyToggles(); renderLayout(); });
+  $("useCoach").addEventListener("change", function() { applyToggles(); renderLayout(); });
+  $("useRow").addEventListener("change", function() { applyToggles(); renderLayout(); });
+
+  // --- INIT ---
+  updateTripUI();
   updateTicketPreview();
-  renderSeatingPlan();
+  renderLayout();
 
   $("createTripForm").addEventListener("submit", function(e){
     e.preventDefault();
@@ -506,4 +555,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-                                    </html>
+              </html>
