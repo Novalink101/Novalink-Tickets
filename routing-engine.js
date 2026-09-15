@@ -9,8 +9,6 @@
 
   /* -----------------------------------------------------------------------
      PART 1: EVENT ROUTING MATRIX
-     Used by create-event.html
-     Maps venue type → label configuration and calculation rules.
      ----------------------------------------------------------------------- */
   const EventRoutingEngine = {
     "stadium":    { label1: "Stand / Block",    label2: "Row",  label3: "Seat",  requiresCalculation: true },
@@ -24,10 +22,29 @@
   };
 
   /* -----------------------------------------------------------------------
-     PART 2: TRIP ROUTING MATRIX
-     Used by create-trip.html
-     Maps vehicle type → which structural terms (Carriage / Coach / Row / Seat)
-     are available for the organizer to toggle on or off.
+     PART 2: STADIUM SUB-TYPE OPTIONS
+     Displayed when "Stadium" is selected.
+     ----------------------------------------------------------------------- */
+  const StadiumSubTypes = [
+    { value: "horseshoe",   label: "Horseshoe" },
+    { value: "rectangular", label: "Rectangular" },
+    { value: "one_stand",   label: "1 Stand" },
+    { value: "arena",       label: "Arena" },
+    { value: "octagonal",   label: "Octagonal" }
+  ];
+
+  /* -----------------------------------------------------------------------
+     PART 3: AUDITORIUM SUB-TYPE OPTIONS
+     Displayed when "Auditorium" is selected.
+     ----------------------------------------------------------------------- */
+  const AuditoriumSubTypes = [
+    { value: "traverse",    label: "Traverse / Alley Layout" },
+    { value: "continental", label: "Continental Seating Layout" },
+    { value: "straight",    label: "Straight Row Layout" }
+  ];
+
+  /* -----------------------------------------------------------------------
+     PART 4: TRIP ROUTING MATRIX
      ----------------------------------------------------------------------- */
   const TripRoutingEngine = {
     "bus":     { term_coach: false, term_carriage: false, term_row: true,  term_seat: true },
@@ -37,9 +54,7 @@
   };
 
   /* -----------------------------------------------------------------------
-     PART 3: SHARED HELPER — EVENT CONFIG RESOLVER
-     Given a venue type and a hall-layout toggle state, returns the
-     active label configuration for the event form.
+     PART 5: HELPER — EVENT CONFIG RESOLVER
      ----------------------------------------------------------------------- */
   function resolveEventConfig(venueType, isTablesMode) {
     if (venueType === "hall") {
@@ -51,23 +66,18 @@
     if (EventRoutingEngine[venueType]) {
       return Object.assign({}, EventRoutingEngine[venueType], { mode: "seat_types" });
     }
-    // Fallback
     return { label1: "Section", label2: "Row", label3: "Seat", mode: "seat_types", requiresCalculation: true };
   }
 
   /* -----------------------------------------------------------------------
-     PART 4: SHARED HELPER — TRIP RULES RESOLVER
-     Given a vehicle type, returns the toggle rules.
+     PART 6: HELPER — TRIP RULES RESOLVER
      ----------------------------------------------------------------------- */
   function resolveTripRules(vehicleType) {
     return TripRoutingEngine[vehicleType] || TripRoutingEngine["bus"];
   }
 
   /* -----------------------------------------------------------------------
-     PART 5: SHARED HELPER — CAPACITY CALCULATOR (EVENT MODE)
-     Multiplies the active event inputs.
-       - Tables & Chairs mode: Table × Chair
-       - All other modes:      Section × Row × Seat
+     PART 7: HELPER — EVENT CAPACITY CALCULATOR
      ----------------------------------------------------------------------- */
   function calculateEventCapacity(config, l1, l2, l3) {
     var a = parseInt(l1) || 0;
@@ -81,8 +91,7 @@
   }
 
   /* -----------------------------------------------------------------------
-     PART 6: SHARED HELPER — CAPACITY CALCULATOR (TRIP MODE)
-     Multiplies only the components that are toggled ON.
+     PART 8: HELPER — TRIP CAPACITY CALCULATOR
      ----------------------------------------------------------------------- */
   function calculateTripCapacity(activeToggles) {
     var carriage = activeToggles.useCarriage ? (parseInt(activeToggles.carriage) || 1) : 1;
@@ -94,9 +103,7 @@
   }
 
   /* -----------------------------------------------------------------------
-     PART 7: SHARED HELPER — SEAT LABEL BUILDER (TRIP MODE)
-     Constructs a placeholder string like "Carriage D, Coach 2, Row 5, Seat A"
-     based on which components are active.
+     PART 9: HELPER — TRIP SEAT PLACEHOLDER
      ----------------------------------------------------------------------- */
   function buildTripSeatPlaceholder(activeToggles) {
     var parts = [];
@@ -108,23 +115,17 @@
   }
 
   /* -----------------------------------------------------------------------
-     PART 8: EXPORT TO GLOBAL SCOPE
-     Both HTML pages can now access these via window.NovalinkRoutingEngine
+     PART 10: EXPORT TO GLOBAL SCOPE
      ----------------------------------------------------------------------- */
   global.NovalinkRoutingEngine = {
-    // Matrices
     EventRoutingEngine: EventRoutingEngine,
     TripRoutingEngine: TripRoutingEngine,
-
-    // Resolvers
+    StadiumSubTypes: StadiumSubTypes,
+    AuditoriumSubTypes: AuditoriumSubTypes,
     resolveEventConfig: resolveEventConfig,
     resolveTripRules: resolveTripRules,
-
-    // Calculators
     calculateEventCapacity: calculateEventCapacity,
     calculateTripCapacity: calculateTripCapacity,
-
-    // Label builders
     buildTripSeatPlaceholder: buildTripSeatPlaceholder
   };
 
