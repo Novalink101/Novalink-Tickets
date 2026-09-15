@@ -26,8 +26,6 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .novalink-logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none}
 .novalink-logo .mark{width:32px;height:39px}
 .novalink-logo .wordmark{font-weight:800;font-size:1.1rem;color:var(--navy)}
-.back-link{color:var(--text-muted);font-size:14px;font-weight:600;display:flex;align-items:center;gap:6px;text-decoration:none;transition:color 0.2s}
-.back-link:hover{color:var(--cyan-600)}
 .studio-badge{background:#0a0f14;color:#22d3ee;font-size:11px;font-weight:800;padding:4px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:0.05em}
 
 .form-wrapper{flex:1;padding:40px 0;display:flex;align-items:flex-start}
@@ -51,6 +49,16 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 
 .section-divider{margin:24px 0;border-top:1px dashed var(--border);position:relative;text-align:center}
 .section-divider span{background:var(--surface);padding:0 12px;font-size:11px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;position:relative;top:-10px}
+
+/* Toggle Switch */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:10px;margin-bottom:12px}
+.toggle-row .toggle-label{font-size:13px;font-weight:600;color:var(--text)}
+.toggle-switch{position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0}
+.toggle-switch input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;cursor:pointer;inset:0;background:#cbd5e1;transition:.3s;border-radius:34px}
+.toggle-slider:before{position:absolute;content:"";height:18px;width:18px;left:3px;bottom:3px;background:white;transition:.3s;border-radius:50%}
+.toggle-switch input:checked + .toggle-slider{background:var(--cyan-500)}
+.toggle-switch input:checked + .toggle-slider:before{transform:translateX(20px)}
 
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 24px;border-radius:12px;font-weight:700;font-size:15px;border:1px solid transparent;cursor:pointer;transition:all 0.2s ease;font-family:inherit;width:100%;text-decoration:none}
 .btn-accent{background:linear-gradient(135deg,var(--cyan-400),var(--cyan-600));color:#04161c}
@@ -148,11 +156,13 @@ h1,h2,h3{line-height:1.15;font-weight:700}
     <!-- FORM COLUMN -->
     <div class="form-card">
       <div class="form-header">
-        <h1>Ticket & Security Card Studio</h1>
-        <p>Fill in the details to see your security card come to life.</p>
+        <h1>Event Studio</h1>
+        <p>Design your venue layout and generate a live security pass.</p>
       </div>
 
       <form id="createEventForm">
+        <div class="section-divider"><span>Organiser Details</span></div>
+
         <div class="form-group">
           <label for="hostName">Host Name</label>
           <input type="text" id="hostName" placeholder="e.g., John Doe" required />
@@ -182,7 +192,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
           </div>
         </div>
 
-        <div class="section-divider"><span>Event Specifics</span></div>
+        <div class="section-divider"><span>Venue Specifics</span></div>
 
         <div class="form-group">
           <label for="eventName">Event Name</label>
@@ -193,22 +203,42 @@ h1,h2,h3{line-height:1.15;font-weight:700}
           <input type="text" id="venueAddress" placeholder="e.g., Grand Amphitheatre, 123 Main Rd" required />
         </div>
 
-        <div class="section-divider"><span>Seating Configuration</span></div>
-        
+        <div class="section-divider"><span>Venue Type & Layout</span></div>
+
         <div class="form-group">
-          <label for="seatingPlanType">Seating Plan Type</label>
-          <select id="seatingPlanType" required>
-            <option value="stadium">Stadium / Theater (Stand/Block, Row, Seat)</option>
-            <option value="banquet">Gala / Banquet (Table, Chair)</option>
-            <option value="train">Train / Bus (Carriage/Coach, Row, Seat)</option>
+          <label for="venueType">Venue Type</label>
+          <select id="venueType" required>
+            <option value="stadium">Stadium</option>
+            <option value="arena">Arena</option>
+            <option value="hall" selected>Hall</option>
+            <option value="theater">Theater</option>
+            <option value="auditorium">Auditorium</option>
           </select>
         </div>
 
-        <!-- Dynamic Seating Inputs (Universal 3-tier structure) -->
+        <!-- Hall Sub-Toggle -->
+        <div id="hallToggleGroup" class="toggle-row" style="display:none;">
+          <span class="toggle-label">Use Tables & Chairs layout</span>
+          <label class="toggle-switch">
+            <input type="checkbox" id="hallLayoutToggle" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
+        <!-- Dynamic Seating Inputs -->
         <div class="form-row">
-          <div class="form-group"><label id="label-level1" for="totalLevel1">Stand / Block</label><input type="number" id="totalLevel1" min="1" value="1" /></div>
-          <div class="form-group" id="group-level2"><label id="label-level2" for="totalLevel2">Rows per Block</label><input type="number" id="totalLevel2" min="1" value="1" /></div>
-          <div class="form-group"><label id="label-level3" for="totalLevel3">Seats per Row</label><input type="number" id="totalLevel3" min="1" value="1" /></div>
+          <div class="form-group">
+            <label id="label-level1" for="totalLevel1">Section</label>
+            <input type="number" id="totalLevel1" min="1" value="1" />
+          </div>
+          <div class="form-group" id="group-level2">
+            <label id="label-level2" for="totalLevel2">Row</label>
+            <input type="number" id="totalLevel2" min="1" value="1" />
+          </div>
+          <div class="form-group">
+            <label id="label-level3" for="totalLevel3">Seat</label>
+            <input type="number" id="totalLevel3" min="1" value="1" />
+          </div>
         </div>
 
         <div class="form-group">
@@ -234,7 +264,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
           </div>
           <div class="form-group">
             <label for="seatNumber" id="seatLabel">Seat Number (Preview)</label>
-            <input type="text" id="seatNumber" placeholder="e.g., East Stand, Block B, Row MM, Seat 102" />
+            <input type="text" id="seatNumber" placeholder="e.g., Block A, Row 12, Seat 04" />
           </div>
         </div>
 
@@ -280,7 +310,6 @@ h1,h2,h3{line-height:1.15;font-weight:700}
         </div>
       </div>
 
-      <!-- SEATING PLAN PREVIEW -->
       <div>
         <div class="preview-label">Seating Plan Preview</div>
         <div class="seating-plan-preview" id="seatingPlanPreview">
@@ -297,79 +326,112 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 
 function $(id){ return document.getElementById(id); }
 
+// === DYNAMIC ROUTING ENGINE (EVENT MODE ONLY) ===
+const DynamicRoutingEngine = {
+  "stadium":    { label1: "Stand / Block",   label2: "Row",          label3: "Seat",   requiresCalculation: true },
+  "arena":      { label1: "Tier / Section",  label2: "Row",          label3: "Seat",   requiresCalculation: true },
+  "theater":    { label1: "Zone / Level",    label2: "Row",          label3: "Seat",   requiresCalculation: true },
+  "auditorium": { label1: "Balcony / Stalls",label2: "Row",          label3: "Seat",   requiresCalculation: true },
+  "hall": {
+    "seat_types":    { label1: "Section", label2: "Row", label3: "Seat",  requiresCalculation: true },
+    "tables_chairs": { label1: "Table",   label2: null,  label3: "Chair", requiresCalculation: true }
+  }
+};
+
+// Current resolved config (label1, label2, label3, mode)
+var currentConfig = { label1: "Section", label2: "Row", label3: "Seat", mode: "seat_types" };
+
 document.addEventListener("DOMContentLoaded", function(){
   if(window.lucide) lucide.createIcons();
 
   var liveRef = "NL-" + Math.random().toString(36).substring(2, 8).toUpperCase();
   $("prevRef").textContent = "Ref: " + liveRef;
 
-  // --- SEATING LOGIC ---
+  // --- RESOLVE CURRENT ROUTING CONFIG ---
+  function resolveConfig() {
+    var venue = $("venueType").value;
+    var isTablesMode = $("hallLayoutToggle").checked;
+
+    if (venue === "hall") {
+      if (isTablesMode) {
+        currentConfig = Object.assign({}, DynamicRoutingEngine.hall.tables_chairs, { mode: "tables_chairs" });
+      } else {
+        currentConfig = Object.assign({}, DynamicRoutingEngine.hall.seat_types, { mode: "seat_types" });
+      }
+    } else {
+      currentConfig = Object.assign({}, DynamicRoutingEngine[venue], { mode: "seat_types" });
+    }
+  }
+
+  // --- UPDATE UI BASED ON CONFIG ---
   function updateSeatingUI() {
-    var type = $("seatingPlanType").value;
-    var level2Group = $("group-level2");
-    var label1 = $("label-level1");
-    var label2 = $("label-level2");
-    var label3 = $("label-level3");
+    resolveConfig();
+
+    // Toggle visibility of Hall sub-toggle
+    if ($("venueType").value === "hall") {
+      $("hallToggleGroup").style.display = "flex";
+    } else {
+      $("hallToggleGroup").style.display = "none";
+      $("hallLayoutToggle").checked = false;
+    }
+
+    // Apply labels
+    $("label-level1").textContent = currentConfig.label1 || "Section";
+    $("label-level3").textContent = currentConfig.label3 || "Seat";
+
+    // Hide Row group if label2 is null (Tables & Chairs)
+    if (currentConfig.label2 === null) {
+      $("group-level2").style.display = "none";
+      $("label-level2").textContent = "";
+    } else {
+      $("group-level2").style.display = "block";
+      $("label-level2").textContent = currentConfig.label2;
+    }
+
+    // Update preview placeholders
     var seatInput = $("seatNumber");
     var seatLabel = $("seatLabel");
-
-    if (type === "stadium") {
-      level2Group.style.display = "block";
-      label1.textContent = "Stand / Block";
-      label2.textContent = "Rows per Block";
-      label3.textContent = "Seats per Row";
-      seatInput.placeholder = "e.g., East Stand, Block B, Row MM, Seat 102";
-      seatLabel.textContent = "Seat Number (Preview)";
-    } else if (type === "banquet") {
-      level2Group.style.display = "none"; // Hide Row for banquets
-      label1.textContent = "Total Tables";
-      label3.textContent = "Chairs per Table";
+    if (currentConfig.mode === "tables_chairs") {
       seatInput.placeholder = "e.g., Table 14, Chair 6";
-      seatLabel.textContent = "Table/Chair (Preview)";
-    } else if (type === "train") {
-      level2Group.style.display = "block";
-      label1.textContent = "Carriage / Coach";
-      label2.textContent = "Rows per Coach";
-      label3.textContent = "Seats per Row";
-      seatInput.placeholder = "e.g., Coach D, Row 5, Seat A (Window)";
-      seatLabel.textContent = "Seat Number (Preview)";
+      seatLabel.textContent = "Table / Chair (Preview)";
+    } else {
+      seatInput.placeholder = "e.g., East Stand, Block B, Row MM, Seat 102";
+      seatLabel.textContent = currentConfig.label3 + " Number (Preview)";
     }
+
     calculateCapacity();
   }
 
   function calculateCapacity() {
-    var type = $("seatingPlanType").value;
     var l1 = parseInt($("totalLevel1").value) || 0;
-    var l2 = type === "banquet" ? 1 : (parseInt($("totalLevel2").value) || 0);
+    var l2 = currentConfig.label2 === null ? 1 : (parseInt($("totalLevel2").value) || 0);
     var l3 = parseInt($("totalLevel3").value) || 0;
-    
-    if (type === "banquet") {
+
+    if (currentConfig.mode === "tables_chairs") {
       $("totalCapacity").value = l1 * l3; // Tables * Chairs
     } else {
-      $("totalCapacity").value = l1 * l2 * l3; // Blocks * Rows * Seats
+      $("totalCapacity").value = l1 * l2 * l3; // Sections * Rows * Seats
     }
   }
 
   // --- SEATING PLAN RENDERER ---
   function renderSeatingPlan() {
-    var type = $("seatingPlanType").value;
     var tier = $("tierColor").value;
     var container = $("seatingPlanPreview");
-    
-    container.innerHTML = ""; 
+    container.innerHTML = "";
 
     var l1 = parseInt($("totalLevel1").value) || 0;
-    var l2 = type === "banquet" ? 1 : (parseInt($("totalLevel2").value) || 0);
+    var l2 = currentConfig.label2 === null ? 1 : (parseInt($("totalLevel2").value) || 0);
     var l3 = parseInt($("totalLevel3").value) || 0;
 
-    if (l1 === 0 || l3 === 0 || (type !== "banquet" && l2 === 0)) {
+    if (l1 === 0 || l3 === 0 || (currentConfig.label2 !== null && l2 === 0)) {
       container.innerHTML = '<div class="seating-plan-title">Enter seating details to generate layout</div>';
       return;
     }
 
     var wrapper = document.createElement("div");
-    
-    if (type === "banquet") {
+
+    if (currentConfig.mode === "tables_chairs") {
       wrapper.className = "tables-wrapper";
       var renderTables = Math.min(l1, 50);
       var renderChairs = Math.min(l3, 12);
@@ -397,9 +459,8 @@ document.addEventListener("DOMContentLoaded", function(){
       for (var b = 0; b < renderBlocks; b++) {
         var blockDiv = document.createElement("div");
         blockDiv.className = "block";
-        var blockName = type === "train" ? "Coach " + String.fromCharCode(65 + b) : "Block " + String.fromCharCode(65 + b);
-        blockDiv.innerHTML = '<div class="block-label">' + blockName + '</div>';
-        
+        blockDiv.innerHTML = '<div class="block-label">' + currentConfig.label1 + ' ' + String.fromCharCode(65 + b) + '</div>';
+
         var rowsWrapper = document.createElement("div");
         rowsWrapper.className = "rows-wrapper";
 
@@ -417,10 +478,10 @@ document.addEventListener("DOMContentLoaded", function(){
         wrapper.appendChild(blockDiv);
       }
     }
-    
+
     container.appendChild(wrapper);
 
-    if (l1 > (type === "banquet" ? 50 : 10) || l2 > 20 || l3 > (type === "banquet" ? 12 : 25)) {
+    if (l1 > (currentConfig.mode === "tables_chairs" ? 50 : 10) || l2 > 20 || l3 > (currentConfig.mode === "tables_chairs" ? 12 : 25)) {
       var note = document.createElement("p");
       note.style.cssText = "font-size:11px; color:var(--text-muted); text-align:center; margin-top:10px;";
       note.textContent = "Note: Displaying a truncated view for performance.";
@@ -428,7 +489,7 @@ document.addEventListener("DOMContentLoaded", function(){
     }
   }
 
-  // The Live Update Function
+  // --- TICKET PREVIEW UPDATER ---
   function updateTicketPreview() {
     var eventName = $("eventName").value || "EVENT NAME";
     var date = $("startDate").value;
@@ -441,41 +502,43 @@ document.addEventListener("DOMContentLoaded", function(){
     var dateStr = date ? date : "DATE";
     $("prevDateVenue").textContent = dateStr + " · " + venue;
     $("prevGuestName").textContent = guestName;
-    
+
     if (seatNumber) {
       $("prevSeat").textContent = seatNumber;
     } else {
-      $("prevSeat").textContent = $("seatingPlanType").value === "banquet" ? "Table not assigned" : "Seat not assigned";
+      if (currentConfig.mode === "tables_chairs") {
+        $("prevSeat").textContent = "Table not assigned";
+      } else {
+        $("prevSeat").textContent = currentConfig.label3 + " not assigned";
+      }
     }
-    
+
     $("prevVenueLocation").textContent = venue;
     $("prevTierBadge").textContent = tierColor.toUpperCase();
 
-    var ticketEl = $("dynamicTicket");
-    ticketEl.className = "ticket-card " + tierColor;
+    $("dynamicTicket").className = "ticket-card " + tierColor;
   }
 
-  // Attach event listeners
+  // --- ATTACH LISTENERS ---
   var formInputs = document.querySelectorAll("#createEventForm input, #createEventForm select");
   formInputs.forEach(function(input) {
     input.addEventListener("input", function() {
-      updateTicketPreview();
-      calculateCapacity();
-      renderSeatingPlan();
+      updateTicketPreview(); calculateCapacity(); renderSeatingPlan();
     });
     input.addEventListener("change", function() {
-      updateTicketPreview();
-      calculateCapacity();
-      renderSeatingPlan();
+      updateTicketPreview(); calculateCapacity(); renderSeatingPlan();
     });
   });
 
-  $("seatingPlanType").addEventListener("change", function() {
-    updateSeatingUI();
-    updateTicketPreview();
-    renderSeatingPlan();
+  $("venueType").addEventListener("change", function() {
+    updateSeatingUI(); updateTicketPreview(); renderSeatingPlan();
   });
 
+  $("hallLayoutToggle").addEventListener("change", function() {
+    updateSeatingUI(); updateTicketPreview(); renderSeatingPlan();
+  });
+
+  // --- INIT ---
   updateSeatingUI();
   updateTicketPreview();
   renderSeatingPlan();
