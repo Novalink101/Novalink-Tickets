@@ -12,7 +12,7 @@
   --bg:#ffffff;--bg-2:#f6f8fb;--surface:#ffffff;--surface-2:#f1f4f8;
   --border:#e4e9f0;--border-2:#d3dbe5;
   --text:#0a0f14;--text-2:#2b3644;--text-muted:#6b7787;
-  --radius:14px;--max-width:800px;
+  --radius:14px;--max-width:1180px;
   --font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --navy:#1e2f4d;--cyan-logo:#7dd3e8;
 }
@@ -30,7 +30,10 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .back-link:hover{color:var(--cyan-600)}
 .studio-badge{background:#0a0f14;color:#22d3ee;font-size:11px;font-weight:800;padding:4px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:0.05em}
 
-.form-wrapper{flex:1;display:flex;align-items:center;justify-content:center;padding:40px 0}
+.form-wrapper{flex:1;padding:40px 0;display:flex;align-items:flex-start}
+.studio-layout{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start;width:100%}
+@media (max-width:900px){.studio-layout{grid-template-columns:1fr;gap:24px}}
+
 .form-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:32px;box-shadow:0 10px 30px rgba(10,15,20,0.05);width:100%;animation:fadeUp 0.5s ease}
 @keyframes fadeUp{from{opacity:0;transform:translateY(20px)}to{opacity:1;transform:translateY(0)}}
 
@@ -58,8 +61,8 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 
 .form-actions{margin-top:28px;display:flex;flex-direction:column;gap:12px}
 
-/* --- NEW TICKET TEMPLATE STYLES --- */
-#ticketPreview{display:none;animation:fadeUp 0.5s ease;max-width:480px;margin:0 auto}
+/* --- LIVE TICKET PREVIEW STYLES --- */
+.preview-column { position: sticky; top: 40px; }
 .ticket-card {
   border-radius: 18px;
   padding: 24px;
@@ -70,6 +73,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
   position: relative;
   overflow: hidden;
   border: 1px solid rgba(0,0,0,0.05);
+  transition: all 0.4s ease;
 }
 /* Tier Colors */
 .ticket-card.cyan { background: linear-gradient(135deg, #ecfeff, #cffafe); color: #0a0f14; }
@@ -91,7 +95,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 
 .ticket-body-row { display: flex; justify-content: space-between; align-items: flex-end; }
 .ticket-info-left { display: flex; flex-direction: column; gap: 4px; flex: 1; }
-.event-title { font-size: 20px; font-weight: 900; line-height: 1.1; text-transform: uppercase; letter-spacing: -0.5px; }
+.event-title { font-size: 20px; font-weight: 900; line-height: 1.1; text-transform: uppercase; letter-spacing: -0.5px; word-break: break-word; }
 .event-meta { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: rgba(0,0,0,0.6); }
 .ticket-card.black .event-meta { color: rgba(255,255,255,0.6); }
 .guest-title { font-size: 14px; font-weight: 800; margin-top: 8px; }
@@ -122,11 +126,12 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 </header>
 
 <main class="form-wrapper">
-  <div class="container">
-    <div class="form-card" id="formCard">
+  <div class="container studio-layout">
+    <!-- FORM COLUMN -->
+    <div class="form-card">
       <div class="form-header">
         <h1>Ticket & Security Card Studio</h1>
-        <p>Create a secure access pass for your Trip.</p>
+        <p>Fill in the details to see your travel pass come to life.</p>
       </div>
 
       <form id="createTripForm">
@@ -195,7 +200,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
             <option value="cyan">Cyan (Standard)</option>
             <option value="silver">Silver (Mid Seating)</option>
             <option value="gold">Gold (VIP)</option>
-            <option value="black">Black (Elite)</option>
+            <option value="black" selected>Black (Elite)</option>
           </select>
         </div>
         <div class="form-row">
@@ -211,7 +216,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 
         <div class="form-actions">
           <button type="submit" class="btn btn-accent" id="submitBtn">
-            <i data-lucide="shield-check"></i> Generate Security Card
+            <i data-lucide="shield-check"></i> Save & Finalize Trip
           </button>
           <a href="create-event.html" style="text-align:center; font-size:13.5px; color:var(--cyan-600); text-decoration:underline; margin-top:8px; display:block;">Creating an Event instead? Switch to Event Studio →</a>
           <a href="index.html" class="btn btn-ghost">Cancel</a>
@@ -219,8 +224,8 @@ h1,h2,h3{line-height:1.15;font-weight:700}
       </form>
     </div>
 
-    <!-- NEW TICKET PREVIEW TEMPLATE -->
-    <div id="ticketPreview">
+    <!-- LIVE PREVIEW COLUMN -->
+    <div class="preview-column">
       <div class="ticket-card black" id="dynamicTicket">
         <div class="ticket-header-row">
           <div class="ticket-logo">NOVALINK</div>
@@ -232,7 +237,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
         <div class="ticket-body-row">
           <div class="ticket-info-left">
             <div class="event-title" id="prevTripName">TRIP NAME</div>
-            <div class="event-meta" id="prevDateVenue">DATE · DESTINATION</div>
+            <div class="event-meta" id="prevDateVenue">DATE · CITY</div>
             <div class="guest-title" id="prevGuestName">GUEST NAME</div>
             <div class="guest-meta" id="prevSeat">Seat not assigned</div>
             <div class="ref-meta" id="prevRef">Ref: NL-XXXXXX</div>
@@ -247,9 +252,6 @@ h1,h2,h3{line-height:1.15;font-weight:700}
            <div class="barcode-num">0000 0000 0000 0000</div>
         </div>
       </div>
-      <button class="btn btn-ghost" onclick="window.location.reload()" style="margin-top:20px;">
-        <i data-lucide="edit-3"></i> Edit Details
-      </button>
     </div>
   </div>
 </main>
@@ -263,42 +265,52 @@ function $(id){ return document.getElementById(id); }
 document.addEventListener("DOMContentLoaded", function(){
   if(window.lucide) lucide.createIcons();
 
+  // Generate a static reference number for the live preview
+  var liveRef = "NL-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+  $("prevRef").textContent = "Ref: " + liveRef;
+
+  // The Live Update Function
+  function updateTicketPreview() {
+    // 1. Get current values
+    var tripName = $("tripName").value || "TRIP NAME";
+    var date = $("startDate").value;
+    var city = $("city").value || "CITY";
+    var guestName = $("guestName").value || "GUEST NAME";
+    var seatNumber = $("seatNumber").value || "Seat not assigned";
+    var tierColor = $("tierColor").value;
+
+    // 2. Update text elements
+    $("prevTripName").textContent = tripName;
+    
+    // Only show date if it exists to prevent awkward formatting
+    var dateStr = date ? date : "DATE";
+    $("prevDateVenue").textContent = dateStr + " · " + city;
+    
+    $("prevGuestName").textContent = guestName;
+    $("prevSeat").textContent = seatNumber;
+    $("prevVenueLocation").textContent = city;
+    $("prevTierBadge").textContent = tierColor.toUpperCase();
+
+    // 3. Update the ticket colour based on tier
+    var ticketEl = $("dynamicTicket");
+    ticketEl.className = "ticket-card " + tierColor;
+  }
+
+  // 4. Attach event listeners to every input field
+  var formInputs = document.querySelectorAll("#createTripForm input, #createTripForm select");
+  formInputs.forEach(function(input) {
+    input.addEventListener("input", updateTicketPreview);
+    input.addEventListener("change", updateTicketPreview);
+  });
+
+  // Run once on load to set initial state
+  updateTicketPreview();
+
+  // 5. Handle Form Submission (Saving)
   $("createTripForm").addEventListener("submit", function(e){
     e.preventDefault();
-    
-    // Capture Data
-    var data = {
-      tripName: $("tripName").value,
-      city: $("city").value,
-      startDate: $("startDate").value,
-      startTime: $("startTime").value,
-      guestName: $("guestName").value || "GUEST NAME",
-      seatNumber: $("seatNumber").value || "Seat not assigned",
-      tierColor: $("tierColor").value
-    };
-
-    // Generate a random reference number
-    var ref = "NL-" + Math.random().toString(36).substring(2, 8).toUpperCase();
-
-    // Update Ticket Content
-    $("prevTripName").textContent = data.tripName;
-    $("prevDateVenue").textContent = data.startDate + " · " + data.city;
-    $("prevGuestName").textContent = data.guestName;
-    $("prevSeat").textContent = data.seatNumber;
-    $("prevRef").textContent = "Ref: " + ref;
-    $("prevVenueLocation").textContent = data.city;
-    $("prevTierBadge").textContent = data.tierColor.toUpperCase();
-
-    // Update Ticket Colour Theme
-    var ticketEl = $("dynamicTicket");
-    ticketEl.className = "ticket-card " + data.tierColor;
-
-    // Toggle UI
-    $("formCard").style.display = "none";
-    $("ticketPreview").style.display = "block";
-    
-    if(window.lucide) lucide.createIcons(); // Re-render icons inside the new preview
-    console.log("Trip Data Payload:", data);
+    // You can trigger a success toast or save to Firebase here.
+    alert("Trip Saved! Your travel pass design is locked in.");
   });
 });
 
