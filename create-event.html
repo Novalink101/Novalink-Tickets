@@ -291,13 +291,11 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .fs-stage { display: inline-block; padding: 14px 50px; background: linear-gradient(135deg, #1e2f4d, #2a4365); color: #fff; font-weight: 800; letter-spacing: 5px; font-size: 14px; border-radius: 8px; text-transform: uppercase; box-shadow: 0 8px 24px rgba(30,47,77,0.35); flex-shrink: 0; }
 .fs-sections-stack { display: flex; flex-direction: column; gap: 30px; width: 100%; align-items: center; }
 
-/* Shape mode canvas */
 .fs-shape-canvas {
   position: relative;
-  width: 1400px;
-  height: 1400px;
   margin: 0 auto;
   flex-shrink: 0;
+  transition: width 0.25s ease, height 0.25s ease;
 }
 .fs-shape-center-stage {
   position: absolute;
@@ -316,12 +314,23 @@ h1,h2,h3{line-height:1.15;font-weight:700}
   z-index: 10;
   white-space: nowrap;
 }
+.fs-shape-ring {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  border: 1.5px dashed rgba(34,211,238,0.35);
+  border-radius: 50%;
+  pointer-events: none;
+  z-index: 1;
+}
 
 .fs-row-band { display: flex; gap: 40px; justify-content: center; align-items: flex-start; flex-wrap: wrap; width: 100%; min-height: 40px; position: relative; }
 
 .fs-section-frame { transition: transform 0.2s ease; transform-origin: center center; flex-shrink: 0; position: relative; }
 .fs-section-inner { background: #fff; border: 2px solid #e4e9f0; border-radius: 12px; padding: 14px; min-width: 300px; box-shadow: 0 6px 18px rgba(10,15,20,0.06); position: relative; }
-.fs-shape-canvas .fs-section-inner { min-width: 220px; padding: 10px; }
+.fs-shape-canvas .fs-section-frame { transition: none; }
+.fs-shape-canvas .fs-section-inner { min-width: 220px; padding: 10px; transition: transform 0.2s ease; }
 .fs-shape-canvas .fs-section-title { font-size: 10px; margin-bottom: 4px; }
 .fs-shape-canvas .fs-section-location { font-size: 8px; margin-bottom: 6px; letter-spacing: 1px; }
 .fs-shape-canvas .fs-section-stage { font-size: 8px; padding: 4px; letter-spacing: 2px; margin-bottom: 6px; }
@@ -348,7 +357,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .fs-tier-tag.silver { color: #4a5568; }
 .fs-tier-tag.cyan { color: #0e7490; }
 
-.fs-controls { margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; align-items: center; }
+.fs-controls { margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; align-items: center; max-height: 180px; overflow-y: auto; padding: 4px; }
 .fs-rotation-control, .fs-spacing-control { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 12px; display: flex; align-items: center; gap: 8px; font-weight: 700; }
 .fs-rotation-control input, .fs-spacing-control input { width: 70px; padding: 5px 6px; text-align: center; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); color: #fff; border-radius: 6px; font-family: ui-monospace, monospace; font-weight: 800; font-size: 12px; }
 .fs-rotation-control input:focus, .fs-spacing-control input:focus { outline: none; border-color: #22d3ee; }
@@ -419,7 +428,6 @@ h1,h2,h3{line-height:1.15;font-weight:700}
           <p class="form-hint" id="tableShapeHint">Up to 10 chairs placed evenly around the table.</p>
         </div>
 
-        <!-- SHAPE BUILDER -->
         <div class="form-group" id="shapePresetGroup">
           <label for="shapePreset">Shape Builder (optional)</label>
           <div class="shape-preset-row">
@@ -612,9 +620,12 @@ var sectionRowOverrides = {};
 var sectionRowCounts = {};
 var sectionRotations = {};
 var sectionLocations = {};
-var sectionShapePositions = {}; // { idx: {x, y, rotation} } for shape mode
+var sectionShapePositions = {};
 var activeShape = null;
 var sectionSpacingMeters = 2;
+var shapeRingSpacingMeters = 0;   // Ring spacing offset from center (in meters)
+var shapeSideSpacingMeters = 0;   // Gap between sections in a ring (in meters)
+var shapeBaseSize = 900;          // Baseline canvas size
 var currentEditingSection = 0;
 
 var PX_PER_METER = 20;
@@ -646,7 +657,6 @@ var SHAPES = {
   ]}
 };
 
-// Map compass label to angle (clockwise from North)
 var compassToAngle = {
   "N": 0, "NNE": 22.5, "NE": 45, "ENE": 67.5,
   "E": 90, "ESE": 112.5, "SE": 135, "SSE": 157.5,
@@ -724,7 +734,6 @@ document.addEventListener("DOMContentLoaded", function(){
     if (compass) sectionLocations[sectionIdx].compass = compass;
   }
   function getRotation(sectionIdx) {
-    if (sectionShapePositions[sectionIdx]) return sectionShapePositions[sectionIdx].rotation;
     return sectionRotations[sectionIdx] !== undefined ? sectionRotations[sectionIdx] : 0;
   }
 
@@ -740,12 +749,12 @@ document.addEventListener("DOMContentLoaded", function(){
       rebuildRowOverrides();
       calculateCapacity();
       renderSeatingPlan();
+      if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
       return;
     }
     var shape = SHAPES[shapeKey];
     if (!shape) return;
 
-    // Flatten all rings to a list of sections
     var allSections = [];
     shape.rings.forEach(function(ring) {
       for (var i = 0; i < ring.count; i++) {
@@ -758,21 +767,19 @@ document.addEventListener("DOMContentLoaded", function(){
       }
     });
 
-    // Set total sections
     $("totalLevel1").value = allSections.length;
 
-    // Clear previous per-section data
     sectionRowOverrides = {};
     sectionRowCounts = {};
     sectionLocations = {};
     sectionRotations = {};
     sectionShapePositions = {};
+    shapeRingSpacingMeters = 0;
+    shapeSideSpacingMeters = 0;
     currentEditingSection = 0;
 
-    // Apply each section
     allSections.forEach(function(sec, idx) {
       var compassLabel = angleToCompass(sec.angle);
-      // Determine vertical band from radius: inner rings → top, outer → low
       var band = "middle";
       if (sec.radius < 0.5) band = "top";
       else if (sec.radius > 0.75) band = "low";
@@ -780,8 +787,8 @@ document.addEventListener("DOMContentLoaded", function(){
       sectionLocations[idx] = { vertical: band, compass: compassLabel };
       sectionRotations[idx] = sec.rotation;
       sectionShapePositions[idx] = {
-        x: sec.radius * Math.sin(sec.angle * Math.PI / 180),
-        y: -sec.radius * Math.cos(sec.angle * Math.PI / 180),
+        x: Math.sin(sec.angle * Math.PI / 180),
+        y: -Math.cos(sec.angle * Math.PI / 180),
         rotation: sec.rotation,
         angle: sec.angle,
         radius: sec.radius
@@ -1111,29 +1118,25 @@ document.addEventListener("DOMContentLoaded", function(){
     var stack = $("fsSectionsStack");
     stack.innerHTML = "";
     stack.className = "fs-sections-stack";
-    stack.style.cssText = "";
 
     if (activeShape) {
       renderFullscreenShapeMode(stack, sections);
-      $("fsHint").textContent = "🏛️ Shape mode: " + SHAPES[activeShape].name + ". All sections are positioned around the central stage facing inward.";
+      $("fsHint").textContent = "🏛️ Shape mode: " + SHAPES[activeShape].name + ". Use controls below to adjust ring spacing (distance from stage), side spacing (gap between sections), and per-section rotation.";
     } else {
       renderFullscreenBandedMode(stack, sections);
       $("fsHint").textContent = "💡 Sections auto-arrange by their Top/Middle/Low position and compass direction. Adjust spacing and rotation below.";
     }
 
-    // Controls
     var controls = $("fsControls");
     controls.innerHTML = "";
 
     if (!activeShape) {
+      // Banded mode controls
       var spacingCtl = document.createElement("div");
       spacingCtl.className = "fs-spacing-control";
       spacingCtl.innerHTML = "📏 Section Spacing:";
       var spacingInput = document.createElement("input");
-      spacingInput.type = "number";
-      spacingInput.min = 0;
-      spacingInput.max = 50;
-      spacingInput.step = 0.5;
+      spacingInput.type = "number"; spacingInput.min = 0; spacingInput.max = 50; spacingInput.step = 0.5;
       spacingInput.value = sectionSpacingMeters;
       spacingInput.addEventListener("input", function() {
         var v = parseFloat(spacingInput.value);
@@ -1146,20 +1149,14 @@ document.addEventListener("DOMContentLoaded", function(){
       spacingCtl.appendChild(spacingInput);
       spacingCtl.appendChild(document.createTextNode(" m"));
       controls.appendChild(spacingCtl);
-    }
 
-    // Rotation controls (only in banded mode — shape mode already sets rotations automatically)
-    if (!activeShape) {
       for (var b2 = 0; b2 < sections; b2++) {
         (function(idx) {
           var c = document.createElement("div");
           c.className = "fs-rotation-control";
           c.innerHTML = "Section " + blockLabel(idx) + " ↻";
           var inp = document.createElement("input");
-          inp.type = "number";
-          inp.min = -360;
-          inp.max = 360;
-          inp.step = 5;
+          inp.type = "number"; inp.min = -360; inp.max = 360; inp.step = 5;
           inp.value = getRotation(idx);
           inp.addEventListener("input", function() {
             var v = parseInt(inp.value);
@@ -1172,6 +1169,77 @@ document.addEventListener("DOMContentLoaded", function(){
           c.appendChild(document.createTextNode("°"));
           controls.appendChild(c);
         })(b2);
+      }
+    } else {
+      // Shape mode controls
+      var ringCtl = document.createElement("div");
+      ringCtl.className = "fs-spacing-control";
+      ringCtl.innerHTML = "🎯 Ring Spacing:";
+      var ringInput = document.createElement("input");
+      ringInput.type = "number"; ringInput.min = -20; ringInput.max = 20; ringInput.step = 0.5;
+      ringInput.value = shapeRingSpacingMeters;
+      ringInput.addEventListener("input", function() {
+        var v = parseFloat(ringInput.value);
+        if (isNaN(v)) v = 0;
+        shapeRingSpacingMeters = v;
+        renderFullscreenShapeModeOnly();
+      });
+      ringCtl.appendChild(ringInput);
+      ringCtl.appendChild(document.createTextNode(" m"));
+      controls.appendChild(ringCtl);
+
+      var sideCtl = document.createElement("div");
+      sideCtl.className = "fs-spacing-control";
+      sideCtl.innerHTML = "↔ Side Spacing:";
+      var sideInput = document.createElement("input");
+      sideInput.type = "number"; sideInput.min = 0; sideInput.max = 20; sideInput.step = 0.5;
+      sideInput.value = shapeSideSpacingMeters;
+      sideInput.addEventListener("input", function() {
+        var v = parseFloat(sideInput.value);
+        if (isNaN(v) || v < 0) v = 0;
+        shapeSideSpacingMeters = v;
+        renderFullscreenShapeModeOnly();
+      });
+      sideCtl.appendChild(sideInput);
+      sideCtl.appendChild(document.createTextNode(" m"));
+      controls.appendChild(sideCtl);
+
+      // Per-section rotation controls for shape mode
+      for (var s2 = 0; s2 < sections; s2++) {
+        (function(idx) {
+          var c = document.createElement("div");
+          c.className = "fs-rotation-control";
+          c.innerHTML = "Section " + blockLabel(idx) + " ↻";
+          var inp = document.createElement("input");
+          inp.type = "number"; inp.min = -360; inp.max = 360; inp.step = 5;
+          inp.value = getRotation(idx);
+          inp.addEventListener("input", function() {
+            var v = parseInt(inp.value);
+            if (isNaN(v)) v = 0;
+            sectionRotations[idx] = v;
+            // Update just this frame's transform
+            var frame = document.querySelector('.fs-section-frame[data-section="' + idx + '"]');
+            if (frame) {
+              var pos = sectionShapePositions[idx];
+              if (pos) {
+                var scaleFactor = 1 - Math.min(0.7, shapeSideSpacingMeters / 25);
+                var RADIUS_PX = shapeBaseSize * 0.4;
+                var extraRadius = shapeRingSpacingMeters * PX_PER_METER;
+                var baseX = pos.x * RADIUS_PX;
+                var baseY = pos.y * RADIUS_PX;
+                var dirLen = Math.sqrt(pos.x * pos.x + pos.y * pos.y) || 1;
+                var px = baseX + (pos.x / dirLen) * extraRadius;
+                var py = baseY + (pos.y / dirLen) * extraRadius;
+                frame.style.transform = "translate(-50%, -50%) translate(" + px + "px, " + py + "px) rotate(" + v + "deg)";
+                var inner = frame.querySelector(".fs-section-inner");
+                if (inner) inner.style.transform = "scale(" + scaleFactor + ")";
+              }
+            }
+          });
+          c.appendChild(inp);
+          c.appendChild(document.createTextNode("°"));
+          controls.appendChild(c);
+        })(s2);
       }
     }
   }
@@ -1215,24 +1283,40 @@ document.addEventListener("DOMContentLoaded", function(){
     var canvas = document.createElement("div");
     canvas.className = "fs-shape-canvas";
 
-    // Central stage
+    // Compute canvas size accounting for ring spacing
+    var maxRadius = 0;
+    Object.keys(sectionShapePositions).forEach(function(k) {
+      if (sectionShapePositions[k].radius > maxRadius) maxRadius = sectionShapePositions[k].radius;
+    });
+    var extraRadius = shapeRingSpacingMeters * PX_PER_METER;
+    var neededSize = Math.max(700, maxRadius * shapeBaseSize * 0.8 + 400 + extraRadius * 2);
+    canvas.style.width = neededSize + "px";
+    canvas.style.height = neededSize + "px";
+
+    // Center stage
     var centerStage = document.createElement("div");
     centerStage.className = "fs-shape-center-stage";
     centerStage.textContent = ($("stageName").value || "STAGE").trim().toUpperCase();
     canvas.appendChild(centerStage);
 
-    // Set canvas size based on largest radius
-    var maxRadius = 0;
+    // Ring guide circles
+    var ringRadii = {};
     Object.keys(sectionShapePositions).forEach(function(k) {
-      if (sectionShapePositions[k].radius > maxRadius) maxRadius = sectionShapePositions[k].radius;
+      var pos = sectionShapePositions[k];
+      ringRadii[pos.radius] = true;
     });
-    var canvasSize = Math.max(700, maxRadius * 2 * 700 + 400); // scale factor
-    canvas.style.width = canvasSize + "px";
-    canvas.style.height = canvasSize + "px";
+    Object.keys(ringRadii).forEach(function(r) {
+      var ringRadiusPx = parseFloat(r) * shapeBaseSize * 0.4 + extraRadius;
+      var ringEl = document.createElement("div");
+      ringEl.className = "fs-shape-ring";
+      ringEl.style.width = (ringRadiusPx * 2) + "px";
+      ringEl.style.height = (ringRadiusPx * 2) + "px";
+      canvas.appendChild(ringEl);
+    });
 
-    // Each section positioned via absolute positioning
-    var center = canvasSize / 2;
-    var RADIUS_PX = canvasSize * 0.4; // 40% of canvas half
+    var center = neededSize / 2;
+    var RADIUS_PX = shapeBaseSize * 0.4;
+    var scaleFactor = 1 - Math.min(0.7, shapeSideSpacingMeters / 25);
 
     Object.keys(sectionShapePositions).forEach(function(k) {
       var idx = parseInt(k);
@@ -1241,14 +1325,31 @@ document.addEventListener("DOMContentLoaded", function(){
       frame.style.position = "absolute";
       frame.style.left = center + "px";
       frame.style.top = center + "px";
-      var px = pos.x * RADIUS_PX;
-      var py = pos.y * RADIUS_PX;
-      frame.style.transform = "translate(-50%, -50%) translate(" + px + "px, " + py + "px) rotate(" + pos.rotation + "deg)";
+
+      var baseX = pos.x * RADIUS_PX;
+      var baseY = pos.y * RADIUS_PX;
+      var dirLen = Math.sqrt(pos.x * pos.x + pos.y * pos.y) || 1;
+      var px = baseX + (pos.x / dirLen) * extraRadius;
+      var py = baseY + (pos.y / dirLen) * extraRadius;
+
+      var rot = getRotation(idx);
+      frame.style.transform = "translate(-50%, -50%) translate(" + px + "px, " + py + "px) rotate(" + rot + "deg)";
       frame.style.transformOrigin = "center center";
+
+      var inner = frame.querySelector(".fs-section-inner");
+      if (inner) inner.style.transform = "scale(" + scaleFactor + ")";
+
       canvas.appendChild(frame);
     });
 
     stack.appendChild(canvas);
+  }
+
+  function renderFullscreenShapeModeOnly() {
+    // Fast re-render of just the canvas
+    var stack = $("fsSectionsStack");
+    stack.innerHTML = "";
+    renderFullscreenShapeMode(stack, parseInt($("totalLevel1").value) || 0);
   }
 
   function openFullscreen() {
@@ -1265,6 +1366,8 @@ document.addEventListener("DOMContentLoaded", function(){
     sectionRotations = {};
     sectionShapePositions = {};
     sectionSpacingMeters = 2;
+    shapeRingSpacingMeters = 0;
+    shapeSideSpacingMeters = 0;
     activeShape = null;
     $("shapePreset").value = "";
     $("shapePresetBadge").textContent = "—";
@@ -1297,10 +1400,7 @@ document.addEventListener("DOMContentLoaded", function(){
     });
   });
 
-  // Shape preset
-  $("shapePreset").addEventListener("change", function() {
-    applyShape(this.value);
-  });
+  $("shapePreset").addEventListener("change", function() { applyShape(this.value); });
 
   $("venueType").addEventListener("change", function() { updateSeatingUI(); renderSeatingPlan(); });
   $("hallLayoutToggle").addEventListener("change", function() { updateSeatingUI(); renderSeatingPlan(); });
@@ -1318,7 +1418,6 @@ document.addEventListener("DOMContentLoaded", function(){
   });
 
   $("totalLevel1").addEventListener("input", function() {
-    // If user manually changes section count, clear shape mode
     if (activeShape) {
       activeShape = null;
       sectionShapePositions = {};
@@ -1381,6 +1480,8 @@ document.addEventListener("DOMContentLoaded", function(){
     sectionLocations = {};
     sectionShapePositions = {};
     activeShape = null;
+    shapeRingSpacingMeters = 0;
+    shapeSideSpacingMeters = 0;
     $("shapePreset").value = "";
     $("shapePresetBadge").textContent = "—";
     currentEditingSection = 0;
@@ -1417,4 +1518,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-  </html>
+                                  </html>
