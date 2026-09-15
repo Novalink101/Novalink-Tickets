@@ -75,9 +75,24 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .tier-dist-summary{font-size:11.5px;color:var(--text-muted);margin-top:8px;font-style:italic;}
 .tier-dist-summary.error{color:#b91c1c;font-weight:700;}
 
-/* ===== PER-ROW OVERRIDES ===== */
-.row-overrides-section{margin-top:12px;padding:12px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:10px;max-height:280px;overflow-y:auto;}
-.row-overrides-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;}
+/* ===== PER-SECTION / PER-ROW OVERRIDES ===== */
+.row-overrides-section{margin-top:12px;padding:12px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:10px;}
+.row-overrides-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px;flex-wrap:wrap;}
+.section-tabs{display:flex;gap:6px;flex-wrap:wrap;}
+.section-tab{
+  padding:6px 12px;border-radius:8px;border:1px solid var(--border-2);
+  background:var(--surface);font-size:11.5px;font-weight:700;cursor:pointer;
+  font-family:inherit;transition:all 0.15s;color:var(--text-2);
+}
+.section-tab:hover{border-color:var(--cyan-500);color:var(--cyan-700);}
+.section-tab.active{background:#0a0f14;color:#fff;border-color:#0a0f14;}
+.btn-mini{
+  padding:6px 10px;border-radius:8px;border:1px solid var(--border-2);
+  background:transparent;font-size:11px;font-weight:700;cursor:pointer;
+  font-family:inherit;color:var(--text-muted);
+}
+.btn-mini:hover{border-color:#dc2626;color:#dc2626;}
+.row-overrides-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;max-height:240px;overflow-y:auto;}
 .row-override-item{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border-2);border-radius:8px;padding:6px 8px;}
 .row-override-label{font-size:11px;font-weight:800;color:var(--text-2);letter-spacing:0.5px;flex:1;}
 .row-override-item input{width:56px;padding:5px 6px;text-align:center;font-size:13px;}
@@ -126,11 +141,9 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .stage-line { text-align: center; font-size: 10px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: #fff; background: linear-gradient(135deg, var(--navy), #2a4365); padding: 8px; border-radius: 5px; margin-bottom: 10px; }
 .rows-stack { display: flex; flex-direction: column; gap: 4px; }
 
-/* Row grid: [row label] [scrollable seats] [tier tag] */
 .horizontal-row { display: grid; grid-template-columns: 52px 1fr 58px; align-items: center; gap: 6px; }
 .row-label { font-size: 10px; font-weight: 800; color: var(--text-muted); text-align: right; letter-spacing: 0.5px; text-transform: uppercase; }
 
-/* SCROLLABLE ROW — seats center inside a wider inner wrapper */
 .row-seats { overflow-x: auto; overflow-y: hidden; padding-bottom: 4px; scrollbar-width: thin; }
 .row-seats::-webkit-scrollbar { height: 5px; }
 .row-seats::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 3px; }
@@ -144,7 +157,6 @@ h1,h2,h3{line-height:1.15;font-weight:700}
   margin: 0 auto;
 }
 
-/* ===== SEAT WITH NUMBER ===== */
 .row-seat {
   min-width: 22px;
   height: 22px;
@@ -266,21 +278,25 @@ h1,h2,h3{line-height:1.15;font-weight:700}
         </div>
 
         <div class="form-row">
-          <div class="form-group"><label id="label-level1" for="totalLevel1">Sections / Blocks</label><input type="number" id="totalLevel1" min="1" max="26" value="1" /></div>
-          <div class="form-group" id="group-level2"><label id="label-level2" for="totalLevel2">Rows</label><input type="number" id="totalLevel2" min="1" max="52" value="6" /></div>
-          <div class="form-group"><label id="label-level3" for="totalLevel3">Seats per Row (min 4, max 90)</label><input type="number" id="totalLevel3" min="4" max="90" value="10" /></div>
+          <div class="form-group"><label id="label-level1" for="totalLevel1">Sections / Blocks</label><input type="number" id="totalLevel1" min="1" max="26" value="2" /></div>
+          <div class="form-group" id="group-level2"><label id="label-level2" for="totalLevel2">Rows per Section</label><input type="number" id="totalLevel2" min="1" max="52" value="6" /></div>
+          <div class="form-group"><label id="label-level3" for="totalLevel3">Default Seats per Row (min 4, max 90)</label><input type="number" id="totalLevel3" min="4" max="90" value="10" /></div>
         </div>
 
         <div class="form-group" id="rowOverridesGroup">
-          <label>Per-Row Seat Count (Optional)</label>
+          <label>Per-Section Row Seat Counts (Optional)</label>
           <div class="row-overrides-section">
-            <div class="row-overrides-hint">Override the default seat count for individual rows. Leave blank to use the default.</div>
+            <div class="row-overrides-header">
+              <div class="section-tabs" id="sectionTabs"></div>
+              <button type="button" class="btn-mini" id="clearAllOverrides">Clear All</button>
+            </div>
+            <div class="row-overrides-hint">Each section can have its own row seat counts. Pick a section tab, then customise its rows.</div>
             <div class="row-overrides-grid" id="rowOverridesGrid"></div>
           </div>
         </div>
 
         <div class="form-group" id="rowTierGroup">
-          <label>Row Tier Distribution</label>
+          <label>Row Tier Distribution (applies to all sections)</label>
           <p class="form-hint" style="margin-top:0;margin-bottom:8px;">Assign tiers to rows (front to back). Any leftover rows default to Cyan.</p>
           <div class="tier-dist-grid">
             <div class="tier-dist-item"><div class="swatch elite"></div><label for="tierRowsElite">Elite (Black)</label><input type="number" id="tierRowsElite" min="0" value="2" /></div>
@@ -373,7 +389,9 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 
 function $(id){ return document.getElementById(id); }
 
-var rowSeatOverrides = {};
+// { sectionIdx: { rowIdx: seatCount } }
+var sectionRowOverrides = {};
+var currentEditingSection = 0;
 
 document.addEventListener("DOMContentLoaded", function(){
   if(window.lucide) lucide.createIcons();
@@ -394,6 +412,7 @@ document.addEventListener("DOMContentLoaded", function(){
     updateTicketPreview();
   }
   function rowLabel(index) { var n = index, label = ""; do { label = String.fromCharCode(65 + (n % 26)) + label; n = Math.floor(n / 26) - 1; } while (n >= 0); return label; }
+  function blockLabel(index) { return String.fromCharCode(65 + index); }
   function tierTagText(t) { return t === "black" ? "Elite" : t === "gold" ? "Gold" : t === "silver" ? "Silver" : "Cyan"; }
 
   function buildRowTierMap(totalRows) {
@@ -415,12 +434,37 @@ document.addEventListener("DOMContentLoaded", function(){
     else { s.className = "tier-dist-summary error"; s.textContent = "⚠ You've assigned " + sum + " rows but only " + totalRows + " exist. Extra will be ignored."; }
   }
 
+  // ==== SECTION TABS ====
+  function rebuildSectionTabs() {
+    var sections = parseInt($("totalLevel1").value) || 1;
+    if (currentEditingSection >= sections) currentEditingSection = 0;
+    var container = $("sectionTabs");
+    container.innerHTML = "";
+    for (var i = 0; i < sections; i++) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "section-tab" + (i === currentEditingSection ? " active" : "");
+      btn.textContent = "Section " + blockLabel(i);
+      btn.dataset.section = i;
+      (function(idx) {
+        btn.addEventListener("click", function() {
+          currentEditingSection = idx;
+          rebuildSectionTabs();
+          rebuildRowOverrides();
+        });
+      })(i);
+      container.appendChild(btn);
+    }
+  }
+
+  // ==== PER-ROW OVERRIDES (current section) ====
   function rebuildRowOverrides() {
     var totalRows = parseInt($("totalLevel2").value) || 0;
     var baseSeats = parseInt($("totalLevel3").value) || 10;
     var container = $("rowOverridesGrid");
     container.innerHTML = "";
     if (totalRows <= 0) return;
+    var sectionData = sectionRowOverrides[currentEditingSection] || {};
     var display = Math.min(totalRows, 52);
     for (var r = 0; r < display; r++) {
       var item = document.createElement("div");
@@ -432,26 +476,26 @@ document.addEventListener("DOMContentLoaded", function(){
       inp.type = "number";
       inp.min = 4;
       inp.max = 90;
-      inp.value = rowSeatOverrides[r] !== undefined ? rowSeatOverrides[r] : baseSeats;
-      inp.dataset.row = r;
-      (function(idx, input) {
+      inp.value = sectionData[r] !== undefined ? sectionData[r] : baseSeats;
+      (function(sIdx, rIdx, input) {
         input.addEventListener("input", function() {
           var val = parseInt(input.value);
-          if (isNaN(val)) { delete rowSeatOverrides[idx]; }
-          else { rowSeatOverrides[idx] = Math.max(4, Math.min(90, val)); }
+          if (!sectionRowOverrides[sIdx]) sectionRowOverrides[sIdx] = {};
+          if (isNaN(val)) delete sectionRowOverrides[sIdx][rIdx];
+          else sectionRowOverrides[sIdx][rIdx] = Math.max(4, Math.min(90, val));
           calculateCapacity();
           renderSeatingPlan();
         });
-      })(r, inp);
+      })(currentEditingSection, r, inp);
       item.appendChild(lbl);
       item.appendChild(inp);
       container.appendChild(item);
     }
   }
-  function resetRowOverrides() { rowSeatOverrides = {}; rebuildRowOverrides(); }
 
-  function getSeatsForRow(rowIdx) {
-    if (rowSeatOverrides[rowIdx] !== undefined) return rowSeatOverrides[rowIdx];
+  function getSeatsForRow(sectionIdx, rowIdx) {
+    var sectionData = sectionRowOverrides[sectionIdx];
+    if (sectionData && sectionData[rowIdx] !== undefined) return sectionData[rowIdx];
     return parseInt($("totalLevel3").value) || 10;
   }
 
@@ -485,11 +529,13 @@ document.addEventListener("DOMContentLoaded", function(){
       $("totalCapacity").value = tables * chairs;
       return;
     }
-    var blocks = parseInt($("totalLevel1").value) || 0;
+    var sections = parseInt($("totalLevel1").value) || 0;
     var rows = parseInt($("totalLevel2").value) || 0;
     var total = 0;
-    for (var r = 0; r < rows; r++) total += getSeatsForRow(r);
-    $("totalCapacity").value = total * blocks;
+    for (var s = 0; s < sections; s++) {
+      for (var r = 0; r < rows; r++) total += getSeatsForRow(s, r);
+    }
+    $("totalCapacity").value = total;
   }
 
   function buildLegend() {
@@ -502,18 +548,17 @@ document.addEventListener("DOMContentLoaded", function(){
   }
 
   // ============ STANDARD LAYOUT ============
-  function renderStandardLayout(container, blocks, rows) {
+  function renderStandardLayout(container, sections, rows) {
     var map = buildRowTierMap(rows);
     var stageName = ($("stageName").value || "STAGE").trim().toUpperCase();
-    var blockLetters = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
 
-    for (var b = 0; b < blocks; b++) {
+    for (var b = 0; b < sections; b++) {
       var blockEl = document.createElement("div");
       blockEl.className = "block";
 
       var bl = document.createElement("div");
       bl.className = "block-label";
-      bl.textContent = "Section " + (blockLetters[b] || String.fromCharCode(65 + b));
+      bl.textContent = "Section " + blockLabel(b);
       blockEl.appendChild(bl);
 
       var stageLine = document.createElement("div");
@@ -526,7 +571,7 @@ document.addEventListener("DOMContentLoaded", function(){
 
       for (var r = 0; r < rows; r++) {
         var tier = map[r] || "cyan";
-        var seatCount = getSeatsForRow(r);
+        var seatCount = getSeatsForRow(b, r);
         seatCount = Math.max(4, Math.min(90, seatCount));
 
         var rowEl = document.createElement("div");
@@ -547,7 +592,7 @@ document.addEventListener("DOMContentLoaded", function(){
           var seat = document.createElement("div");
           seat.className = "row-seat " + tier;
           seat.textContent = (s + 1);
-          seat.title = "Block " + (blockLetters[b] || "A") + " · Row " + rowLabel(r) + " · Seat " + (s + 1);
+          seat.title = "Section " + blockLabel(b) + " · Row " + rowLabel(r) + " · Seat " + (s + 1);
           seatsInner.appendChild(seat);
         }
         seatsWrap.appendChild(seatsInner);
@@ -658,17 +703,41 @@ document.addEventListener("DOMContentLoaded", function(){
   $("tableShape").addEventListener("change", function() { updateTableShapeHint(); renderSeatingPlan(); });
   $("stageName").addEventListener("input", function() { renderSeatingPlan(); });
 
-  $("totalLevel2").addEventListener("change", function() { resetRowOverrides(); calculateCapacity(); renderSeatingPlan(); });
-  $("totalLevel2").addEventListener("input", function() { resetRowOverrides(); calculateCapacity(); renderSeatingPlan(); });
+  // Section count changes → rebuild tabs + capacity
+  $("totalLevel1").addEventListener("input", function() {
+    rebuildSectionTabs();
+    calculateCapacity(); renderSeatingPlan();
+  });
+
+  // Row count changes → rebuild grid + capacity
+  $("totalLevel2").addEventListener("input", function() {
+    rebuildRowOverrides();
+    calculateCapacity(); renderSeatingPlan();
+  });
+
+  // Base seat count changes → refresh displayed defaults
   $("totalLevel3").addEventListener("change", function() {
     var v = parseInt(this.value) || 10;
     v = Math.max(4, Math.min(90, v));
     this.value = v;
-    resetRowOverrides();
+    rebuildRowOverrides();
     calculateCapacity(); renderSeatingPlan();
   });
 
+  // Clear all overrides
+  $("clearAllOverrides").addEventListener("click", function() {
+    if (!confirm("Clear all per-section row overrides?")) return;
+    sectionRowOverrides = {};
+    currentEditingSection = 0;
+    rebuildSectionTabs();
+    rebuildRowOverrides();
+    calculateCapacity();
+    renderSeatingPlan();
+  });
+
+  // INIT
   updateSeatingUI();
+  rebuildSectionTabs();
   rebuildRowOverrides();
   updateTicketPreview();
   renderSeatingPlan();
@@ -682,4 +751,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-</html>
+  </html>
