@@ -49,14 +49,6 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .section-divider{margin:24px 0;border-top:1px dashed var(--border);position:relative;text-align:center}
 .section-divider span{background:var(--surface);padding:0 12px;font-size:11px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;position:relative;top:-10px}
 
-.tier-row{display:flex;align-items:center;gap:12px;background:var(--bg-2);padding:12px;border-radius:10px;border:1px solid var(--border-2);margin-bottom:10px}
-.tier-dot{width:12px;height:12px;border-radius:50%;flex-shrink:0}
-.tier-dot.cyan{background:var(--cyan-500); box-shadow:0 0 0 3px rgba(6,182,212,0.2);}
-.tier-dot.gold{background:#ecc94b; box-shadow:0 0 0 3px rgba(236,201,75,0.2);}
-.tier-dot.black{background:#1a202c; box-shadow:0 0 0 3px rgba(26,32,44,0.2);}
-.tier-row label{margin:0;flex:1;font-size:13px;font-weight:600;text-transform:none;letter-spacing:0;color:var(--text);}
-.tier-row input{width:80px;padding:8px;text-align:center;margin:0;}
-
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 24px;border-radius:12px;font-weight:700;font-size:15px;border:1px solid transparent;cursor:pointer;transition:all 0.2s ease;font-family:inherit;width:100%;text-decoration:none}
 .btn-accent{background:linear-gradient(135deg,var(--cyan-400),var(--cyan-600));color:#04161c}
 .btn-accent:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(6,182,212,0.35)}
@@ -66,20 +58,56 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 
 .form-actions{margin-top:28px;display:flex;flex-direction:column;gap:12px}
 
-/* Ticket Preview Styles */
-#ticketPreview{display:none;animation:fadeUp 0.5s ease}
-.ticket{background:var(--surface);border-radius:20px;overflow:hidden;box-shadow:0 20px 40px rgba(10,15,20,0.1);border:1px solid var(--border)}
-.ticket-header{background:linear-gradient(135deg,var(--navy),#2a4365);padding:24px;color:#fff;position:relative}
-.ticket-header .brand{font-size:12px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--cyan-400);margin-bottom:8px}
-.ticket-header h2{font-size:1.4rem;font-weight:800;line-height:1.2}
-.ticket-header p{font-size:13px;color:rgba(255,255,255,0.7);margin-top:4px}
-.ticket-body{padding:24px;display:flex;flex-direction:column;gap:16px}
-.ticket-row{display:flex;justify-content:space-between;align-items:center;border-bottom:1px dashed var(--border);padding-bottom:12px}
-.ticket-row:last-child{border-bottom:none;padding-bottom:0}
-.ticket-label{font-size:11px;text-transform:uppercase;color:var(--text-muted);font-weight:700;letter-spacing:0.05em}
-.ticket-value{font-size:15px;font-weight:700;color:var(--text)}
-.ticket-value.highlight{font-size:18px;color:var(--cyan-700);font-weight:800}
-.ticket-footer{padding:16px 24px;background:var(--surface-2);border-top:1px solid var(--border);text-align:center;font-size:11px;color:var(--text-muted)}
+/* --- NEW TICKET TEMPLATE STYLES --- */
+#ticketPreview{display:none;animation:fadeUp 0.5s ease;max-width:480px;margin:0 auto}
+.ticket-card {
+  border-radius: 18px;
+  padding: 24px;
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+  position: relative;
+  overflow: hidden;
+  border: 1px solid rgba(0,0,0,0.05);
+}
+/* Tier Colors */
+.ticket-card.cyan { background: linear-gradient(135deg, #ecfeff, #cffafe); color: #0a0f14; }
+.ticket-card.silver { background: linear-gradient(135deg, #f1f4f8, #cbd5e1); color: #0a0f14; }
+.ticket-card.gold { background: linear-gradient(135deg, #fef9c3, #ecc94b); color: #0a0f14; }
+.ticket-card.black { background: linear-gradient(135deg, #1a202c, #0a0f14); color: #ffffff; }
+.ticket-card.black .badge-public, .ticket-card.black .badge-tier { background: rgba(255,255,255,0.15); color: #fff; }
+.ticket-card.black .ticket-logo { color: #22d3ee; }
+.ticket-card.black .ticket-qr-box { background: #fff; }
+.ticket-card.black .barcode { background: #fff; }
+.ticket-card.black .location-text { color: #a0aec0; }
+
+.ticket-header-row { display: flex; justify-content: space-between; align-items: center; }
+.ticket-logo { font-weight: 800; font-size: 13px; letter-spacing: 1.5px; color: var(--navy); }
+.ticket-badges { display: flex; gap: 8px; }
+.badge-public, .badge-tier { font-size: 9px; font-weight: 800; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
+.badge-public { background: rgba(0,0,0,0.08); color: #4a5568; }
+.badge-tier { background: rgba(0,0,0,0.15); color: #1a202c; font-weight: 900; }
+
+.ticket-body-row { display: flex; justify-content: space-between; align-items: flex-end; }
+.ticket-info-left { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+.event-title { font-size: 20px; font-weight: 900; line-height: 1.1; text-transform: uppercase; letter-spacing: -0.5px; }
+.event-meta { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: rgba(0,0,0,0.6); }
+.ticket-card.black .event-meta { color: rgba(255,255,255,0.6); }
+.guest-title { font-size: 14px; font-weight: 800; margin-top: 8px; }
+.guest-meta { font-size: 11px; font-weight: 600; color: rgba(0,0,0,0.6); }
+.ticket-card.black .guest-meta { color: rgba(255,255,255,0.6); }
+.ref-meta { font-size: 10px; font-weight: 700; font-family: monospace; color: rgba(0,0,0,0.5); margin-top: 4px; }
+.ticket-card.black .ref-meta { color: rgba(255,255,255,0.5); }
+
+.ticket-qr-box { width: 70px; height: 70px; background: #fff; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); flex-shrink: 0; }
+
+.ticket-location-row { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: rgba(0,0,0,0.6); }
+.location-text { text-transform: uppercase; letter-spacing: 0.5px; }
+
+.ticket-barcode-wrap { background: #fff; border-radius: 6px; padding: 8px; display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: 4px; }
+.barcode { width: 100%; height: 30px; background: repeating-linear-gradient(to right, #000 0px, #000 2px, #fff 2px, #fff 4px, #000 4px, #000 6px, #fff 6px, #fff 10px, #000 10px, #000 12px, #fff 12px, #fff 16px); }
+.barcode-num { font-family: monospace; font-size: 10px; font-weight: 700; color: #000; letter-spacing: 2px; }
 </style>
 </head>
 <body>
@@ -102,7 +130,6 @@ h1,h2,h3{line-height:1.15;font-weight:700}
       </div>
 
       <form id="createTripForm">
-        <!-- STEP 2: CORE STUDIO DATA -->
         <div class="form-group">
           <label for="hostName">Host Name</label>
           <input type="text" id="hostName" placeholder="e.g., Jane Smith" required />
@@ -134,7 +161,6 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 
         <div class="section-divider"><span>Trip Specifics</span></div>
 
-        <!-- STEP 3: TRIP SPECIFIC FIELDS -->
         <div class="form-group">
           <label for="tripName">Trip Name</label>
           <input type="text" id="tripName" placeholder="e.g., Bali Getaway 2026" required />
@@ -161,23 +187,26 @@ h1,h2,h3{line-height:1.15;font-weight:700}
           </select>
         </div>
 
-        <div class="section-divider"><span>Ticket Tiers & Quantities</span></div>
+        <div class="section-divider"><span>Ticket Design & Allocation</span></div>
 
-        <!-- TIER QUANTITIES -->
-        <div class="tier-row">
-          <div class="tier-dot cyan"></div>
-          <label for="qtyGeneral">General Admission (Cyan)</label>
-          <input type="number" id="qtyGeneral" placeholder="0" min="0" value="0" />
+        <div class="form-group">
+          <label for="tierColor">Card Colour Tier</label>
+          <select id="tierColor" required>
+            <option value="cyan">Cyan (Standard)</option>
+            <option value="silver">Silver (Mid Seating)</option>
+            <option value="gold">Gold (VIP)</option>
+            <option value="black">Black (Elite)</option>
+          </select>
         </div>
-        <div class="tier-row">
-          <div class="tier-dot gold"></div>
-          <label for="qtyVip">VIP (Gold)</label>
-          <input type="number" id="qtyVip" placeholder="0" min="0" value="0" />
-        </div>
-        <div class="tier-row">
-          <div class="tier-dot black"></div>
-          <label for="qtyElite">Backstage / Elite (Black)</label>
-          <input type="number" id="qtyElite" placeholder="0" min="0" value="0" />
+        <div class="form-row">
+          <div class="form-group">
+            <label for="guestName">Guest Name (Preview)</label>
+            <input type="text" id="guestName" placeholder="e.g., Jane Smith" />
+          </div>
+          <div class="form-group">
+            <label for="seatNumber">Seat Number (Preview)</label>
+            <input type="text" id="seatNumber" placeholder="e.g., Block A, Row 12, Seat 04" />
+          </div>
         </div>
 
         <div class="form-actions">
@@ -190,55 +219,32 @@ h1,h2,h3{line-height:1.15;font-weight:700}
       </form>
     </div>
 
-    <!-- STEP 4: CARD CONFIRMATION PREVIEW -->
+    <!-- NEW TICKET PREVIEW TEMPLATE -->
     <div id="ticketPreview">
-      <div class="ticket">
-        <div class="ticket-header">
-          <div class="brand">Novalink Travel Pass</div>
-          <h2 id="prevTripName">Trip Name</h2>
-          <p id="prevRoute">Destination Route</p>
-        </div>
-        <div class="ticket-body">
-          <div class="ticket-row">
-            <div><div class="ticket-label">Host</div><div class="ticket-value" id="prevHostName">-</div></div>
-            <div style="text-align:right"><div class="ticket-label">City</div><div class="ticket-value" id="prevCity">-</div></div>
-          </div>
-          <div class="ticket-row">
-            <div><div class="ticket-label">Departure</div><div class="ticket-value" id="prevStartDate">-</div></div>
-            <div style="text-align:right"><div class="ticket-label">Return</div><div class="ticket-value" id="prevReturnDate">-</div></div>
-          </div>
-          <div class="ticket-row">
-            <div><div class="ticket-label">Transport</div><div class="ticket-value highlight" id="prevVehicle">-</div></div>
-            <div style="text-align:right"><div class="ticket-label">Price</div><div class="ticket-value" id="prevCost">-</div></div>
-          </div>
-          
-          <div class="section-divider" style="margin:16px 0 8px;"><span style="font-size:10px;">Ticket Allocation</span></div>
-          
-          <div class="ticket-row" style="border-bottom:1px solid var(--border-2); padding-bottom:8px; margin-bottom:4px;">
-             <div><div class="ticket-label">Tier</div></div>
-             <div><div class="ticket-label">Quantity</div></div>
-          </div>
-          <div class="ticket-row" style="padding-bottom:8px; border-bottom:1px dashed var(--border);">
-             <div><div class="ticket-value" style="font-size:13px;">General Admission</div></div>
-             <div><div class="ticket-value highlight" id="prevQtyGeneral" style="font-size:15px;">0</div></div>
-          </div>
-          <div class="ticket-row" style="padding-bottom:8px; border-bottom:1px dashed var(--border);">
-             <div><div class="ticket-value" style="font-size:13px;">VIP</div></div>
-             <div><div class="ticket-value highlight" id="prevQtyVip" style="font-size:15px;">0</div></div>
-          </div>
-          <div class="ticket-row" style="padding-bottom:8px; border-bottom:none;">
-             <div><div class="ticket-value" style="font-size:13px;">Backstage / Elite</div></div>
-             <div><div class="ticket-value highlight" id="prevQtyElite" style="font-size:15px;">0</div></div>
-          </div>
-
-          <div class="ticket-row" style="justify-content:center; text-align:center; border:none; margin-top:10px;">
-             <div style="background:var(--bg-2); padding:10px 20px; border-radius:10px; border:1px dashed var(--border-2); font-family:monospace; font-weight:700; color:var(--cyan-700);">
-               SECURE-HASH-<span id="prevHash">XXXXX</span>
-             </div>
+      <div class="ticket-card black" id="dynamicTicket">
+        <div class="ticket-header-row">
+          <div class="ticket-logo">NOVALINK</div>
+          <div class="ticket-badges">
+            <span class="badge-public">PUBLIC</span>
+            <span class="badge-tier" id="prevTierBadge">BLACK</span>
           </div>
         </div>
-        <div class="ticket-footer">
-          This digital pass is unique and locked to the named host. Unauthorised duplication is prohibited.
+        <div class="ticket-body-row">
+          <div class="ticket-info-left">
+            <div class="event-title" id="prevTripName">TRIP NAME</div>
+            <div class="event-meta" id="prevDateVenue">DATE · DESTINATION</div>
+            <div class="guest-title" id="prevGuestName">GUEST NAME</div>
+            <div class="guest-meta" id="prevSeat">Seat not assigned</div>
+            <div class="ref-meta" id="prevRef">Ref: NL-XXXXXX</div>
+          </div>
+          <div class="ticket-qr-box"></div>
+        </div>
+        <div class="ticket-location-row">
+          <i data-lucide="map-pin" style="width:12px;height:12px;"></i> <span class="location-text" id="prevVenueLocation">CITY</span>
+        </div>
+        <div class="ticket-barcode-wrap">
+           <div class="barcode"></div>
+           <div class="barcode-num">0000 0000 0000 0000</div>
         </div>
       </div>
       <button class="btn btn-ghost" onclick="window.location.reload()" style="margin-top:20px;">
@@ -262,46 +268,36 @@ document.addEventListener("DOMContentLoaded", function(){
     
     // Capture Data
     var data = {
-      hostName: $("hostName").value,
-      hostEmail: $("hostEmail").value,
+      tripName: $("tripName").value,
       city: $("city").value,
-      cost: $("cost").value,
       startDate: $("startDate").value,
       startTime: $("startTime").value,
-      tripName: $("tripName").value,
-      returnDate: $("returnDate").value,
-      returnTime: $("returnTime").value,
-      vehicleType: $("vehicleType").value,
-      qtyGeneral: parseInt($("qtyGeneral").value) || 0,
-      qtyVip: parseInt($("qtyVip").value) || 0,
-      qtyElite: parseInt($("qtyElite").value) || 0
+      guestName: $("guestName").value || "GUEST NAME",
+      seatNumber: $("seatNumber").value || "Seat not assigned",
+      tierColor: $("tierColor").value
     };
 
-    // Generate a random hash for the security card
-    var hash = Math.random().toString(36).substring(2, 8).toUpperCase();
+    // Generate a random reference number
+    var ref = "NL-" + Math.random().toString(36).substring(2, 8).toUpperCase();
 
-    // Populate Preview
+    // Update Ticket Content
     $("prevTripName").textContent = data.tripName;
-    $("prevRoute").textContent = "Departing from " + data.city;
-    $("prevHostName").textContent = data.hostName;
-    $("prevCity").textContent = data.city;
-    $("prevStartDate").textContent = data.startDate + " " + data.startTime;
-    $("prevReturnDate").textContent = data.returnDate + " " + data.returnTime;
-    $("prevVehicle").textContent = data.vehicleType;
-    $("prevCost").textContent = data.cost;
-    
-    // Populate Tier Quantities
-    $("prevQtyGeneral").textContent = data.qtyGeneral;
-    $("prevQtyVip").textContent = data.qtyVip;
-    $("prevQtyElite").textContent = data.qtyElite;
+    $("prevDateVenue").textContent = data.startDate + " · " + data.city;
+    $("prevGuestName").textContent = data.guestName;
+    $("prevSeat").textContent = data.seatNumber;
+    $("prevRef").textContent = "Ref: " + ref;
+    $("prevVenueLocation").textContent = data.city;
+    $("prevTierBadge").textContent = data.tierColor.toUpperCase();
 
-    $("prevHash").textContent = hash;
+    // Update Ticket Colour Theme
+    var ticketEl = $("dynamicTicket");
+    ticketEl.className = "ticket-card " + data.tierColor;
 
     // Toggle UI
     $("formCard").style.display = "none";
     $("ticketPreview").style.display = "block";
     
-    // Log the full payload to console for debugging/Firebase integration
+    if(window.lucide) lucide.createIcons(); // Re-render icons inside the new preview
     console.log("Trip Data Payload:", data);
   });
 });
