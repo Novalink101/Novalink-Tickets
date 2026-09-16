@@ -78,7 +78,64 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .tier-dist-summary{font-size:11.5px;color:var(--text-muted);margin-top:8px;font-style:italic;}
 .tier-dist-summary.error{color:#b91c1c;font-weight:700;}
 
-/* ===== LEVELS MANAGER ===== */
+/* ===== DEV SETTINGS ===== */
+.dev-settings-toggle {
+  margin-bottom: 20px;
+  padding: 14px 16px;
+  background: linear-gradient(135deg, #0a0f14, #1a2129);
+  border: 1px solid #0a0f14;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.dev-settings-toggle .info {
+  display: flex;
+  flex-direction: column;
+  color: #fff;
+}
+.dev-settings-toggle .info .title {
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  color: #22d3ee;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.dev-settings-toggle .info .title i {
+  width: 15px;
+  height: 15px;
+}
+.dev-settings-toggle .info .desc {
+  font-size: 11px;
+  color: rgba(255,255,255,0.55);
+  font-style: italic;
+  margin-top: 2px;
+}
+.dev-settings-toggle .toggle-switch {
+  flex-shrink: 0;
+}
+.dev-only {
+  display: none;
+}
+body.dev-on .dev-only {
+  display: block;
+}
+body.dev-on .dev-only.form-row-3,
+body.dev-on .dev-only.form-row {
+  display: grid;
+}
+body.dev-on .dev-only.toggle-row {
+  display: flex;
+}
+body.dev-on .dev-only.section-rows-row {
+  display: flex;
+}
+
+/* Levels Manager */
 .levels-panel {
   margin-top: 12px;
   padding: 12px;
@@ -157,7 +214,6 @@ h1,h2,h3{line-height:1.15;font-weight:700}
   color: #dc2626;
 }
 
-/* Row Overrides */
 .row-overrides-section{margin-top:12px;padding:12px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:10px;}
 .row-overrides-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px;flex-wrap:wrap;}
 .section-tabs{display:flex;gap:6px;flex-wrap:wrap;flex:1;}
@@ -233,7 +289,6 @@ h1,h2,h3{line-height:1.15;font-weight:700}
   white-space: nowrap;
 }
 
-/* Preview Column */
 .preview-column { position: sticky; top: 40px; display: flex; flex-direction: column; gap: 24px; }
 .preview-label { text-align: center; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
 .ticket-card { border-radius: 18px; padding: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); display: flex; flex-direction: column; gap: 20px; position: relative; overflow: hidden; border: 1px solid rgba(0,0,0,0.05); transition: all 0.4s ease; }
@@ -320,7 +375,6 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .layout-legend .lg-swatch.silver { background: #cbd5e1; }
 .layout-legend .lg-swatch.cyan { background: #22d3ee; }
 
-/* ===== FULL SCREEN VIEW (Freeform Canvas) ===== */
 .fullscreen-overlay { position: fixed; inset: 0; background: #0a0f14; z-index: 9999; display: none; flex-direction: column; padding: 16px; }
 .fullscreen-overlay.open { display: flex; }
 .fs-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; color: #fff; gap: 10px; flex-wrap: wrap; }
@@ -478,7 +532,6 @@ h1,h2,h3{line-height:1.15;font-weight:700}
   max-width: 300px;
 }
 
-/* Toast */
 .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(120%); background: #0a0f14; color: #fff; padding: 12px 18px; border-radius: 12px; font-size: 13.5px; z-index: 200; transition: transform .4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease; max-width: calc(100vw - 40px); display: flex; align-items: center; gap: 10px; pointer-events: none; opacity: 0; }
 .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 .toast.success { background: #065f46; }
@@ -501,10 +554,22 @@ h1,h2,h3{line-height:1.15;font-weight:700}
     <div class="form-card">
       <div class="form-header">
         <h1>Event Studio</h1>
-        <p>Design your venue layout freely — position, scale, levels and stage.</p>
+        <p>Design your venue layout and generate a live security pass.</p>
       </div>
 
       <form id="createEventForm">
+        <!-- DEVELOPER SETTINGS TOGGLE -->
+        <div class="dev-settings-toggle">
+          <div class="info">
+            <div class="title"><i data-lucide="code-2"></i> Developer Settings</div>
+            <div class="desc">Reveal advanced controls: canvas size, stage position, grid, levels, and per-section placement.</div>
+          </div>
+          <label class="toggle-switch">
+            <input type="checkbox" id="devModeToggle" />
+            <span class="toggle-slider"></span>
+          </label>
+        </div>
+
         <div class="section-divider"><span>Organiser Details</span></div>
         <div class="form-group"><label for="hostName">Host Name</label><input type="text" id="hostName" placeholder="e.g., John Doe" required /></div>
         <div class="form-group"><label for="hostEmail">Host Email</label><input type="email" id="hostEmail" placeholder="e.g., john@example.com" required /></div>
@@ -521,34 +586,42 @@ h1,h2,h3{line-height:1.15;font-weight:700}
         <div class="form-group"><label for="eventName">Event Name</label><input type="text" id="eventName" placeholder="e.g., Neon Nights Live" required /></div>
         <div class="form-group"><label for="venueAddress">Venue Name & Address</label><input type="text" id="venueAddress" placeholder="e.g., Grand Amphitheatre, 123 Main Rd" required /></div>
 
-        <div class="section-divider"><span>Venue Canvas & Stage</span></div>
-        <div class="form-row">
-          <div class="form-group"><label for="canvasWidth">Canvas Width (px)</label><input type="number" id="canvasWidth" min="400" max="3000" value="1200" /></div>
-          <div class="form-group"><label for="canvasHeight">Canvas Height (px)</label><input type="number" id="canvasHeight" min="400" max="3000" value="800" /></div>
-        </div>
-        <div class="form-group">
-          <label for="stageName">Stage / Performance Area Name</label>
-          <input type="text" id="stageName" placeholder="e.g., STAGE · MAIN STAGE · PERFORMANCE AREA" value="STAGE" />
-        </div>
-        <div class="form-row-3">
-          <div class="form-group"><label for="stageX">Stage X (px)</label><input type="number" id="stageX" min="0" value="500" /></div>
-          <div class="form-group"><label for="stageY">Stage Y (px)</label><input type="number" id="stageY" min="0" value="60" /></div>
-          <div class="form-group"><label for="stageW">Stage Width (px)</label><input type="number" id="stageW" min="40" value="200" /></div>
-        </div>
-        <div class="form-row">
-          <div class="form-group"><label for="stageH">Stage Height (px)</label><input type="number" id="stageH" min="20" value="60" /></div>
-          <div class="form-group"><label for="gridSize">Grid Size (px)</label><input type="number" id="gridSize" min="10" max="200" value="50" /></div>
-        </div>
-        <div class="toggle-row">
-          <span class="toggle-label">Snap to Grid</span>
-          <label class="toggle-switch"><input type="checkbox" id="snapToggle" checked /><span class="toggle-slider"></span></label>
+        <!-- ============ DEV-ONLY: CANVAS & STAGE ============ -->
+        <div class="dev-only">
+          <div class="section-divider"><span>Venue Canvas & Stage</span></div>
+          <div class="form-row">
+            <div class="form-group"><label for="canvasWidth">Canvas Width (px)</label><input type="number" id="canvasWidth" min="400" max="3000" value="1200" /></div>
+            <div class="form-group"><label for="canvasHeight">Canvas Height (px)</label><input type="number" id="canvasHeight" min="400" max="3000" value="800" /></div>
+          </div>
+          <div class="form-row-3">
+            <div class="form-group"><label for="stageX">Stage X (px)</label><input type="number" id="stageX" min="0" value="500" /></div>
+            <div class="form-group"><label for="stageY">Stage Y (px)</label><input type="number" id="stageY" min="0" value="60" /></div>
+            <div class="form-group"><label for="stageW">Stage Width (px)</label><input type="number" id="stageW" min="40" value="200" /></div>
+          </div>
+          <div class="form-row">
+            <div class="form-group"><label for="stageH">Stage Height (px)</label><input type="number" id="stageH" min="20" value="60" /></div>
+            <div class="form-group"><label for="gridSize">Grid Size (px)</label><input type="number" id="gridSize" min="10" max="200" value="50" /></div>
+          </div>
+          <div class="toggle-row">
+            <span class="toggle-label">Snap to Grid</span>
+            <label class="toggle-switch"><input type="checkbox" id="snapToggle" checked /><span class="toggle-slider"></span></label>
+          </div>
         </div>
 
-        <div class="section-divider"><span>Levels / Floors</span></div>
-        <div class="levels-panel">
-          <div class="row-overrides-hint">Group sections into levels (e.g., Ground, Mezzanine, Balcony). Toggle visibility to isolate a level in the Full Screen view.</div>
-          <div class="levels-list" id="levelsList"></div>
-          <button type="button" class="btn-mini" id="addLevelBtn">+ Add Level</button>
+        <!-- Stage Name (always visible) -->
+        <div class="form-group">
+          <label for="stageName">Stage / Performance Area Name</label>
+          <input type="text" id="stageName" placeholder="e.g., STAGE · MAIN STAGE" value="STAGE" />
+        </div>
+
+        <!-- ============ DEV-ONLY: LEVELS ============ -->
+        <div class="dev-only">
+          <div class="section-divider"><span>Levels / Floors</span></div>
+          <div class="levels-panel">
+            <div class="row-overrides-hint">Group sections into levels (e.g., Ground, Mezzanine, Balcony). Toggle visibility to isolate a level in the Full Screen view.</div>
+            <div class="levels-list" id="levelsList"></div>
+            <button type="button" class="btn-mini" id="addLevelBtn">+ Add Level</button>
+          </div>
         </div>
 
         <div class="section-divider"><span>Sections</span></div>
@@ -572,7 +645,8 @@ h1,h2,h3{line-height:1.15;font-weight:700}
               <input type="text" id="sectionNameInput" placeholder="e.g., VIP Stand" maxlength="40" />
             </div>
 
-            <div class="section-rows-row">
+            <!-- DEV-ONLY: Level dropdown -->
+            <div class="section-rows-row dev-only">
               <label for="sectionLevelSelect">Level</label>
               <select id="sectionLevelSelect"></select>
             </div>
@@ -594,28 +668,31 @@ h1,h2,h3{line-height:1.15;font-weight:700}
               </select>
             </div>
 
-            <div class="form-row-3" style="margin: 6px 0 10px;">
-              <div class="form-group" style="margin-bottom:0;">
-                <label for="sectionXInput" style="font-size:10px;">X Position (px)</label>
-                <input type="number" id="sectionXInput" min="0" max="3000" value="100" style="text-align:center;padding:8px;" />
+            <!-- DEV-ONLY: Position/Rotation/Scale -->
+            <div class="dev-only">
+              <div class="form-row-3" style="margin: 6px 0 10px;">
+                <div class="form-group" style="margin-bottom:0;">
+                  <label for="sectionXInput" style="font-size:10px;">X Position (px)</label>
+                  <input type="number" id="sectionXInput" min="0" max="3000" value="100" style="text-align:center;padding:8px;" />
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                  <label for="sectionYInput" style="font-size:10px;">Y Position (px)</label>
+                  <input type="number" id="sectionYInput" min="0" max="3000" value="200" style="text-align:center;padding:8px;" />
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                  <label for="sectionRotationInput" style="font-size:10px;">Rotation (°)</label>
+                  <input type="number" id="sectionRotationInput" min="-360" max="360" value="0" style="text-align:center;padding:8px;" />
+                </div>
               </div>
-              <div class="form-group" style="margin-bottom:0;">
-                <label for="sectionYInput" style="font-size:10px;">Y Position (px)</label>
-                <input type="number" id="sectionYInput" min="0" max="3000" value="200" style="text-align:center;padding:8px;" />
-              </div>
-              <div class="form-group" style="margin-bottom:0;">
-                <label for="sectionRotationInput" style="font-size:10px;">Rotation (°)</label>
-                <input type="number" id="sectionRotationInput" min="-360" max="360" value="0" style="text-align:center;padding:8px;" />
+
+              <div class="section-rows-row">
+                <label for="sectionScaleInput">Scale (0.5× – 2×)</label>
+                <span class="section-rows-badge" id="sectionScaleBadge">1.00×</span>
+                <input type="range" id="sectionScaleInput" min="0.5" max="2" step="0.05" value="1" />
               </div>
             </div>
 
-            <div class="section-rows-row">
-              <label for="sectionScaleInput">Scale (0.5× – 2×)</label>
-              <span class="section-rows-badge" id="sectionScaleBadge">1.00×</span>
-              <input type="range" id="sectionScaleInput" min="0.5" max="2" step="0.05" value="1" />
-            </div>
-
-            <div class="row-overrides-hint">Each section has its own position, scale, level and row configuration.</div>
+            <div class="row-overrides-hint">Each section has its own name, rows, tier override and configuration.</div>
             <div class="row-overrides-grid" id="rowOverridesGrid"></div>
           </div>
         </div>
@@ -711,12 +788,12 @@ h1,h2,h3{line-height:1.15;font-weight:700}
   <div class="fs-header">
     <h2>Full Venue Layout · <span id="fsStageName">STAGE</span></h2>
     <div class="fs-actions">
-      <button type="button" class="fs-btn active" id="fsToggleGrid">Grid</button>
+      <button type="button" class="fs-btn active dev-only" id="fsToggleGrid">Grid</button>
       <button type="button" class="fs-btn" id="fsResetView">↺ Reset</button>
       <button type="button" class="fs-btn fs-btn-close" id="closeFullscreen">✕ Close</button>
     </div>
   </div>
-  <div class="fs-level-bar" id="fsLevelBar"></div>
+  <div class="fs-level-bar dev-only" id="fsLevelBar"></div>
   <div class="fs-canvas-outer">
     <div class="fs-canvas" id="fsCanvas">
       <div class="fs-stage-marker" id="fsStageMarker">STAGE</div>
@@ -752,6 +829,7 @@ try {
 } catch(e){ console.error("Firebase init failed", e); }
 
 // ===== STATE =====
+var devMode = false;
 var canvasWidth = 1200;
 var canvasHeight = 800;
 var gridSize = 50;
@@ -769,7 +847,7 @@ var sectionRowOverrides = {};
 var sectionRowCounts = {};
 var sectionNames = {};
 var sectionTierOverrides = {};
-var sectionPositions = {}; // { idx: { x, y, scale, rotation, levelId } }
+var sectionPositions = {};
 var currentEditingSection = 0;
 
 var levelColors = ["#22d3ee", "#facc15", "#a78bfa", "#fb7185", "#34d399", "#60a5fa", "#f97316", "#e879f9"];
@@ -810,7 +888,6 @@ document.addEventListener("DOMContentLoaded", function(){
   }
   function getSectionPos(idx) {
     if (sectionPositions[idx]) return sectionPositions[idx];
-    // Auto-position: spread sections in a row near the bottom
     var count = parseInt($("totalLevel1").value) || 1;
     var gap = canvasWidth / (count + 1);
     var pos = { x: Math.round(gap * (idx + 1) - 120), y: 300, scale: 1, rotation: 0, levelId: levels[0].id };
@@ -867,6 +944,23 @@ document.addEventListener("DOMContentLoaded", function(){
     });
     return legend;
   }
+
+  // ===== DEV MODE =====
+  function setDevMode(on) {
+    devMode = on;
+    document.body.classList.toggle("dev-on", on);
+    $("devModeToggle").checked = on;
+    // Re-render full screen so grid button and level bar toggle visibility
+    if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+    try { localStorage.setItem("novalink_dev_mode", on ? "1" : "0"); } catch(e){}
+  }
+
+  $("devModeToggle").addEventListener("change", function() { setDevMode(this.checked); });
+
+  // Restore from localStorage
+  try {
+    if (localStorage.getItem("novalink_dev_mode") === "1") setDevMode(true);
+  } catch(e){}
 
   // ===== LEVELS UI =====
   function rebuildLevelsList() {
@@ -978,21 +1072,15 @@ document.addEventListener("DOMContentLoaded", function(){
     }
   }
 
-  // ===== SECTION INPUTS =====
   function refreshSectionInputs() {
     var idx = currentEditingSection;
-    // Name
     $("sectionNameInput").value = sectionNames[idx] || "";
     $("sectionNameInput").placeholder = "e.g., VIP Stand (currently " + getSectionName(idx) + ")";
-    // Level
     $("sectionLevelSelect").value = getSectionPos(idx).levelId;
-    // Rows
     var rows = getRowCount(idx);
     $("sectionRowsInput").value = rows;
     $("sectionRowsBadge").textContent = rows + " rows";
-    // Tier override
     $("sectionTierOverride").value = sectionTierOverrides[idx] || "";
-    // Position
     var pos = getSectionPos(idx);
     $("sectionXInput").value = pos.x;
     $("sectionYInput").value = pos.y;
@@ -1036,7 +1124,7 @@ document.addEventListener("DOMContentLoaded", function(){
     }
   }
 
-  // ===== LEFT PANEL PREVIEW (stacked list of blocks) =====
+  // ===== LEFT PANEL PREVIEW =====
   function renderStandardLayout(container, sections) {
     var stageName = ($("stageName").value || "STAGE").trim().toUpperCase();
     for (var b = 0; b < sections; b++) {
@@ -1048,7 +1136,7 @@ document.addEventListener("DOMContentLoaded", function(){
       blockEl.className = "block";
       var bl = document.createElement("div");
       bl.className = "block-label";
-      bl.textContent = getSectionName(b) + " · " + rowCount + " rows" + (lvl ? " · " + lvl.name : "");
+      bl.textContent = getSectionName(b) + " · " + rowCount + " rows" + (devMode && lvl ? " · " + lvl.name : "");
       blockEl.appendChild(bl);
       var stageLine = document.createElement("div");
       stageLine.className = "stage-line";
@@ -1182,9 +1270,11 @@ document.addEventListener("DOMContentLoaded", function(){
     }
     el.appendChild(rowsArea);
 
-    // Apply transform: center the section at (pos.x, pos.y)
+    // Apply transform
+    var rot = pos.rotation || 0;
+    var scale = pos.scale || 1;
     el.style.transformOrigin = "center center";
-    el.style.transform = "rotate(" + pos.rotation + "deg) scale(" + pos.scale + ")";
+    el.style.transform = "rotate(" + rot + "deg) scale(" + scale + ")";
     el.style.left = pos.x + "px";
     el.style.top = pos.y + "px";
     return el;
@@ -1192,15 +1282,14 @@ document.addEventListener("DOMContentLoaded", function(){
 
   function renderFullscreen() {
     var canvas = $("fsCanvas");
-    // Remove existing sections
     canvas.querySelectorAll(".fs-section").forEach(function(el) { el.remove(); });
 
     canvas.style.width = canvasWidth + "px";
     canvas.style.height = canvasHeight + "px";
     canvas.style.setProperty("--grid-size", gridSize + "px");
-    canvas.className = "fs-canvas" + (showGrid ? " show-grid" : "");
+    // Only show grid when devMode is on AND showGrid is true
+    canvas.className = "fs-canvas" + ((devMode && showGrid) ? " show-grid" : "");
 
-    // Stage
     var stageName = ($("stageName").value || "STAGE").trim().toUpperCase();
     var sm = $("fsStageMarker");
     sm.textContent = stageName;
@@ -1210,26 +1299,27 @@ document.addEventListener("DOMContentLoaded", function(){
     sm.style.height = stage.height + "px";
     $("fsStageName").textContent = stageName;
 
-    // Sections
     var sections = parseInt($("totalLevel1").value) || 0;
     var anyVisible = false;
     for (var i = 0; i < sections; i++) {
       var pos = getSectionPos(i);
       var lv = levels.find(function(x){return x.id === pos.levelId;});
-      if (!lv || !lv.visible) continue;
+      // In dev mode, respect per-level visibility. In non-dev mode, always show everything.
+      if (devMode && lv && !lv.visible) continue;
       anyVisible = true;
       canvas.appendChild(buildFSSection(i));
     }
 
     $("fsEmptyHint").style.display = anyVisible ? "none" : "block";
 
-    // Level pills
-    rebuildLevelPills();
+    // Level pills visible only in dev mode
+    if (devMode) rebuildLevelPills();
+    else $("fsLevelBar").innerHTML = "";
 
     if(window.lucide) lucide.createIcons();
   }
 
-  // ===== BUILD DATA FOR EXPORT =====
+  // ===== EXPORT DATA =====
   function buildSectionsData() {
     var sections = [];
     var count = parseInt($("totalLevel1").value) || 0;
@@ -1247,7 +1337,7 @@ document.addEventListener("DOMContentLoaded", function(){
       }
       sections.push({
         name: getSectionName(s),
-        level: lv ? lv.name : null,
+        level: (devMode && lv) ? lv.name : null,
         x: pos.x, y: pos.y, scale: pos.scale, rotation: pos.rotation,
         tierOverride: getSectionTierOverride(s),
         rowCount: rowCount,
@@ -1267,7 +1357,6 @@ document.addEventListener("DOMContentLoaded", function(){
     };
   }
 
-  // ===== EXPORT =====
   function downloadFile(content, filename, mime) {
     var blob = new Blob([content], { type: mime });
     var url = URL.createObjectURL(blob);
@@ -1303,7 +1392,6 @@ document.addEventListener("DOMContentLoaded", function(){
     showToast("Venue exported as CSV", "success");
   }
 
-  // ===== SAVE =====
   async function saveEvent() {
     if (!db) { showToast("Firebase not connected", "error", 5000); return false; }
     var payload = Object.assign({
@@ -1313,6 +1401,7 @@ document.addEventListener("DOMContentLoaded", function(){
       venueAddress: $("venueAddress").value,
       tierColor: $("tierColor").value,
       totalAttendees: parseInt($("totalCapacity").value) || 0,
+      devModeUsed: devMode,
       createdAt: firebase.firestore.FieldValue.serverTimestamp()
     }, buildVenuePayload());
     try {
@@ -1328,13 +1417,11 @@ document.addEventListener("DOMContentLoaded", function(){
   }
 
   // ===== WIRING =====
-  // Canvas
   $("canvasWidth").addEventListener("change", function() { canvasWidth = Math.max(400, Math.min(3000, parseInt(this.value)||1200)); this.value = canvasWidth; renderFullscreen(); });
   $("canvasHeight").addEventListener("change", function() { canvasHeight = Math.max(400, Math.min(3000, parseInt(this.value)||800)); this.value = canvasHeight; renderFullscreen(); });
   $("gridSize").addEventListener("change", function() { gridSize = Math.max(10, Math.min(200, parseInt(this.value)||50)); this.value = gridSize; renderFullscreen(); });
   $("snapToggle").addEventListener("change", function() { snapToGrid = this.checked; });
 
-  // Stage
   function readStageInputs() {
     stage.x = parseInt($("stageX").value) || 0;
     stage.y = parseInt($("stageY").value) || 0;
@@ -1345,10 +1432,8 @@ document.addEventListener("DOMContentLoaded", function(){
   }
   ["stageX","stageY","stageW","stageH","stageName"].forEach(function(id){ $(id).addEventListener("input", readStageInputs); });
 
-  // Levels
   $("addLevelBtn").addEventListener("click", addLevel);
 
-  // Sections count
   $("totalLevel1").addEventListener("input", function() {
     var v = parseInt(this.value) || 1;
     v = Math.max(1, Math.min(26, v));
@@ -1366,7 +1451,6 @@ document.addEventListener("DOMContentLoaded", function(){
     rebuildRowOverrides(); calculateCapacity(); renderSeatingPlan();
   });
 
-  // Section name
   $("sectionNameInput").addEventListener("input", function() {
     setSectionName(currentEditingSection, this.value);
     rebuildSectionTabs();
@@ -1374,14 +1458,12 @@ document.addEventListener("DOMContentLoaded", function(){
     if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
   });
 
-  // Section level
   $("sectionLevelSelect").addEventListener("change", function() {
     setSectionPos(currentEditingSection, "levelId", parseInt(this.value));
     renderSeatingPlan();
     if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
   });
 
-  // Section rows
   $("sectionRowsInput").addEventListener("input", function() {
     var v = parseInt(this.value); if (isNaN(v)) return;
     setRowCount(currentEditingSection, v);
@@ -1390,14 +1472,12 @@ document.addEventListener("DOMContentLoaded", function(){
     if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
   });
 
-  // Section tier override
   $("sectionTierOverride").addEventListener("change", function() {
     setSectionTierOverride(currentEditingSection, this.value || null);
     renderSeatingPlan();
     if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
   });
 
-  // Position inputs
   $("sectionXInput").addEventListener("input", function() {
     setSectionPos(currentEditingSection, "x", snap(parseInt(this.value)||0));
     renderSeatingPlan();
@@ -1421,7 +1501,6 @@ document.addEventListener("DOMContentLoaded", function(){
     if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
   });
 
-  // Fullscreen open/close
   $("openFullscreen").addEventListener("click", function() {
     $("fullscreenOverlay").classList.add("open");
     document.body.style.overflow = "hidden";
@@ -1444,7 +1523,6 @@ document.addEventListener("DOMContentLoaded", function(){
     refreshSectionInputs();
   });
 
-  // Clear all overrides
   $("clearAllOverrides").addEventListener("click", function() {
     if (!confirm("Clear all section overrides and reset positions?")) return;
     sectionRowOverrides = {}; sectionRowCounts = {}; sectionNames = {};
@@ -1457,11 +1535,9 @@ document.addEventListener("DOMContentLoaded", function(){
     calculateCapacity(); renderSeatingPlan();
   });
 
-  // Exports
   $("exportJsonBtn").addEventListener("click", exportJson);
   $("exportCsvBtn").addEventListener("click", exportCsv);
 
-  // Ticket preview inputs
   ["eventName","startDate","venueAddress","guestName","seatBlock","seatRow","seatNum"].forEach(function(id) {
     $(id).addEventListener("input", updateTicketPreview);
   });
@@ -1472,7 +1548,6 @@ document.addEventListener("DOMContentLoaded", function(){
     $(id).addEventListener("input", function() { this.value = this.value.toUpperCase().replace(/[^A-Z]/g,"").slice(0,1); });
   });
 
-  // Tier distribution summary
   function updateTierSummary() {
     var defaultRows = parseInt($("totalLevel2").value) || 0;
     var sum = (parseInt($("tierRowsElite").value)||0) + (parseInt($("tierRowsGold").value)||0) + (parseInt($("tierRowsSilver").value)||0) + (parseInt($("tierRowsCyan").value)||0);
@@ -1486,7 +1561,6 @@ document.addEventListener("DOMContentLoaded", function(){
     $(id).addEventListener("input", function() { updateTierSummary(); renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
   });
 
-  // Submit
   $("createEventForm").addEventListener("submit", async function(e) {
     e.preventDefault();
     var btn = $("submitBtn"); var orig = btn.innerHTML;
@@ -1496,7 +1570,6 @@ document.addEventListener("DOMContentLoaded", function(){
     if(window.lucide) lucide.createIcons();
   });
 
-  // Keyboard esc
   document.addEventListener("keydown", function(e) {
     if (e.key === "Escape" && $("fullscreenOverlay").classList.contains("open")) {
       $("fullscreenOverlay").classList.remove("open");
@@ -1519,4 +1592,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-              </html>
+                                                                                 </html>
