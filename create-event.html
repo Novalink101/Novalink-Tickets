@@ -1158,7 +1158,7 @@ var TIER_NAMES = Object.assign({}, TIER_DEFAULT_NAMES);
 var TIER_PRICES = { black: 0, gold: 0, silver: 0, cyan: 0, tier5: 0, tier6: 0 };
 
 var MAX_TIERS = 6;
-var MIN_TIERS = 2;                    // <-- minimum of 2
+var MIN_TIERS = 2;
 var DEFAULT_TIERS = 4;
 var LARGE_VENUE_THRESHOLD = 5000;
 var activeTierCount = DEFAULT_TIERS;
@@ -1183,10 +1183,10 @@ var currentPlan = { id: "standard", fee: 7, limit: 500 };
    ============================================================ */
 var PLAN_FEATURES = {
   basic: {
-    seatingPlan:     false,   // no seating plan at all
+    seatingPlan:     false,
     rowsMode:        false,
     tableMode:       false,
-    venueLayout:     false,   // no canvas / stage / fullscreen / annotations / levels
+    venueLayout:     false,
     annotations:     false,
     levels:          false,
     editTierColors:  false,
@@ -1196,7 +1196,7 @@ var PLAN_FEATURES = {
   },
   standard: {
     seatingPlan:     true,
-    rowsMode:        false,   // tables & chairs only
+    rowsMode:        false,
     tableMode:       true,
     venueLayout:     false,
     annotations:     false,
@@ -1450,11 +1450,6 @@ document.addEventListener("DOMContentLoaded", function(){
     return null;
   }
 
-  /**
-   * Hide (or restore) a divider and every sibling up to the next divider.
-   * Elements whose display is controlled elsewhere get re-set by their own
-   * functions right after this runs.
-   */
   function hideSectionGroup(dividerText, hide){
     var d = findDivider(dividerText);
     if (!d) return;
@@ -1482,7 +1477,6 @@ document.addEventListener("DOMContentLoaded", function(){
     var rb = $("resetTierColorsBtn");
     if (rb) rb.style.display = editable ? "" : "none";
     if (!editable) {
-      // Force the default palette when colour editing is locked
       TIER_KEYS.forEach(function(k){
         TIER_COLORS[k] = TIER_DEFAULTS[k];
         var el = document.querySelector('.tier-color-input[data-tier="' + k + '"]');
@@ -1518,22 +1512,15 @@ document.addEventListener("DOMContentLoaded", function(){
     FEATURES = getPlanFeatures(currentPlan.id);
     var f = FEATURES;
 
-    // --- Right column: seating plan preview card ---
     var spWrap = $("seatingPlanPreview") ? $("seatingPlanPreview").parentElement : null;
     if (spWrap) spWrap.style.display = f.seatingPlan ? "" : "none";
 
-    // --- Venue-layout-related blocks ---
     hideSectionGroup("Venue Canvas & Stage", !f.venueLayout);
     hideSectionGroup("Canvas Annotations", !f.annotations);
     hideSectionGroup("Levels / Floors", !f.levels);
-
-    // --- Whole Sections region (basic has none) ---
     hideSectionGroup("Sections", !f.seatingPlan);
-
-    // --- Tier colour editor ---
     hideSectionGroup("Tier Colours", !f.editTierColors);
 
-    // --- Seating mode toggle (rows ⇄ tables) ---
     var tmToggle = $("tableModeToggle");
     var tmRow = tmToggle ? tmToggle.closest(".toggle-row") : null;
     if (tmRow) tmRow.style.display = (!f.seatingPlan || !f.rowsMode) ? "none" : "";
@@ -1542,18 +1529,15 @@ document.addEventListener("DOMContentLoaded", function(){
       else { tmToggle.disabled = false; }
     }
 
-    // --- Buttons that open gated views ---
     var fsBtn = $("openFullscreen");
     if (fsBtn) fsBtn.style.display = f.venueLayout ? "" : "none";
     var spFull = $("viewSeatingPlanFull");
     if (spFull) spFull.style.display = f.seatingPlan ? "" : "none";
 
-    // --- Locks on names / colours ---
     applyTierNameLock();
     if (!f.editTierNames) resetTierNamesToDefaults();
     applyTierColourLock();
 
-    // --- Tier count limits ---
     if (f.lockTiers) {
       activeTierCount = 4;
       var tsel = $("tierCount");
@@ -1562,7 +1546,6 @@ document.addEventListener("DOMContentLoaded", function(){
     updateTierCountOptions();
     updateTierVisibility();
 
-    // --- Apply the seating mode + re-render everything ---
     if (f.seatingPlan) {
       applyTableModeUI();
     } else {
@@ -1570,7 +1553,6 @@ document.addEventListener("DOMContentLoaded", function(){
       updateRevenueCalculator();
     }
 
-    // --- Close any overlay that is no longer permitted ---
     if (!f.venueLayout && $("fullscreenOverlay").classList.contains("open")) {
       $("fullscreenOverlay").classList.remove("open");
       document.body.style.overflow = "";
@@ -1633,12 +1615,10 @@ document.addEventListener("DOMContentLoaded", function(){
       var distItem = document.querySelector('.tier-dist-item[data-tier-dist="' + t + '"]');
       if (distItem) distItem.style.display = display;
     });
-    // Clear any section override that points to a now-inactive tier
     var idx = currentEditingSection;
     if (sectionTierOverrides[idx] && !isTierActive(sectionTierOverrides[idx])) {
       delete sectionTierOverrides[idx];
     }
-    // If the preview is showing a now-inactive tier, switch to the lowest active tier
     var previewSel = $("tierColor");
     if (previewSel && !isTierActive(previewSel.value)) {
       var fallback = active[active.length - 1] || "cyan";
@@ -1780,18 +1760,15 @@ document.addEventListener("DOMContentLoaded", function(){
     var seatCode = NovalinkRoutingEngine.buildSeatCode($("seatBlock").value, $("seatRow").value, $("seatNum").value);
     var venue = $("venueAddress").value || "VENUE";
 
-    // Front
     $("prevEventName").textContent = eventName;
     $("prevDateVenue").textContent = dateVenue;
     $("prevGuestName").textContent = guestName;
     $("prevSeat").textContent = seatCode || "Seat not assigned";
     $("prevVenueLocation").textContent = venue;
 
-    // Back
     $("prevBackEventName").textContent = eventName;
     $("prevBackRef").textContent = "Ref: " + (seatCode ? seatCode.replace(/\s/g, "") : "NL-XXXXXX");
 
-    // Tier labels + palette
     var tier = $("tierColor").value;
     if (!isTierActive(tier)) tier = getActiveTiers()[getActiveTiers().length - 1] || "cyan";
     var tierLabel = (TIER_NAMES[tier] || tier).toUpperCase();
@@ -2656,7 +2633,6 @@ document.addEventListener("DOMContentLoaded", function(){
     var container = $("seatingPlanPreview");
     if (!container) return;
 
-    // Feature gate — Basic has no seating plan at all
     if (!FEATURES.seatingPlan) {
       container.innerHTML = '<div class="seating-plan-title">Seating plans are not available on the Basic plan</div>';
       if ($("seatingPlanOverlay").classList.contains("open")) {
@@ -3237,7 +3213,6 @@ document.addEventListener("DOMContentLoaded", function(){
   }
 
   function applyTableModeUI() {
-    // Plan gate: if rows mode isn't allowed, force tables mode
     if (!FEATURES.rowsMode && $("tableModeToggle")) {
       $("tableModeToggle").checked = true;
     }
@@ -3264,7 +3239,7 @@ document.addEventListener("DOMContentLoaded", function(){
         limit: parseInt(this.dataset.limit) || 500
       };
       updatePlanDisplay();
-      applyPlanFeatures();   // <-- gate the studio UI to the new plan
+      applyPlanFeatures();
     });
   });
 
@@ -3392,7 +3367,7 @@ document.addEventListener("DOMContentLoaded", function(){
   /* ===== TIER COLOUR PICKERS ===== */
   document.querySelectorAll(".tier-color-input").forEach(function(el){
     el.addEventListener("input", function(){
-      if (!FEATURES.editTierColors) return;   // plan lock
+      if (!FEATURES.editTierColors) return;
       var t = this.dataset.tier;
       TIER_COLORS[t] = this.value;
       applyTierColors();
@@ -3700,11 +3675,10 @@ document.addEventListener("DOMContentLoaded", function(){
   updateTierVisibility();
   updateRevenueCalculator();
 
-  // Apply plan-based feature gating last so it wins over all defaults
   applyPlanFeatures();
 });
 n
 })();
 </script>
 </body>
-  </html>
+                                                                                             </html>
