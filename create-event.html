@@ -254,6 +254,27 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .tbl-chair.cyan{background:#22d3ee;}
 .table-meta-line{font-size:11px;font-weight:700;color:var(--text-muted);text-align:center;margin-bottom:6px;letter-spacing:0.5px;}
 
+/* Table validation panel */
+.table-standard-legend{font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6;padding:8px 10px;background:#fff;border:1px solid var(--border-2);border-radius:8px;}
+.table-standard-legend strong{color:var(--text-2);display:block;margin-bottom:2px;font-size:10.5px;text-transform:uppercase;letter-spacing:0.05em;}
+.table-standard-legend .std-line{display:flex;flex-wrap:wrap;gap:10px;}
+.table-standard-legend .std-chip{display:inline-flex;align-items:center;gap:4px;font-weight:700;color:var(--text-2);}
+.table-standard-legend .std-chip .dot{width:6px;height:6px;border-radius:50%;background:var(--cyan-500);flex-shrink:0;}
+
+.table-validation{margin-top:10px;display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto;padding-right:2px;}
+.table-validation .tv-item{display:flex;gap:8px;align-items:flex-start;padding:9px 11px;border-radius:8px;font-size:11.5px;line-height:1.5;font-weight:600;border:1px solid;animation:tvFadeIn .22s ease;}
+@keyframes tvFadeIn{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:translateY(0)}}
+.table-validation .tv-item .tv-icon{flex-shrink:0;font-weight:900;line-height:1.5;width:14px;text-align:center;}
+.table-validation .tv-item.error{background:#fef2f2;border-color:#fecaca;color:#991b1b;}
+.table-validation .tv-item.error .tv-icon{color:#dc2626;}
+.table-validation .tv-item.warn{background:#fffbeb;border-color:#fde68a;color:#92400e;}
+.table-validation .tv-item.warn .tv-icon{color:#d97706;}
+.table-validation .tv-item.info{background:#ecfeff;border-color:#a5f3fc;color:#0e7490;}
+.table-validation .tv-item.info .tv-icon{color:#0891b2;}
+.table-validation .tv-item.ok{background:#ecfdf5;border-color:#a7f3d0;color:#065f46;}
+.table-validation .tv-item.ok .tv-icon{color:#059669;}
+.table-validation .tv-item strong{font-weight:900;}
+
 /* Preview Column */
 .preview-column { position: sticky; top: 40px; display: flex; flex-direction: column; gap: 24px; }
 .preview-label { text-align: center; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
@@ -633,14 +654,14 @@ h1,h2,h3{line-height:1.15;font-weight:700}
             </div>
             <div class="form-group" id="tableHeightGroup" style="display:none;">
               <label for="tableHeight" id="tableHeightLabel">Table Length (cm)</label>
-              <input type="number" id="tableHeight" min="20" max="600" step="1" value="75" />
+              <input type="number" id="tableHeight" min="20" max="600" step="1" value="180" />
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-group">
               <label for="tableSpacing">Table Spacing (cm)</label>
-              <input type="number" id="tableSpacing" min="0" max="500" step="1" value="60" />
+              <input type="number" id="tableSpacing" min="0" max="500" step="1" value="65" />
               <p class="form-hint">Clear gap between the edges of neighbouring tables.</p>
             </div>
             <div class="form-group">
@@ -649,7 +670,18 @@ h1,h2,h3{line-height:1.15;font-weight:700}
             </div>
           </div>
 
+          <div class="table-standard-legend">
+            <strong>Standard event ranges</strong>
+            <div class="std-line">
+              <span class="std-chip"><span class="dot"></span>Table width 90–102 cm</span>
+              <span class="std-chip"><span class="dot"></span>Spacing 61–76 cm</span>
+              <span class="std-chip"><span class="dot"></span>Per-person 41–51 cm</span>
+            </div>
+          </div>
+
           <div class="tier-dist-summary" id="tableSummaryHint"></div>
+
+          <div class="table-validation" id="tableValidationOut"></div>
         </div>
 
         <div class="form-row">
@@ -880,15 +912,29 @@ var currentEditingSection = 0;
 /* ===== TABLE / CHAIR MODE STATE (all lengths in centimetres) ===== */
 var tableMode = false;
 var sectionTableCounts = {};   // per-section table count overrides
+
+/* Per-shape memory so switching shapes keeps sensible values */
 var tableConfig = {
   shape: "circular",           // circular | square | rectangular
   chairsAround: 8,             // circular: chairs around the table
   chairsPerSide: 2,            // square: chairs per each of 4 sides
   chairsLongSide: 4,           // rectangular: chairs on long sides
   chairsShortSide: 1,          // rectangular: chairs on short sides
-  widthCm: 150,                // diameter (circular) / side (square) / width (rect)
-  heightCm: 75,                // length (rectangular only)
-  spacingCm: 60                // clear gap between table edges
+  circularDiameterCm: 150,     // circular diameter (cm)
+  squareSideCm: 100,           // square side (cm)
+  rectWidthCm: 90,             // rectangular width / depth (cm) — standard 90–102
+  rectLengthCm: 180,           // rectangular length (cm)
+  spacingCm: 65                // clear gap between table edges (cm)
+};
+
+/* Standard real-world event ranges used for validation */
+var TABLE_STD = {
+  widthMin: 90,  widthMax: 102,      // rectangular table width (depth)
+  squareMin: 90, squareMax: 120,     // square table side
+  circMin: 90,   circMax: 180,       // circular table diameter
+  lengthMin: 120, lengthMax: 300,    // rectangular table length
+  spacingMin: 61, spacingMax: 76,    // table-to-table clearance
+  seatMin: 41,    seatMax: 51        // per-person seating width
 };
 
 var levelColors = ["#22d3ee", "#facc15", "#a78bfa", "#fb7185", "#34d399", "#60a5fa", "#f97316", "#e879f9"];
@@ -913,6 +959,11 @@ document.addEventListener("DOMContentLoaded", function(){
   function blockLabel(index) { return String.fromCharCode(65 + index); }
   function tierTagText(t) { return t === "black" ? "Elite" : t === "gold" ? "Gold" : t === "silver" ? "Silver" : "Cyan"; }
   function snap(v) { return snapToGrid ? Math.round(v / gridSize) * gridSize : v; }
+  function clampInt(v, min, max, fallback) {
+    var n = parseInt(v, 10);
+    if (isNaN(n)) n = fallback;
+    return Math.max(min, Math.min(max, n));
+  }
   function getSectionName(idx) { return sectionNames[idx] || ("Section " + blockLabel(idx)); }
   function setSectionName(idx, name) { if (name && name.trim()) sectionNames[idx] = name.trim(); else delete sectionNames[idx]; }
   function getSectionTierOverride(idx) { return sectionTierOverrides[idx] || null; }
@@ -931,6 +982,18 @@ document.addEventListener("DOMContentLoaded", function(){
   }
   function setTableCount(idx, v) { sectionTableCounts[idx] = Math.max(1, Math.min(200, v)); }
 
+  /* ---- effective (shape-aware) dimension getters ---- */
+  function getTableWidthCm() {
+    if (tableConfig.shape === "circular") return tableConfig.circularDiameterCm;
+    if (tableConfig.shape === "square")   return tableConfig.squareSideCm;
+    return tableConfig.rectWidthCm;
+  }
+  function getTableLengthCm() {
+    if (tableConfig.shape === "rectangular") return tableConfig.rectLengthCm;
+    return getTableWidthCm();
+  }
+  function getSpacingCm() { return tableConfig.spacingCm; }
+
   function chairsPerTable() {
     var c = tableConfig;
     if (c.shape === "circular") return c.chairsAround;
@@ -942,7 +1005,6 @@ document.addEventListener("DOMContentLoaded", function(){
   function cmToPx(cm, extraScale) {
     return cm * pxPerCm * (extraScale === undefined ? 1 : extraScale);
   }
-  function pxToCm(px) { return px / pxPerCm; }
 
   function getSeatsForRow(sIdx, rIdx) {
     var d = sectionRowOverrides[sIdx];
@@ -951,7 +1013,6 @@ document.addEventListener("DOMContentLoaded", function(){
   }
   function getSectionPos(idx) {
     if (sectionPositions[idx]) return sectionPositions[idx];
-    // Auto-position: spread sections in a row near the bottom
     var count = parseInt($("totalLevel1").value) || 1;
     var gap = canvasWidth / (count + 1);
     var pos = { x: Math.round(gap * (idx + 1) - 120), y: 300, scale: 1, rotation: 0, levelId: levels[0].id };
@@ -1127,12 +1188,9 @@ document.addEventListener("DOMContentLoaded", function(){
   // ===== SECTION INPUTS =====
   function refreshSectionInputs() {
     var idx = currentEditingSection;
-    // Name
     $("sectionNameInput").value = sectionNames[idx] || "";
     $("sectionNameInput").placeholder = "e.g., VIP Stand (currently " + getSectionName(idx) + ")";
-    // Level
     $("sectionLevelSelect").value = getSectionPos(idx).levelId;
-    // Rows or Tables
     if (tableMode) {
       var tc = getTableCount(idx);
       $("sectionRowsInput").value = tc;
@@ -1144,9 +1202,7 @@ document.addEventListener("DOMContentLoaded", function(){
       $("sectionRowsBadge").textContent = rows + (rows === 1 ? " row" : " rows");
       $("sectionRowsInput").max = 52;
     }
-    // Tier override
     $("sectionTierOverride").value = sectionTierOverrides[idx] || "";
-    // Position
     var pos = getSectionPos(idx);
     $("sectionXInput").value = pos.x;
     $("sectionYInput").value = pos.y;
@@ -1191,41 +1247,75 @@ document.addEventListener("DOMContentLoaded", function(){
     }
   }
 
-  // ===== TABLE GEOMETRY BUILDER (cm → px) =====
+  // ===== TABLE GEOMETRY (cm → px) =====
+  /* Returns table + chair geometry (all in px at the given render scale). */
+  function tableUnitMetrics(scale) {
+    scale = scale || 1;
+    var k = pxPerCm * scale;                                       // px per cm at this scale
+    var chairSize = Math.max(4, Math.min(60, Math.round(45 * k))); // ≈ 45 cm chair
+    var gap = Math.max(2, Math.min(20, Math.round(5 * k)));        // ≈ 5 cm tuck-in gap
+    var shape = tableConfig.shape;
+    var W, H;
+    if (shape === "circular" || shape === "square") {
+      W = H = Math.max(20, getTableWidthCm()) * k;
+    } else {
+      W = Math.max(20, getTableLengthCm()) * k;                    // horizontal = length
+      H = Math.max(20, getTableWidthCm()) * k;                     // vertical  = width
+    }
+    return {
+      w: W, h: H,
+      chairSize: chairSize,
+      gap: gap,
+      cellW: W + 2 * (gap + chairSize),
+      cellH: H + 2 * (gap + chairSize)
+    };
+  }
+
+  /* Footprint (bounding box) of a grid of `count` tables — used for validation. */
+  function tableGroupFootprint(count, scale) {
+    count = Math.max(1, count);
+    scale = scale || 1;
+    var unit = tableUnitMetrics(scale);
+    var cols = Math.max(1, Math.ceil(Math.sqrt(count)));
+    var rows = Math.ceil(count / cols);
+    var gapX = Math.max(0, cmToPx(getSpacingCm(), scale));
+    var gapY = Math.max(0, cmToPx(getSpacingCm(), scale));
+    return {
+      cols: cols, rows: rows,
+      w: cols * unit.cellW + (cols - 1) * gapX,
+      h: rows * unit.cellH + (rows - 1) * gapY
+    };
+  }
+
   function buildTableUnit(shape, cfg, scale) {
     scale = scale || 1;
-    var k = pxPerCm * scale;                                          // px per cm at this render scale
-    var chairSize = Math.max(4, Math.min(60, Math.round(45 * k)));    // ≈ 45 cm chair
-    var gap = Math.max(2, Math.min(20, Math.round(5 * k)));           // ≈ 5 cm tuck-in gap
-    var chairs = [], w, h;
+    var m = tableUnitMetrics(scale);
+    var chairSize = m.chairSize;
+    var gap = m.gap;
+    var W = m.w, H = m.h;
+    var chairs = [];
 
     if (shape === "circular") {
-      var d = Math.max(20, cfg.widthCm) * k;
-      var ringR = d / 2 + gap + chairSize / 2;
+      var ringR = W / 2 + gap + chairSize / 2;
       var n = Math.max(1, cfg.chairsAround);
       for (var i = 0; i < n; i++) {
         var a = (-90 + (i * 360 / n)) * Math.PI / 180;
         chairs.push({ x: Math.cos(a) * ringR, y: Math.sin(a) * ringR, round: true });
       }
-      w = d; h = d;
     } else if (shape === "square") {
-      var s = Math.max(20, cfg.widthCm) * k;
       var nS = Math.max(1, cfg.chairsPerSide);
-      var off = s / 2 + gap + chairSize / 2;
+      var off = W / 2 + gap + chairSize / 2;
       for (var i2 = 0; i2 < nS; i2++) {
-        var x2 = -s / 2 + ((i2 + 0.5) * s / nS);
+        var x2 = -W / 2 + ((i2 + 0.5) * W / nS);
         chairs.push({ x: x2, y: -off });
         chairs.push({ x: x2, y: off });
       }
       for (var j2 = 0; j2 < nS; j2++) {
-        var y2 = -s / 2 + ((j2 + 0.5) * s / nS);
+        var y2 = -H / 2 + ((j2 + 0.5) * H / nS);
         chairs.push({ x: -off, y: y2 });
         chairs.push({ x: off, y: y2 });
       }
-      w = s; h = s;
     } else {
-      var W = Math.max(20, cfg.widthCm) * k;
-      var H = Math.max(20, cfg.heightCm) * k;
       var nl = Math.max(1, cfg.chairsLongSide);
       var ns = Math.max(1, cfg.chairsShortSide);
       var offY = H / 2 + gap + chairSize / 2;
@@ -1240,12 +1330,9 @@ document.addEventListener("DOMContentLoaded", function(){
         chairs.push({ x: -offX, y: y3 });
         chairs.push({ x: offX, y: y3 });
       }
-      w = W; h = H;
     }
 
-    var cellW = w + 2 * (gap + chairSize);
-    var cellH = h + 2 * (gap + chairSize);
-    return { chairs: chairs, w: w, h: h, chairSize: chairSize, cellW: cellW, cellH: cellH };
+    return { chairs: chairs, w: W, h: H, chairSize: chairSize, cellW: m.cellW, cellH: m.cellH };
   }
 
   function buildTableGroup(count, shape, cfg, tier, scale) {
@@ -1254,8 +1341,8 @@ document.addEventListener("DOMContentLoaded", function(){
     var unit = buildTableUnit(shape, cfg, scale);
     var cols = Math.max(1, Math.ceil(Math.sqrt(count)));
     var rows = Math.ceil(count / cols);
-    var gapX = Math.max(0, cmToPx(cfg.spacingCm, scale));
-    var gapY = Math.max(0, cmToPx(cfg.spacingCm, scale));
+    var gapX = Math.max(0, cmToPx(getSpacingCm(), scale));
+    var gapY = Math.max(0, cmToPx(getSpacingCm(), scale));
 
     var totalW = cols * unit.cellW + (cols - 1) * gapX;
     var totalH = rows * unit.cellH + (rows - 1) * gapY;
@@ -1297,6 +1384,135 @@ document.addEventListener("DOMContentLoaded", function(){
       wrap.appendChild(t);
     }
     return wrap;
+  }
+
+  /* ===== TABLE VALIDATION ===== */
+  function tableValidationMessages() {
+    var msgs = [];
+    var shape = tableConfig.shape;
+    var w = getTableWidthCm();
+    var len = getTableLengthCm();
+
+    /* 1. Table size guidance */
+    if (shape === "circular") {
+      if (w < TABLE_STD.circMin) {
+        msgs.push({level:'warn', text:'Circular table diameter is ' + w + ' cm — a standard event round table is 90–180 cm. Small tables feel cramped for guests.'});
+      } else if (w > TABLE_STD.circMax) {
+        msgs.push({level:'warn', text:'Circular table diameter is ' + w + ' cm — a standard event round table is 90–180 cm. Very large rounds make conversation across the table difficult.'});
+      }
+    } else if (shape === "square") {
+      if (w < TABLE_STD.squareMin) {
+        msgs.push({level:'warn', text:'Square table side is ' + w + ' cm — a standard dining width is 90–102 cm. Narrower tables have less elbow room.'});
+      } else if (w > TABLE_STD.squareMax) {
+        msgs.push({level:'info', text:'Square table side is ' + w + ' cm — larger than a typical 90–102 cm dining width, but fine for banquet seating.'});
+      }
+    } else {
+      if (w < TABLE_STD.widthMin) {
+        msgs.push({level:'warn', text:'Table width is ' + w + ' cm — a standard dining table is 90–102 cm wide. Narrower settings feel cramped for guests facing each other.'});
+      } else if (w > TABLE_STD.widthMax) {
+        msgs.push({level:'warn', text:'Table width is ' + w + ' cm — a standard dining table is 90–102 cm wide. Wider tables reduce how many can fit side by side.'});
+      }
+      if (len < TABLE_STD.lengthMin) {
+        msgs.push({level:'warn', text:'Table length is ' + len + ' cm — 120 cm is the minimum comfortable length for a rectangular dining table.'});
+      } else if (len > TABLE_STD.lengthMax) {
+        msgs.push({level:'info', text:'Table length is ' + len + ' cm — very long tables make it hard to pass items and talk across.'});
+      }
+    }
+
+    /* 2. Spacing guidance (61–76 cm recommended) */
+    if (getSpacingCm() < TABLE_STD.spacingMin) {
+      msgs.push({level:'error', text:'Table spacing is only ' + getSpacingCm() + ' cm — below the recommended 61–76 cm. Guests will not be able to push their chairs back. Increase the spacing or reduce the table count.'});
+    } else if (getSpacingCm() > TABLE_STD.spacingMax) {
+      msgs.push({level:'info', text:'Table spacing is ' + getSpacingCm() + ' cm — above the typical 61–76 cm. This is generous but may limit how many tables fit.'});
+    }
+
+    /* 3. Per-person seating width (41–51 cm recommended) */
+    var checks = [];
+    if (shape === "circular") {
+      var perim = Math.PI * w;
+      checks.push({ label: 'around the circular table', cm: perim / Math.max(1, tableConfig.chairsAround), chairs: tableConfig.chairsAround });
+    } else if (shape === "square") {
+      checks.push({ label: 'on each side', cm: w / Math.max(1, tableConfig.chairsPerSide), chairs: tableConfig.chairsPerSide });
+    } else {
+      checks.push({ label: 'along the long side', cm: len / Math.max(1, tableConfig.chairsLongSide), chairs: tableConfig.chairsLongSide });
+      if (tableConfig.chairsShortSide > 1) {
+        checks.push({ label: 'along the short side', cm: w / Math.max(1, tableConfig.chairsShortSide), chairs: tableConfig.chairsShortSide });
+      }
+    }
+    checks.forEach(function(c) {
+      if (c.cm < TABLE_STD.seatMin) {
+        msgs.push({level:'error', text:'Too many chairs ' + c.label + ' — only ' + c.cm.toFixed(1) + ' cm per person (' + c.chairs + ' chairs). Recommended is 41–51 cm. Remove chairs or enlarge the table.'});
+      } else if (c.cm > TABLE_STD.seatMax) {
+        msgs.push({level:'info', text:'Room to spare ' + c.label + ' — ' + c.cm.toFixed(1) + ' cm per person. You could add another chair (recommended 41–51 cm).'});
+      }
+    });
+
+    /* 4. Too many tables — footprint vs. canvas */
+    var sections = parseInt($("totalLevel1").value) || 0;
+    var largest = { count: 0, w: 0, h: 0, name: '' };
+    for (var i = 0; i < sections; i++) {
+      var count = getTableCount(i);
+      var fp = tableGroupFootprint(count, 1);
+      if (fp.w * fp.h > largest.w * largest.h) {
+        largest = { count: count, w: fp.w, h: fp.h, name: getSectionName(i) };
+      }
+    }
+    if (largest.count > 0) {
+      if (largest.w > canvasWidth || largest.h > canvasHeight) {
+        msgs.push({
+          level: 'error',
+          text: 'TOO MANY TABLES in "' + largest.name + '": ' + largest.count + ' tables need about ' +
+                Math.round(largest.w) + ' × ' + Math.round(largest.h) + ' px, but the canvas is only ' +
+                canvasWidth + ' × ' + canvasHeight + ' px. Reduce the table count, table size, or spacing — or enlarge the canvas.'
+        });
+      } else if (largest.w > canvasWidth * 0.9 || largest.h > canvasHeight * 0.9) {
+        msgs.push({
+          level: 'warn',
+          text: '"' + largest.name + '" fills about ' + Math.round((largest.w / canvasWidth) * 100) +
+                '% of the canvas width — leave more room for walkways around the tables.'
+        });
+      }
+    }
+
+    return msgs;
+  }
+
+  function updateTableValidation() {
+    var out = $("tableValidationOut");
+    if (!out) return;
+    if (!tableMode) { out.innerHTML = ""; return; }
+
+    var msgs = tableValidationMessages();
+    out.innerHTML = "";
+
+    if (!msgs.length) {
+      var ok = document.createElement("div");
+      ok.className = "tv-item ok";
+      var okIcon = document.createElement("span");
+      okIcon.className = "tv-icon"; okIcon.textContent = "✓";
+      var okText = document.createElement("span");
+      okText.textContent = "All table sizes, spacing and seat counts are within standard event ranges.";
+      ok.appendChild(okIcon); ok.appendChild(okText);
+      out.appendChild(ok);
+      return;
+    }
+
+    // Sort: errors first, then warnings, then info
+    var order = { error: 0, warn: 1, info: 2 };
+    msgs.sort(function(a, b) { return (order[a.level] || 3) - (order[b.level] || 3); });
+
+    msgs.forEach(function(m) {
+      var el = document.createElement("div");
+      el.className = "tv-item " + m.level;
+      var icon = document.createElement("span");
+      icon.className = "tv-icon";
+      icon.textContent = m.level === "error" ? "✕" : (m.level === "warn" ? "!" : "i");
+      var text = document.createElement("span");
+      text.textContent = m.text;
+      el.appendChild(icon);
+      el.appendChild(text);
+      out.appendChild(el);
+    });
   }
 
   // ===== LEFT PANEL PREVIEW (stacked list of blocks) =====
@@ -1358,9 +1574,11 @@ document.addEventListener("DOMContentLoaded", function(){
   }
 
   function dimsText() {
-    if (tableConfig.shape === "circular") return "⌀ " + tableConfig.widthCm + " cm";
-    if (tableConfig.shape === "square") return tableConfig.widthCm + " × " + tableConfig.widthCm + " cm";
-    return tableConfig.widthCm + " × " + tableConfig.heightCm + " cm";
+    var shape = tableConfig.shape;
+    var w = getTableWidthCm();
+    if (shape === "circular") return "⌀ " + w + " cm";
+    if (shape === "square") return w + " × " + w + " cm";
+    return getTableLengthCm() + " × " + w + " cm (L × W)";
   }
 
   function renderTableLayout(container, sections) {
@@ -1500,7 +1718,6 @@ document.addEventListener("DOMContentLoaded", function(){
       el.appendChild(rowsArea);
     }
 
-    // Apply transform: center the section at (pos.x, pos.y)
     el.style.transformOrigin = "center center";
     el.style.transform = "rotate(" + pos.rotation + "deg) scale(" + pos.scale + ")";
     el.style.left = pos.x + "px";
@@ -1510,7 +1727,6 @@ document.addEventListener("DOMContentLoaded", function(){
 
   function renderFullscreen() {
     var canvas = $("fsCanvas");
-    // Remove existing sections
     canvas.querySelectorAll(".fs-section").forEach(function(el) { el.remove(); });
 
     canvas.style.width = canvasWidth + "px";
@@ -1518,7 +1734,6 @@ document.addEventListener("DOMContentLoaded", function(){
     canvas.style.setProperty("--grid-size", gridSize + "px");
     canvas.className = "fs-canvas" + (showGrid ? " show-grid" : "");
 
-    // Stage
     var stageName = ($("stageName").value || "STAGE").trim().toUpperCase();
     var sm = $("fsStageMarker");
     sm.textContent = stageName;
@@ -1528,7 +1743,6 @@ document.addEventListener("DOMContentLoaded", function(){
     sm.style.height = stage.height + "px";
     $("fsStageName").textContent = stageName;
 
-    // Sections
     var sections = parseInt($("totalLevel1").value) || 0;
     var anyVisible = false;
     for (var i = 0; i < sections; i++) {
@@ -1540,10 +1754,7 @@ document.addEventListener("DOMContentLoaded", function(){
     }
 
     $("fsEmptyHint").style.display = anyVisible ? "none" : "block";
-
-    // Level pills
     rebuildLevelPills();
-
     if(window.lucide) lucide.createIcons();
   }
 
@@ -1551,6 +1762,9 @@ document.addEventListener("DOMContentLoaded", function(){
   function buildSectionsData() {
     var sections = [];
     var count = parseInt($("totalLevel1").value) || 0;
+    var wCm = getTableWidthCm();
+    var lCm = getTableLengthCm();
+    var spCm = getSpacingCm();
     for (var s = 0; s < count; s++) {
       var pos = getSectionPos(s);
       var lv = levels.find(function(x){return x.id === pos.levelId;});
@@ -1565,15 +1779,14 @@ document.addEventListener("DOMContentLoaded", function(){
         var tc = getTableCount(s);
         var tier = getSectionTierOverride(s) || "cyan";
         var cpt = chairsPerTable();
-        var lengthCm = (tableConfig.shape === "rectangular") ? tableConfig.heightCm : tableConfig.widthCm;
         var tables = [];
         for (var t = 0; t < tc; t++) {
           tables.push({
             table: t + 1,
             shape: tableConfig.shape,
-            widthCm: tableConfig.widthCm,
-            lengthCm: lengthCm,
-            spacingCm: tableConfig.spacingCm,
+            widthCm: wCm,
+            lengthCm: lCm,
+            spacingCm: spCm,
             chairs: cpt,
             tier: tier
           });
@@ -1581,9 +1794,9 @@ document.addEventListener("DOMContentLoaded", function(){
         base.mode = "tables";
         base.tableCount = tc;
         base.tableShape = tableConfig.shape;
-        base.tableWidthCm = tableConfig.widthCm;
-        base.tableLengthCm = lengthCm;
-        base.tableSpacingCm = tableConfig.spacingCm;
+        base.tableWidthCm = wCm;
+        base.tableLengthCm = lCm;
+        base.tableSpacingCm = spCm;
         base.chairsPerTable = cpt;
         base.tables = tables;
         sections.push(base);
@@ -1607,6 +1820,9 @@ document.addEventListener("DOMContentLoaded", function(){
   }
 
   function buildVenuePayload() {
+    var wCm = getTableWidthCm();
+    var lCm = getTableLengthCm();
+    var spCm = getSpacingCm();
     return {
       canvasWidth: canvasWidth, canvasHeight: canvasHeight,
       gridSize: gridSize, snapToGrid: snapToGrid,
@@ -1621,14 +1837,14 @@ document.addEventListener("DOMContentLoaded", function(){
         chairsLongSide: tableConfig.chairsLongSide,
         chairsShortSide: tableConfig.chairsShortSide,
         /* --- centimetre values (source of truth) --- */
-        widthCm: tableConfig.widthCm,
-        heightCm: tableConfig.heightCm,
-        spacingCm: tableConfig.spacingCm,
+        widthCm: wCm,
+        lengthCm: lCm,
+        spacingCm: spCm,
         /* --- derived pixel values for rendering --- */
         pxPerCm: pxPerCm,
-        widthPx: Math.round(cmToPx(tableConfig.widthCm)),
-        heightPx: Math.round(cmToPx(tableConfig.heightCm)),
-        spacingPx: Math.round(cmToPx(tableConfig.spacingCm)),
+        widthPx: Math.round(cmToPx(wCm)),
+        lengthPx: Math.round(cmToPx(lCm)),
+        spacingPx: Math.round(cmToPx(spCm)),
         chairsPerTable: chairsPerTable()
       } : null,
       sections: buildSectionsData()
@@ -1740,15 +1956,24 @@ document.addEventListener("DOMContentLoaded", function(){
     var cs = parseInt($("chairsShortSide").value); if (isNaN(cs)) cs = 1;
     cs = Math.max(1, Math.min(8, cs)); $("chairsShortSide").value = cs; tableConfig.chairsShortSide = cs;
 
-    /* --- centimetres --- */
-    var w = parseInt($("tableWidth").value); if (isNaN(w)) w = 150;
-    w = Math.max(20, Math.min(600, w)); $("tableWidth").value = w; tableConfig.widthCm = w;
+    /* Width — stored per shape so switching preserves each shape's value */
+    var w = clampInt($("tableWidth").value, 20, 600, 100);
+    $("tableWidth").value = w;
+    if (tableConfig.shape === "circular")     tableConfig.circularDiameterCm = w;
+    else if (tableConfig.shape === "square")  tableConfig.squareSideCm = w;
+    else                                      tableConfig.rectWidthCm = w;
 
-    var h = parseInt($("tableHeight").value); if (isNaN(h)) h = 75;
-    h = Math.max(20, Math.min(600, h)); $("tableHeight").value = h; tableConfig.heightCm = h;
+    /* Length (rectangular only) */
+    if (tableConfig.shape === "rectangular") {
+      var h = clampInt($("tableHeight").value, 20, 600, 180);
+      $("tableHeight").value = h;
+      tableConfig.rectLengthCm = h;
+    }
 
-    var sp = parseInt($("tableSpacing").value); if (isNaN(sp)) sp = 60;
-    sp = Math.max(0, Math.min(500, sp)); $("tableSpacing").value = sp; tableConfig.spacingCm = sp;
+    /* Spacing */
+    var sp = clampInt($("tableSpacing").value, 0, 500, 65);
+    $("tableSpacing").value = sp;
+    tableConfig.spacingCm = sp;
 
     updateScaleHints();
   }
@@ -1769,6 +1994,10 @@ document.addEventListener("DOMContentLoaded", function(){
       $("tableWidthLabel").textContent = "Table Width (cm)";
       $("tableHeightLabel").textContent = "Table Length (cm)";
     }
+
+    /* Keep input in sync with the active shape's stored value */
+    $("tableWidth").value = getTableWidthCm();
+    if (shape === "rectangular") $("tableHeight").value = tableConfig.rectLengthCm;
   }
 
   function updateTableSummary() {
@@ -1780,9 +2009,10 @@ document.addEventListener("DOMContentLoaded", function(){
 
     $("tableSummaryHint").textContent =
       shapeLabel(tableConfig.shape) + " " + dimsText() +
-      " · " + cpt + " chairs per table · spacing " + tableConfig.spacingCm + " cm · " +
-      tables + " tables across " + sections + " section" + (sections === 1 ? "" : "s") +
-      " · " + (tables * cpt) + " seats total · 1 cm = " + pxPerCm + " px.";
+      " · " + cpt + " chairs/table · spacing " + tableConfig.spacingCm + " cm · " +
+      tables + " tables · " + (tables * cpt) + " seats · 1 cm = " + pxPerCm + " px";
+
+    updateTableValidation();
   }
 
   function onTableConfigChange() {
@@ -1816,8 +2046,8 @@ document.addEventListener("DOMContentLoaded", function(){
 
   // ===== WIRING =====
   // Canvas
-  $("canvasWidth").addEventListener("change", function() { canvasWidth = Math.max(400, Math.min(3000, parseInt(this.value)||1200)); this.value = canvasWidth; updateScaleHints(); renderFullscreen(); });
-  $("canvasHeight").addEventListener("change", function() { canvasHeight = Math.max(400, Math.min(3000, parseInt(this.value)||800)); this.value = canvasHeight; updateScaleHints(); renderFullscreen(); });
+  $("canvasWidth").addEventListener("change", function() { canvasWidth = Math.max(400, Math.min(3000, parseInt(this.value)||1200)); this.value = canvasWidth; updateScaleHints(); updateTableValidation(); renderFullscreen(); });
+  $("canvasHeight").addEventListener("change", function() { canvasHeight = Math.max(400, Math.min(3000, parseInt(this.value)||800)); this.value = canvasHeight; updateScaleHints(); updateTableValidation(); renderFullscreen(); });
   $("gridSize").addEventListener("change", function() { gridSize = Math.max(10, Math.min(200, parseInt(this.value)||50)); this.value = gridSize; updateScaleHints(); renderFullscreen(); });
   $("snapToggle").addEventListener("change", function() { snapToGrid = this.checked; });
 
@@ -1844,9 +2074,27 @@ document.addEventListener("DOMContentLoaded", function(){
   /* ---- Table mode toggle + config ---- */
   $("tableModeToggle").addEventListener("change", applyTableModeUI);
 
-  ["tableShape","chairsAround","chairsPerSide","chairsLongSide","chairsShortSide","tableWidth","tableHeight","tableSpacing"]
+  ["chairsAround","chairsPerSide","chairsLongSide","chairsShortSide","tableWidth","tableHeight","tableSpacing"]
     .forEach(function(id) { $(id).addEventListener("input", onTableConfigChange); });
-  $("tableShape").addEventListener("change", onTableConfigChange);
+
+  /* Shape change — swap in the new shape's stored width before syncing */
+  $("tableShape").addEventListener("change", function() {
+    // Persist the value currently shown for the previous shape
+    var prev = tableConfig.shape;
+    var w = clampInt($("tableWidth").value, 20, 600, 100);
+    if (prev === "circular")     tableConfig.circularDiameterCm = w;
+    else if (prev === "square")  tableConfig.squareSideCm = w;
+    else                         tableConfig.rectWidthCm = w;
+
+    // Switch to the new shape
+    tableConfig.shape = this.value;
+
+    // Load the new shape's stored width (and length if rectangular)
+    $("tableWidth").value = getTableWidthCm();
+    if (tableConfig.shape === "rectangular") $("tableHeight").value = tableConfig.rectLengthCm;
+
+    onTableConfigChange();
+  });
 
   $("tableCount").addEventListener("change", function() {
     var v = Math.max(1, Math.min(200, parseInt(this.value) || 6));
@@ -1881,6 +2129,7 @@ document.addEventListener("DOMContentLoaded", function(){
     setSectionName(currentEditingSection, this.value);
     rebuildSectionTabs();
     renderSeatingPlan();
+    updateTableValidation();
     if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
   });
 
@@ -2044,4 +2293,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-  </html>
+          </html>
