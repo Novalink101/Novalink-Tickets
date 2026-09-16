@@ -233,6 +233,18 @@ h1,h2,h3{line-height:1.15;font-weight:700}
   white-space: nowrap;
 }
 
+/* Table Rows Editor */
+.table-rows-panel{margin:6px 0 12px;padding:10px;background:var(--surface);border:1px solid var(--border-2);border-radius:10px;}
+.table-rows-list{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;}
+.table-row-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:8px;}
+.table-row-item .table-row-label{flex:0 0 auto;font-size:11px;font-weight:800;color:var(--cyan-700);background:var(--cyan-50);text-transform:uppercase;letter-spacing:0.5px;padding:3px 8px;border-radius:6px;text-align:center;min-width:52px;}
+.table-row-item input{width:70px;padding:6px 8px;text-align:center;font-size:13px;font-weight:700;background:#fff;border:1px solid var(--border-2);border-radius:8px;font-family:inherit;color:var(--text);}
+.table-row-item input:focus{outline:none;border-color:var(--cyan-500);box-shadow:0 0 0 3px rgba(6,182,212,0.15);}
+.table-row-item .tr-hint{flex:1;font-size:11px;color:var(--text-muted);font-style:italic;}
+.table-row-item .btn-trash{padding:4px 6px;border-radius:6px;border:1px solid var(--border-2);background:transparent;color:var(--text-muted);cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;}
+.table-row-item .btn-trash:hover:not(:disabled){border-color:#dc2626;color:#dc2626;}
+.table-row-item .btn-trash:disabled{opacity:0.3;cursor:not-allowed;}
+
 /* ===== TABLE / CHAIR MODE ===== */
 .table-options-panel{margin-top:4px;padding:14px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:10px;}
 .table-options-title{font-size:11px;font-weight:800;color:var(--cyan-700);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;}
@@ -618,8 +630,9 @@ h1,h2,h3{line-height:1.15;font-weight:700}
               </select>
             </div>
             <div class="form-group">
-              <label for="tableCount">Number of Tables (default per section)</label>
-              <input type="number" id="tableCount" min="1" max="200" value="6" />
+              <label for="tableCount">Default Tables per Row</label>
+              <input type="number" id="tableCount" min="1" max="50" value="4" />
+              <p class="form-hint">Used as the starting count when a new table row is added.</p>
             </div>
           </div>
 
@@ -709,10 +722,16 @@ h1,h2,h3{line-height:1.15;font-weight:700}
               <select id="sectionLevelSelect"></select>
             </div>
 
-            <div class="section-rows-row">
+            <div class="section-rows-row" id="sectionRowsRow">
               <label for="sectionRowsInput" id="sectionRowsLabel">Rows in this section</label>
               <span class="section-rows-badge" id="sectionRowsBadge">6 rows</span>
               <input type="number" id="sectionRowsInput" min="1" max="52" value="6" />
+            </div>
+
+            <div class="table-rows-panel" id="tableRowsBlock" style="display:none;">
+              <div class="row-overrides-hint">Define each row of tables — e.g., Row A: 4 tables, Row B: 3 tables.</div>
+              <div class="table-rows-list" id="tableRowsList"></div>
+              <button type="button" class="btn-mini" id="addTableRowBtn">+ Add Table Row</button>
             </div>
 
             <div class="section-rows-row">
@@ -906,35 +925,38 @@ var sectionRowOverrides = {};
 var sectionRowCounts = {};
 var sectionNames = {};
 var sectionTierOverrides = {};
-var sectionPositions = {}; // { idx: { x, y, scale, rotation, levelId } }
+var sectionPositions = {};
 var currentEditingSection = 0;
 
 /* ===== TABLE / CHAIR MODE STATE (all lengths in centimetres) ===== */
 var tableMode = false;
-var sectionTableCounts = {};   // per-section table count overrides
+
+/* Per-section, per-row table counts.
+   sectionTableRows[idx] = [ { count: 4 }, { count: 3 } , ... ] */
+var sectionTableRows = {};
 
 /* Per-shape memory so switching shapes keeps sensible values */
 var tableConfig = {
-  shape: "circular",           // circular | square | rectangular
-  chairsAround: 8,             // circular: chairs around the table
-  chairsPerSide: 2,            // square: chairs per each of 4 sides
-  chairsLongSide: 4,           // rectangular: chairs on long sides
-  chairsShortSide: 1,          // rectangular: chairs on short sides
-  circularDiameterCm: 150,     // circular diameter (cm)
-  squareSideCm: 100,           // square side (cm)
-  rectWidthCm: 90,             // rectangular width / depth (cm) — standard 90–102
-  rectLengthCm: 180,           // rectangular length (cm)
-  spacingCm: 65                // clear gap between table edges (cm)
+  shape: "circular",
+  chairsAround: 8,
+  chairsPerSide: 2,
+  chairsLongSide: 4,
+  chairsShortSide: 1,
+  circularDiameterCm: 150,
+  squareSideCm: 100,
+  rectWidthCm: 90,
+  rectLengthCm: 180,
+  spacingCm: 65
 };
 
 /* Standard real-world event ranges used for validation */
 var TABLE_STD = {
-  widthMin: 90,  widthMax: 102,      // rectangular table width (depth)
-  squareMin: 90, squareMax: 120,     // square table side
-  circMin: 90,   circMax: 180,       // circular table diameter
-  lengthMin: 120, lengthMax: 300,    // rectangular table length
-  spacingMin: 61, spacingMax: 76,    // table-to-table clearance
-  seatMin: 41,    seatMax: 51        // per-person seating width
+  widthMin: 90,  widthMax: 102,
+  squareMin: 90, squareMax: 120,
+  circMin: 90,   circMax: 180,
+  lengthMin: 120, lengthMax: 300,
+  spacingMin: 61, spacingMax: 76,
+  seatMin: 41,    seatMax: 51
 };
 
 var levelColors = ["#22d3ee", "#facc15", "#a78bfa", "#fb7185", "#34d399", "#60a5fa", "#f97316", "#e879f9"];
@@ -974,13 +996,24 @@ document.addEventListener("DOMContentLoaded", function(){
   }
   function setRowCount(idx, v) { sectionRowCounts[idx] = Math.max(1, Math.min(52, v)); }
 
-  /* ---- table count helpers ---- */
-  function getDefaultTableCount() { return Math.max(1, Math.min(200, parseInt($("tableCount").value) || 6)); }
-  function getTableCount(idx) {
-    if (sectionTableCounts[idx] !== undefined) return sectionTableCounts[idx];
-    return getDefaultTableCount();
+  /* ---- table row helpers ---- */
+  function getDefaultTableCount() { return Math.max(1, Math.min(50, parseInt($("tableCount").value) || 4)); }
+
+  /* Returns the array of rows for a section. Falls back to a single row. */
+  function getSectionTableRows(idx) {
+    var rows = sectionTableRows[idx];
+    if (!rows || !rows.length) return [{ count: getDefaultTableCount() }];
+    return rows;
   }
-  function setTableCount(idx, v) { sectionTableCounts[idx] = Math.max(1, Math.min(200, v)); }
+  function ensureSectionTableRows(idx) {
+    if (!sectionTableRows[idx] || !sectionTableRows[idx].length) {
+      sectionTableRows[idx] = [{ count: getDefaultTableCount() }];
+    }
+    return sectionTableRows[idx];
+  }
+  function getTableCount(idx) {
+    return getSectionTableRows(idx).reduce(function(s, r) { return s + (r.count || 0); }, 0);
+  }
 
   /* ---- effective (shape-aware) dimension getters ---- */
   function getTableWidthCm() {
@@ -998,7 +1031,7 @@ document.addEventListener("DOMContentLoaded", function(){
     var c = tableConfig;
     if (c.shape === "circular") return c.chairsAround;
     if (c.shape === "square") return c.chairsPerSide * 4;
-    return (c.chairsLongSide + c.chairsShortSide) * 2; // rectangular
+    return (c.chairsLongSide + c.chairsShortSide) * 2;
   }
 
   /* ---- centimetre helpers ---- */
@@ -1179,6 +1212,7 @@ document.addEventListener("DOMContentLoaded", function(){
           rebuildSectionTabs();
           refreshSectionInputs();
           rebuildRowOverrides();
+          rebuildTableRowsEditor();
         });
       })(i);
       container.appendChild(btn);
@@ -1191,18 +1225,26 @@ document.addEventListener("DOMContentLoaded", function(){
     $("sectionNameInput").value = sectionNames[idx] || "";
     $("sectionNameInput").placeholder = "e.g., VIP Stand (currently " + getSectionName(idx) + ")";
     $("sectionLevelSelect").value = getSectionPos(idx).levelId;
+
     if (tableMode) {
-      var tc = getTableCount(idx);
-      $("sectionRowsInput").value = tc;
-      $("sectionRowsBadge").textContent = tc + (tc === 1 ? " table" : " tables");
-      $("sectionRowsInput").max = 200;
+      var totalTables = getTableCount(idx);
+      var rowCount = getSectionTableRows(idx).length;
+      $("sectionRowsLabel").textContent = "Tables in this section";
+      $("sectionRowsInput").style.display = "none";
+      $("sectionRowsBadge").textContent =
+        rowCount + (rowCount === 1 ? " row" : " rows") + " · " +
+        totalTables + (totalTables === 1 ? " table" : " tables");
     } else {
       var rows = getRowCount(idx);
+      $("sectionRowsLabel").textContent = "Rows in this section";
+      $("sectionRowsInput").style.display = "";
       $("sectionRowsInput").value = rows;
-      $("sectionRowsBadge").textContent = rows + (rows === 1 ? " row" : " rows");
       $("sectionRowsInput").max = 52;
+      $("sectionRowsBadge").textContent = rows + (rows === 1 ? " row" : " rows");
     }
+
     $("sectionTierOverride").value = sectionTierOverrides[idx] || "";
+
     var pos = getSectionPos(idx);
     $("sectionXInput").value = pos.x;
     $("sectionYInput").value = pos.y;
@@ -1247,20 +1289,109 @@ document.addEventListener("DOMContentLoaded", function(){
     }
   }
 
+  /* ===== TABLE ROWS EDITOR (per section) ===== */
+  function rebuildTableRowsEditor() {
+    var block = $("tableRowsBlock");
+    if (!tableMode) { block.style.display = "none"; return; }
+    block.style.display = "";
+
+    var rows = ensureSectionTableRows(currentEditingSection);
+    var list = $("tableRowsList");
+    list.innerHTML = "";
+
+    rows.forEach(function(row, i) {
+      var item = document.createElement("div");
+      item.className = "table-row-item";
+
+      var lbl = document.createElement("span");
+      lbl.className = "table-row-label";
+      lbl.textContent = "Row " + rowLabel(i);
+      item.appendChild(lbl);
+
+      var inp = document.createElement("input");
+      inp.type = "number";
+      inp.min = 1;
+      inp.max = 50;
+      inp.value = row.count;
+      (function(rowIdx) {
+        inp.addEventListener("input", function() {
+          var v = parseInt(inp.value);
+          if (isNaN(v)) return;
+          v = Math.max(1, Math.min(50, v));
+          rows[rowIdx].count = v;
+          // Sync on blur to avoid re-writing the field while typing
+          if (this.value !== String(v)) this.value = v;
+          updateTableRowAggregates();
+        });
+        inp.addEventListener("change", function() {
+          var v = Math.max(1, Math.min(50, parseInt(inp.value) || 1));
+          inp.value = v;
+          rows[rowIdx].count = v;
+          updateTableRowAggregates();
+        });
+      })(i);
+      item.appendChild(inp);
+
+      var hint = document.createElement("span");
+      hint.className = "tr-hint";
+      hint.textContent = (row.count === 1 ? "table" : "tables");
+      item.appendChild(hint);
+
+      var del = document.createElement("button");
+      del.type = "button";
+      del.className = "btn-trash";
+      del.innerHTML = '<i data-lucide="trash-2" style="width:14px;height:14px;"></i>';
+      del.title = rows.length <= 1 ? "At least one row is required" : "Remove this row";
+      del.disabled = rows.length <= 1;
+      (function(rowIdx) {
+        del.addEventListener("click", function() {
+          if (rows.length <= 1) return;
+          rows.splice(rowIdx, 1);
+          sectionTableRows[currentEditingSection] = rows;
+          rebuildTableRowsEditor();
+          updateTableRowAggregates();
+        });
+      })(i);
+      item.appendChild(del);
+
+      list.appendChild(item);
+    });
+
+    if (window.lucide) lucide.createIcons();
+  }
+
+  /* Called whenever a row's count changes — refreshes summaries and previews. */
+  function updateTableRowAggregates() {
+    refreshSectionInputs();
+    calculateCapacity();
+    updateTableSummary();
+    renderSeatingPlan();
+    if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+  }
+
+  function addTableRow() {
+    var rows = ensureSectionTableRows(currentEditingSection);
+    // Default new row to the last row's count, or the global default
+    var lastCount = rows.length ? rows[rows.length - 1].count : getDefaultTableCount();
+    rows.push({ count: lastCount });
+    sectionTableRows[currentEditingSection] = rows;
+    rebuildTableRowsEditor();
+    updateTableRowAggregates();
+  }
+
   // ===== TABLE GEOMETRY (cm → px) =====
-  /* Returns table + chair geometry (all in px at the given render scale). */
   function tableUnitMetrics(scale) {
     scale = scale || 1;
-    var k = pxPerCm * scale;                                       // px per cm at this scale
-    var chairSize = Math.max(4, Math.min(60, Math.round(45 * k))); // ≈ 45 cm chair
-    var gap = Math.max(2, Math.min(20, Math.round(5 * k)));        // ≈ 5 cm tuck-in gap
+    var k = pxPerCm * scale;
+    var chairSize = Math.max(4, Math.min(60, Math.round(45 * k)));
+    var gap = Math.max(2, Math.min(20, Math.round(5 * k)));
     var shape = tableConfig.shape;
     var W, H;
     if (shape === "circular" || shape === "square") {
       W = H = Math.max(20, getTableWidthCm()) * k;
     } else {
-      W = Math.max(20, getTableLengthCm()) * k;                    // horizontal = length
-      H = Math.max(20, getTableWidthCm()) * k;                     // vertical  = width
+      W = Math.max(20, getTableLengthCm()) * k;
+      H = Math.max(20, getTableWidthCm()) * k;
     }
     return {
       w: W, h: H,
@@ -1271,20 +1402,18 @@ document.addEventListener("DOMContentLoaded", function(){
     };
   }
 
-  /* Footprint (bounding box) of a grid of `count` tables — used for validation. */
-  function tableGroupFootprint(count, scale) {
-    count = Math.max(1, count);
+  /* Footprint of a set of rows (bounding box in px). */
+  function tableRowsFootprint(rows, scale) {
     scale = scale || 1;
+    if (!rows || !rows.length) return { w: 0, h: 0, cols: 0, rows: 0 };
     var unit = tableUnitMetrics(scale);
-    var cols = Math.max(1, Math.ceil(Math.sqrt(count)));
-    var rows = Math.ceil(count / cols);
     var gapX = Math.max(0, cmToPx(getSpacingCm(), scale));
     var gapY = Math.max(0, cmToPx(getSpacingCm(), scale));
-    return {
-      cols: cols, rows: rows,
-      w: cols * unit.cellW + (cols - 1) * gapX,
-      h: rows * unit.cellH + (rows - 1) * gapY
-    };
+    var maxCols = 1;
+    rows.forEach(function(r) { if (r.count > maxCols) maxCols = r.count; });
+    var w = maxCols * unit.cellW + Math.max(0, maxCols - 1) * gapX;
+    var h = rows.length * unit.cellH + Math.max(0, rows.length - 1) * gapY;
+    return { w: w, h: h, cols: maxCols, rows: rows.length };
   }
 
   function buildTableUnit(shape, cfg, scale) {
@@ -1335,54 +1464,63 @@ document.addEventListener("DOMContentLoaded", function(){
     return { chairs: chairs, w: W, h: H, chairSize: chairSize, cellW: m.cellW, cellH: m.cellH };
   }
 
-  function buildTableGroup(count, shape, cfg, tier, scale) {
-    count = Math.max(1, count);
+  /* Build a stack of table rows. Each row is centered horizontally. */
+  function buildTableRowsGroup(rows, shape, cfg, tier, scale) {
     scale = scale || 1;
+    if (!rows || !rows.length) rows = [{ count: 1 }];
     var unit = buildTableUnit(shape, cfg, scale);
-    var cols = Math.max(1, Math.ceil(Math.sqrt(count)));
-    var rows = Math.ceil(count / cols);
     var gapX = Math.max(0, cmToPx(getSpacingCm(), scale));
     var gapY = Math.max(0, cmToPx(getSpacingCm(), scale));
 
-    var totalW = cols * unit.cellW + (cols - 1) * gapX;
-    var totalH = rows * unit.cellH + (rows - 1) * gapY;
+    var maxCols = 1;
+    rows.forEach(function(r) { if (r.count > maxCols) maxCols = r.count; });
+
+    var totalW = maxCols * unit.cellW + Math.max(0, maxCols - 1) * gapX;
+    var totalH = rows.length * unit.cellH + Math.max(0, rows.length - 1) * gapY;
 
     var wrap = document.createElement("div");
     wrap.className = "tbl-group";
     wrap.style.width = totalW + "px";
     wrap.style.height = totalH + "px";
 
-    for (var i = 0; i < count; i++) {
-      var c = i % cols, r = Math.floor(i / cols);
-      var cx = c * (unit.cellW + gapX) + unit.cellW / 2;
-      var cy = r * (unit.cellH + gapY) + unit.cellH / 2;
+    var tableNum = 0;
+    rows.forEach(function(row, ri) {
+      var count = Math.max(1, row.count);
+      var rowW = count * unit.cellW + Math.max(0, count - 1) * gapX;
+      var startX = (totalW - rowW) / 2;
+      var cy = ri * (unit.cellH + gapY) + unit.cellH / 2;
 
-      var t = document.createElement("div");
-      t.className = "tbl-unit";
-      t.style.left = cx + "px";
-      t.style.top = cy + "px";
+      for (var i = 0; i < count; i++) {
+        tableNum++;
+        var cx = startX + i * (unit.cellW + gapX) + unit.cellW / 2;
 
-      var shapeEl = document.createElement("div");
-      shapeEl.className = "tbl-shape " + shape + " " + tier;
-      shapeEl.style.width = unit.w + "px";
-      shapeEl.style.height = unit.h + "px";
-      shapeEl.style.left = (-unit.w / 2) + "px";
-      shapeEl.style.top = (-unit.h / 2) + "px";
-      shapeEl.textContent = (i + 1);
-      t.appendChild(shapeEl);
+        var t = document.createElement("div");
+        t.className = "tbl-unit";
+        t.style.left = cx + "px";
+        t.style.top = cy + "px";
 
-      unit.chairs.forEach(function(ch) {
-        var cel = document.createElement("div");
-        cel.className = "tbl-chair " + tier + (ch.round ? " round" : "");
-        cel.style.width = unit.chairSize + "px";
-        cel.style.height = unit.chairSize + "px";
-        cel.style.left = (ch.x - unit.chairSize / 2) + "px";
-        cel.style.top = (ch.y - unit.chairSize / 2) + "px";
-        t.appendChild(cel);
-      });
+        var shapeEl = document.createElement("div");
+        shapeEl.className = "tbl-shape " + shape + " " + tier;
+        shapeEl.style.width = unit.w + "px";
+        shapeEl.style.height = unit.h + "px";
+        shapeEl.style.left = (-unit.w / 2) + "px";
+        shapeEl.style.top = (-unit.h / 2) + "px";
+        shapeEl.textContent = tableNum;
+        t.appendChild(shapeEl);
 
-      wrap.appendChild(t);
-    }
+        unit.chairs.forEach(function(ch) {
+          var cel = document.createElement("div");
+          cel.className = "tbl-chair " + tier + (ch.round ? " round" : "");
+          cel.style.width = unit.chairSize + "px";
+          cel.style.height = unit.chairSize + "px";
+          cel.style.left = (ch.x - unit.chairSize / 2) + "px";
+          cel.style.top = (ch.y - unit.chairSize / 2) + "px";
+          t.appendChild(cel);
+        });
+
+        wrap.appendChild(t);
+      }
+    });
     return wrap;
   }
 
@@ -1419,14 +1557,14 @@ document.addEventListener("DOMContentLoaded", function(){
       }
     }
 
-    /* 2. Spacing guidance (61–76 cm recommended) */
+    /* 2. Spacing guidance */
     if (getSpacingCm() < TABLE_STD.spacingMin) {
       msgs.push({level:'error', text:'Table spacing is only ' + getSpacingCm() + ' cm — below the recommended 61–76 cm. Guests will not be able to push their chairs back. Increase the spacing or reduce the table count.'});
     } else if (getSpacingCm() > TABLE_STD.spacingMax) {
       msgs.push({level:'info', text:'Table spacing is ' + getSpacingCm() + ' cm — above the typical 61–76 cm. This is generous but may limit how many tables fit.'});
     }
 
-    /* 3. Per-person seating width (41–51 cm recommended) */
+    /* 3. Per-person seating width */
     var checks = [];
     if (shape === "circular") {
       var perim = Math.PI * w;
@@ -1447,30 +1585,42 @@ document.addEventListener("DOMContentLoaded", function(){
       }
     });
 
-    /* 4. Too many tables — footprint vs. canvas */
+    /* 4. Too many tables — footprint vs. canvas (uses the widest row + total height) */
     var sections = parseInt($("totalLevel1").value) || 0;
-    var largest = { count: 0, w: 0, h: 0, name: '' };
+    var worst = { name: '', fp: { w: 0, h: 0 }, rows: [], widestRowIdx: 0 };
     for (var i = 0; i < sections; i++) {
-      var count = getTableCount(i);
-      var fp = tableGroupFootprint(count, 1);
-      if (fp.w * fp.h > largest.w * largest.h) {
-        largest = { count: count, w: fp.w, h: fp.h, name: getSectionName(i) };
+      var rows = getSectionTableRows(i);
+      var fp = tableRowsFootprint(rows, 1);
+      if (fp.w * fp.h > worst.fp.w * worst.fp.h) {
+        var widestIdx = 0;
+        rows.forEach(function(r, idx) { if (r.count > rows[widestIdx].count) widestIdx = idx; });
+        worst = { name: getSectionName(i), fp: fp, rows: rows, widestRowIdx: widestIdx };
       }
     }
-    if (largest.count > 0) {
-      if (largest.w > canvasWidth || largest.h > canvasHeight) {
+
+    if (worst.rows.length) {
+      if (worst.fp.w > canvasWidth) {
+        var widest = worst.rows[worst.widestRowIdx];
         msgs.push({
           level: 'error',
-          text: 'TOO MANY TABLES in "' + largest.name + '": ' + largest.count + ' tables need about ' +
-                Math.round(largest.w) + ' × ' + Math.round(largest.h) + ' px, but the canvas is only ' +
-                canvasWidth + ' × ' + canvasHeight + ' px. Reduce the table count, table size, or spacing — or enlarge the canvas.'
+          text: 'TOO MANY TABLES in "' + worst.name + '": Row ' + rowLabel(worst.widestRowIdx) + ' has ' +
+                widest.count + ' tables needing about ' + Math.round(worst.fp.w) + ' px, but the canvas is only ' +
+                canvasWidth + ' px wide. Reduce the table count, size, spacing — or enlarge the canvas.'
         });
-      } else if (largest.w > canvasWidth * 0.9 || largest.h > canvasHeight * 0.9) {
+      }
+      if (worst.fp.h > canvasHeight) {
         msgs.push({
-          level: 'warn',
-          text: '"' + largest.name + '" fills about ' + Math.round((largest.w / canvasWidth) * 100) +
-                '% of the canvas width — leave more room for walkways around the tables.'
+          level: 'error',
+          text: 'Section "' + worst.name + '" has ' + worst.rows.length + ' rows needing about ' +
+                Math.round(worst.fp.h) + ' px height, but the canvas is only ' + canvasHeight +
+                ' px tall. Reduce the number of rows, table size, or spacing.'
         });
+      }
+      if (worst.fp.w <= canvasWidth && worst.fp.w > canvasWidth * 0.9) {
+        msgs.push({ level: 'warn', text: '"' + worst.name + '" widest row is about ' + Math.round((worst.fp.w / canvasWidth) * 100) + '% of the canvas width — leave more room for walkways.' });
+      }
+      if (worst.fp.h <= canvasHeight && worst.fp.h > canvasHeight * 0.9) {
+        msgs.push({ level: 'warn', text: '"' + worst.name + '" rows fill about ' + Math.round((worst.fp.h / canvasHeight) * 100) + '% of the canvas height — leave more room for walkways.' });
       }
     }
 
@@ -1491,13 +1641,12 @@ document.addEventListener("DOMContentLoaded", function(){
       var okIcon = document.createElement("span");
       okIcon.className = "tv-icon"; okIcon.textContent = "✓";
       var okText = document.createElement("span");
-      okText.textContent = "All table sizes, spacing and seat counts are within standard event ranges.";
+      okText.textContent = "All table sizes, spacing, row widths and seat counts are within standard event ranges.";
       ok.appendChild(okIcon); ok.appendChild(okText);
       out.appendChild(ok);
       return;
     }
 
-    // Sort: errors first, then warnings, then info
     var order = { error: 0, warn: 1, info: 2 };
     msgs.sort(function(a, b) { return (order[a.level] || 3) - (order[b.level] || 3); });
 
@@ -1581,10 +1730,15 @@ document.addEventListener("DOMContentLoaded", function(){
     return getTableLengthCm() + " × " + w + " cm (L × W)";
   }
 
+  function rowSummary(rows) {
+    return rows.map(function(r, i) { return rowLabel(i) + ":" + r.count; }).join(", ");
+  }
+
   function renderTableLayout(container, sections) {
     var cfg = tableConfig;
     for (var b = 0; b < sections; b++) {
-      var count = getTableCount(b);
+      var rows = getSectionTableRows(b);
+      var totalTables = getTableCount(b);
       var pos = getSectionPos(b);
       var lvl = levels.find(function(x){return x.id === pos.levelId;});
       var tier = getSectionTierOverride(b) || "cyan";
@@ -1594,15 +1748,18 @@ document.addEventListener("DOMContentLoaded", function(){
 
       var bl = document.createElement("div");
       bl.className = "block-label";
-      bl.textContent = getSectionName(b) + " · " + count + (count === 1 ? " table" : " tables") + (lvl ? " · " + lvl.name : "");
+      bl.textContent = getSectionName(b) + " · " + rows.length + (rows.length === 1 ? " row" : " rows") +
+                       " · " + totalTables + (totalTables === 1 ? " table" : " tables") +
+                       (lvl ? " · " + lvl.name : "");
       blockEl.appendChild(bl);
 
       var meta = document.createElement("div");
       meta.className = "table-meta-line";
-      meta.textContent = shapeLabel(cfg.shape) + " " + dimsText() + " · " + chairsPerTable() + " chairs/table · spacing " + cfg.spacingCm + " cm · " + tierTagText(tier);
+      meta.textContent = shapeLabel(cfg.shape) + " " + dimsText() + " · " + chairsPerTable() +
+                         " chairs/table · spacing " + cfg.spacingCm + " cm · Rows: " + rowSummary(rows);
       blockEl.appendChild(meta);
 
-      blockEl.appendChild(buildTableGroup(count, cfg.shape, cfg, tier, 0.5));
+      blockEl.appendChild(buildTableRowsGroup(rows, cfg.shape, cfg, tier, 0.5));
       container.appendChild(blockEl);
     }
     container.appendChild(buildLegend());
@@ -1668,19 +1825,24 @@ document.addEventListener("DOMContentLoaded", function(){
     stage.textContent = stageName;
 
     if (tableMode) {
-      var count = getTableCount(sectionIdx);
+      var rows = getSectionTableRows(sectionIdx);
+      var totalTables = getTableCount(sectionIdx);
       var tier = getSectionTierOverride(sectionIdx) || "cyan";
-      loc.textContent = (lv ? lv.name.toUpperCase() : "—") + " · " + count + (count === 1 ? " TABLE" : " TABLES") + " · " + chairsPerTable() + " CHAIRS";
+      loc.textContent = (lv ? lv.name.toUpperCase() : "—") + " · " +
+                        rows.length + (rows.length === 1 ? " ROW" : " ROWS") + " · " +
+                        totalTables + (totalTables === 1 ? " TABLE" : " TABLES") + " · " +
+                        chairsPerTable() + " CHAIRS/TABLE";
       if (lv) loc.style.color = lv.color;
       el.appendChild(loc);
       el.appendChild(stage);
 
       var meta = document.createElement("div");
       meta.className = "fs-section-location";
-      meta.textContent = shapeLabel(tableConfig.shape).toUpperCase() + " · " + dimsText() + " · GAP " + tableConfig.spacingCm + " CM";
+      meta.textContent = shapeLabel(tableConfig.shape).toUpperCase() + " · " + dimsText() +
+                         " · GAP " + tableConfig.spacingCm + " CM · " + rowSummary(rows);
       el.appendChild(meta);
 
-      el.appendChild(buildTableGroup(count, tableConfig.shape, tableConfig, tier, 1));
+      el.appendChild(buildTableRowsGroup(rows, tableConfig.shape, tableConfig, tier, 1));
     } else {
       var rowCount = getRowCount(sectionIdx);
       var map = buildRowTierMap(rowCount, sectionIdx);
@@ -1776,43 +1938,51 @@ document.addEventListener("DOMContentLoaded", function(){
       };
 
       if (tableMode) {
-        var tc = getTableCount(s);
+        var rows = getSectionTableRows(s);
         var tier = getSectionTierOverride(s) || "cyan";
         var cpt = chairsPerTable();
-        var tables = [];
-        for (var t = 0; t < tc; t++) {
-          tables.push({
-            table: t + 1,
-            shape: tableConfig.shape,
-            widthCm: wCm,
-            lengthCm: lCm,
-            spacingCm: spCm,
-            chairs: cpt,
-            tier: tier
-          });
-        }
+        var flatTables = [];
+        var tableNum = 0;
+        rows.forEach(function(row, ri) {
+          for (var k = 0; k < row.count; k++) {
+            tableNum++;
+            flatTables.push({
+              table: tableNum,
+              row: rowLabel(ri),
+              rowIndex: ri,
+              shape: tableConfig.shape,
+              widthCm: wCm,
+              lengthCm: lCm,
+              spacingCm: spCm,
+              chairs: cpt,
+              tier: tier
+            });
+          }
+        });
         base.mode = "tables";
-        base.tableCount = tc;
+        base.tableRows = rows.map(function(r) { return r.count; });
+        base.tableRowCount = rows.length;
+        base.tableCount = getTableCount(s);
         base.tableShape = tableConfig.shape;
         base.tableWidthCm = wCm;
         base.tableLengthCm = lCm;
         base.tableSpacingCm = spCm;
         base.chairsPerTable = cpt;
-        base.tables = tables;
+        base.tables = flatTables;
         sections.push(base);
       } else {
         var rowCount = getRowCount(s);
         var map = buildRowTierMap(rowCount, s);
-        var rows = [];
+        var rowsData = [];
         for (var r = 0; r < rowCount; r++) {
           var seats = [];
           var seatCount = getSeatsForRow(s, r);
           for (var i = 0; i < seatCount; i++) seats.push({ seat: i + 1, tier: map[r] });
-          rows.push({ row: rowLabel(r), seats: seats });
+          rowsData.push({ row: rowLabel(r), seats: seats });
         }
         base.mode = "rows";
         base.rowCount = rowCount;
-        base.rows = rows;
+        base.rows = rowsData;
         sections.push(base);
       }
     }
@@ -1836,11 +2006,9 @@ document.addEventListener("DOMContentLoaded", function(){
         chairsPerSide: tableConfig.chairsPerSide,
         chairsLongSide: tableConfig.chairsLongSide,
         chairsShortSide: tableConfig.chairsShortSide,
-        /* --- centimetre values (source of truth) --- */
         widthCm: wCm,
         lengthCm: lCm,
         spacingCm: spCm,
-        /* --- derived pixel values for rendering --- */
         pxPerCm: pxPerCm,
         widthPx: Math.round(cmToPx(wCm)),
         lengthPx: Math.round(cmToPx(lCm)),
@@ -1877,10 +2045,10 @@ document.addEventListener("DOMContentLoaded", function(){
     var name = $("eventName").value || "Untitled Event";
     var lines;
     if (tableMode) {
-      lines = ["Section,Level,Table,Shape,Width(cm),Length(cm),Spacing(cm),Chairs,Tier,X,Y,Scale,Rotation"];
+      lines = ["Section,Level,TableRow,TableIndex,Shape,Width(cm),Length(cm),Spacing(cm),Chairs,Tier,X,Y,Scale,Rotation"];
       buildSectionsData().forEach(function(sec) {
         sec.tables.forEach(function(t) {
-          lines.push(['"' + sec.name + '"', '"' + (sec.level||"") + '"', t.table, t.shape, t.widthCm, t.lengthCm, t.spacingCm, t.chairs, t.tier, sec.x, sec.y, sec.scale, sec.rotation].join(","));
+          lines.push(['"' + sec.name + '"', '"' + (sec.level||"") + '"', t.row, t.table, t.shape, t.widthCm, t.lengthCm, t.spacingCm, t.chairs, t.tier, sec.x, sec.y, sec.scale, sec.rotation].join(","));
         });
       });
     } else {
@@ -1956,21 +2124,18 @@ document.addEventListener("DOMContentLoaded", function(){
     var cs = parseInt($("chairsShortSide").value); if (isNaN(cs)) cs = 1;
     cs = Math.max(1, Math.min(8, cs)); $("chairsShortSide").value = cs; tableConfig.chairsShortSide = cs;
 
-    /* Width — stored per shape so switching preserves each shape's value */
     var w = clampInt($("tableWidth").value, 20, 600, 100);
     $("tableWidth").value = w;
     if (tableConfig.shape === "circular")     tableConfig.circularDiameterCm = w;
     else if (tableConfig.shape === "square")  tableConfig.squareSideCm = w;
     else                                      tableConfig.rectWidthCm = w;
 
-    /* Length (rectangular only) */
     if (tableConfig.shape === "rectangular") {
       var h = clampInt($("tableHeight").value, 20, 600, 180);
       $("tableHeight").value = h;
       tableConfig.rectLengthCm = h;
     }
 
-    /* Spacing */
     var sp = clampInt($("tableSpacing").value, 0, 500, 65);
     $("tableSpacing").value = sp;
     tableConfig.spacingCm = sp;
@@ -1995,7 +2160,6 @@ document.addEventListener("DOMContentLoaded", function(){
       $("tableHeightLabel").textContent = "Table Length (cm)";
     }
 
-    /* Keep input in sync with the active shape's stored value */
     $("tableWidth").value = getTableWidthCm();
     if (shape === "rectangular") $("tableHeight").value = tableConfig.rectLengthCm;
   }
@@ -2004,13 +2168,19 @@ document.addEventListener("DOMContentLoaded", function(){
     var cpt = chairsPerTable();
     $("chairsPerTableOut").value = cpt;
     var sections = parseInt($("totalLevel1").value) || 0;
-    var tables = 0;
-    for (var i = 0; i < sections; i++) tables += getTableCount(i);
+    var totalTables = 0, totalRows = 0;
+    for (var i = 0; i < sections; i++) {
+      var rows = getSectionTableRows(i);
+      totalRows += rows.length;
+      totalTables += getTableCount(i);
+    }
 
     $("tableSummaryHint").textContent =
       shapeLabel(tableConfig.shape) + " " + dimsText() +
       " · " + cpt + " chairs/table · spacing " + tableConfig.spacingCm + " cm · " +
-      tables + " tables · " + (tables * cpt) + " seats · 1 cm = " + pxPerCm + " px";
+      totalRows + " table row" + (totalRows === 1 ? "" : "s") + " · " +
+      totalTables + " table" + (totalTables === 1 ? "" : "s") + " · " +
+      (totalTables * cpt) + " seats · 1 cm = " + pxPerCm + " px";
 
     updateTableValidation();
   }
@@ -2032,13 +2202,12 @@ document.addEventListener("DOMContentLoaded", function(){
     $("seatsPerRowGroup").style.display = tableMode ? "none" : "";
     $("rowOverridesBlock").style.display = tableMode ? "none" : "";
     $("rowTierGroup").style.display = tableMode ? "none" : "";
-    $("sectionRowsLabel").textContent = tableMode ? "Tables in this section" : "Rows in this section";
-    $("sectionRowsInput").max = tableMode ? 200 : 52;
 
     applyShapeUI();
     updateTableSummary();
     refreshSectionInputs();
     rebuildRowOverrides();
+    rebuildTableRowsEditor();
     calculateCapacity();
     renderSeatingPlan();
     if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
@@ -2077,19 +2246,15 @@ document.addEventListener("DOMContentLoaded", function(){
   ["chairsAround","chairsPerSide","chairsLongSide","chairsShortSide","tableWidth","tableHeight","tableSpacing"]
     .forEach(function(id) { $(id).addEventListener("input", onTableConfigChange); });
 
-  /* Shape change — swap in the new shape's stored width before syncing */
   $("tableShape").addEventListener("change", function() {
-    // Persist the value currently shown for the previous shape
     var prev = tableConfig.shape;
     var w = clampInt($("tableWidth").value, 20, 600, 100);
     if (prev === "circular")     tableConfig.circularDiameterCm = w;
     else if (prev === "square")  tableConfig.squareSideCm = w;
     else                         tableConfig.rectWidthCm = w;
 
-    // Switch to the new shape
     tableConfig.shape = this.value;
 
-    // Load the new shape's stored width (and length if rectangular)
     $("tableWidth").value = getTableWidthCm();
     if (tableConfig.shape === "rectangular") $("tableHeight").value = tableConfig.rectLengthCm;
 
@@ -2097,20 +2262,19 @@ document.addEventListener("DOMContentLoaded", function(){
   });
 
   $("tableCount").addEventListener("change", function() {
-    var v = Math.max(1, Math.min(200, parseInt(this.value) || 6));
+    var v = Math.max(1, Math.min(50, parseInt(this.value) || 4));
     this.value = v;
-    refreshSectionInputs();
     updateTableSummary();
-    calculateCapacity();
-    renderSeatingPlan();
-    if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
   });
+
+  /* Add table row button */
+  $("addTableRowBtn").addEventListener("click", addTableRow);
 
   // Sections count
   $("totalLevel1").addEventListener("input", function() {
     var v = parseInt(this.value) || 1;
     v = Math.max(1, Math.min(26, v));
-    rebuildSectionTabs(); refreshSectionInputs(); rebuildRowOverrides();
+    rebuildSectionTabs(); refreshSectionInputs(); rebuildRowOverrides(); rebuildTableRowsEditor();
     calculateCapacity(); renderSeatingPlan(); updateTableSummary();
     if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
   });
@@ -2140,19 +2304,14 @@ document.addEventListener("DOMContentLoaded", function(){
     if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
   });
 
-  // Section rows / tables
+  // Section rows (row-mode only; the input is hidden in table mode)
   $("sectionRowsInput").addEventListener("input", function() {
+    if (tableMode) return;
     var v = parseInt(this.value); if (isNaN(v)) return;
-    if (tableMode) {
-      setTableCount(currentEditingSection, v);
-      var tc = getTableCount(currentEditingSection);
-      $("sectionRowsBadge").textContent = tc + (tc === 1 ? " table" : " tables");
-    } else {
-      setRowCount(currentEditingSection, v);
-      var rc = getRowCount(currentEditingSection);
-      $("sectionRowsBadge").textContent = rc + (rc === 1 ? " row" : " rows");
-    }
-    rebuildRowOverrides(); calculateCapacity(); renderSeatingPlan(); updateTableSummary();
+    setRowCount(currentEditingSection, v);
+    var rc = getRowCount(currentEditingSection);
+    $("sectionRowsBadge").textContent = rc + (rc === 1 ? " row" : " rows");
+    rebuildRowOverrides(); calculateCapacity(); renderSeatingPlan();
     if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
   });
 
@@ -2212,14 +2371,14 @@ document.addEventListener("DOMContentLoaded", function(){
 
   // Clear all overrides
   $("clearAllOverrides").addEventListener("click", function() {
-    if (!confirm("Clear all section overrides and reset positions?")) return;
+    if (!confirm("Clear all section overrides, table rows, and reset positions?")) return;
     sectionRowOverrides = {}; sectionRowCounts = {}; sectionNames = {};
-    sectionTierOverrides = {}; sectionPositions = {}; sectionTableCounts = {};
+    sectionTierOverrides = {}; sectionPositions = {}; sectionTableRows = {};
     levels = [{ id: 0, name: "Ground Floor", color: "#22d3ee", visible: true }];
     nextLevelId = 1;
     currentEditingSection = 0;
     rebuildLevelsList(); rebuildLevelSelect();
-    rebuildSectionTabs(); refreshSectionInputs(); rebuildRowOverrides();
+    rebuildSectionTabs(); refreshSectionInputs(); rebuildRowOverrides(); rebuildTableRowsEditor();
     calculateCapacity(); renderSeatingPlan(); updateTableSummary();
     if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
   });
@@ -2280,6 +2439,7 @@ document.addEventListener("DOMContentLoaded", function(){
   applyShapeUI();
   refreshSectionInputs();
   rebuildRowOverrides();
+  rebuildTableRowsEditor();
   calculateCapacity();
   updateTicketPreview();
   renderSeatingPlan();
@@ -2293,4 +2453,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-          </html>
+  </html>
