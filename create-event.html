@@ -275,10 +275,30 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .preview-label-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; }
 .preview-label-row .preview-label { margin-bottom: 0; text-align: left; }
 
+/* ============ TICKET FLIP ============ */
+.ticket-flip-container { perspective: 1600px; width: 100%; }
+.ticket-flip-inner {
+  display: grid;
+  transition: transform 0.65s cubic-bezier(0.4, 0.0, 0.2, 1);
+  transform-style: preserve-3d;
+  width: 100%;
+}
+.ticket-flip-inner.flipped { transform: rotateY(180deg); }
+.ticket-flip-face {
+  grid-area: 1 / 1;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  display: flex;
+  min-width: 0;
+}
+.ticket-flip-face .ticket-card { flex: 1; width: 100%; min-height: 340px; }
+.ticket-flip-back { transform: rotateY(180deg); }
+
+/* ============ TICKET CARD ============ */
 .ticket-card {
   border-radius: 18px; padding: 24px;
   box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-  display: flex; flex-direction: column; gap: 20px;
+  display: flex; flex-direction: column; gap: 18px;
   position: relative; overflow: hidden;
   border: 1px solid rgba(0,0,0,0.05);
   transition: background 0.4s ease, color 0.4s ease;
@@ -311,6 +331,21 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .ticket-barcode-wrap { background: #fff; border-radius: 6px; padding: 8px; display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: 4px; }
 .barcode { width: 100%; height: 30px; background: repeating-linear-gradient(to right, #000 0px, #000 2px, #fff 2px, #fff 4px, #000 4px, #000 6px, #fff 6px, #fff 10px, #000 10px, #000 12px, #fff 12px, #fff 16px); }
 .barcode-num { font-family: monospace; font-size: 10px; font-weight: 700; color: #000; letter-spacing: 2px; word-break: break-all; }
+
+/* ============ TICKET BACK ============ */
+.ticket-back-card { gap: 14px; }
+.ticket-back-title { font-size: 11px; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ticket-muted); }
+.ticket-back-terms { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 6px; margin: 0; }
+.ticket-back-terms li { font-size: 11px; font-weight: 600; color: var(--ticket-text); position: relative; padding-left: 16px; line-height: 1.4; opacity: 0.92; }
+.ticket-back-terms li::before { content: '✓'; position: absolute; left: 0; top: 0; font-weight: 900; color: var(--ticket-logo); font-size: 11px; }
+.ticket-back-scan { display: flex; align-items: center; gap: 12px; border: 1px dashed var(--ticket-muted); border-radius: 10px; padding: 10px 12px; }
+.ticket-back-qr { width: 54px; height: 54px; background: #fff; border-radius: 6px; flex-shrink: 0; }
+.ticket-back-scan-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
+.ticket-back-scan-label { font-size: 9px; font-weight: 900; letter-spacing: 1.2px; text-transform: uppercase; color: var(--ticket-muted); }
+.ticket-back-event-name { font-size: 13px; font-weight: 800; color: var(--ticket-text); word-break: break-word; overflow-wrap: anywhere; line-height: 1.15; }
+.ticket-back-ref { font-size: 10px; font-weight: 700; font-family: monospace; color: var(--ticket-muted); word-break: break-all; }
+.ticket-back-footer { display: flex; justify-content: space-between; gap: 8px; font-size: 9.5px; font-weight: 700; color: var(--ticket-muted); border-top: 1px dashed currentColor; padding-top: 8px; margin-top: auto; opacity: 0.65; }
+.ticket-flip-hint { position: absolute; top: 14px; right: 16px; font-size: 9px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ticket-muted); opacity: 0.55; pointer-events: none; }
 
 .seating-plan-preview { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; max-height: 640px; overflow-y: auto; overflow-x: auto; box-shadow: 0 10px 20px rgba(10,15,20,0.05); width: 100%; max-width: 100%; min-width: 0; }
 .seating-plan-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 16px; text-align: center; word-break: break-word; }
@@ -573,14 +608,13 @@ h1,h2,h3{line-height:1.15;font-weight:700}
         <div class="form-group">
           <label for="tierCount">Number of Tiers</label>
           <select id="tierCount">
-            <option value="1">1 Tier</option>
-            <option value="2">2 Tiers</option>
+            <option value="2">2 Tiers (minimum)</option>
             <option value="3">3 Tiers</option>
             <option value="4" selected>4 Tiers (default)</option>
             <option value="5">5 Tiers</option>
             <option value="6">6 Tiers</option>
           </select>
-          <p class="form-hint" id="tierCountHint">Venue capacity must exceed 5,000 to enable 5 or 6 tiers.</p>
+          <p class="form-hint" id="tierCountHint">Minimum 2 tiers. Venue capacity must exceed 5,000 to enable 5 or 6 tiers.</p>
         </div>
         <div class="form-group">
           <label>Customise each tier</label>
@@ -899,7 +933,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
         <div class="section-divider"><span>Tier Colours</span></div>
         <div class="form-group" id="tierColorsGroup">
           <label>Tier Colours</label>
-          <p class="form-hint" style="margin-top:0;margin-bottom:8px;">Edit the tier colours. Applied to seats, tables, the seating plan legend, and the live ticket preview.</p>
+          <p class="form-hint" style="margin-top:0;margin-bottom:8px;">Edit the tier colours. Applied to seats, tables, the seating plan legend, and both sides of the live ticket preview.</p>
           <div class="tier-color-grid">
             <div class="tier-color-item" data-tier-color="black"><span class="tier-color-swatch" id="tierSwatchBlack"></span><label for="tierColorBlack">Elite</label><input type="color" class="tier-color-input" data-tier="black" id="tierColorBlack" value="#1a202c" /></div>
             <div class="tier-color-item" data-tier-color="gold"><span class="tier-color-swatch" id="tierSwatchGold"></span><label for="tierColorGold">Gold</label><input type="color" class="tier-color-input" data-tier="gold" id="tierColorGold" value="#ecc94b" /></div>
@@ -950,24 +984,64 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 
     <div class="preview-column">
       <div>
-        <div class="preview-label">Live Ticket Preview</div>
-        <div class="ticket-card" data-tier="cyan" id="dynamicTicket">
-          <div class="ticket-header-row">
-            <div class="ticket-logo">NOVALINK</div>
-            <div class="ticket-badges"><span class="badge-public">PUBLIC</span><span class="badge-tier" id="prevTierBadge">STANDARD</span></div>
-          </div>
-          <div class="ticket-body-row">
-            <div class="ticket-info-left">
-              <div class="event-title" id="prevEventName">EVENT NAME</div>
-              <div class="event-meta" id="prevDateVenue">DATE · VENUE</div>
-              <div class="guest-title" id="prevGuestName">GUEST NAME</div>
-              <div class="guest-meta" id="prevSeat">Seat not assigned</div>
-              <div class="ref-meta" id="prevRef">Ref: NL-XXXXXX</div>
+        <div class="preview-label-row">
+          <span class="preview-label">Live Ticket Preview</span>
+          <button type="button" class="btn-mini fs-btn" id="flipTicketBtn" title="Flip to see the back">↻ Flip</button>
+        </div>
+        <div class="ticket-flip-container">
+          <div class="ticket-flip-inner" id="ticketFlipInner">
+            <!-- FRONT FACE -->
+            <div class="ticket-flip-face ticket-flip-front">
+              <div class="ticket-card" data-tier="cyan" id="dynamicTicket">
+                <div class="ticket-flip-hint">↻ Tap flip</div>
+                <div class="ticket-header-row">
+                  <div class="ticket-logo">NOVALINK</div>
+                  <div class="ticket-badges"><span class="badge-public">PUBLIC</span><span class="badge-tier" id="prevTierBadge">STANDARD</span></div>
+                </div>
+                <div class="ticket-body-row">
+                  <div class="ticket-info-left">
+                    <div class="event-title" id="prevEventName">EVENT NAME</div>
+                    <div class="event-meta" id="prevDateVenue">DATE · VENUE</div>
+                    <div class="guest-title" id="prevGuestName">GUEST NAME</div>
+                    <div class="guest-meta" id="prevSeat">Seat not assigned</div>
+                    <div class="ref-meta" id="prevRef">Ref: NL-XXXXXX</div>
+                  </div>
+                  <div class="ticket-qr-box"></div>
+                </div>
+                <div class="ticket-location-row"><i data-lucide="map-pin" style="width:12px;height:12px;"></i> <span class="location-text" id="prevVenueLocation">VENUE</span></div>
+                <div class="ticket-barcode-wrap"><div class="barcode"></div><div class="barcode-num">0000 0000 0000 0000</div></div>
+              </div>
             </div>
-            <div class="ticket-qr-box"></div>
+            <!-- BACK FACE -->
+            <div class="ticket-flip-face ticket-flip-back">
+              <div class="ticket-card ticket-back-card" id="dynamicTicketBack">
+                <div class="ticket-header-row">
+                  <div class="ticket-logo">NOVALINK</div>
+                  <div class="ticket-badges"><span class="badge-public">TICKET</span><span class="badge-tier" id="prevBackTierBadge">STANDARD</span></div>
+                </div>
+                <div class="ticket-back-title">Important Information</div>
+                <ul class="ticket-back-terms">
+                  <li>Non-transferable &amp; non-refundable.</li>
+                  <li>Valid for single entry only.</li>
+                  <li>Present this ticket (or QR) at the door.</li>
+                  <li>Right of admission reserved.</li>
+                </ul>
+                <div class="ticket-back-scan">
+                  <div class="ticket-back-qr"></div>
+                  <div class="ticket-back-scan-text">
+                    <div class="ticket-back-scan-label">Scan at entry</div>
+                    <div class="ticket-back-event-name" id="prevBackEventName">EVENT NAME</div>
+                    <div class="ticket-back-ref" id="prevBackRef">Ref: NL-XXXXXX</div>
+                  </div>
+                </div>
+                <div class="ticket-barcode-wrap"><div class="barcode"></div><div class="barcode-num">0000 0000 0000 0000</div></div>
+                <div class="ticket-back-footer">
+                  <span>novalink.co.za</span>
+                  <span>support@novalink</span>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="ticket-location-row"><i data-lucide="map-pin" style="width:12px;height:12px;"></i> <span class="location-text" id="prevVenueLocation">VENUE</span></div>
-          <div class="ticket-barcode-wrap"><div class="barcode"></div><div class="barcode-num">0000 0000 0000 0000</div></div>
         </div>
       </div>
 
@@ -1066,9 +1140,9 @@ var canvasElements = [];
 var nextCanvasElementId = 1;
 var expandedElementId = null;
 var lastFoundSeat = null;
+var ticketFlipped = false;
 
 // ===== TIER SYSTEM =====
-// Keys in the canonical order (top → bottom): Black (Elite) is highest, tier6 is lowest.
 var TIER_KEYS = ["black", "gold", "silver", "cyan", "tier5", "tier6"];
 var TIER_DEFAULTS = { black: "#1a202c", gold: "#ecc94b", silver: "#cbd5e1", cyan: "#00FFFF", tier5: "#a855f7", tier6: "#f472b6" };
 var TIER_DEFAULT_NAMES = { black: "Elite", gold: "Gold", silver: "Silver", cyan: "Standard", tier5: "Platinum", tier6: "Diamond" };
@@ -1076,11 +1150,10 @@ var TIER_COLORS = Object.assign({}, TIER_DEFAULTS);
 var TIER_NAMES = Object.assign({}, TIER_DEFAULT_NAMES);
 var TIER_PRICES = { black: 0, gold: 0, silver: 0, cyan: 0, tier5: 0, tier6: 0 };
 
-// Tier count control
 var MAX_TIERS = 6;
-var MIN_TIERS = 1;
+var MIN_TIERS = 2;                    // <-- minimum of 2
 var DEFAULT_TIERS = 4;
-var LARGE_VENUE_THRESHOLD = 5000;   // capacity must be > this to allow more than 4 tiers
+var LARGE_VENUE_THRESHOLD = 5000;
 var activeTierCount = DEFAULT_TIERS;
 
 function getActiveTiers(){ return TIER_KEYS.slice(0, activeTierCount); }
@@ -1088,7 +1161,6 @@ function isTierActive(t){ return getActiveTiers().indexOf(t) !== -1; }
 function tierIdToCap(t){ return t.charAt(0).toUpperCase() + t.slice(1); }
 function getTierLabel(tier){ return TIER_NAMES[tier] || tier; }
 
-// Plan
 var currentPlan = { id: "standard", fee: 7, limit: 500 };
 
 var MARKER_TYPES = {
@@ -1176,13 +1248,8 @@ function getTicketPalette(hex){
     badgeText: isLightText ? "#ffffff" : "#4a5568"
   };
 }
-function applyTicketPalette(tier){
-  var card = $("dynamicTicket");
+function applyPaletteToCard(card, p){
   if (!card) return;
-  var hex = TIER_COLORS[tier] || TIER_DEFAULTS[tier] || "#00FFFF";
-  var p = getTicketPalette(hex);
-  card.className = "ticket-card";
-  card.setAttribute("data-tier", tier);
   card.style.setProperty("--ticket-bg-1", p.c1);
   card.style.setProperty("--ticket-bg-2", p.c2);
   card.style.setProperty("--ticket-text", p.text);
@@ -1190,6 +1257,12 @@ function applyTicketPalette(tier){
   card.style.setProperty("--ticket-logo", p.logo);
   card.style.setProperty("--ticket-badge-bg", p.badgeBg);
   card.style.setProperty("--ticket-badge-text", p.badgeText);
+}
+function applyTicketPalette(tier){
+  var hex = TIER_COLORS[tier] || TIER_DEFAULTS[tier] || "#00FFFF";
+  var p = getTicketPalette(hex);
+  applyPaletteToCard($("dynamicTicket"), p);
+  applyPaletteToCard($("dynamicTicketBack"), p);
 }
 
 /* ============ CURRENCY HELPERS ============ */
@@ -1296,7 +1369,6 @@ document.addEventListener("DOMContentLoaded", function(){
   }
 
   /* ============ TIER MANAGEMENT ============ */
-  // Show/hide UI based on activeTierCount and enable/disable options.
   function updateTierCountOptions(){
     var sel = $("tierCount");
     if (!sel) return;
@@ -1304,13 +1376,9 @@ document.addEventListener("DOMContentLoaded", function(){
     var allowExtra = capacity > LARGE_VENUE_THRESHOLD;
     Array.from(sel.options).forEach(function(opt){
       var n = parseInt(opt.value, 10);
-      if (n > 4 && !allowExtra) {
-        opt.disabled = true;
-      } else {
-        opt.disabled = false;
-      }
+      if (n > 4 && !allowExtra) opt.disabled = true;
+      else opt.disabled = false;
     });
-    // If current activeTierCount exceeds allowed max, clamp it back
     if (!allowExtra && activeTierCount > 4) {
       activeTierCount = 4;
       sel.value = "4";
@@ -1320,45 +1388,34 @@ document.addEventListener("DOMContentLoaded", function(){
     if (hint) {
       hint.textContent = allowExtra
         ? "Venue capacity is above 5,000 — you can use up to 6 tiers."
-        : "Venue capacity must exceed 5,000 to enable 5 or 6 tiers.";
+        : "Minimum 2 tiers. Venue capacity must exceed 5,000 to enable 5 or 6 tiers.";
     }
   }
 
-  // Show/hide the UI elements for tiers 5 and 6 based on activeTierCount.
   function updateTierVisibility(){
     var active = getActiveTiers();
     TIER_KEYS.forEach(function(t){
       var visible = active.indexOf(t) !== -1;
       var display = visible ? "" : "none";
-      // Pricing rows
       var priceRow = document.querySelector('.tier-price-row[data-tier-row="' + t + '"]');
       if (priceRow) priceRow.style.display = display;
-      // Colour pickers
       var colorItem = document.querySelector('.tier-color-item[data-tier-color="' + t + '"]');
       if (colorItem) colorItem.style.display = display;
-      // Row distribution items
       var distItem = document.querySelector('.tier-dist-item[data-tier-dist="' + t + '"]');
       if (distItem) distItem.style.display = display;
     });
-    // Update the ticket preview tier dropdown
-    rebuildTicketTierDropdown();
-    // Update the section tier override dropdown
-    rebuildSectionTierOverrideDropdown();
-    // If the preview is currently showing a now-inactive tier, switch to the lowest active tier
-    var previewSel = $("tierColor");
-    if (previewSel && !isTierActive(previewSel.value)) {
-      var fallback = getActiveTiers()[getActiveTiers().length - 1] || "cyan";
-      previewSel.value = fallback;
-    }
-    // If the current editing section has a now-inactive override, clear it
+    // Clear any section override that points to a now-inactive tier
     var idx = currentEditingSection;
     if (sectionTierOverrides[idx] && !isTierActive(sectionTierOverrides[idx])) {
       delete sectionTierOverrides[idx];
-      if ($("sectionTierOverride")) $("sectionTierOverride").value = "";
     }
-    // Update names display everywhere
+    // If the preview is showing a now-inactive tier, switch to the lowest active tier
+    var previewSel = $("tierColor");
+    if (previewSel && !isTierActive(previewSel.value)) {
+      var fallback = active[active.length - 1] || "cyan";
+      previewSel.value = fallback;
+    }
     syncTierNamesEverywhere();
-    // Recompute
     updateRevenueCalculator();
     updateTierSummary();
     renderSeatingPlan();
@@ -1405,10 +1462,11 @@ document.addEventListener("DOMContentLoaded", function(){
     var counts = {};
     TIER_KEYS.forEach(function(t){ counts[t] = 0; });
     var sections = parseInt($("totalLevel1").value) || 0;
+    var fallbackTier = getActiveTiers()[getActiveTiers().length - 1] || "cyan";
     if (tableMode) {
       var cpt = chairsPerTable();
       for (var s = 0; s < sections; s++) {
-        var tier = getSectionTierOverride(s) || (getActiveTiers()[getActiveTiers().length - 1] || "cyan");
+        var tier = getSectionTierOverride(s) || fallbackTier;
         var tables = getTableCount(s);
         counts[tier] = (counts[tier] || 0) + tables * cpt;
       }
@@ -1474,7 +1532,6 @@ document.addEventListener("DOMContentLoaded", function(){
   function syncTierNamesEverywhere() {
     rebuildTicketTierDropdown();
     rebuildSectionTierOverrideDropdown();
-    // Update tier colour picker labels
     TIER_KEYS.forEach(function(t){
       var label = document.querySelector('label[for="tierColor' + tierIdToCap(t) + '"]');
       if (label) label.textContent = TIER_NAMES[t];
@@ -1488,17 +1545,39 @@ document.addEventListener("DOMContentLoaded", function(){
 
   /* ============ TICKET PREVIEW ============ */
   function updateTicketPreview() {
-    $("prevEventName").textContent = $("eventName").value || "EVENT NAME";
-    $("prevDateVenue").textContent = ($("startDate").value || "DATE") + " · " + ($("venueAddress").value || "VENUE");
-    $("prevGuestName").textContent = $("guestName").value || "GUEST NAME";
+    var eventName = $("eventName").value || "EVENT NAME";
+    var dateVenue = ($("startDate").value || "DATE") + " · " + ($("venueAddress").value || "VENUE");
+    var guestName = $("guestName").value || "GUEST NAME";
     var seatCode = NovalinkRoutingEngine.buildSeatCode($("seatBlock").value, $("seatRow").value, $("seatNum").value);
-    if (seatCode) $("prevSeat").textContent = seatCode;
-    else $("prevSeat").textContent = "Seat not assigned";
-    $("prevVenueLocation").textContent = $("venueAddress").value || "VENUE";
+    var venue = $("venueAddress").value || "VENUE";
+
+    // Front
+    $("prevEventName").textContent = eventName;
+    $("prevDateVenue").textContent = dateVenue;
+    $("prevGuestName").textContent = guestName;
+    $("prevSeat").textContent = seatCode || "Seat not assigned";
+    $("prevVenueLocation").textContent = venue;
+
+    // Back
+    $("prevBackEventName").textContent = eventName;
+    $("prevBackRef").textContent = "Ref: " + (seatCode ? seatCode.replace(/\s/g, "") : "NL-XXXXXX");
+
+    // Tier labels + palette
     var tier = $("tierColor").value;
     if (!isTierActive(tier)) tier = getActiveTiers()[getActiveTiers().length - 1] || "cyan";
-    $("prevTierBadge").textContent = (TIER_NAMES[tier] || tier).toUpperCase();
+    var tierLabel = (TIER_NAMES[tier] || tier).toUpperCase();
+    $("prevTierBadge").textContent = tierLabel;
+    $("prevBackTierBadge").textContent = tierLabel;
     applyTicketPalette(tier);
+  }
+
+  /* ============ TICKET FLIP ============ */
+  function setTicketFlipped(flipped) {
+    ticketFlipped = !!flipped;
+    var inner = $("ticketFlipInner");
+    var btn = $("flipTicketBtn");
+    if (inner) inner.classList.toggle("flipped", ticketFlipped);
+    if (btn) btn.textContent = ticketFlipped ? "↺ Front" : "↻ Flip";
   }
 
   function buildLegend() {
@@ -2958,7 +3037,6 @@ document.addEventListener("DOMContentLoaded", function(){
 
   function applyBasePriceToTiers(base){
     if (isNaN(base) || base < 0) return;
-    // Multipliers by tier position (higher = more premium)
     var active = getActiveTiers();
     var multipliers = { black: 4, gold: 2.5, silver: 1.5, cyan: 1, tier5: 6, tier6: 8 };
     active.forEach(function(t){
@@ -2976,7 +3054,6 @@ document.addEventListener("DOMContentLoaded", function(){
     var v = parseInt(this.value, 10);
     if (isNaN(v)) v = DEFAULT_TIERS;
     v = Math.max(MIN_TIERS, Math.min(MAX_TIERS, v));
-    // Enforce the venue capacity rule
     var capacity = calculateCapacity();
     var allowExtra = capacity > LARGE_VENUE_THRESHOLD;
     if (v > 4 && !allowExtra) {
@@ -2987,6 +3064,21 @@ document.addEventListener("DOMContentLoaded", function(){
     this.value = String(v);
     updateTierVisibility();
   });
+
+  /* ===== FLIP TICKET ===== */
+  $("flipTicketBtn").addEventListener("click", function(){
+    setTicketFlipped(!ticketFlipped);
+  });
+  // Also allow clicking the ticket itself to flip
+  var flipContainer = $("ticketFlipInner");
+  if (flipContainer) {
+    flipContainer.style.cursor = "pointer";
+    flipContainer.addEventListener("click", function(e){
+      // Ignore clicks on interactive elements
+      if (e.target.closest("button, input, select, a")) return;
+      setTicketFlipped(!ticketFlipped);
+    });
+  }
 
   /* ===== TIER NAME INPUTS ===== */
   document.querySelectorAll(".tier-name-input").forEach(function(inp){
@@ -3336,8 +3428,10 @@ document.addEventListener("DOMContentLoaded", function(){
   updateTierVisibility();
   updateRevenueCalculator();
 });
-
+n
 })();
 </script>
 </body>
-            </html>
+  </html>
+
+Certian features arent supposed to be available to every tier dont include tge image in code
