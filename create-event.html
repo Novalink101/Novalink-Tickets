@@ -80,7 +80,6 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .currency-input.compact .currency-prefix{padding:0 10px;font-size:13px;}
 .currency-input.compact input{padding:8px 10px;font-size:13.5px;font-weight:800;}
 
-/* Plan selector cards */
 .plan-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:8px;}
 .plan-card{position:relative;display:flex;flex-direction:column;gap:4px;padding:14px 14px 12px;background:var(--surface);border:2px solid var(--border-2);border-radius:12px;cursor:pointer;transition:all 0.2s ease;min-width:0;overflow:hidden;}
 .plan-card:hover{border-color:var(--cyan-400);transform:translateY(-2px);}
@@ -96,7 +95,6 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .plan-desc{font-size:10.5px;color:var(--text-muted);font-weight:600;margin-top:2px;line-height:1.3;}
 .plan-card.selected .plan-desc{color:rgba(255,255,255,0.7);}
 
-/* Tier pricing rows */
 .tier-pricing-list{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
 .tier-price-row{display:grid;grid-template-columns:18px minmax(80px,1.2fr) 70px minmax(90px,1fr) 90px;align-items:center;gap:8px;padding:8px 10px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:10px;min-width:0;}
 @media (max-width:600px){.tier-price-row{grid-template-columns:18px 1fr;grid-auto-rows:auto;gap:6px;}.tier-price-row .tier-qty-badge,.tier-price-row .currency-input,.tier-price-row .tier-revenue{grid-column:2 / -1;}}
@@ -106,7 +104,6 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .tier-price-row .tier-qty-badge{font-size:10.5px;font-weight:800;color:var(--cyan-700);background:var(--cyan-50);padding:4px 8px;border-radius:6px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
 .tier-price-row .tier-revenue{font-size:12px;font-weight:800;color:var(--text-2);text-align:right;font-family:ui-monospace,monospace;white-space:nowrap;}
 
-/* Live revenue calculator */
 .revenue-card{background:linear-gradient(135deg,#0a0f14,#1a2129);color:#fff;border-radius:14px;padding:18px 20px;box-shadow:0 12px 30px rgba(10,15,20,0.2);border:1px solid #1f2937;margin-top:8px;}
 .revenue-card .rev-head{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#67e8f9;margin-bottom:12px;}
 .revenue-card .rev-head i{width:15px;height:15px;}
@@ -122,7 +119,6 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .revenue-warning{margin-top:10px;background:#7f1d1d;color:#fecaca;padding:8px 12px;border-radius:8px;font-size:11.5px;font-weight:700;display:flex;align-items:flex-start;gap:8px;line-height:1.5;}
 .revenue-warning.hidden{display:none;}
 .revenue-warning .warn-icon{flex-shrink:0;font-weight:900;}
-.rev-divider{margin:6px 0;height:1px;background:rgba(255,255,255,0.06);}
 
 .tier-dist-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-top:8px;}
 .tier-dist-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:10px;min-width:0;}
@@ -277,34 +273,40 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .preview-label-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; }
 .preview-label-row .preview-label { margin-bottom: 0; text-align: left; }
 
-.ticket-card { border-radius: 18px; padding: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); display: flex; flex-direction: column; gap: 20px; position: relative; overflow: hidden; border: 1px solid rgba(0,0,0,0.05); transition: all 0.4s ease; width: 100%; max-width: 100%; min-width: 0; }
-.ticket-card.cyan { background: linear-gradient(135deg, #e6ffff, #b3ffff); color: #0a0f14; }
-.ticket-card.silver { background: linear-gradient(135deg, #f1f4f8, #cbd5e1); color: #0a0f14; }
-.ticket-card.gold { background: linear-gradient(135deg, #fef9c3, #ecc94b); color: #0a0f14; }
-.ticket-card.black { background: linear-gradient(135deg, #1a202c, #0a0f14); color: #ffffff; }
-.ticket-card.black .badge-public, .ticket-card.black .badge-tier { background: rgba(255,255,255,0.15); color: #fff; }
-.ticket-card.black .ticket-logo { color: #00FFFF; }
-.ticket-card.black .ticket-qr-box { background: #fff; }
-.ticket-card.black .barcode { background: #fff; }
-.ticket-card.black .location-text { color: #a0aec0; }
+/* ============ TICKET CARD (tier-colour driven) ============ */
+.ticket-card {
+  border-radius: 18px; padding: 24px;
+  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
+  display: flex; flex-direction: column; gap: 20px;
+  position: relative; overflow: hidden;
+  border: 1px solid rgba(0,0,0,0.05);
+  transition: background 0.4s ease, color 0.4s ease;
+  width: 100%; max-width: 100%; min-width: 0;
+  /* Defaults (overridden inline by JS based on selected tier colour) */
+  --ticket-bg-1: #e6ffff;
+  --ticket-bg-2: #b3ffff;
+  --ticket-text: #0a0f14;
+  --ticket-muted: rgba(0,0,0,0.6);
+  --ticket-logo: var(--navy);
+  --ticket-badge-bg: rgba(0,0,0,0.08);
+  --ticket-badge-text: #4a5568;
+  background: linear-gradient(135deg, var(--ticket-bg-1), var(--ticket-bg-2));
+  color: var(--ticket-text);
+}
 .ticket-header-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
-.ticket-logo { font-weight: 800; font-size: 13px; letter-spacing: 1.5px; color: var(--navy); word-break: break-word; }
+.ticket-logo { font-weight: 800; font-size: 13px; letter-spacing: 1.5px; color: var(--ticket-logo); word-break: break-word; transition: color 0.3s ease; }
 .ticket-badges { display: flex; gap: 8px; flex-shrink: 0; }
-.badge-public, .badge-tier { font-size: 9px; font-weight: 800; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-.badge-public { background: rgba(0,0,0,0.08); color: #4a5568; }
-.badge-tier { background: rgba(0,0,0,0.15); color: #1a202c; font-weight: 900; }
+.badge-public, .badge-tier { font-size: 9px; font-weight: 800; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; background: var(--ticket-badge-bg); color: var(--ticket-badge-text); transition: background 0.3s ease, color 0.3s ease; }
+.badge-tier { font-weight: 900; }
 .ticket-body-row { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; min-width: 0; }
 .ticket-info-left { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
 .event-title { font-size: 20px; font-weight: 900; line-height: 1.1; text-transform: uppercase; letter-spacing: -0.5px; word-break: break-word; overflow-wrap: anywhere; }
-.event-meta { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: rgba(0,0,0,0.6); word-break: break-word; overflow-wrap: anywhere; }
-.ticket-card.black .event-meta { color: rgba(255,255,255,0.6); }
+.event-meta { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--ticket-muted); word-break: break-word; overflow-wrap: anywhere; transition: color 0.3s ease; }
 .guest-title { font-size: 14px; font-weight: 800; margin-top: 8px; word-break: break-word; overflow-wrap: anywhere; }
-.guest-meta { font-size: 11px; font-weight: 600; color: rgba(0,0,0,0.6); word-break: break-word; overflow-wrap: anywhere; }
-.ticket-card.black .guest-meta { color: rgba(255,255,255,0.6); }
-.ref-meta { font-size: 10px; font-weight: 700; font-family: monospace; color: rgba(0,0,0,0.5); margin-top: 4px; word-break: break-all; }
-.ticket-card.black .ref-meta { color: rgba(255,255,255,0.5); }
+.guest-meta { font-size: 11px; font-weight: 600; color: var(--ticket-muted); word-break: break-word; overflow-wrap: anywhere; transition: color 0.3s ease; }
+.ref-meta { font-size: 10px; font-weight: 700; font-family: monospace; color: var(--ticket-muted); margin-top: 4px; word-break: break-all; transition: color 0.3s ease; opacity: 0.85; }
 .ticket-qr-box { width: 70px; height: 70px; background: #fff; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); flex-shrink: 0; }
-.ticket-location-row { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: rgba(0,0,0,0.6); min-width: 0; }
+.ticket-location-row { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--ticket-muted); min-width: 0; transition: color 0.3s ease; }
 .location-text { text-transform: uppercase; letter-spacing: 0.5px; word-break: break-word; overflow-wrap: anywhere; }
 .ticket-barcode-wrap { background: #fff; border-radius: 6px; padding: 8px; display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: 4px; }
 .barcode { width: 100%; height: 30px; background: repeating-linear-gradient(to right, #000 0px, #000 2px, #fff 2px, #fff 4px, #000 4px, #000 6px, #fff 6px, #fff 10px, #000 10px, #000 12px, #fff 12px, #fff 16px); }
@@ -839,7 +841,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
         <div class="section-divider"><span>Tier Colours</span></div>
         <div class="form-group" id="tierColorsGroup">
           <label>Tier Colours</label>
-          <p class="form-hint" style="margin-top:0;margin-bottom:8px;">Edit the four tier colours. Applied to seats, tables and the seating plan legend.</p>
+          <p class="form-hint" style="margin-top:0;margin-bottom:8px;">Edit the four tier colours. Applied to seats, tables, the seating plan legend, and the live ticket preview.</p>
           <div class="tier-color-grid">
             <div class="tier-color-item"><span class="tier-color-swatch" id="tierSwatchBlack"></span><label for="tierColorBlack">Elite</label><input type="color" id="tierColorBlack" value="#1a202c" /></div>
             <div class="tier-color-item"><span class="tier-color-swatch" id="tierSwatchGold"></span><label for="tierColorGold">Gold</label><input type="color" id="tierColorGold" value="#ecc94b" /></div>
@@ -894,7 +896,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
     <div class="preview-column">
       <div>
         <div class="preview-label">Live Ticket Preview</div>
-        <div class="ticket-card cyan" id="dynamicTicket">
+        <div class="ticket-card" data-tier="cyan" id="dynamicTicket">
           <div class="ticket-header-row">
             <div class="ticket-logo">NOVALINK</div>
             <div class="ticket-badges"><span class="badge-public">PUBLIC</span><span class="badge-tier" id="prevTierBadge">STANDARD</span></div>
@@ -1014,11 +1016,11 @@ var lastFoundSeat = null;
 var TIER_DEFAULTS = { black: "#1a202c", gold: "#ecc94b", silver: "#cbd5e1", cyan: "#00FFFF" };
 var TIER_COLORS   = Object.assign({}, TIER_DEFAULTS);
 
-// ===== TIER NAMES (editable) =====
+// ===== TIER NAMES =====
 var TIER_NAMES = { black: "Elite", gold: "Gold", silver: "Silver", cyan: "Standard" };
 function getTierLabel(tier){ return TIER_NAMES[tier] || tier; }
 
-// ===== TIER PRICES (editable) =====
+// ===== TIER PRICES =====
 var TIER_PRICES = { black: 0, gold: 0, silver: 0, cyan: 0 };
 
 // ===== PLAN =====
@@ -1078,7 +1080,62 @@ function applyTierColors(){
     root.style.setProperty("--tier-" + name + "-text-light", mixWithBlack(hex, 0.45));
     var sw = $("tierSwatch" + name.charAt(0).toUpperCase() + name.slice(1));
     if (sw) sw.style.background = hex;
+    // Also update the small swatch in the tier-pricing list
+    var priceSw = document.querySelector('.tier-price-row .tier-swatch[data-tier-swatch="' + name + '"]');
+    if (priceSw) priceSw.style.background = hex;
   });
+  // Re-render the ticket preview so it picks up new colours
+  updateTicketPreview();
+}
+
+/* ============ TICKET PALETTE ============ */
+// Compute a full palette for the ticket card based on the tier colour.
+// Dark colours get a dark ticket, light colours get a light ticket.
+function getTicketPalette(hex){
+  var lum = relativeLuminance(hex);
+  var isDark = lum < 0.35;
+  if (isDark) {
+    // Dark colour: keep dark background, use white text
+    return {
+      c1: mixWithWhite(hex, 0.06),
+      c2: mixWithBlack(hex, 0.45),
+      text: "#ffffff",
+      muted: "rgba(255,255,255,0.65)",
+      logo: "#00FFFF",
+      badgeBg: "rgba(255,255,255,0.15)",
+      badgeText: "#ffffff"
+    };
+  }
+  // Light colour: use a light gradient, dark text
+  var c1 = mixWithWhite(hex, 0.92);
+  var c2 = mixWithWhite(hex, 0.4);
+  var text = contrastTextOn(c2);
+  var isLightText = text === "#ffffff";
+  return {
+    c1: c1,
+    c2: c2,
+    text: text,
+    muted: isLightText ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.6)",
+    logo: isLightText ? "#00FFFF" : "#1e2f4d",
+    badgeBg: isLightText ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.08)",
+    badgeText: isLightText ? "#ffffff" : "#4a5568"
+  };
+}
+
+function applyTicketPalette(tier){
+  var card = $("dynamicTicket");
+  if (!card) return;
+  var hex = TIER_COLORS[tier] || TIER_DEFAULTS[tier] || "#00FFFF";
+  var p = getTicketPalette(hex);
+  card.className = "ticket-card";
+  card.setAttribute("data-tier", tier);
+  card.style.setProperty("--ticket-bg-1", p.c1);
+  card.style.setProperty("--ticket-bg-2", p.c2);
+  card.style.setProperty("--ticket-text", p.text);
+  card.style.setProperty("--ticket-muted", p.muted);
+  card.style.setProperty("--ticket-logo", p.logo);
+  card.style.setProperty("--ticket-badge-bg", p.badgeBg);
+  card.style.setProperty("--ticket-badge-text", p.badgeText);
 }
 
 /* ============ CURRENCY HELPERS ============ */
@@ -1215,7 +1272,6 @@ document.addEventListener("DOMContentLoaded", function(){
     var fee = gross * (currentPlan.fee / 100);
     var net = gross - fee;
 
-    // Ticket limit
     var limit = currentPlan.limit;
     var limitLabel = limit >= 999999 ? "unlimited" : limit;
     $("revTotalTickets").textContent = totalTickets + " / " + limitLabel;
@@ -1223,7 +1279,6 @@ document.addEventListener("DOMContentLoaded", function(){
     $("revFee").textContent = "− " + formatCurrency(fee);
     $("revNet").textContent = formatCurrency(net);
 
-    // Warning if capacity exceeds plan limit
     var warn = $("revWarning"), warnTxt = $("revWarningText");
     if (totalTickets > limit && limit < 999999) {
       warnTxt.textContent = "Your capacity (" + totalTickets + ") exceeds the " + currentPlan.id.charAt(0).toUpperCase() + currentPlan.id.slice(1) + " plan limit of " + limit + " tickets. Upgrade to sell more, or reduce capacity.";
@@ -1243,45 +1298,39 @@ document.addEventListener("DOMContentLoaded", function(){
     updateRevenueCalculator();
   }
 
-  /* ============ TIER LABEL / PRICE SYNC ============ */
+  /* ============ TIER LABEL SYNC ============ */
   function syncTierNamesEverywhere() {
-    // Update the tierColor dropdown options
     var sel = $("tierColor");
     if (sel) {
       var current = sel.value;
-      var labels = { cyan: "Standard", silver: "Silver", gold: "Gold", black: "Elite" };
       Array.from(sel.options).forEach(function(opt){
         var t = opt.value;
-        if (labels[t] && TIER_NAMES[t]) opt.textContent = TIER_NAMES[t];
+        if (TIER_NAMES[t]) opt.textContent = TIER_NAMES[t];
       });
       sel.value = current;
     }
-    // Update tier colour labels in tier colour section
     var labelMap = { black: "tierColorBlack", gold: "tierColorGold", silver: "tierColorSilver", cyan: "tierColorCyan" };
     Object.keys(labelMap).forEach(function(t){
       var label = document.querySelector("label[for='" + labelMap[t] + "']");
       if (label) label.textContent = TIER_NAMES[t];
     });
-    // Update row tier distribution labels
     var distMap = { black: "tierRowsElite", gold: "tierRowsGold", silver: "tierRowsSilver", cyan: "tierRowsCyan" };
     Object.keys(distMap).forEach(function(t){
       var label = document.querySelector("label[for='" + distMap[t] + "']");
       if (label) label.textContent = TIER_NAMES[t];
     });
-    // Update section tier override dropdown options
     var overrideSel = $("sectionTierOverride");
     if (overrideSel) {
       Array.from(overrideSel.options).forEach(function(opt){
         if (opt.value && TIER_NAMES[opt.value]) opt.textContent = TIER_NAMES[opt.value];
       });
     }
-    // Update ticket preview badge
     updateTicketPreview();
-    // Update legend + plan rendering
     renderSeatingPlan();
     if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
   }
 
+  /* ============ TICKET PREVIEW ============ */
   function updateTicketPreview() {
     $("prevEventName").textContent = $("eventName").value || "EVENT NAME";
     $("prevDateVenue").textContent = ($("startDate").value || "DATE") + " · " + ($("venueAddress").value || "VENUE");
@@ -1292,7 +1341,8 @@ document.addEventListener("DOMContentLoaded", function(){
     $("prevVenueLocation").textContent = $("venueAddress").value || "VENUE";
     var tier = $("tierColor").value;
     $("prevTierBadge").textContent = (TIER_NAMES[tier] || tier).toUpperCase();
-    $("dynamicTicket").className = "ticket-card " + tier;
+    // Apply the tier colour palette to the ticket card
+    applyTicketPalette(tier);
   }
 
   function buildLegend() {
@@ -2734,11 +2784,9 @@ document.addEventListener("DOMContentLoaded", function(){
     } else {
       hint.textContent = "Recommended price: R" + min.toFixed(2) + " – R" + max.toFixed(2) + " per ticket";
     }
-    // Auto-fill base price with mid of recommended range
     var mid = (min + max) / 2;
     if (mid > 0) {
       $("cost").value = mid.toFixed(2);
-      // Suggest tier prices based on multipliers
       applyBasePriceToTiers(mid);
       updateRevenueCalculator();
     }
@@ -2746,13 +2794,7 @@ document.addEventListener("DOMContentLoaded", function(){
 
   function applyBasePriceToTiers(base){
     if (isNaN(base) || base < 0) return;
-    // Multipliers: cyan=1x (standard), silver=1.5x, gold=2.5x, black=4x
-    var suggested = {
-      cyan:   base,
-      silver: base * 1.5,
-      gold:   base * 2.5,
-      black:  base * 4
-    };
+    var suggested = { cyan: base, silver: base * 1.5, gold: base * 2.5, black: base * 4 };
     Object.keys(suggested).forEach(function(t){
       var inp = document.querySelector('.tier-price-input[data-tier="' + t + '"]');
       if (inp) inp.value = suggested[t].toFixed(2);
@@ -2814,7 +2856,7 @@ document.addEventListener("DOMContentLoaded", function(){
     if (!el) return;
     el.addEventListener("input", function(){
       TIER_COLORS[name] = this.value;
-      applyTierColors();
+      applyTierColors();   // this also re-renders the ticket preview
       renderSeatingPlan();
       if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
     });
@@ -3070,7 +3112,6 @@ document.addEventListener("DOMContentLoaded", function(){
 
   /* ===== INIT ===== */
   applyTierColors();
-  // Initialize tier names from inputs
   document.querySelectorAll(".tier-name-input").forEach(function(inp){
     TIER_NAMES[inp.dataset.tier] = inp.value || TIER_NAMES[inp.dataset.tier];
   });
@@ -3078,7 +3119,6 @@ document.addEventListener("DOMContentLoaded", function(){
     var v = parseFloat(inp.value);
     TIER_PRICES[inp.dataset.tier] = (isNaN(v) || v < 0) ? 0 : v;
   });
-  // Set default plan
   var checkedPlan = document.querySelector('input[name="plan"]:checked');
   if (checkedPlan) {
     currentPlan = { id: checkedPlan.value, fee: parseFloat(checkedPlan.dataset.fee) || 7, limit: parseInt(checkedPlan.dataset.limit) || 500 };
@@ -3100,4 +3140,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-                                        </html>
+  </html>
