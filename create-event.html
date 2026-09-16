@@ -414,10 +414,15 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .fs-level-pill.off { opacity: 0.4; }
 .fs-level-pill .pill-swatch { width: 10px; height: 10px; border-radius: 3px; border: 1px solid rgba(255,255,255,0.2); }
 .fs-canvas-outer { flex: 1; overflow: auto; background: #f6f8fb; border-radius: 12px; padding: 20px; position: relative; display: flex; align-items: flex-start; justify-content: center; }
-.fs-canvas { position: relative; background: #ffffff; border: 2px solid #d3dbe5; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); flex-shrink: 0; }
+.fs-canvas { position: relative; background: #ffffff; border: 2px solid #d3dbe5; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); flex-shrink: 0; transition: background-color 0.15s ease; }
 .fs-canvas.show-grid { background-image: linear-gradient(to right, rgba(0,255,255,0.12) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,255,255,0.12) 1px, transparent 1px); background-size: var(--grid-size, 50px) var(--grid-size, 50px); }
 .fs-canvas.two-point-mode { cursor: crosshair; }
-.fs-stage-marker { position: absolute; background: linear-gradient(135deg, #1e2f4d, #2a4365); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; letter-spacing: 4px; text-transform: uppercase; border-radius: 6px; box-shadow: 0 6px 20px rgba(30,47,77,0.4); z-index: 5; white-space: nowrap; padding: 4px 10px; pointer-events: none; }
+/* RED BACKGROUND DURING DRAG */
+.fs-canvas.dragging-active { background-color: #ffe0e0 !important; border-color: #dc2626 !important; box-shadow: 0 0 0 3px rgba(220,38,38,0.35), 0 8px 24px rgba(0,0,0,0.08) !important; }
+.fs-canvas.dragging-active.show-grid { background-image: linear-gradient(to right, rgba(220,38,38,0.28) 1px, transparent 1px), linear-gradient(to bottom, rgba(220,38,38,0.28) 1px, transparent 1px); }
+.fs-stage-marker { position: absolute; background: linear-gradient(135deg, #1e2f4d, #2a4365); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; letter-spacing: 4px; text-transform: uppercase; border-radius: 6px; box-shadow: 0 6px 20px rgba(30,47,77,0.4); z-index: 5; white-space: nowrap; padding: 4px 10px; pointer-events: auto; cursor: move; user-select: none; touch-action: none; transition: box-shadow 0.15s ease; }
+.fs-stage-marker:hover { box-shadow: 0 0 0 3px rgba(0,255,255,0.4), 0 6px 20px rgba(30,47,77,0.6); }
+.fs-stage-marker.dragging { cursor: grabbing; box-shadow: 0 0 0 4px rgba(220,38,38,0.6), 0 6px 20px rgba(30,47,77,0.6); }
 .fs-section { position: absolute; background: #fff; border: 2px solid #e4e9f0; border-radius: 10px; padding: 8px; box-shadow: 0 4px 14px rgba(10,15,20,0.08); transform-origin: center center; z-index: 10; cursor: grab; }
 .fs-section:active { cursor: grabbing; }
 .fs-section.selected { border-color: #00FFFF !important; box-shadow: 0 0 0 3px rgba(0,255,255,0.35) !important; z-index: 100 !important; }
@@ -443,8 +448,10 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .fs-tier-tag.cyan { color: var(--tier-cyan-text-light); }
 .fs-tier-tag.tier5 { color: var(--tier-tier5-text-light); }
 .fs-tier-tag.tier6 { color: var(--tier-tier6-text-light); }
-.fs-empty-hint { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #6b7787; font-size: 12px; text-align: center; max-width: 300px; }
-.fs-element{position:absolute;pointer-events:none;}
+.fs-empty-hint { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #6b7787; font-size: 12px; text-align: center; max-width: 300px; pointer-events: none; }
+.fs-element{position:absolute;pointer-events:auto;cursor:move;user-select:none;touch-action:none;transition:box-shadow 0.15s ease;}
+.fs-element:hover{outline:2px dashed rgba(0,255,255,0.7);outline-offset:2px;}
+.fs-element.selected-element{outline:3px solid #00FFFF !important;outline-offset:3px !important;box-shadow:0 0 0 4px rgba(0,255,255,0.25) !important;}
 .fs-element-shape{display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;padding:4px;text-align:center;overflow:hidden;transform-origin:center center;}
 .fs-element-shape.rectangle{border-radius:4px;}
 .fs-element-shape.square{border-radius:4px;}
@@ -544,7 +551,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 }
 .fs-section-controls .fs-ctrl-actions button:hover { background: #00FFFF; color: #04161c; border-color: #00FFFF; }
 
-/* ========== ROTATE HANDLE ========== */
+/* ========== ROTATE HANDLE (section) ========== */
 .fs-rotate-handle {
   position: absolute; width: 26px; height: 26px;
   border-radius: 50%;
@@ -566,6 +573,29 @@ h1,h2,h3{line-height:1.15;font-weight:700}
   display: none; box-shadow: 0 0 6px rgba(0,255,255,0.7);
 }
 .fs-rotate-line.visible { display: block; }
+
+/* ========== ROTATE HANDLE (shape) ========== */
+.fs-shape-rotate-handle {
+  position: absolute; width: 24px; height: 24px;
+  border-radius: 50%;
+  background: #f472b6;
+  border: 3px solid #fff;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+  cursor: grab; z-index: 320;
+  display: none; align-items: center; justify-content: center;
+  font-size: 12px; font-weight: 900; color: #04161c;
+  user-select: none; touch-action: none;
+  transition: transform 0.1s;
+}
+.fs-shape-rotate-handle.visible { display: flex; }
+.fs-shape-rotate-handle:hover { transform: scale(1.15); }
+.fs-shape-rotate-handle:active { cursor: grabbing; }
+.fs-shape-rotate-line {
+  position: absolute; height: 2px; background: #f472b6;
+  transform-origin: 0 50%; z-index: 260; pointer-events: none;
+  display: none; box-shadow: 0 0 6px rgba(244,114,182,0.7);
+}
+.fs-shape-rotate-line.visible { display: block; }
 
 /* ========== INSERT SHAPES TOOLBAR ========== */
 .fs-tool-group {
@@ -592,7 +622,8 @@ h1,h2,h3{line-height:1.15;font-weight:700}
   box-shadow: 0 0 12px rgba(0,255,255,0.6);
 }
 .fs-canvas.insert-mode,
-.fs-canvas.insert-mode .fs-section { cursor: crosshair !important; }
+.fs-canvas.insert-mode .fs-section,
+.fs-canvas.insert-mode .fs-element { cursor: crosshair !important; }
 
 .sp-fullscreen { position: fixed; inset: 0; background: #0a0f14; z-index: 9999; display: none; flex-direction: column; padding: 16px; }
 .sp-fullscreen.open { display: flex; }
@@ -1258,6 +1289,8 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 
       <div class="fs-rotate-line" id="fsRotateLine"></div>
       <div class="fs-rotate-handle" id="fsRotateHandle" title="Drag to rotate section (Shift = snap to 15°)">↻</div>
+      <div class="fs-shape-rotate-line" id="fsShapeRotateLine"></div>
+      <div class="fs-shape-rotate-handle" id="fsShapeRotateHandle" title="Drag to rotate element (Shift = snap to 15°)">↻</div>
 
       <!-- Floating Section Controls (Dragging & Coordinate Bar) -->
       <div class="fs-section-controls" id="fsSectionControls">
@@ -1359,9 +1392,10 @@ var seatGapEvery = 0;
 var seatGapSize = 1;
 var seatGapRowSpecific = 'all';
 
-// ==== Section Dragging ====
+// ==== Section / Element Dragging ====
 var isDraggingSection = false;
 var selectedSectionIdx = null;
+var selectedElementId = null;   // id of currently selected canvasElement (shape/line/marker)
 var dragStartX = 0, dragStartY = 0;
 var dragSectionStartX = 0, dragSectionStartY = 0;
 
@@ -1506,6 +1540,7 @@ document.addEventListener("DOMContentLoaded", function(){
     return pos;
   }
   function setSectionPos(idx, key, val) { if (!sectionPositions[idx]) getSectionPos(idx); sectionPositions[idx][key] = val; }
+  function findElementById(id) { for (var i = 0; i < canvasElements.length; i++) if (canvasElements[i].id === id) return canvasElements[i]; return null; }
 
   function buildRowTierMap(totalRows, sectionIdx) {
     var override = (sectionIdx !== undefined) ? getSectionTierOverride(sectionIdx) : null;
@@ -2029,19 +2064,19 @@ document.addEventListener("DOMContentLoaded", function(){
     var list = $("annotationList"); list.innerHTML = "";
     if (!canvasElements.length) { list.innerHTML = '<div class="annotation-empty">No elements added yet.</div>'; updateAnnotationCounts(); return; }
     canvasElements.forEach(function(item) {
-      var wrap = document.createElement("div"); wrap.className = "annotation-item" + (expandedElementId === item.id ? " expanded" : "");
+      var wrap = document.createElement("div"); wrap.className = "annotation-item" + (expandedElementId === item.id ? " expanded" : "") + (selectedElementId === item.id ? " expanded" : "");
       var header = document.createElement("div"); header.className = "anno-header-row";
       var badge = document.createElement("span"); badge.className = "anno-badge " + elementBadgeClass(item); badge.textContent = elementTypeLabel(item); header.appendChild(badge);
       var name = document.createElement("span"); name.className = "anno-name"; name.textContent = elementDisplayName(item); header.appendChild(name);
       var dims = document.createElement("span"); dims.className = "anno-dims"; dims.textContent = elementDimsSummary(item); header.appendChild(dims);
       var expandBtn = document.createElement("button"); expandBtn.type = "button"; expandBtn.className = "anno-icon-btn" + (expandedElementId === item.id ? " active" : "");
       expandBtn.innerHTML = expandedElementId === item.id ? '<i data-lucide="chevron-up" style="width:14px;height:14px;"></i>' : '<i data-lucide="edit-3" style="width:14px;height:14px;"></i>';
-      expandBtn.addEventListener("click", function(e) { e.stopPropagation(); expandedElementId = (expandedElementId === item.id) ? null : item.id; rebuildAnnotationList(); });
+      expandBtn.addEventListener("click", function(e) { e.stopPropagation(); expandedElementId = (expandedElementId === item.id) ? null : item.id; selectedElementId = item.id; rebuildAnnotationList(); updateShapeRotateHandle(); });
       header.appendChild(expandBtn);
       var del = document.createElement("button"); del.type = "button"; del.className = "anno-icon-btn danger"; del.innerHTML = '<i data-lucide="trash-2" style="width:14px;height:14px;"></i>';
-      del.addEventListener("click", function(e) { e.stopPropagation(); canvasElements = canvasElements.filter(function(x) { return x.id !== item.id; }); if (expandedElementId === item.id) expandedElementId = null; rebuildAnnotationList(); renderFullscreen(); });
+      del.addEventListener("click", function(e) { e.stopPropagation(); canvasElements = canvasElements.filter(function(x) { return x.id !== item.id; }); if (expandedElementId === item.id) expandedElementId = null; if (selectedElementId === item.id) selectedElementId = null; rebuildAnnotationList(); renderFullscreen(); updateShapeRotateHandle(); });
       header.appendChild(del);
-      header.addEventListener("click", function(e) { if (e.target.closest("button")) return; expandedElementId = (expandedElementId === item.id) ? null : item.id; rebuildAnnotationList(); });
+      header.addEventListener("click", function(e) { if (e.target.closest("button")) return; expandedElementId = (expandedElementId === item.id) ? null : item.id; selectedElementId = item.id; rebuildAnnotationList(); updateShapeRotateHandle(); });
       wrap.appendChild(header);
       if (expandedElementId === item.id) wrap.appendChild(buildElementEditor(item));
       list.appendChild(wrap);
@@ -2094,7 +2129,7 @@ document.addEventListener("DOMContentLoaded", function(){
     var rowWH = document.createElement("div"); rowWH.className = "ed-row";
     rowWH.appendChild(buildField("Width (px)", buildNumberInput(item.w, 10, 2000, 1, function(v) { item.w = v; if (item.shapeKind === "square" || item.shapeKind === "circle") item.h = v; renderFullscreen(); })));
     rowWH.appendChild(buildField("Height (px)", buildNumberInput(item.h, 10, 2000, 1, function(v) { item.h = v; if (item.shapeKind === "square" || item.shapeKind === "circle") item.w = v; renderFullscreen(); })));
-    rowWH.appendChild(buildField("Rotation (°)", buildNumberInput(item.rotation, -360, 360, 1, function(v) { item.rotation = v; renderFullscreen(); })));
+    rowWH.appendChild(buildField("Rotation (°)", buildNumberInput(item.rotation, -360, 360, 1, function(v) { item.rotation = v; renderFullscreen(); updateShapeRotateHandle(); })));
     editor.appendChild(rowWH);
   }
 
@@ -2136,7 +2171,7 @@ document.addEventListener("DOMContentLoaded", function(){
     var rowWH = document.createElement("div"); rowWH.className = "ed-row";
     rowWH.appendChild(buildField("Width (px)", buildNumberInput(item.w, 20, 300, 1, function(v) { item.w = v; renderFullscreen(); })));
     rowWH.appendChild(buildField("Height (px)", buildNumberInput(item.h, 20, 300, 1, function(v) { item.h = v; renderFullscreen(); })));
-    rowWH.appendChild(buildField("Rotation (°)", buildNumberInput(item.rotation, -360, 360, 1, function(v) { item.rotation = v; renderFullscreen(); })));
+    rowWH.appendChild(buildField("Rotation (°)", buildNumberInput(item.rotation, -360, 360, 1, function(v) { item.rotation = v; renderFullscreen(); updateShapeRotateHandle(); })));
     editor.appendChild(rowWH);
   }
 
@@ -2178,12 +2213,12 @@ document.addEventListener("DOMContentLoaded", function(){
     rebuildAnnotationList(); renderFullscreen(); showToast("Marker added", "success");
   }
 
-  function buildCanvasElement(item) { if (item.type === "shape") return buildShapeNode(item); if (item.type === "line") return buildLineNode(item); if (item.type === "marker") return buildMarkerNode(item); return null; }
   function buildShapeNode(item) {
     var el = document.createElement("div"); el.className = "fs-element fs-element-shape " + item.shapeKind;
     el.style.left = item.x + "px"; el.style.top = item.y + "px"; el.style.width = item.w + "px"; el.style.height = item.h + "px";
     el.style.background = hexToRgba(item.color, 0.15); el.style.border = "2px solid " + item.color;
-    el.style.color = shadeColor(item.color, -60); el.style.zIndex = String(item.z || 6);
+    el.style.color = shadeColor(item.color, -60);
+    el.style.zIndex = String((item.z || 6) + 50);
     if (item.rotation) { el.style.transform = "rotate(" + item.rotation + "deg)"; el.style.transformOrigin = "center center"; }
     if (item.label) el.textContent = item.label;
     return el;
@@ -2193,7 +2228,9 @@ document.addEventListener("DOMContentLoaded", function(){
     var el = document.createElement("div"); el.className = "fs-element fs-element-line";
     el.style.left = item.x1 + "px"; el.style.top = item.y1 + "px"; el.style.width = len + "px"; el.style.height = item.thickness + "px";
     el.style.background = item.color; el.style.borderRadius = (item.thickness / 2) + "px";
-    el.style.transform = "rotate(" + angle + "deg)"; el.style.transformOrigin = "0 50%"; el.style.zIndex = String(item.z || 6); el.style.boxShadow = "0 2px 4px rgba(0,0,0,0.15)";
+    el.style.transform = "rotate(" + angle + "deg)"; el.style.transformOrigin = "0 50%";
+    el.style.zIndex = String((item.z || 6) + 50);
+    el.style.boxShadow = "0 2px 4px rgba(0,0,0,0.15)";
     if (item.label) { var lbl = document.createElement("div"); lbl.style.cssText = "position:absolute;top:-16px;left:50%;transform:translateX(-50%);font-size:10px;font-weight:800;color:" + item.color + ";background:#fff;padding:1px 6px;border-radius:4px;white-space:nowrap;box-shadow:0 1px 3px rgba(0,0,0,0.1);"; lbl.textContent = item.label; el.appendChild(lbl); }
     return el;
   }
@@ -2201,19 +2238,37 @@ document.addEventListener("DOMContentLoaded", function(){
     var mt = MARKER_TYPES[item.markerKind] || MARKER_TYPES.exit;
     var el = document.createElement("div"); el.className = "fs-element fs-element-marker";
     el.style.left = item.x + "px"; el.style.top = item.y + "px"; el.style.width = item.w + "px"; el.style.height = item.h + "px";
-    el.style.background = mt.color; el.style.zIndex = String(item.z || 6);
+    el.style.background = mt.color;
+    el.style.zIndex = String((item.z || 6) + 50);
     if (item.rotation) { el.style.transform = "rotate(" + item.rotation + "deg)"; el.style.transformOrigin = "center center"; }
     var icon = document.createElement("span"); icon.className = "marker-icon"; icon.textContent = mt.icon; el.appendChild(icon);
     var label = document.createElement("span"); label.className = "marker-label"; label.textContent = item.label || mt.defaultLabel; el.appendChild(label);
     return el;
   }
+  function buildCanvasElement(item) {
+    var el = null;
+    if (item.type === "shape") el = buildShapeNode(item);
+    else if (item.type === "line") el = buildLineNode(item);
+    else if (item.type === "marker") el = buildMarkerNode(item);
+    if (el) {
+      el.dataset.elId = String(item.id);
+      if (selectedElementId === item.id) el.classList.add("selected-element");
+    }
+    return el;
+  }
+
   function hexToRgba(hex, alpha) { var c = String(hex).replace("#", ""); if (c.length === 3) c = c[0]+c[0]+c[1]+c[1]+c[2]+c[2]; if (c.length !== 6) return "rgba(0,255,255," + alpha + ")"; var r = parseInt(c.substring(0,2),16), g = parseInt(c.substring(2,4),16), b = parseInt(c.substring(4,6),16); return "rgba(" + r + "," + g + "," + b + "," + alpha + ")"; }
   function shadeColor(hex, percent) { var c = String(hex).replace("#", ""); if (c.length === 3) c = c[0]+c[0]+c[1]+c[1]+c[2]+c[2]; if (c.length !== 6) return hex; var r = parseInt(c.substring(0,2),16), g = parseInt(c.substring(2,4),16), b = parseInt(c.substring(4,6),16); r = Math.max(0, Math.min(255, r + percent)); g = Math.max(0, Math.min(255, g + percent)); b = Math.max(0, Math.min(255, b + percent)); return "#" + [r,g,b].map(function(x){ return x.toString(16).padStart(2,"0"); }).join(""); }
 
   function renderCanvasAnnotations(canvas) {
     canvas.querySelectorAll(".fs-element").forEach(function(el) { el.remove(); });
     var sorted = canvasElements.slice().sort(function(a, b) { return (a.z || 6) - (b.z || 6); });
-    sorted.forEach(function(item) { var lv = levels.find(function(x) { return x.id === item.levelId; }); if (!lv || !lv.visible) return; var el = buildCanvasElement(item); if (el) canvas.appendChild(el); });
+    sorted.forEach(function(item) {
+      var lv = levels.find(function(x) { return x.id === item.levelId; });
+      if (!lv || !lv.visible) return;
+      var el = buildCanvasElement(item);
+      if (el) canvas.appendChild(el);
+    });
   }
 
   function renderStandardLayout(container, sections) {
@@ -2523,8 +2578,11 @@ document.addEventListener("DOMContentLoaded", function(){
   function setupPointDrag() {
     var canvas = $("fsCanvas"); var aEl = $("fsPointA"); var bEl = $("fsPointB");
     if (!canvas || !aEl || !bEl) return;
+    if (aEl._bound) return;
+    aEl._bound = true; bEl._bound = true;
     function startDrag(which, e) {
       e.preventDefault();
+      canvas.classList.add("dragging-active");
       function move(ev) {
         var rect = canvas.getBoundingClientRect();
         var clientX = ev.touches ? ev.touches[0].clientX : ev.clientX;
@@ -2551,6 +2609,7 @@ document.addEventListener("DOMContentLoaded", function(){
         }
       }
       function end() {
+        canvas.classList.remove("dragging-active");
         document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', end);
         document.removeEventListener('touchmove', move); document.removeEventListener('touchend', end);
       }
@@ -2563,7 +2622,7 @@ document.addEventListener("DOMContentLoaded", function(){
     bEl.addEventListener('touchstart', function(e){ startDrag('B', e); }, { passive: false });
   }
 
-  /* ============ ROTATE HANDLE ============ */
+  /* ============ ROTATE HANDLE (sections) ============ */
   function updateRotateHandle() {
     var handle = $("fsRotateHandle"), line = $("fsRotateLine"), canvas = $("fsCanvas");
     if (!handle || !line || !canvas) return;
@@ -2612,7 +2671,7 @@ document.addEventListener("DOMContentLoaded", function(){
       var pos = getSectionPos(selectedSectionIdx);
       var natW = el.offsetWidth || 140, natH = el.offsetHeight || 120;
       var cx = pos.x + natW / 2, cy = pos.y + natH / 2;
-
+      canvas.classList.add("dragging-active");
       function move(ev) {
         var rect = canvas.getBoundingClientRect();
         var clientX = ev.touches ? ev.touches[0].clientX : ev.clientX;
@@ -2631,6 +2690,7 @@ document.addEventListener("DOMContentLoaded", function(){
         updateRotateHandle();
       }
       function end() {
+        canvas.classList.remove("dragging-active");
         document.removeEventListener('mousemove', move);
         document.removeEventListener('mouseup', end);
         document.removeEventListener('touchmove', move);
@@ -2645,6 +2705,85 @@ document.addEventListener("DOMContentLoaded", function(){
         }
         checkSectionOverlaps(sectionEls, canvas);
         refreshSectionInputs();
+      }
+      document.addEventListener('mousemove', move);
+      document.addEventListener('mouseup', end);
+      document.addEventListener('touchmove', move, { passive: false });
+      document.addEventListener('touchend', end);
+    }
+    handle.addEventListener('mousedown', start);
+    handle.addEventListener('touchstart', start, { passive: false });
+  }
+
+  /* ============ ROTATE HANDLE (elements) ============ */
+  function updateShapeRotateHandle() {
+    var handle = $("fsShapeRotateHandle"), line = $("fsShapeRotateLine"), canvas = $("fsCanvas");
+    if (!handle || !line || !canvas) return;
+    if (selectedElementId === null) {
+      handle.classList.remove("visible"); line.classList.remove("visible"); return;
+    }
+    var item = findElementById(selectedElementId);
+    if (!item || item.type === 'line') {
+      handle.classList.remove("visible"); line.classList.remove("visible"); return;
+    }
+    var cx = item.x + item.w / 2;
+    var cy = item.y + item.h / 2;
+    var halfH = item.h / 2, dist = 36, R = halfH + dist;
+    var rad = (item.rotation || 0) * Math.PI / 180;
+    var hx = cx + R * Math.sin(rad);
+    var hy = cy - R * Math.cos(rad);
+    var tx = cx + halfH * Math.sin(rad);
+    var ty = cy - halfH * Math.cos(rad);
+    handle.style.left = (hx - 12) + "px";
+    handle.style.top  = (hy - 12) + "px";
+    handle.classList.add("visible");
+    var dx = hx - tx, dy = hy - ty;
+    var len = Math.sqrt(dx*dx + dy*dy);
+    var angle = Math.atan2(dy, dx) * 180 / Math.PI;
+    line.style.left = tx + "px";
+    line.style.top  = (ty - 1) + "px";
+    line.style.width = len + "px";
+    line.style.transform = "rotate(" + angle + "deg)";
+    line.classList.add("visible");
+  }
+
+  function setupShapeRotateHandle() {
+    var handle = $("fsShapeRotateHandle"), canvas = $("fsCanvas");
+    if (!handle || !canvas || handle._bound) return;
+    handle._bound = true;
+    function start(e) {
+      if (selectedElementId === null) return;
+      var item = findElementById(selectedElementId);
+      if (!item || item.type === 'line') return;
+      e.preventDefault(); e.stopPropagation();
+      var cx = item.x + item.w / 2, cy = item.y + item.h / 2;
+      canvas.classList.add("dragging-active");
+      function move(ev) {
+        var rect = canvas.getBoundingClientRect();
+        var clientX = ev.touches ? ev.touches[0].clientX : ev.clientX;
+        var clientY = ev.touches ? ev.touches[0].clientY : ev.clientY;
+        var mx = clientX - rect.left, my = clientY - rect.top;
+        var angDeg = Math.atan2(my - cy, mx - cx) * 180 / Math.PI + 90;
+        if (ev.shiftKey) angDeg = Math.round(angDeg / 15) * 15;
+        angDeg = Math.round(angDeg);
+        while (angDeg > 180) angDeg -= 360;
+        while (angDeg < -180) angDeg += 360;
+        item.rotation = angDeg;
+        var el = canvas.querySelector('.fs-element[data-el-id="' + item.id + '"]');
+        if (el) {
+          el.style.transform = "rotate(" + angDeg + "deg)";
+          el.style.transformOrigin = "center center";
+        }
+        updateShapeRotateHandle();
+      }
+      function end() {
+        canvas.classList.remove("dragging-active");
+        document.removeEventListener('mousemove', move);
+        document.removeEventListener('mouseup', end);
+        document.removeEventListener('touchmove', move);
+        document.removeEventListener('touchend', end);
+        rebuildAnnotationList();
+        updateShapeRotateHandle();
       }
       document.addEventListener('mousemove', move);
       document.addEventListener('mouseup', end);
@@ -2678,9 +2817,11 @@ document.addEventListener("DOMContentLoaded", function(){
     if (!el) return;
     canvasElements.push(el);
     expandedElementId = el.id;
+    selectedElementId = el.id;
     rebuildAnnotationList();
     renderFullscreen();
-    showToast("Element inserted — expand it in Canvas Annotations below", "success", 2600);
+    updateShapeRotateHandle();
+    showToast("Element inserted — drag to move, use pink handle to rotate", "success", 2600);
   }
 
   function setupInsertTools() {
@@ -2716,10 +2857,137 @@ document.addEventListener("DOMContentLoaded", function(){
     canvas.addEventListener('touchstart', intercept, { capture: true, passive: false });
   }
 
+  /* ============ SHAPE/STAGE DRAG + RED BG ============ */
+  function startShapeDrag(e, item, el) {
+    if (insertTool) return;
+    e.stopPropagation();
+    e.preventDefault && e.preventDefault();
+    var canvas = $("fsCanvas");
+
+    // Deselect section, select this element
+    selectedSectionIdx = null;
+    $("fsSectionControls").classList.remove("visible");
+    canvas.querySelectorAll('.fs-section').forEach(function(s){ s.classList.remove('selected'); });
+    canvas.querySelectorAll('.fs-element').forEach(function(x){ x.classList.remove('selected-element'); });
+    el.classList.add('selected-element');
+    selectedElementId = item.id;
+    updateRotateHandle();
+    updateShapeRotateHandle();
+
+    canvas.classList.add("dragging-active");
+
+    var startX = e.touches ? e.touches[0].clientX : e.clientX;
+    var startY = e.touches ? e.touches[0].clientY : e.clientY;
+    var orig = (item.type === 'line')
+      ? { x1: item.x1, y1: item.y1, x2: item.x2, y2: item.y2 }
+      : { x: item.x, y: item.y };
+
+    function move(ev) {
+      var cX = ev.touches ? ev.touches[0].clientX : ev.clientX;
+      var cY = ev.touches ? ev.touches[0].clientY : ev.clientY;
+      var dx = cX - startX, dy = cY - startY;
+      if (item.type === 'line') {
+        item.x1 = orig.x1 + dx; item.y1 = orig.y1 + dy;
+        item.x2 = orig.x2 + dx; item.y2 = orig.y2 + dy;
+        if (snapToGrid) {
+          item.x1 = snap(item.x1); item.y1 = snap(item.y1);
+          item.x2 = snap(item.x2); item.y2 = snap(item.y2);
+        }
+        var ddx = item.x2 - item.x1, ddy = item.y2 - item.y1;
+        var len = Math.sqrt(ddx*ddx + ddy*ddy);
+        var ang = Math.atan2(ddy, ddx) * 180 / Math.PI;
+        el.style.left = item.x1 + "px";
+        el.style.top = item.y1 + "px";
+        el.style.width = len + "px";
+        el.style.transform = "rotate(" + ang + "deg)";
+        el.style.transformOrigin = "0 50%";
+      } else {
+        item.x = orig.x + dx; item.y = orig.y + dy;
+        if (snapToGrid) { item.x = snap(item.x); item.y = snap(item.y); }
+        el.style.left = item.x + "px";
+        el.style.top = item.y + "px";
+      }
+      updateShapeRotateHandle();
+    }
+
+    function end() {
+      canvas.classList.remove("dragging-active");
+      document.removeEventListener('mousemove', move);
+      document.removeEventListener('mouseup', end);
+      document.removeEventListener('touchmove', move);
+      document.removeEventListener('touchend', end);
+      rebuildAnnotationList();
+      updateShapeRotateHandle();
+      if ($("fullscreenOverlay").classList.contains("open")) {
+        // keep element references in sync with render
+        renderFullscreen();
+        updateShapeRotateHandle();
+      }
+    }
+    document.addEventListener('mousemove', move);
+    document.addEventListener('mouseup', end);
+    document.addEventListener('touchmove', move, { passive: false });
+    document.addEventListener('touchend', end);
+  }
+
+  function setupStageDrag() {
+    var sm = $("fsStageMarker"), canvas = $("fsCanvas");
+    if (!sm || !canvas || sm._dragBound) return;
+    sm._dragBound = true;
+
+    function start(e) {
+      if (insertTool) return;
+      e.preventDefault(); e.stopPropagation();
+      // Deselect everything
+      selectedSectionIdx = null;
+      selectedElementId = null;
+      $("fsSectionControls").classList.remove("visible");
+      canvas.querySelectorAll('.fs-section').forEach(function(s){ s.classList.remove('selected'); });
+      canvas.querySelectorAll('.fs-element').forEach(function(x){ x.classList.remove('selected-element'); });
+      updateRotateHandle(); updateShapeRotateHandle();
+
+      sm.classList.add("dragging");
+      canvas.classList.add("dragging-active");
+
+      var startX = e.touches ? e.touches[0].clientX : e.clientX;
+      var startY = e.touches ? e.touches[0].clientY : e.clientY;
+      var origX = stage.x, origY = stage.y;
+
+      function move(ev) {
+        var cX = ev.touches ? ev.touches[0].clientX : ev.clientX;
+        var cY = ev.touches ? ev.touches[0].clientY : ev.clientY;
+        var nx = origX + (cX - startX);
+        var ny = origY + (cY - startY);
+        if (snapToGrid) { nx = snap(nx); ny = snap(ny); }
+        nx = Math.max(0, Math.min(canvasWidth - stage.width, nx));
+        ny = Math.max(0, Math.min(canvasHeight - stage.height, ny));
+        stage.x = nx; stage.y = ny;
+        sm.style.left = nx + "px"; sm.style.top = ny + "px";
+        $("stageX").value = nx;
+        $("stageY").value = ny;
+      }
+      function end() {
+        sm.classList.remove("dragging");
+        canvas.classList.remove("dragging-active");
+        document.removeEventListener('mousemove', move);
+        document.removeEventListener('mouseup', end);
+        document.removeEventListener('touchmove', move);
+        document.removeEventListener('touchend', end);
+      }
+      document.addEventListener('mousemove', move);
+      document.addEventListener('mouseup', end);
+      document.addEventListener('touchmove', move, { passive: false });
+      document.addEventListener('touchend', end);
+    }
+    sm.addEventListener('mousedown', start);
+    sm.addEventListener('touchstart', start, { passive: false });
+  }
+
   /* ============ SECTION DIRECT DRAG ============ */
   function setupSectionDrag() {
     var canvas = $("fsCanvas");
-    if (!canvas) return;
+    if (!canvas || canvas._dragBound) return;
+    canvas._dragBound = true;
 
     function startDragSection(e, idx, el) {
       if (insertTool) return;
@@ -2735,10 +3003,13 @@ document.addEventListener("DOMContentLoaded", function(){
       }
 
       selectedSectionIdx = idx;
+      selectedElementId = null;
       isDraggingSection = true;
 
       canvas.querySelectorAll('.fs-section').forEach(function(s){ s.classList.remove('selected'); });
+      canvas.querySelectorAll('.fs-element').forEach(function(x){ x.classList.remove('selected-element'); });
       el.classList.add('selected');
+      updateShapeRotateHandle();
 
       var panel = $("fsSectionControls");
       var pos = getSectionPos(idx);
@@ -2749,7 +3020,8 @@ document.addEventListener("DOMContentLoaded", function(){
       panel.classList.add("visible");
       updateRotateHandle();
 
-      var rect = canvas.getBoundingClientRect();
+      canvas.classList.add("dragging-active");
+
       var clientX = e.touches ? e.touches[0].clientX : e.clientX;
       var clientY = e.touches ? e.touches[0].clientY : e.clientY;
       dragStartX = clientX;
@@ -2759,10 +3031,10 @@ document.addEventListener("DOMContentLoaded", function(){
 
       function move(ev) {
         if (!isDraggingSection) return;
-        var clientX = ev.touches ? ev.touches[0].clientX : ev.clientX;
-        var clientY = ev.touches ? ev.touches[0].clientY : ev.clientY;
-        var dx = clientX - dragStartX;
-        var dy = clientY - dragStartY;
+        var cX = ev.touches ? ev.touches[0].clientX : ev.clientX;
+        var cY = ev.touches ? ev.touches[0].clientY : ev.clientY;
+        var dx = cX - dragStartX;
+        var dy = cY - dragStartY;
 
         var newX = dragSectionStartX + dx;
         var newY = dragSectionStartY + dy;
@@ -2782,6 +3054,7 @@ document.addEventListener("DOMContentLoaded", function(){
 
       function end() {
         isDraggingSection = false;
+        canvas.classList.remove("dragging-active");
         document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', end);
         document.removeEventListener('touchmove', move); document.removeEventListener('touchend', end);
         var sectionEls = [];
@@ -2801,35 +3074,46 @@ document.addEventListener("DOMContentLoaded", function(){
       document.addEventListener('touchmove', move, { passive: false }); document.addEventListener('touchend', end);
     }
 
-    canvas.addEventListener('mousedown', function(e) {
+    function handleDown(e) {
       if (insertTool) return;
-      var section = e.target.closest('.fs-section');
-      if (!section) {
-        canvas.querySelectorAll('.fs-section').forEach(function(s){ s.classList.remove('selected'); });
-        $("fsSectionControls").classList.remove("visible");
-        selectedSectionIdx = null;
-        updateRotateHandle();
-        return;
-      }
-      var idx = parseInt(section.dataset.section);
-      if (isNaN(idx)) return;
-      startDragSection(e, idx, section);
-    });
 
-    canvas.addEventListener('touchstart', function(e) {
-      if (insertTool) return;
-      var section = e.target.closest('.fs-section');
-      if (!section) {
-        canvas.querySelectorAll('.fs-section').forEach(function(s){ s.classList.remove('selected'); });
-        $("fsSectionControls").classList.remove("visible");
-        selectedSectionIdx = null;
-        updateRotateHandle();
+      // 1) Elements (shapes/lines/markers) take priority
+      var elTarget = e.target.closest && e.target.closest('.fs-element');
+      if (elTarget) {
+        var elId = parseInt(elTarget.dataset.elId, 10);
+        var item = findElementById(elId);
+        if (item) { startShapeDrag(e, item, elTarget); return; }
+      }
+
+      // 2) Sections
+      var section = e.target.closest && e.target.closest('.fs-section');
+      if (section) {
+        var idx = parseInt(section.dataset.section);
+        if (!isNaN(idx)) { startDragSection(e, idx, section); }
         return;
       }
-      var idx = parseInt(section.dataset.section);
-      if (isNaN(idx)) return;
-      startDragSection(e, idx, section);
-    }, { passive: true });
+
+      // 3) Empty canvas: deselect all
+      canvas.querySelectorAll('.fs-section').forEach(function(s){ s.classList.remove('selected'); });
+      canvas.querySelectorAll('.fs-element').forEach(function(x){ x.classList.remove('selected-element'); });
+      $("fsSectionControls").classList.remove("visible");
+      selectedSectionIdx = null;
+      selectedElementId = null;
+      updateRotateHandle();
+      updateShapeRotateHandle();
+    }
+
+    canvas.addEventListener('mousedown', handleDown);
+    canvas.addEventListener('touchstart', function(e) {
+      // For touchstart we need to allow default scrolling? keep passive false on element/handle only
+      // We'll use passive:false here but not preventDefault unless we hit a target.
+      var elTarget = e.target.closest && e.target.closest('.fs-element');
+      var section = e.target.closest && e.target.closest('.fs-section');
+      if (elTarget || section) {
+        e.preventDefault();
+        handleDown(e);
+      }
+    }, { passive: false });
   }
 
   /* ============ CONTROLS PANEL SYNC ============ */
@@ -2837,6 +3121,8 @@ document.addEventListener("DOMContentLoaded", function(){
     var xIn = $("fsCtrlX"), yIn = $("fsCtrlY"), rotIn = $("fsCtrlRot"), scaleIn = $("fsCtrlScale");
     var deselect = $("fsCtrlDeselect");
     var canvas = $("fsCanvas");
+    if (xIn._bound) return;
+    xIn._bound = true;
 
     function applyChanges() {
       if (selectedSectionIdx === null) return;
@@ -2942,6 +3228,12 @@ document.addEventListener("DOMContentLoaded", function(){
       }
     }
 
+    // Restore selected element highlight
+    if (selectedElementId !== null) {
+      var sElem = canvas.querySelector('.fs-element[data-el-id="' + selectedElementId + '"]');
+      if (sElem) sElem.classList.add('selected-element');
+    }
+
     var axisBtn = $("fsToggleAxis");
     if (axisBtn) axisBtn.textContent = autoLayoutAxis === "vertical" ? "↕ Vertical" : "↔ Horizontal";
     var arcField = $("fsArcField");
@@ -2949,6 +3241,7 @@ document.addEventListener("DOMContentLoaded", function(){
     var tpBtn = $("fsToggleTwoPoint");
     if (tpBtn) tpBtn.classList.toggle("active", twoPointMode);
     updateRotateHandle();
+    updateShapeRotateHandle();
     if(window.lucide) lucide.createIcons();
   }
 
@@ -3335,12 +3628,13 @@ document.addEventListener("DOMContentLoaded", function(){
 
   $("openFullscreen").addEventListener("click", function() {
     if (!FEATURES.venueLayout) { showToast("The venue layout editor is available on Premium and Enterprise plans.", "error", 4200); return; }
-    $("fullscreenOverlay").classList.add("open"); document.body.style.overflow = "hidden"; renderFullscreen(); setupSectionDrag(); setupControlsPanel(); setupRotateHandle(); setupInsertTools(); updateInsertToolUI();
+    $("fullscreenOverlay").classList.add("open"); document.body.style.overflow = "hidden"; renderFullscreen();
+    setupSectionDrag(); setupControlsPanel(); setupRotateHandle(); setupShapeRotateHandle(); setupStageDrag(); setupInsertTools(); updateInsertToolUI();
   });
   $("closeFullscreen").addEventListener("click", function() {
     $("fullscreenOverlay").classList.remove("open"); document.body.style.overflow = "";
-    selectedSectionIdx = null; $("fsSectionControls").classList.remove("visible");
-    insertTool = null; updateInsertToolUI(); updateRotateHandle();
+    selectedSectionIdx = null; selectedElementId = null; $("fsSectionControls").classList.remove("visible");
+    insertTool = null; updateInsertToolUI(); updateRotateHandle(); updateShapeRotateHandle();
   });
   $("fsToggleGrid").addEventListener("click", function() { showGrid = !showGrid; this.classList.toggle("active", showGrid); renderFullscreen(); });
   $("fsToggleAuto").addEventListener("click", function() {
@@ -3350,8 +3644,8 @@ document.addEventListener("DOMContentLoaded", function(){
       twoPointMode = false;
       var tpBtn = $("fsToggleTwoPoint"); if (tpBtn) tpBtn.classList.remove("active");
     }
-    selectedSectionIdx = null; $("fsSectionControls").classList.remove("visible");
-    updateRotateHandle();
+    selectedSectionIdx = null; selectedElementId = null; $("fsSectionControls").classList.remove("visible");
+    updateRotateHandle(); updateShapeRotateHandle();
     renderFullscreen();
     showToast(autoLayoutEnabled ? "Auto Layout ON" : "Auto Layout OFF");
   });
@@ -3362,8 +3656,8 @@ document.addEventListener("DOMContentLoaded", function(){
       autoLayoutEnabled = false;
       var btn = $("fsToggleAuto"); if (btn) btn.classList.remove("active");
     }
-    selectedSectionIdx = null; $("fsSectionControls").classList.remove("visible");
-    updateRotateHandle();
+    selectedSectionIdx = null; selectedElementId = null; $("fsSectionControls").classList.remove("visible");
+    updateRotateHandle(); updateShapeRotateHandle();
     renderFullscreen();
     showToast(twoPointMode ? "Two-Point mode — drag A and B points on the canvas" : "Two-Point mode OFF", twoPointMode ? "success" : "info", 3500);
   });
@@ -3398,11 +3692,11 @@ document.addEventListener("DOMContentLoaded", function(){
     twoPointMode = false;
     pointA = { x: 200, y: 480 }; pointB = { x: canvasWidth - 200, y: 480 }; arcAmount = 0;
     $("fsArcAmount").value = 0;
-    selectedSectionIdx = null; $("fsSectionControls").classList.remove("visible");
+    selectedSectionIdx = null; selectedElementId = null; $("fsSectionControls").classList.remove("visible");
     var btn = $("fsToggleAuto"); if (btn) btn.classList.add("active");
     var tpBtn = $("fsToggleTwoPoint"); if (tpBtn) tpBtn.classList.remove("active");
     var axisBtn = $("fsToggleAxis"); if (axisBtn) axisBtn.textContent = autoLayoutAxis === "vertical" ? "↕ Vertical" : "↔ Horizontal";
-    updateRotateHandle();
+    updateRotateHandle(); updateShapeRotateHandle();
     renderSeatingPlan(); renderFullscreen(); refreshSectionInputs();
     showToast("Positions reset", "success");
   });
@@ -3417,7 +3711,7 @@ document.addEventListener("DOMContentLoaded", function(){
     if (!confirm("Clear all section overrides, canvas elements, and reset positions?")) return;
     sectionRowOverrides = {}; sectionRowCounts = {}; sectionNames = {};
     sectionTierOverrides = {}; sectionPositions = {}; sectionTableRows = {};
-    canvasElements = []; nextCanvasElementId = 1; expandedElementId = null; lastFoundSeat = null;
+    canvasElements = []; nextCanvasElementId = 1; expandedElementId = null; lastFoundSeat = null; selectedElementId = null;
     levels = [{ id: 0, name: "Ground Floor", color: "#00FFFF", visible: true }];
     nextLevelId = 1; currentEditingSection = 0;
     autoLayoutEnabled = true; autoLayoutAxis = tableMode ? "vertical" : "horizontal";
@@ -3428,7 +3722,7 @@ document.addEventListener("DOMContentLoaded", function(){
     var axisBtn = $("fsToggleAxis"); if (axisBtn) axisBtn.textContent = autoLayoutAxis === "vertical" ? "↕ Vertical" : "↔ Horizontal";
     rebuildLevelsList(); rebuildLevelSelect(); rebuildSectionTabs(); refreshSectionInputs(); rebuildRowOverrides(); rebuildTableRowsEditor();
     rebuildAnnotationList(); calculateCapacity(); updateTierCountOptions(); updateRevenueCalculator(); renderSeatingPlan(); updateTableSummary();
-    updateRotateHandle();
+    updateRotateHandle(); updateShapeRotateHandle();
     if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
   });
 
@@ -3457,7 +3751,11 @@ document.addEventListener("DOMContentLoaded", function(){
     if (e.key === "Escape") {
       if (insertTool) { insertTool = null; updateInsertToolUI(); return; }
       if ($("seatingPlanOverlay").classList.contains("open")) { $("seatingPlanOverlay").classList.remove("open"); document.body.style.overflow = ""; }
-      else if ($("fullscreenOverlay").classList.contains("open")) { $("fullscreenOverlay").classList.remove("open"); document.body.style.overflow = ""; selectedSectionIdx = null; $("fsSectionControls").classList.remove("visible"); updateRotateHandle(); }
+      else if ($("fullscreenOverlay").classList.contains("open")) {
+        $("fullscreenOverlay").classList.remove("open"); document.body.style.overflow = "";
+        selectedSectionIdx = null; selectedElementId = null; $("fsSectionControls").classList.remove("visible");
+        updateRotateHandle(); updateShapeRotateHandle();
+      }
     }
   });
 
@@ -3489,6 +3787,8 @@ document.addEventListener("DOMContentLoaded", function(){
   setupSectionDrag();
   setupControlsPanel();
   setupRotateHandle();
+  setupShapeRotateHandle();
+  setupStageDrag();
   setupInsertTools();
   updateInsertToolUI();
   applyPlanFeatures();
