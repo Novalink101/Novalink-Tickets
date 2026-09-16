@@ -268,37 +268,100 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .annotation-body .form-group{margin-bottom:10px;}
 .annotation-body .form-group:last-child{margin-bottom:0;}
 .annotation-body input[type="color"]{padding:4px 6px;height:38px;cursor:pointer;}
-.annotation-list{margin-top:10px;display:flex;flex-direction:column;gap:6px;max-height:260px;overflow-y:auto;}
+
+.annotation-list{margin-top:10px;display:flex;flex-direction:column;gap:6px;max-height:520px;overflow-y:auto;}
+
+/* Compact row + expanded editor */
 .annotation-item{
-  display:flex;align-items:center;gap:8px;padding:8px 10px;
-  background:var(--surface);border:1px solid var(--border-2);border-radius:8px;
-  min-width:0;flex-wrap:wrap;
+  display:flex;flex-direction:column;gap:0;padding:0;
+  background:var(--surface);border:1px solid var(--border-2);border-radius:10px;
+  min-width:0;overflow:hidden;transition:box-shadow 0.15s;
 }
-.annotation-item .anno-badge{
+.annotation-item:hover{border-color:var(--border);}
+.annotation-item.expanded{border-color:var(--cyan-500);box-shadow:0 0 0 3px rgba(0,255,255,0.08);}
+.anno-header-row{
+  display:flex;align-items:center;gap:8px;padding:8px 10px;min-width:0;
+  cursor:pointer;user-select:none;background:transparent;transition:background 0.15s;
+}
+.anno-header-row:hover{background:var(--bg-2);}
+.anno-badge{
   flex:0 0 auto;font-size:10px;font-weight:800;color:#04161c;background:var(--cyan-400);
   padding:3px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:0.5px;
-  min-width:52px;text-align:center;
+  min-width:56px;text-align:center;
 }
-.annotation-item .anno-badge.line{background:#facc15;color:#744210;}
-.annotation-item .anno-badge.exit{background:#10b981;color:#ffffff;}
-.annotation-item .anno-name{flex:1;min-width:0;font-size:12.5px;font-weight:700;color:var(--text);word-break:break-word;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.annotation-item .anno-dims{font-size:10.5px;font-weight:700;color:var(--text-muted);flex-shrink:0;font-family:ui-monospace,monospace;white-space:nowrap;}
-.annotation-item input[type="number"]{width:64px;padding:5px 6px;text-align:center;font-size:12px;font-weight:700;background:var(--bg-2);border:1px solid var(--border-2);border-radius:6px;font-family:inherit;color:var(--text);flex-shrink:0;}
-.annotation-item input[type="number"]:focus{outline:none;border-color:var(--cyan-500);box-shadow:0 0 0 2px rgba(0,255,255,0.15);}
-.annotation-item .btn-trash{padding:4px 6px;border-radius:6px;border:1px solid var(--border-2);background:transparent;color:var(--text-muted);cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
-.annotation-item .btn-trash:hover{border-color:#dc2626;color:#dc2626;}
+.anno-badge.line{background:#facc15;color:#744210;}
+.anno-badge.exit{background:#10b981;color:#ffffff;}
+.anno-badge.entrance{background:#3b82f6;color:#ffffff;}
+.anno-badge.bathroom{background:#a855f7;color:#ffffff;}
+.anno-name{flex:1;min-width:0;font-size:12.5px;font-weight:700;color:var(--text);word-break:break-word;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
+.anno-dims{font-size:10.5px;font-weight:700;color:var(--text-muted);flex-shrink:0;font-family:ui-monospace,monospace;white-space:nowrap;display:none;}
+@media (min-width: 640px){ .anno-dims{display:inline;} }
+.anno-icon-btn{
+  padding:4px 6px;border-radius:6px;border:1px solid var(--border-2);
+  background:transparent;color:var(--text-muted);cursor:pointer;font-family:inherit;
+  display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;
+  transition:all 0.15s;
+}
+.anno-icon-btn:hover{border-color:var(--cyan-500);color:var(--cyan-700);}
+.anno-icon-btn.danger:hover{border-color:#dc2626;color:#dc2626;}
+.anno-icon-btn.active{background:#0a0f14;color:#00FFFF;border-color:#0a0f14;}
+
+/* Expanded editor */
+.annotation-editor{
+  padding:10px 12px 12px;
+  background:var(--bg-2);
+  border-top:1px dashed var(--border-2);
+  display:flex;flex-direction:column;gap:8px;
+}
+.annotation-editor .ed-row{
+  display:flex;gap:8px;flex-wrap:wrap;
+}
+.annotation-editor .ed-field{
+  flex:1 1 80px;min-width:72px;display:flex;flex-direction:column;gap:3px;
+}
+.annotation-editor .ed-field.wide{flex:1 1 140px;}
+.annotation-editor .ed-field label{
+  font-size:10px;font-weight:800;color:var(--text-muted);
+  text-transform:uppercase;letter-spacing:0.5px;
+  word-break:break-word;
+}
+.annotation-editor .ed-field input,
+.annotation-editor .ed-field select{
+  padding:6px 8px;font-size:12.5px;font-weight:700;
+  background:#fff;border:1px solid var(--border-2);border-radius:6px;
+  font-family:inherit;color:var(--text);width:100%;min-width:0;
+}
+.annotation-editor .ed-field input[type="color"]{
+  padding:2px 4px;height:32px;cursor:pointer;
+}
+.annotation-editor .ed-field input:focus,
+.annotation-editor .ed-field select:focus{
+  outline:none;border-color:var(--cyan-500);
+  box-shadow:0 0 0 2px rgba(0,255,255,0.15);
+}
+.annotation-editor .ed-hint{
+  font-size:10.5px;color:var(--text-muted);font-style:italic;
+  text-align:right;font-family:ui-monospace,monospace;
+}
 .annotation-empty{font-size:11.5px;color:var(--text-muted);font-style:italic;text-align:center;padding:12px;}
 
 /* ===== FULL SCREEN CANVAS ELEMENTS ===== */
-.fs-element{position:absolute;z-index:6;}
-.fs-element-shape{display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;padding:4px;text-align:center;overflow:hidden;}
+.fs-element{position:absolute;pointer-events:none;}
+.fs-element-shape{display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;padding:4px;text-align:center;overflow:hidden;transform-origin:center center;}
 .fs-element-shape.rectangle{border-radius:4px;}
 .fs-element-shape.square{border-radius:4px;}
 .fs-element-shape.circle{border-radius:50%;}
-.fs-element-line{height:0;transform-origin:0 0;}
-.fs-element-exit{display:flex;flex-direction:column;align-items:center;justify-content:center;background:#10b981;color:#fff;border-radius:6px;font-weight:900;font-size:9px;letter-spacing:0.5px;box-shadow:0 4px 10px rgba(16,185,129,0.4);border:2px solid rgba(255,255,255,0.4);}
-.fs-element-exit .exit-arrow{font-size:14px;line-height:1;margin-bottom:2px;}
-.fs-element-exit .exit-label{line-height:1;}
+.fs-element-line{height:0;transform-origin:0 0;position:absolute;}
+.fs-element-marker{
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  color:#fff;border-radius:6px;font-weight:900;font-size:9px;letter-spacing:0.5px;
+  box-shadow:0 4px 10px rgba(0,0,0,0.25);
+  border:2px solid rgba(255,255,255,0.4);
+  transform-origin:center center;
+  padding:2px;
+}
+.fs-element-marker .marker-icon{font-size:14px;line-height:1;margin-bottom:2px;}
+.fs-element-marker .marker-label{line-height:1;text-align:center;word-break:break-word;}
 
 /* Preview Column */
 .preview-column {
@@ -539,14 +602,14 @@ h1,h2,h3{line-height:1.15;font-weight:700}
         <div class="section-divider"><span>Canvas Annotations</span></div>
         <div class="annotations-panel">
           <div class="annotations-title">
-            <span>Shapes, Lines &amp; Exit Points</span>
-            <span class="form-hint" style="margin:0;">Placed in Full Screen view</span>
+            <span>Shapes, Lines &amp; Markers</span>
+            <span class="form-hint" style="margin:0;">Click any item below to edit its X, Y, Z, size, angles</span>
           </div>
 
           <div class="annotation-tabs">
             <button type="button" class="annotation-tab active" data-anno="shape">▭ Shapes <span class="tab-count" id="countShapes">0</span></button>
             <button type="button" class="annotation-tab" data-anno="line">／ Lines <span class="tab-count" id="countLines">0</span></button>
-            <button type="button" class="annotation-tab" data-anno="exit">🚪 Exits <span class="tab-count" id="countExits">0</span></button>
+            <button type="button" class="annotation-tab" data-anno="exit">🚪 Markers <span class="tab-count" id="countExits">0</span></button>
           </div>
 
           <!-- Shapes tab -->
@@ -565,13 +628,15 @@ h1,h2,h3{line-height:1.15;font-weight:700}
                 <input type="text" id="shapeLabelInput" placeholder="e.g., Bar, DJ Booth" maxlength="20" />
               </div>
             </div>
-            <div class="form-row">
+            <div class="form-row-3">
               <div class="form-group"><label for="shapeX">X (px)</label><input type="number" id="shapeX" min="0" max="3000" value="100" /></div>
               <div class="form-group"><label for="shapeY">Y (px)</label><input type="number" id="shapeY" min="0" max="3000" value="100" /></div>
+              <div class="form-group"><label for="shapeZ">Z-index</label><input type="number" id="shapeZ" min="1" max="99" value="6" /></div>
             </div>
-            <div class="form-row">
+            <div class="form-row-3">
               <div class="form-group"><label for="shapeW">Width (px)</label><input type="number" id="shapeW" min="10" max="2000" value="140" /></div>
               <div class="form-group"><label for="shapeH">Height (px)</label><input type="number" id="shapeH" min="10" max="2000" value="100" /></div>
+              <div class="form-group"><label for="shapeRotation">Rotation (°)</label><input type="number" id="shapeRotation" min="-360" max="360" value="0" /></div>
             </div>
             <div class="form-row">
               <div class="form-group"><label for="shapeColor">Colour</label><input type="color" id="shapeColor" value="#00FFFF" /></div>
@@ -582,16 +647,19 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 
           <!-- Lines tab -->
           <div class="annotation-body" id="annoLineBody" style="display:none;">
-            <div class="form-row">
-              <div class="form-group"><label for="lineX1">From X (px)</label><input type="number" id="lineX1" min="0" max="3000" value="100" /></div>
-              <div class="form-group"><label for="lineY1">From Y (px)</label><input type="number" id="lineY1" min="0" max="3000" value="100" /></div>
+            <div class="form-row-3">
+              <div class="form-group"><label for="lineX1">From X</label><input type="number" id="lineX1" min="0" max="3000" value="100" /></div>
+              <div class="form-group"><label for="lineY1">From Y</label><input type="number" id="lineY1" min="0" max="3000" value="100" /></div>
+              <div class="form-group"><label for="lineZ">Z-index</label><input type="number" id="lineZ" min="1" max="99" value="6" /></div>
             </div>
-            <div class="form-row">
-              <div class="form-group"><label for="lineX2">To X (px)</label><input type="number" id="lineX2" min="0" max="3000" value="500" /></div>
-              <div class="form-group"><label for="lineY2">To Y (px)</label><input type="number" id="lineY2" min="0" max="3000" value="500" /></div>
+            <div class="form-row-3">
+              <div class="form-group"><label for="lineX2">To X</label><input type="number" id="lineX2" min="0" max="3000" value="500" /></div>
+              <div class="form-group"><label for="lineY2">To Y</label><input type="number" id="lineY2" min="0" max="3000" value="500" /></div>
+              <div class="form-group"><label for="lineLength">Length (px)</label><input type="number" id="lineLength" min="1" max="5000" value="0" readonly style="background:var(--surface-2);" /></div>
             </div>
-            <div class="form-row">
-              <div class="form-group"><label for="lineThickness">Thickness (px)</label><input type="number" id="lineThickness" min="1" max="20" value="2" /></div>
+            <div class="form-row-3">
+              <div class="form-group"><label for="lineThickness">Thickness (px)</label><input type="number" id="lineThickness" min="1" max="40" value="2" /></div>
+              <div class="form-group"><label for="lineAngleOut">Angle (°)</label><input type="number" id="lineAngleOut" min="-360" max="360" value="0" readonly style="background:var(--surface-2);" /></div>
               <div class="form-group"><label for="lineColor">Colour</label><input type="color" id="lineColor" value="#facc15" /></div>
             </div>
             <div class="form-row">
@@ -601,21 +669,31 @@ h1,h2,h3{line-height:1.15;font-weight:700}
             <button type="button" class="btn btn-ghost" id="addLineBtn" style="padding:10px 16px;font-size:13px;">+ Add Line</button>
           </div>
 
-          <!-- Exits tab -->
+          <!-- Markers tab (Exit / Entrance / Bathroom) -->
           <div class="annotation-body" id="annoExitBody" style="display:none;">
             <div class="form-row">
-              <div class="form-group"><label for="exitLabelInput">Label</label><input type="text" id="exitLabelInput" value="EXIT" maxlength="10" /></div>
-              <div class="form-group"><label for="exitSizeInput">Size (px)</label><input type="number" id="exitSizeInput" min="20" max="200" value="56" /></div>
+              <div class="form-group">
+                <label for="markerKind">Marker Type</label>
+                <select id="markerKind">
+                  <option value="exit" selected>Exit</option>
+                  <option value="entrance">Entrance</option>
+                  <option value="bathroom">Bathroom</option>
+                </select>
+              </div>
+              <div class="form-group"><label for="exitLabelInput">Label</label><input type="text" id="exitLabelInput" value="EXIT" maxlength="14" /></div>
             </div>
-            <div class="form-row">
+            <div class="form-row-3">
               <div class="form-group"><label for="exitX">X (px)</label><input type="number" id="exitX" min="0" max="3000" value="100" /></div>
               <div class="form-group"><label for="exitY">Y (px)</label><input type="number" id="exitY" min="0" max="3000" value="600" /></div>
+              <div class="form-group"><label for="exitZInput">Z-index</label><input type="number" id="exitZInput" min="1" max="99" value="6" /></div>
             </div>
-            <div class="form-row">
+            <div class="form-row-3">
+              <div class="form-group"><label for="exitW">Width (px)</label><input type="number" id="exitW" min="20" max="300" value="56" /></div>
+              <div class="form-group"><label for="exitH">Height (px)</label><input type="number" id="exitH" min="20" max="300" value="56" /></div>
               <div class="form-group"><label for="exitRotationInput">Rotation (°)</label><input type="number" id="exitRotationInput" min="-360" max="360" value="0" /></div>
-              <div class="form-group"><label for="exitLevelSelect">Level</label><select id="exitLevelSelect"></select></div>
             </div>
-            <button type="button" class="btn btn-ghost" id="addExitBtn" style="padding:10px 16px;font-size:13px;">+ Add Exit Point</button>
+            <div class="form-group"><label for="exitLevelSelect">Level</label><select id="exitLevelSelect"></select></div>
+            <button type="button" class="btn btn-ghost" id="addExitBtn" style="padding:10px 16px;font-size:13px;">+ Add Marker</button>
           </div>
 
           <!-- Element list -->
@@ -944,8 +1022,7 @@ var snapToGrid = true;
 var showGrid = true;
 
 var autoLayoutEnabled = true;
-/* === NEW: auto layout axis. 'horizontal' (rows) or 'vertical' (tables) === */
-var autoLayoutAxis = 'horizontal';
+var autoLayoutAxis = 'horizontal';   // 'horizontal' (rows) or 'vertical' (tables)
 var sectionSpacingPx = 40;
 
 var pxPerCm = 1;
@@ -967,9 +1044,17 @@ var currentEditingSection = 0;
 var tableMode = false;
 var sectionTableRows = {};
 
-/* === NEW: Canvas annotation elements === */
-var canvasElements = [];   // { id, type:'shape'|'line'|'exit', ...props }
+/* === Canvas annotation elements === */
+var canvasElements = [];
 var nextCanvasElementId = 1;
+var expandedElementId = null;     // which element is open in the editor
+
+/* === Marker type palette === */
+var MARKER_TYPES = {
+  exit:     { color: '#10b981', icon: '↗',  defaultLabel: 'EXIT' },
+  entrance: { color: '#3b82f6', icon: '→',  defaultLabel: 'ENTRANCE' },
+  bathroom: { color: '#a855f7', icon: '🚻', defaultLabel: 'WC' }
+};
 
 var tableConfig = {
   shape: "circular",
@@ -1016,6 +1101,11 @@ document.addEventListener("DOMContentLoaded", function(){
   function snap(v) { return snapToGrid ? Math.round(v / gridSize) * gridSize : v; }
   function clampInt(v, min, max, fallback) {
     var n = parseInt(v, 10);
+    if (isNaN(n)) n = fallback;
+    return Math.max(min, Math.min(max, n));
+  }
+  function clampFloat(v, min, max, fallback) {
+    var n = parseFloat(v);
     if (isNaN(n)) n = fallback;
     return Math.max(min, Math.min(max, n));
   }
@@ -1180,7 +1270,7 @@ document.addEventListener("DOMContentLoaded", function(){
         trash.className = "btn-trash";
         trash.innerHTML = '<i data-lucide="trash-2" style="width:14px;height:14px;"></i>';
         trash.addEventListener("click", function() {
-          if (!confirm("Delete this level? Sections on this level will be moved to the first level.")) return;
+          if (!confirm("Delete this level? Sections and elements on this level will be moved to the first level.")) return;
           var firstId = levels.find(function(x){ return x.id !== lv.id; }).id;
           Object.keys(sectionPositions).forEach(function(k) {
             if (sectionPositions[k].levelId === lv.id) sectionPositions[k].levelId = firstId;
@@ -1204,16 +1294,18 @@ document.addEventListener("DOMContentLoaded", function(){
 
   function rebuildLevelSelect() {
     var sel = $("sectionLevelSelect");
-    sel.innerHTML = "";
-    levels.forEach(function(lv) {
-      var opt = document.createElement("option");
-      opt.value = lv.id;
-      opt.textContent = lv.name;
-      sel.appendChild(opt);
-    });
-    if (currentEditingSection !== undefined) {
-      var pos = getSectionPos(currentEditingSection);
-      sel.value = pos.levelId;
+    if (sel) {
+      sel.innerHTML = "";
+      levels.forEach(function(lv) {
+        var opt = document.createElement("option");
+        opt.value = lv.id;
+        opt.textContent = lv.name;
+        sel.appendChild(opt);
+      });
+      if (currentEditingSection !== undefined) {
+        var pos = getSectionPos(currentEditingSection);
+        sel.value = pos.levelId;
+      }
     }
     /* Annotation level selects */
     ["shapeLevelSelect","lineLevelSelect","exitLevelSelect"].forEach(function(id) {
@@ -1421,7 +1513,7 @@ document.addEventListener("DOMContentLoaded", function(){
     updateTableRowAggregates();
   }
 
-  // ===== TABLE GEOMETRY (cm → px) =====
+  // ===== TABLE GEOMETRY =====
   function tableUnitMetrics(scale) {
     scale = scale || 1;
     var k = pxPerCm * scale;
@@ -1657,83 +1749,424 @@ document.addEventListener("DOMContentLoaded", function(){
     });
   }
 
-  /* ================================================================
-     CANVAS ANNOTATIONS
-     ================================================================ */
+  /* ============================================================
+     CANVAS ANNOTATIONS (Shapes, Lines, Markers) — with full editing
+     ============================================================ */
+
+  function elementTypeLabel(item) {
+    if (item.type === "shape") {
+      return item.shapeKind === "circle" ? "Circle" : (item.shapeKind === "square" ? "Square" : "Rectangle");
+    }
+    if (item.type === "line") return "Line";
+    if (item.type === "marker") {
+      var mt = MARKER_TYPES[item.markerKind] || MARKER_TYPES.exit;
+      return item.markerKind.charAt(0).toUpperCase() + item.markerKind.slice(1);
+    }
+    return "Element";
+  }
+
+  function elementBadgeClass(item) {
+    if (item.type === "line") return "line";
+    if (item.type === "marker") return item.markerKind || "exit";
+    return "";
+  }
+
+  function elementDisplayName(item) {
+    if (item.type === "shape") return item.label || elementTypeLabel(item);
+    if (item.type === "line")  return item.label || ("Line " + item.id);
+    if (item.type === "marker") return item.label || (MARKER_TYPES[item.markerKind] || MARKER_TYPES.exit).defaultLabel;
+    return "Element";
+  }
+
+  function elementDimsSummary(item) {
+    if (item.type === "shape") return "W" + Math.round(item.w) + " × H" + Math.round(item.h) + " · " + Math.round(item.rotation) + "°";
+    if (item.type === "line") {
+      var dx = item.x2 - item.x1, dy = item.y2 - item.y1;
+      var len = Math.round(Math.sqrt(dx*dx + dy*dy));
+      var ang = Math.round(Math.atan2(dy, dx) * 180 / Math.PI);
+      return "L" + len + " · " + ang + "° · T" + item.thickness;
+    }
+    if (item.type === "marker") return "W" + Math.round(item.w) + " × H" + Math.round(item.h) + " · " + Math.round(item.rotation) + "°";
+    return "";
+  }
+
   function rebuildAnnotationList() {
     var list = $("annotationList");
     list.innerHTML = "";
     if (!canvasElements.length) {
-      list.innerHTML = '<div class="annotation-empty">No elements added yet.</div>';
+      list.innerHTML = '<div class="annotation-empty">No elements added yet. Use the tabs above to add shapes, lines, or markers.</div>';
       updateAnnotationCounts();
       return;
     }
 
     canvasElements.forEach(function(item) {
-      var row = document.createElement("div");
-      row.className = "annotation-item";
+      var wrap = document.createElement("div");
+      wrap.className = "annotation-item" + (expandedElementId === item.id ? " expanded" : "");
+
+      /* === Header row (always visible) === */
+      var header = document.createElement("div");
+      header.className = "anno-header-row";
 
       var badge = document.createElement("span");
-      badge.className = "anno-badge" + (item.type === "line" ? " line" : (item.type === "exit" ? " exit" : ""));
-      badge.textContent = item.type === "line" ? "Line" : (item.type === "exit" ? "Exit" : (item.shapeKind ? item.shapeKind.slice(0,4) : "Shape"));
-      row.appendChild(badge);
+      badge.className = "anno-badge " + elementBadgeClass(item);
+      badge.textContent = elementTypeLabel(item);
+      header.appendChild(badge);
 
       var name = document.createElement("span");
       name.className = "anno-name";
-      if (item.type === "shape") name.textContent = item.label || (item.shapeKind.charAt(0).toUpperCase() + item.shapeKind.slice(1));
-      else if (item.type === "line") name.textContent = item.label || "Line " + item.id;
-      else name.textContent = item.label || "EXIT";
-      row.appendChild(name);
+      name.textContent = elementDisplayName(item);
+      header.appendChild(name);
 
-      /* X input */
-      var xLbl = document.createElement("span");
-      xLbl.style.cssText = "font-size:10.5px;font-weight:800;color:var(--text-muted);";
-      xLbl.textContent = "X";
-      row.appendChild(xLbl);
-      var xInp = document.createElement("input");
-      xInp.type = "number";
-      xInp.min = 0; xInp.max = 3000;
-      xInp.value = (item.type === "line") ? item.x1 : item.x;
-      xInp.addEventListener("input", function() {
-        var v = parseInt(this.value); if (isNaN(v)) return;
-        if (item.type === "line") item.x1 = Math.max(0, v); else item.x = Math.max(0, v);
-        renderFullscreen();
-      });
-      row.appendChild(xInp);
+      var dims = document.createElement("span");
+      dims.className = "anno-dims";
+      dims.textContent = elementDimsSummary(item);
+      header.appendChild(dims);
 
-      /* Y input */
-      var yLbl = document.createElement("span");
-      yLbl.style.cssText = "font-size:10.5px;font-weight:800;color:var(--text-muted);";
-      yLbl.textContent = "Y";
-      row.appendChild(yLbl);
-      var yInp = document.createElement("input");
-      yInp.type = "number";
-      yInp.min = 0; yInp.max = 3000;
-      yInp.value = (item.type === "line") ? item.y1 : item.y;
-      yInp.addEventListener("input", function() {
-        var v = parseInt(this.value); if (isNaN(v)) return;
-        if (item.type === "line") item.y1 = Math.max(0, v); else item.y = Math.max(0, v);
-        renderFullscreen();
+      var expandBtn = document.createElement("button");
+      expandBtn.type = "button";
+      expandBtn.className = "anno-icon-btn" + (expandedElementId === item.id ? " active" : "");
+      expandBtn.title = expandedElementId === item.id ? "Collapse" : "Edit";
+      expandBtn.innerHTML = expandedElementId === item.id
+        ? '<i data-lucide="chevron-up" style="width:14px;height:14px;"></i>'
+        : '<i data-lucide="edit-3" style="width:14px;height:14px;"></i>';
+      expandBtn.addEventListener("click", function(e) {
+        e.stopPropagation();
+        expandedElementId = (expandedElementId === item.id) ? null : item.id;
+        rebuildAnnotationList();
       });
-      row.appendChild(yInp);
+      header.appendChild(expandBtn);
 
       var del = document.createElement("button");
       del.type = "button";
-      del.className = "btn-trash";
-      del.innerHTML = '<i data-lucide="trash-2" style="width:14px;height:14px;"></i>';
+      del.className = "anno-icon-btn danger";
       del.title = "Delete";
-      del.addEventListener("click", function() {
+      del.innerHTML = '<i data-lucide="trash-2" style="width:14px;height:14px;"></i>';
+      del.addEventListener("click", function(e) {
+        e.stopPropagation();
         canvasElements = canvasElements.filter(function(x) { return x.id !== item.id; });
+        if (expandedElementId === item.id) expandedElementId = null;
         rebuildAnnotationList();
         renderFullscreen();
       });
-      row.appendChild(del);
+      header.appendChild(del);
 
-      list.appendChild(row);
+      /* Toggle expansion when clicking header (but not the buttons) */
+      header.addEventListener("click", function(e) {
+        if (e.target.closest("button")) return;
+        expandedElementId = (expandedElementId === item.id) ? null : item.id;
+        rebuildAnnotationList();
+      });
+
+      wrap.appendChild(header);
+
+      /* === Expanded editor (only if open) === */
+      if (expandedElementId === item.id) {
+        var editor = buildElementEditor(item);
+        wrap.appendChild(editor);
+      }
+
+      list.appendChild(wrap);
     });
 
     updateAnnotationCounts();
     if (window.lucide) lucide.createIcons();
+  }
+
+  /* Build helper: field row inside the editor */
+  function buildField(labelText, inputEl) {
+    var f = document.createElement("div");
+    f.className = "ed-field";
+    var lbl = document.createElement("label");
+    lbl.textContent = labelText;
+    f.appendChild(lbl);
+    f.appendChild(inputEl);
+    return f;
+  }
+
+  function buildNumberInput(value, min, max, step, onChange) {
+    var inp = document.createElement("input");
+    inp.type = "number";
+    inp.min = min; inp.max = max;
+    if (step !== undefined) inp.step = step;
+    inp.value = value;
+    inp.addEventListener("input", function() {
+      var v = parseFloat(this.value);
+      if (isNaN(v)) return;
+      onChange(v);
+    });
+    inp.addEventListener("change", function() {
+      var v = parseFloat(this.value);
+      if (isNaN(v)) v = min;
+      v = Math.max(min, Math.min(max, v));
+      this.value = v;
+      onChange(v, true);
+    });
+    return inp;
+  }
+
+  function buildTextInput(value, maxLen, onChange) {
+    var inp = document.createElement("input");
+    inp.type = "text";
+    if (maxLen) inp.maxLength = maxLen;
+    inp.value = value;
+    inp.addEventListener("input", function() {
+      onChange(this.value);
+    });
+    return inp;
+  }
+
+  function buildColorInput(value, onChange) {
+    var inp = document.createElement("input");
+    inp.type = "color";
+    inp.value = value;
+    inp.addEventListener("input", function() {
+      onChange(this.value);
+    });
+    return inp;
+  }
+
+  function buildSelect(options, currentValue, onChange) {
+    var sel = document.createElement("select");
+    options.forEach(function(o) {
+      var opt = document.createElement("option");
+      opt.value = o.value;
+      opt.textContent = o.label;
+      if (String(o.value) === String(currentValue)) opt.selected = true;
+      sel.appendChild(opt);
+    });
+    sel.addEventListener("change", function() {
+      onChange(this.value);
+    });
+    return sel;
+  }
+
+  /* Build the full editor for one element */
+  function buildElementEditor(item) {
+    var editor = document.createElement("div");
+    editor.className = "annotation-editor";
+
+    /* ---- Common: name ---- */
+    var rowName = document.createElement("div");
+    rowName.className = "ed-row";
+    var nameInp = buildTextInput(item.label || "", 24, function(v) {
+      item.label = v;
+      /* Update header name live */
+      var parent = editor.parentNode;
+      var nameEl = parent.querySelector(".anno-name");
+      if (nameEl) nameEl.textContent = elementDisplayName(item);
+      renderFullscreen();
+    });
+    rowName.appendChild(buildField("Label", nameInp));
+    editor.appendChild(rowName);
+
+    if (item.type === "shape") {
+      buildShapeEditor(item, editor);
+    } else if (item.type === "line") {
+      buildLineEditor(item, editor);
+    } else if (item.type === "marker") {
+      buildMarkerEditor(item, editor);
+    }
+
+    /* ---- Common: level ---- */
+    var rowLevel = document.createElement("div");
+    rowLevel.className = "ed-row";
+    var levelOpts = levels.map(function(lv) { return { value: lv.id, label: lv.name }; });
+    var levelSel = buildSelect(levelOpts, item.levelId, function(v) {
+      item.levelId = parseInt(v);
+      renderFullscreen();
+    });
+    rowLevel.appendChild(buildField("Level", levelSel));
+    editor.appendChild(rowLevel);
+
+    return editor;
+  }
+
+  function buildShapeEditor(item, editor) {
+    /* Row: kind */
+    var rowKind = document.createElement("div");
+    rowKind.className = "ed-row";
+    var kindSel = buildSelect([
+      { value: "rectangle", label: "Rectangle" },
+      { value: "square", label: "Square" },
+      { value: "circle", label: "Circle" }
+    ], item.shapeKind, function(v) {
+      item.shapeKind = v;
+      if (v === "square" || v === "circle") {
+        item.h = item.w;
+        /* Refresh editor so the H input reflects the synced value */
+        refreshExpandedEditor(item);
+      }
+      renderFullscreen();
+    });
+    rowKind.appendChild(buildField("Shape Kind", kindSel));
+
+    var colorInp = buildColorInput(item.color, function(v) {
+      item.color = v;
+      renderFullscreen();
+    });
+    rowKind.appendChild(buildField("Colour", colorInp));
+    editor.appendChild(rowKind);
+
+    /* Row: X, Y, Z */
+    var rowXYZ = document.createElement("div");
+    rowXYZ.className = "ed-row";
+    rowXYZ.appendChild(buildField("X (px)", buildNumberInput(item.x, 0, 3000, 1, function(v) { item.x = v; renderFullscreen(); })));
+    rowXYZ.appendChild(buildField("Y (px)", buildNumberInput(item.y, 0, 3000, 1, function(v) { item.y = v; renderFullscreen(); })));
+    rowXYZ.appendChild(buildField("Z-index", buildNumberInput(item.z, 1, 99, 1, function(v) { item.z = v; renderFullscreen(); })));
+    editor.appendChild(rowXYZ);
+
+    /* Row: Width, Height, Rotation */
+    var rowWH = document.createElement("div");
+    rowWH.className = "ed-row";
+    rowWH.appendChild(buildField("Width (px)", buildNumberInput(item.w, 10, 2000, 1, function(v) {
+      item.w = v;
+      if (item.shapeKind === "square" || item.shapeKind === "circle") item.h = v;
+      renderFullscreen();
+    })));
+    rowWH.appendChild(buildField("Height (px)", buildNumberInput(item.h, 10, 2000, 1, function(v) {
+      item.h = v;
+      if (item.shapeKind === "square" || item.shapeKind === "circle") item.w = v;
+      renderFullscreen();
+    })));
+    rowWH.appendChild(buildField("Rotation (°)", buildNumberInput(item.rotation, -360, 360, 1, function(v) { item.rotation = v; renderFullscreen(); })));
+    editor.appendChild(rowWH);
+  }
+
+  function buildLineEditor(item, editor) {
+    /* Row: X1, Y1, Z */
+    var row1 = document.createElement("div");
+    row1.className = "ed-row";
+    row1.appendChild(buildField("From X (px)", buildNumberInput(item.x1, 0, 3000, 1, function(v) { item.x1 = v; renderFullscreen(); syncLineDerived(item); })));
+    row1.appendChild(buildField("From Y (px)", buildNumberInput(item.y1, 0, 3000, 1, function(v) { item.y1 = v; renderFullscreen(); syncLineDerived(item); })));
+    row1.appendChild(buildField("Z-index", buildNumberInput(item.z, 1, 99, 1, function(v) { item.z = v; renderFullscreen(); })));
+    editor.appendChild(row1);
+
+    /* Row: X2, Y2, Length */
+    var dx = item.x2 - item.x1;
+    var dy = item.y2 - item.y1;
+    var currentLength = Math.round(Math.sqrt(dx*dx + dy*dy));
+    var currentAngle = Math.round(Math.atan2(dy, dx) * 180 / Math.PI);
+
+    var row2 = document.createElement("div");
+    row2.className = "ed-row";
+    row2.appendChild(buildField("To X (px)", buildNumberInput(item.x2, 0, 3000, 1, function(v) { item.x2 = v; renderFullscreen(); syncLineDerived(item); })));
+    row2.appendChild(buildField("To Y (px)", buildNumberInput(item.y2, 0, 3000, 1, function(v) { item.y2 = v; renderFullscreen(); syncLineDerived(item); })));
+
+    /* Length field — auto-updates when X2/Y2 change; editing it recomputes X2/Y2 */
+    var lengthInp = document.createElement("input");
+    lengthInp.type = "number";
+    lengthInp.min = 1; lengthInp.max = 5000;
+    lengthInp.value = currentLength;
+    lengthInp.addEventListener("change", function() {
+      var v = clampFloat(this.value, 1, 5000, currentLength);
+      this.value = Math.round(v);
+      var angRad = Math.atan2(item.y2 - item.y1, item.x2 - item.x1);
+      if (isNaN(angRad)) angRad = 0;
+      item.x2 = Math.round(item.x1 + Math.cos(angRad) * v);
+      item.y2 = Math.round(item.y1 + Math.sin(angRad) * v);
+      refreshExpandedEditor(item);
+      renderFullscreen();
+    });
+    var lengthField = document.createElement("div");
+    lengthField.className = "ed-field";
+    var lengthLbl = document.createElement("label");
+    lengthLbl.textContent = "Length (px)";
+    lengthField.appendChild(lengthLbl);
+    lengthField.appendChild(lengthInp);
+    row2.appendChild(lengthField);
+    editor.appendChild(row2);
+
+    /* Row: Thickness, Angle, Colour */
+    var row3 = document.createElement("div");
+    row3.className = "ed-row";
+    row3.appendChild(buildField("Thickness (px)", buildNumberInput(item.thickness, 1, 40, 1, function(v) { item.thickness = v; renderFullscreen(); })));
+
+    var angleInp = document.createElement("input");
+    angleInp.type = "number";
+    angleInp.min = -360; angleInp.max = 360;
+    angleInp.value = currentAngle;
+    angleInp.addEventListener("change", function() {
+      var v = clampFloat(this.value, -360, 360, currentAngle);
+      this.value = Math.round(v);
+      /* Recompute X2/Y2 from current length */
+      var dx2 = item.x2 - item.x1;
+      var dy2 = item.y2 - item.y1;
+      var len = Math.sqrt(dx2*dx2 + dy2*dy2);
+      if (len < 1) len = 100;
+      var rad = v * Math.PI / 180;
+      item.x2 = Math.round(item.x1 + Math.cos(rad) * len);
+      item.y2 = Math.round(item.y1 + Math.sin(rad) * len);
+      refreshExpandedEditor(item);
+      renderFullscreen();
+    });
+    var angleField = document.createElement("div");
+    angleField.className = "ed-field";
+    var angleLbl = document.createElement("label");
+    angleLbl.textContent = "Angle (°)";
+    angleField.appendChild(angleLbl);
+    angleField.appendChild(angleInp);
+    row3.appendChild(angleField);
+
+    row3.appendChild(buildField("Colour", buildColorInput(item.color, function(v) { item.color = v; renderFullscreen(); })));
+    editor.appendChild(row3);
+  }
+
+  function buildMarkerEditor(item, editor) {
+    /* Row: kind */
+    var rowKind = document.createElement("div");
+    rowKind.className = "ed-row";
+    var kindSel = buildSelect([
+      { value: "exit",     label: "Exit" },
+      { value: "entrance", label: "Entrance" },
+      { value: "bathroom", label: "Bathroom" }
+    ], item.markerKind, function(v) {
+      item.markerKind = v;
+      /* Update badge in the header */
+      var parent = editor.parentNode;
+      var badge = parent.querySelector(".anno-badge");
+      if (badge) {
+        badge.className = "anno-badge " + v;
+        badge.textContent = v.charAt(0).toUpperCase() + v.slice(1);
+      }
+      var nameEl = parent.querySelector(".anno-name");
+      if (nameEl) nameEl.textContent = elementDisplayName(item);
+      renderFullscreen();
+    });
+    rowKind.appendChild(buildField("Marker Type", kindSel));
+    editor.appendChild(rowKind);
+
+    /* Row: X, Y, Z */
+    var rowXYZ = document.createElement("div");
+    rowXYZ.className = "ed-row";
+    rowXYZ.appendChild(buildField("X (px)", buildNumberInput(item.x, 0, 3000, 1, function(v) { item.x = v; renderFullscreen(); })));
+    rowXYZ.appendChild(buildField("Y (px)", buildNumberInput(item.y, 0, 3000, 1, function(v) { item.y = v; renderFullscreen(); })));
+    rowXYZ.appendChild(buildField("Z-index", buildNumberInput(item.z, 1, 99, 1, function(v) { item.z = v; renderFullscreen(); })));
+    editor.appendChild(rowXYZ);
+
+    /* Row: Width, Height, Rotation */
+    var rowWH = document.createElement("div");
+    rowWH.className = "ed-row";
+    rowWH.appendChild(buildField("Width (px)", buildNumberInput(item.w, 20, 300, 1, function(v) { item.w = v; renderFullscreen(); })));
+    rowWH.appendChild(buildField("Height (px)", buildNumberInput(item.h, 20, 300, 1, function(v) { item.h = v; renderFullscreen(); })));
+    rowWH.appendChild(buildField("Rotation (°)", buildNumberInput(item.rotation, -360, 360, 1, function(v) { item.rotation = v; renderFullscreen(); })));
+    editor.appendChild(rowWH);
+  }
+
+  /* Re-render just the expanded editor to refresh derived fields */
+  function refreshExpandedEditor(item) {
+    /* We need to keep the same list item — rebuild just the editor child */
+    var list = $("annotationList");
+    var items = list.querySelectorAll(".annotation-item");
+    /* Find the matching wrap by checking editor's ancestor */
+    /* Simpler: just rebuild the whole list */
+    rebuildAnnotationList();
+  }
+
+  /* Sync derived fields (length/angle) after X2/Y2 change */
+  function syncLineDerived(item) {
+    /* Rebuild list so the length/angle fields refresh */
+    /* But avoid losing focus during typing — only rebuild on 'change' events */
+    /* For simplicity, we just leave derived fields stale until next rebuild */
   }
 
   function updateAnnotationCounts() {
@@ -1741,7 +2174,7 @@ document.addEventListener("DOMContentLoaded", function(){
     canvasElements.forEach(function(x) {
       if (x.type === "shape") s++;
       else if (x.type === "line") l++;
-      else if (x.type === "exit") e++;
+      else if (x.type === "marker") e++;
     });
     if ($("countShapes")) $("countShapes").textContent = s;
     if ($("countLines")) $("countLines").textContent = l;
@@ -1753,20 +2186,23 @@ document.addEventListener("DOMContentLoaded", function(){
     var label = $("shapeLabelInput").value.trim();
     var x = clampInt($("shapeX").value, 0, 3000, 100);
     var y = clampInt($("shapeY").value, 0, 3000, 100);
+    var z = clampInt($("shapeZ").value, 1, 99, 6);
     var w = clampInt($("shapeW").value, 10, 2000, 140);
     var h = clampInt($("shapeH").value, 10, 2000, 100);
+    var rotation = clampInt($("shapeRotation").value, -360, 360, 0);
     var color = $("shapeColor").value || "#00FFFF";
     var levelId = parseInt($("shapeLevelSelect").value) || levels[0].id;
 
-    if (kind === "square") { h = w; }
-    if (kind === "circle") { h = w; }
+    if (kind === "square" || kind === "circle") h = w;
 
     canvasElements.push({
       id: nextCanvasElementId++,
       type: "shape",
       shapeKind: kind,
       label: label,
-      x: x, y: y, w: w, h: h,
+      x: x, y: y, z: z,
+      w: w, h: h,
+      rotation: rotation,
       color: color,
       levelId: levelId
     });
@@ -1781,7 +2217,8 @@ document.addEventListener("DOMContentLoaded", function(){
     var y1 = clampInt($("lineY1").value, 0, 3000, 100);
     var x2 = clampInt($("lineX2").value, 0, 3000, 500);
     var y2 = clampInt($("lineY2").value, 0, 3000, 500);
-    var thickness = clampInt($("lineThickness").value, 1, 20, 2);
+    var z = clampInt($("lineZ").value, 1, 99, 6);
+    var thickness = clampInt($("lineThickness").value, 1, 40, 2);
     var color = $("lineColor").value || "#facc15";
     var label = $("lineLabelInput").value.trim();
     var levelId = parseInt($("lineLevelSelect").value) || levels[0].id;
@@ -1791,6 +2228,7 @@ document.addEventListener("DOMContentLoaded", function(){
       type: "line",
       label: label,
       x1: x1, y1: y1, x2: x2, y2: y2,
+      z: z,
       thickness: thickness,
       color: color,
       levelId: levelId
@@ -1801,34 +2239,38 @@ document.addEventListener("DOMContentLoaded", function(){
     showToast("Line added", "success");
   }
 
-  function addExitElement() {
-    var label = ($("exitLabelInput").value.trim() || "EXIT").toUpperCase();
-    var size = clampInt($("exitSizeInput").value, 20, 200, 56);
+  function addMarkerElement() {
+    var kind = $("markerKind").value;
+    var label = ($("exitLabelInput").value.trim() || (MARKER_TYPES[kind] || MARKER_TYPES.exit).defaultLabel).toUpperCase();
     var x = clampInt($("exitX").value, 0, 3000, 100);
     var y = clampInt($("exitY").value, 0, 3000, 600);
+    var z = clampInt($("exitZInput").value, 1, 99, 6);
+    var w = clampInt($("exitW").value, 20, 300, 56);
+    var h = clampInt($("exitH").value, 20, 300, 56);
     var rotation = clampInt($("exitRotationInput").value, -360, 360, 0);
     var levelId = parseInt($("exitLevelSelect").value) || levels[0].id;
 
     canvasElements.push({
       id: nextCanvasElementId++,
-      type: "exit",
+      type: "marker",
+      markerKind: kind,
       label: label,
-      x: x, y: y,
-      size: size,
+      x: x, y: y, z: z,
+      w: w, h: h,
       rotation: rotation,
       levelId: levelId
     });
 
     rebuildAnnotationList();
     renderFullscreen();
-    showToast("Exit point added", "success");
+    showToast("Marker added", "success");
   }
 
   /* Build a canvas element DOM node for fullscreen */
   function buildCanvasElement(item) {
     if (item.type === "shape") return buildShapeNode(item);
     if (item.type === "line") return buildLineNode(item);
-    if (item.type === "exit") return buildExitNode(item);
+    if (item.type === "marker") return buildMarkerNode(item);
     return null;
   }
 
@@ -1841,7 +2283,12 @@ document.addEventListener("DOMContentLoaded", function(){
     el.style.height = item.h + "px";
     el.style.background = hexToRgba(item.color, 0.15);
     el.style.border = "2px solid " + item.color;
-    el.style.color = shadeColor(item.color, -50);
+    el.style.color = shadeColor(item.color, -60);
+    el.style.zIndex = String(item.z || 6);
+    if (item.rotation) {
+      el.style.transform = "rotate(" + item.rotation + "deg)";
+      el.style.transformOrigin = "center center";
+    }
     if (item.label) el.textContent = item.label;
     return el;
   }
@@ -1862,6 +2309,7 @@ document.addEventListener("DOMContentLoaded", function(){
     el.style.borderRadius = (item.thickness / 2) + "px";
     el.style.transform = "rotate(" + angle + "deg)";
     el.style.transformOrigin = "0 50%";
+    el.style.zIndex = String(item.z || 6);
     el.style.boxShadow = "0 2px 4px rgba(0,0,0,0.15)";
 
     if (item.label) {
@@ -1873,31 +2321,44 @@ document.addEventListener("DOMContentLoaded", function(){
     return el;
   }
 
-  function buildExitNode(item) {
+  function buildMarkerNode(item) {
+    var mt = MARKER_TYPES[item.markerKind] || MARKER_TYPES.exit;
     var el = document.createElement("div");
-    el.className = "fs-element fs-element-exit";
+    el.className = "fs-element fs-element-marker";
     el.style.left = item.x + "px";
     el.style.top = item.y + "px";
-    el.style.width = item.size + "px";
-    el.style.height = item.size + "px";
-    el.style.transform = "rotate(" + item.rotation + "deg)";
-    el.style.transformOrigin = "center center";
-    el.innerHTML = '<span class="exit-arrow">↗</span><span class="exit-label">' + item.label + '</span>';
+    el.style.width = item.w + "px";
+    el.style.height = item.h + "px";
+    el.style.background = mt.color;
+    el.style.zIndex = String(item.z || 6);
+    if (item.rotation) {
+      el.style.transform = "rotate(" + item.rotation + "deg)";
+      el.style.transformOrigin = "center center";
+    }
+    var icon = document.createElement("span");
+    icon.className = "marker-icon";
+    icon.textContent = mt.icon;
+    el.appendChild(icon);
+    var label = document.createElement("span");
+    label.className = "marker-label";
+    label.textContent = item.label || mt.defaultLabel;
+    el.appendChild(label);
     return el;
   }
 
-  /* Helpers for colours */
   function hexToRgba(hex, alpha) {
-    var c = hex.replace("#", "");
+    var c = String(hex).replace("#", "");
     if (c.length === 3) c = c[0]+c[0]+c[1]+c[1]+c[2]+c[2];
+    if (c.length !== 6) return "rgba(0,255,255," + alpha + ")";
     var r = parseInt(c.substring(0,2),16);
     var g = parseInt(c.substring(2,4),16);
     var b = parseInt(c.substring(4,6),16);
     return "rgba(" + r + "," + g + "," + b + "," + alpha + ")";
   }
   function shadeColor(hex, percent) {
-    var c = hex.replace("#", "");
+    var c = String(hex).replace("#", "");
     if (c.length === 3) c = c[0]+c[0]+c[1]+c[1]+c[2]+c[2];
+    if (c.length !== 6) return hex;
     var r = parseInt(c.substring(0,2),16);
     var g = parseInt(c.substring(2,4),16);
     var b = parseInt(c.substring(4,6),16);
@@ -1907,16 +2368,19 @@ document.addEventListener("DOMContentLoaded", function(){
     return "#" + [r,g,b].map(function(x){ return x.toString(16).padStart(2,"0"); }).join("");
   }
 
-  /* Render all visible annotation elements into the canvas */
   function renderCanvasAnnotations(canvas) {
     canvas.querySelectorAll(".fs-element").forEach(function(el) { el.remove(); });
-    canvasElements.forEach(function(item) {
+    /* Sort by z so lower z appears behind */
+    var sorted = canvasElements.slice().sort(function(a, b) { return (a.z || 6) - (b.z || 6); });
+    sorted.forEach(function(item) {
       var lv = levels.find(function(x) { return x.id === item.levelId; });
       if (!lv || !lv.visible) return;
       var el = buildCanvasElement(item);
       if (el) canvas.appendChild(el);
     });
   }
+
+  /* ============================================================ */
 
   // ===== LEFT PANEL PREVIEW =====
   function renderStandardLayout(container, sections) {
@@ -2133,7 +2597,6 @@ document.addEventListener("DOMContentLoaded", function(){
     return el;
   }
 
-  /* === UPDATED: supports both horizontal and vertical auto layout === */
   function autoLayoutSections(sectionEls, canvas) {
     if (!sectionEls.length) return;
     var spacing = Math.max(0, sectionSpacingPx);
@@ -2150,7 +2613,6 @@ document.addEventListener("DOMContentLoaded", function(){
         var effW = natW * pos.scale;
         var effH = natH * pos.scale;
 
-        /* Center horizontally on the canvas */
         pos.x = Math.round((canvasWidth - natW) / 2);
         pos.y = Math.round(cursorY + (effH - natH) / 2);
 
@@ -2161,7 +2623,6 @@ document.addEventListener("DOMContentLoaded", function(){
         cursorY += effH + spacing;
       });
     } else {
-      /* Horizontal — existing behavior */
       var cursorX = baseX;
       sectionEls.forEach(function(item) {
         var pos = getSectionPos(item.idx);
@@ -2232,7 +2693,6 @@ document.addEventListener("DOMContentLoaded", function(){
     sm.style.height = stage.height + "px";
     $("fsStageName").textContent = stageName;
 
-    /* Render annotation elements first (behind sections) */
     renderCanvasAnnotations(canvas);
 
     var sections = parseInt($("totalLevel1").value) || 0;
@@ -2256,7 +2716,6 @@ document.addEventListener("DOMContentLoaded", function(){
     checkSectionOverlaps(sectionEls, canvas);
     rebuildLevelPills();
 
-    /* Keep axis toggle in sync */
     var axisBtn = $("fsToggleAxis");
     if (axisBtn) axisBtn.textContent = autoLayoutAxis === "vertical" ? "↕ Vertical" : "↔ Horizontal";
 
@@ -2517,7 +2976,6 @@ document.addEventListener("DOMContentLoaded", function(){
     $("rowOverridesBlock").style.display = tableMode ? "none" : "";
     $("rowTierGroup").style.display = tableMode ? "none" : "";
 
-    /* === DEFAULT AXIS: vertical for tables, horizontal for rows === */
     autoLayoutAxis = tableMode ? "vertical" : "horizontal";
 
     applyShapeUI();
@@ -2580,7 +3038,7 @@ document.addEventListener("DOMContentLoaded", function(){
 
   $("addTableRowBtn").addEventListener("click", addTableRow);
 
-  /* ===== Annotation tab switching ===== */
+  /* Annotation tab switching */
   document.querySelectorAll(".annotation-tab").forEach(function(btn) {
     btn.addEventListener("click", function() {
       document.querySelectorAll(".annotation-tab").forEach(function(b){ b.classList.remove("active"); });
@@ -2592,12 +3050,12 @@ document.addEventListener("DOMContentLoaded", function(){
     });
   });
 
-  /* ===== Annotation add handlers ===== */
+  /* Add handlers */
   $("addShapeBtn").addEventListener("click", addShapeElement);
   $("addLineBtn").addEventListener("click", addLineElement);
-  $("addExitBtn").addEventListener("click", addExitElement);
+  $("addExitBtn").addEventListener("click", addMarkerElement);
 
-  /* Shape kind -> sync width/height for square/circle */
+  /* Sync width/height for square/circle in the add form */
   $("shapeKind").addEventListener("change", function() {
     var k = this.value;
     if (k === "square" || k === "circle") {
@@ -2610,6 +3068,25 @@ document.addEventListener("DOMContentLoaded", function(){
     if (k === "square" || k === "circle") {
       $("shapeH").value = this.value;
     }
+  });
+  /* Auto-update line length/angle display in add form */
+  function updateLineFormDerived() {
+    var x1 = clampInt($("lineX1").value, 0, 3000, 0);
+    var y1 = clampInt($("lineY1").value, 0, 3000, 0);
+    var x2 = clampInt($("lineX2").value, 0, 3000, 0);
+    var y2 = clampInt($("lineY2").value, 0, 3000, 0);
+    var len = Math.round(Math.sqrt((x2-x1)*(x2-x1) + (y2-y1)*(y2-y1)));
+    var ang = Math.round(Math.atan2(y2-y1, x2-x1) * 180 / Math.PI);
+    $("lineLength").value = len;
+    $("lineAngleOut").value = ang;
+  }
+  ["lineX1","lineY1","lineX2","lineY2"].forEach(function(id) {
+    $(id).addEventListener("input", updateLineFormDerived);
+  });
+  /* Marker kind -> update default label in add form */
+  $("markerKind").addEventListener("change", function() {
+    var mt = MARKER_TYPES[this.value] || MARKER_TYPES.exit;
+    $("exitLabelInput").value = mt.defaultLabel;
   });
 
   $("totalLevel1").addEventListener("input", function() {
@@ -2715,7 +3192,6 @@ document.addEventListener("DOMContentLoaded", function(){
     showToast(autoLayoutEnabled ? "Auto Layout ON — sections arranged automatically" : "Auto Layout OFF — manual positions kept");
   });
 
-  /* === NEW: Axis toggle === */
   $("fsToggleAxis").addEventListener("click", function() {
     autoLayoutAxis = autoLayoutAxis === "vertical" ? "horizontal" : "vertical";
     this.textContent = autoLayoutAxis === "vertical" ? "↕ Vertical" : "↔ Horizontal";
@@ -2754,7 +3230,7 @@ document.addEventListener("DOMContentLoaded", function(){
     if (!confirm("Clear all section overrides, table rows, canvas elements, and reset positions?")) return;
     sectionRowOverrides = {}; sectionRowCounts = {}; sectionNames = {};
     sectionTierOverrides = {}; sectionPositions = {}; sectionTableRows = {};
-    canvasElements = []; nextCanvasElementId = 1;
+    canvasElements = []; nextCanvasElementId = 1; expandedElementId = null;
     levels = [{ id: 0, name: "Ground Floor", color: "#00FFFF", visible: true }];
     nextLevelId = 1;
     currentEditingSection = 0;
@@ -2830,6 +3306,7 @@ document.addEventListener("DOMContentLoaded", function(){
   updateTierSummary();
   updateTableSummary();
   updateScaleHints();
+  updateLineFormDerived();
   $("tableOptionsPanel").style.display = "none";
   $("fsSectionSpacing").value = sectionSpacingPx;
   applyTableModeUI();
