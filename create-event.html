@@ -250,7 +250,7 @@ body.dev-on .dev-only.section-rows-row { display: flex; }
 .fs-tier-tag.cyan { color: #0e7490; }
 .fs-empty-hint { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #6b7787; font-size: 12px; text-align: center; max-width: 300px; }
 
-/* ===== MAP PICKER OVERLAY (New Layout with Sidebar) ===== */
+/* ===== MAP PICKER OVERLAY ===== */
 #mapOverlay { z-index: 10000; }
 .map-layout {
   flex: 1;
@@ -396,6 +396,90 @@ body.dev-on .dev-only.section-rows-row { display: flex; }
 .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 .toast.success { background: #065f46; }
 .toast.error { background: #991b1b; }
+
+/* New styles for enhancements */
+.curved-layout-panel {
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--bg-2);
+  border: 1px solid var(--border-2);
+  border-radius: 10px;
+}
+.aisle-config-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  padding: 6px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border-2);
+  border-radius: 8px;
+}
+.aisle-config-row label {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex: 1;
+}
+.aisle-config-row input {
+  width: 70px;
+  padding: 5px 8px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  background: var(--bg-2);
+  border: 1px solid var(--border-2);
+  border-radius: 6px;
+  font-family: inherit;
+  color: var(--text);
+}
+.curved-config-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 8px;
+  padding: 6px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border-2);
+  border-radius: 8px;
+}
+.curved-config-row label {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex: 1;
+}
+.curved-config-row input {
+  width: 80px;
+  padding: 5px 8px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+  background: var(--bg-2);
+  border: 1px solid var(--border-2);
+  border-radius: 6px;
+  font-family: inherit;
+  color: var(--text);
+}
+.fs-canvas-curved {
+  background: #ffffff;
+}
+.seat-mask-input {
+  width: 100%;
+  padding: 8px 10px;
+  font-size: 11px;
+  font-family: ui-monospace, monospace;
+  background: var(--bg-2);
+  border: 1px solid var(--border-2);
+  border-radius: 6px;
+  color: var(--text);
+  resize: vertical;
+  min-height: 50px;
+}
 </style>
 </head>
 <body>
@@ -421,7 +505,7 @@ body.dev-on .dev-only.section-rows-row { display: flex; }
         <div class="dev-settings-toggle">
           <div class="info">
             <div class="title"><i data-lucide="code-2"></i> Developer Settings</div>
-            <div class="desc">Reveal advanced controls: canvas size, stage position, grid, levels, and per-section placement.</div>
+            <div class="desc">Reveal advanced controls: canvas size, stage position, grid, levels, curved layout, aisles & seat masking.</div>
           </div>
           <label class="toggle-switch">
             <input type="checkbox" id="devModeToggle" />
@@ -526,6 +610,7 @@ body.dev-on .dev-only.section-rows-row { display: flex; }
           <div class="form-group"><label for="totalLevel3">Default Seats per Row (4–90)</label><input type="number" id="totalLevel3" min="4" max="90" value="8" /></div>
         </div>
 
+        <!-- ===== ENHANCED PER-SECTION CONFIGURATION ===== -->
         <div class="form-group" id="rowOverridesGroup">
           <label>Per-Section Configuration</label>
           <div class="row-overrides-section">
@@ -560,6 +645,59 @@ body.dev-on .dev-only.section-rows-row { display: flex; }
                 <option value="silver">Silver</option>
                 <option value="cyan">Cyan (Standard)</option>
               </select>
+            </div>
+
+            <!-- ===== CURVED LAYOUT MODE ===== -->
+            <div class="dev-only">
+              <div class="section-divider" style="margin:12px 0 8px;"><span>Curved Layout Mode</span></div>
+              <div class="curved-layout-panel">
+                <div class="toggle-row" style="margin-bottom:8px;">
+                  <span class="toggle-label">Enable Curved Layout</span>
+                  <label class="toggle-switch"><input type="checkbox" id="curvedModeToggle" /><span class="toggle-slider"></span></label>
+                </div>
+                <div id="curvedConfigPanel" style="display:none;">
+                  <div class="curved-config-row">
+                    <label for="curveCenterX">Center X (px)</label>
+                    <input type="number" id="curveCenterX" value="600" />
+                  </div>
+                  <div class="curved-config-row">
+                    <label for="curveCenterY">Center Y (px)</label>
+                    <input type="number" id="curveCenterY" value="400" />
+                  </div>
+                  <div class="curved-config-row">
+                    <label for="curveRadiusStart">Start Radius (px)</label>
+                    <input type="number" id="curveRadiusStart" value="150" />
+                  </div>
+                  <div class="curved-config-row">
+                    <label for="curveRadiusStep">Radius Step per Row (px)</label>
+                    <input type="number" id="curveRadiusStep" value="22" />
+                  </div>
+                  <div class="curved-config-row">
+                    <label for="curveArcAngle">Total Arc Angle (°)</label>
+                    <input type="number" id="curveArcAngle" value="90" />
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ===== AISLE INJECTION ===== -->
+            <div class="dev-only">
+              <div class="section-divider" style="margin:12px 0 8px;"><span>Aisle Injection</span></div>
+              <div class="aisle-config-row">
+                <label for="aisleEveryN">Insert aisle every N seats</label>
+                <input type="number" id="aisleEveryN" min="0" value="0" />
+              </div>
+              <div class="aisle-config-row">
+                <label for="aisleWidth">Aisle Width (seat units)</label>
+                <input type="number" id="aisleWidth" min="1" max="5" value="1" />
+              </div>
+            </div>
+
+            <!-- ===== SEAT MASKING ===== -->
+            <div class="dev-only">
+              <div class="section-divider" style="margin:12px 0 8px;"><span>Seat Masking (Exclusions)</span></div>
+              <div class="row-overrides-hint">One seat per line. Format: <code>RowLabel-SeatNumber</code> (e.g., <code>A-5</code>, <code>C-12</code>).</div>
+              <textarea class="seat-mask-input" id="seatMaskInput" rows="4" placeholder="A-5&#10;B-8&#10;C-1"></textarea>
             </div>
 
             <div class="dev-only">
@@ -688,10 +826,8 @@ body.dev-on .dev-only.section-rows-row { display: flex; }
   </div>
   <div class="fs-level-bar dev-only" id="fsLevelBar"></div>
   <div class="fs-canvas-outer">
-    <div class="fs-canvas" id="fsCanvas">
-      <div class="fs-stage-marker" id="fsStageMarker">STAGE</div>
-      <div class="fs-empty-hint" id="fsEmptyHint" style="display:none;">Add sections to see them placed here</div>
-    </div>
+    <canvas id="fsCanvasCanvas" class="fs-canvas" width="1200" height="800"></canvas>
+    <div class="fs-empty-hint" id="fsEmptyHint" style="display:none;">Add sections to see them placed here</div>
   </div>
 </div>
 
@@ -705,15 +841,12 @@ body.dev-on .dev-only.section-rows-row { display: flex; }
   </div>
 
   <div class="map-layout">
-    <!-- Sidebar -->
     <div class="map-sidebar">
       <div class="map-sidebar-title"><i data-lucide="sparkles"></i> Recommend Venues</div>
-
       <div class="map-api-hint" id="mapApiHint">
         ⚠️ Add your Google Places API key to enable venue recommendations.
         <button type="button" class="btn-mini" id="setApiKeyBtn" style="margin-top:6px;background:#fbbf24;color:#0a0f14;border-color:#fbbf24;font-weight:800;">Set API Key</button>
       </div>
-
       <div class="map-sidebar-row">
         <label for="mapEventType">Event Type</label>
         <select id="mapEventType">
@@ -727,7 +860,6 @@ body.dev-on .dev-only.section-rows-row { display: flex; }
           <option value="banquet">Banquet / Dinner</option>
         </select>
       </div>
-
       <div class="map-sidebar-row">
         <label for="mapPriceRange">Price Range</label>
         <select id="mapPriceRange">
@@ -738,26 +870,20 @@ body.dev-on .dev-only.section-rows-row { display: flex; }
           <option value="luxury">Luxury</option>
         </select>
       </div>
-
       <div class="map-sidebar-row">
         <label for="mapRadiusInput">Search Radius (km)</label>
         <input type="number" id="mapRadiusInput" min="1" max="50" value="10" />
       </div>
-
       <button type="button" class="map-recommend-btn" id="recommendBtn">
         <i data-lucide="search"></i> Recommend Venues
       </button>
-
       <button type="button" class="map-recommend-btn" id="useMapCenterBtn" style="background:rgba(255,255,255,0.1);color:#fff;font-weight:700;">
         📍 Use Map Center
       </button>
-
       <div class="map-results" id="mapResults">
         <div class="map-results-empty">Tap the map, search, or hit "Recommend Venues" to see options here.</div>
       </div>
     </div>
-
-    <!-- Map -->
     <div style="position:relative; border-radius:12px; overflow:hidden; min-height:300px;">
       <div class="map-hint">📌 Tap anywhere or drag the marker to select a venue</div>
       <div id="venueMap"></div>
@@ -822,12 +948,23 @@ var sectionPositions = {};
 var currentEditingSection = 0;
 var levelColors = ["#22d3ee", "#facc15", "#a78bfa", "#fb7185", "#34d399", "#60a5fa", "#f97316", "#e879f9"];
 
+// New: Curved layout & aisle state
+var curvedMode = false;
+var curvedConfig = { centerX: 600, centerY: 400, radiusStart: 150, radiusStep: 22, arcAngle: 90 };
+var aisleEveryN = 0;
+var aisleWidth = 1;
+var seatExclusions = {}; // { sectionIndex: ["A-5", "B-8"] }
+
 // Map + Places state
 var map = null;
 var mapMarker = null;
 var mapMarkersList = [];
 var pendingPick = null;
 var placesKey = null;
+
+// Canvas rendering
+var fsCanvas = null;
+var fsCtx = null;
 
 // ===== EVENT TYPE → GOOGLE PLACES includedTypes MAPPING =====
 var EVENT_TYPE_TO_PLACES = {
@@ -841,7 +978,6 @@ var EVENT_TYPE_TO_PLACES = {
   "banquet":    ["banquet_hall", "restaurant", "event_venue"]
 };
 
-// ===== PRICE RANGE → GOOGLE PRICE LEVELS =====
 var PRICE_TO_LEVELS = {
   "any":     [],
   "budget":  ["PRICE_LEVEL_INEXPENSIVE", "PRICE_LEVEL_FREE"],
@@ -903,7 +1039,17 @@ document.addEventListener("DOMContentLoaded", function(){
   function calculateCapacity() {
     var sections = parseInt($("totalLevel1").value) || 0;
     var total = 0;
-    for (var s = 0; s < sections; s++) { var rows = getRowCount(s); for (var r = 0; r < rows; r++) total += getSeatsForRow(s, r); }
+    for (var s = 0; s < sections; s++) {
+      var rows = getRowCount(s);
+      for (var r = 0; r < rows; r++) {
+        var seatCount = getSeatsForRow(s, r);
+        // Subtract excluded seats
+        var exclusions = seatExclusions[s] || [];
+        var rowLabelStr = rowLabel(r);
+        var excludedInRow = exclusions.filter(function(ex) { return ex.startsWith(rowLabelStr + "-"); }).length;
+        total += Math.max(0, seatCount - excludedInRow);
+      }
+    }
     $("totalCapacity").value = total;
   }
 
@@ -1035,6 +1181,23 @@ document.addEventListener("DOMContentLoaded", function(){
     $("sectionRotationInput").value = pos.rotation;
     $("sectionScaleInput").value = pos.scale;
     $("sectionScaleBadge").textContent = pos.scale.toFixed(2) + "×";
+
+    // Curved mode
+    $("curvedModeToggle").checked = curvedMode;
+    $("curvedConfigPanel").style.display = curvedMode ? "block" : "none";
+    $("curveCenterX").value = curvedConfig.centerX;
+    $("curveCenterY").value = curvedConfig.centerY;
+    $("curveRadiusStart").value = curvedConfig.radiusStart;
+    $("curveRadiusStep").value = curvedConfig.radiusStep;
+    $("curveArcAngle").value = curvedConfig.arcAngle;
+
+    // Aisles
+    $("aisleEveryN").value = aisleEveryN;
+    $("aisleWidth").value = aisleWidth;
+
+    // Seat masking
+    var exclusions = seatExclusions[idx] || [];
+    $("seatMaskInput").value = exclusions.join("\n");
   }
 
   function rebuildRowOverrides() {
@@ -1083,7 +1246,22 @@ document.addEventListener("DOMContentLoaded", function(){
         var rl = document.createElement("div"); rl.className = "row-label"; rl.textContent = "Row " + rowLabel(r); rowEl.appendChild(rl);
         var seatsWrap = document.createElement("div"); seatsWrap.className = "row-seats";
         var inner = document.createElement("div"); inner.className = "row-seats-inner";
-        for (var s = 0; s < seatCount; s++) { var seat = document.createElement("div"); seat.className = "row-seat " + tier; seat.textContent = (s + 1); inner.appendChild(seat); }
+        var exclusions = seatExclusions[b] || [];
+        var rowLbl = rowLabel(r);
+        for (var s = 0; s < seatCount; s++) {
+          var seatKey = rowLbl + "-" + (s + 1);
+          if (exclusions.indexOf(seatKey) !== -1) {
+            var gap = document.createElement("div"); gap.className = "row-seat"; gap.style.background = "transparent"; gap.style.border = "1px dashed var(--border-2)"; gap.textContent = ""; inner.appendChild(gap);
+            continue;
+          }
+          var seat = document.createElement("div"); seat.className = "row-seat " + tier; seat.textContent = (s + 1); inner.appendChild(seat);
+          // Aisle injection
+          if (aisleEveryN > 0 && (s + 1) % aisleEveryN === 0 && s < seatCount - 1) {
+            for (var aw = 0; aw < aisleWidth; aw++) {
+              var aisleGap = document.createElement("div"); aisleGap.className = "row-seat"; aisleGap.style.background = "transparent"; aisleGap.style.border = "none"; aisleGap.style.width = "8px"; aisleGap.style.minWidth = "8px"; inner.appendChild(aisleGap);
+            }
+          }
+        }
         seatsWrap.appendChild(inner); rowEl.appendChild(seatsWrap);
         var tt = document.createElement("div"); tt.className = "row-tier-tag " + tier; tt.textContent = tierTagText(tier); rowEl.appendChild(tt);
         rowsStack.appendChild(rowEl);
@@ -1100,7 +1278,7 @@ document.addEventListener("DOMContentLoaded", function(){
     renderStandardLayout(container, Math.min(l1, 8));
   }
 
-  // ===== FULL SCREEN =====
+  // ===== FULL SCREEN (CANVAS RENDERING) =====
   function rebuildLevelPills() {
     var bar = $("fsLevelBar"); bar.innerHTML = "";
     var label = document.createElement("span"); label.textContent = "Levels:"; label.style.opacity = "0.7"; label.style.fontWeight = "700"; bar.appendChild(label);
@@ -1113,64 +1291,163 @@ document.addEventListener("DOMContentLoaded", function(){
     });
   }
 
-  function buildFSSection(sectionIdx) {
-    var rowCount = getRowCount(sectionIdx);
-    var map_ = buildRowTierMap(rowCount, sectionIdx);
-    var pos = getSectionPos(sectionIdx);
-    var lv = levels.find(function(x){return x.id === pos.levelId;});
-    var stageName = ($("stageName").value || "STAGE").trim().toUpperCase();
-    var el = document.createElement("div"); el.className = "fs-section"; el.dataset.section = sectionIdx;
-    var title = document.createElement("div"); title.className = "fs-section-title"; title.textContent = getSectionName(sectionIdx); el.appendChild(title);
-    var loc = document.createElement("div"); loc.className = "fs-section-location";
-    loc.textContent = (lv ? lv.name.toUpperCase() : "—") + " · " + rowCount + " rows";
-    if (lv) loc.style.color = lv.color;
-    el.appendChild(loc);
-    var stage = document.createElement("div"); stage.className = "fs-section-stage"; stage.textContent = stageName; el.appendChild(stage);
-    var rowsArea = document.createElement("div"); rowsArea.className = "fs-rows-area";
-    for (var r = 0; r < rowCount; r++) {
-      var tier = map_[r] || "cyan";
-      var seatCount = Math.max(4, Math.min(90, getSeatsForRow(sectionIdx, r)));
-      var rowEl = document.createElement("div"); rowEl.className = "fs-row";
-      var rl = document.createElement("div"); rl.className = "fs-row-label"; rl.textContent = "Row " + rowLabel(r); rowEl.appendChild(rl);
-      var seatsWrap = document.createElement("div"); seatsWrap.className = "fs-row-seats";
-      for (var s = 0; s < seatCount; s++) { var seat = document.createElement("div"); seat.className = "fs-seat " + tier; seat.textContent = (s + 1); seatsWrap.appendChild(seat); }
-      rowEl.appendChild(seatsWrap);
-      var tt = document.createElement("div"); tt.className = "fs-tier-tag " + tier; tt.textContent = tierTagText(tier); rowEl.appendChild(tt);
-      rowsArea.appendChild(rowEl);
-    }
-    el.appendChild(rowsArea);
-    el.style.transformOrigin = "center center";
-    el.style.transform = "rotate(" + (pos.rotation||0) + "deg) scale(" + (pos.scale||1) + ")";
-    el.style.left = pos.x + "px"; el.style.top = pos.y + "px";
-    return el;
-  }
+  function renderFullscreenCanvas() {
+    if (!fsCanvas || !fsCtx) return;
+    var canvas = fsCanvas;
+    var ctx = fsCtx;
+    canvas.width = canvasWidth;
+    canvas.height = canvasHeight;
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  function renderFullscreen() {
-    var canvas = $("fsCanvas");
-    canvas.querySelectorAll(".fs-section").forEach(function(el) { el.remove(); });
-    canvas.style.width = canvasWidth + "px"; canvas.style.height = canvasHeight + "px";
-    canvas.style.setProperty("--grid-size", gridSize + "px");
-    canvas.className = "fs-canvas" + ((devMode && showGrid) ? " show-grid" : "");
+    // Draw grid if dev mode and showGrid
+    if (devMode && showGrid) {
+      ctx.strokeStyle = "rgba(34,211,238,0.12)";
+      ctx.lineWidth = 1;
+      for (var x = 0; x <= canvas.width; x += gridSize) {
+        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
+      }
+      for (var y = 0; y <= canvas.height; y += gridSize) {
+        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
+      }
+    }
+
+    // Draw stage
     var stageName = ($("stageName").value || "STAGE").trim().toUpperCase();
-    var sm = $("fsStageMarker"); sm.textContent = stageName;
-    sm.style.left = stage.x + "px"; sm.style.top = stage.y + "px";
-    sm.style.width = stage.width + "px"; sm.style.height = stage.height + "px";
-    $("fsStageName").textContent = stageName;
+    ctx.fillStyle = "#1e2f4d";
+    ctx.fillRect(stage.x, stage.y, stage.width, stage.height);
+    ctx.fillStyle = "#ffffff";
+    ctx.font = "bold 14px Inter, sans-serif";
+    ctx.textAlign = "center";
+    ctx.textBaseline = "middle";
+    ctx.fillText(stageName, stage.x + stage.width / 2, stage.y + stage.height / 2);
+
     var sections = parseInt($("totalLevel1").value) || 0;
     var anyVisible = false;
+
     for (var i = 0; i < sections; i++) {
       var pos = getSectionPos(i);
       var lv = levels.find(function(x){return x.id === pos.levelId;});
       if (devMode && lv && !lv.visible) continue;
       anyVisible = true;
-      canvas.appendChild(buildFSSection(i));
+
+      var rowCount = getRowCount(i);
+      var map_ = buildRowTierMap(rowCount, i);
+      var exclusions = seatExclusions[i] || [];
+
+      ctx.save();
+      ctx.translate(pos.x, pos.y);
+      ctx.rotate((pos.rotation || 0) * Math.PI / 180);
+      ctx.scale(pos.scale || 1, pos.scale || 1);
+
+      // Section background
+      var maxSeats = 0;
+      for (var r = 0; r < rowCount; r++) { maxSeats = Math.max(maxSeats, getSeatsForRow(i, r)); }
+      var sectionW = maxSeats * 16 + 40;
+      var sectionH = rowCount * 18 + 50;
+      ctx.fillStyle = "#ffffff";
+      ctx.strokeStyle = "#e4e9f0";
+      ctx.lineWidth = 2;
+      ctx.beginPath();
+      ctx.roundRect(0, 0, sectionW, sectionH, 10);
+      ctx.fill();
+      ctx.stroke();
+
+      // Section title
+      ctx.fillStyle = "#0e7490";
+      ctx.font = "bold 11px Inter, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "top";
+      ctx.fillText(getSectionName(i), sectionW / 2, 6);
+
+      // Level name
+      if (lv) {
+        ctx.fillStyle = lv.color;
+        ctx.font = "bold 8px Inter, sans-serif";
+        ctx.fillText(lv.name.toUpperCase() + " · " + rowCount + " ROWS", sectionW / 2, 20);
+      }
+
+      // Stage line
+      ctx.fillStyle = "#1e2f4d";
+      ctx.fillRect(10, 32, sectionW - 20, 12);
+      ctx.fillStyle = "#ffffff";
+      ctx.font = "bold 7px Inter, sans-serif";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
+      ctx.fillText(stageName, sectionW / 2, 38);
+
+      // Draw rows
+      var tierColors = {
+        black: { bg: "#1a202c", fg: "#ffffff" },
+        gold: { bg: "#ecc94b", fg: "#744210" },
+        silver: { bg: "#cbd5e1", fg: "#4a5568" },
+        cyan: { bg: "#22d3ee", fg: "#04161c" }
+      };
+
+      for (var r = 0; r < rowCount; r++) {
+        var tier = map_[r] || "cyan";
+        var seatCount = Math.max(4, Math.min(90, getSeatsForRow(i, r)));
+        var rowLbl = rowLabel(r);
+        var yPos = 52 + r * 18;
+
+        // Row label
+        ctx.fillStyle = "#6b7787";
+        ctx.font = "bold 7px Inter, sans-serif";
+        ctx.textAlign = "right";
+        ctx.textBaseline = "middle";
+        ctx.fillText(rowLbl, 30, yPos + 6);
+
+        // Draw seats
+        for (var s = 0; s < seatCount; s++) {
+          var seatKey = rowLbl + "-" + (s + 1);
+          if (exclusions.indexOf(seatKey) !== -1) continue;
+
+          // Aisle gap
+          if (aisleEveryN > 0 && s > 0 && s % aisleEveryN === 0) {
+            // Skip this seat position for aisle
+          }
+
+          var xPos = 38 + s * 16;
+          var c = tierColors[tier] || tierColors.cyan;
+          ctx.fillStyle = c.bg;
+          ctx.beginPath();
+          ctx.roundRect(xPos, yPos, 12, 12, 2);
+          ctx.fill();
+
+          ctx.fillStyle = c.fg;
+          ctx.font = "bold 6px Inter, sans-serif";
+          ctx.textAlign = "center";
+          ctx.textBaseline = "middle";
+          ctx.fillText(s + 1, xPos + 6, yPos + 6);
+        }
+
+        // Tier tag
+        ctx.fillStyle = tier === "black" ? "#1a202c" : (tier === "gold" ? "#92700c" : (tier === "silver" ? "#4a5568" : "#0e7490"));
+        ctx.font = "bold 6px Inter, sans-serif";
+        ctx.textAlign = "left";
+        ctx.textBaseline = "middle";
+        ctx.fillText(tierTagText(tier).toUpperCase(), 38 + seatCount * 16 + 6, yPos + 6);
+      }
+
+      ctx.restore();
     }
+
     $("fsEmptyHint").style.display = anyVisible ? "none" : "block";
     if (devMode) rebuildLevelPills(); else $("fsLevelBar").innerHTML = "";
+  }
+
+  function renderFullscreen() {
+    if (!fsCanvas || !fsCtx) {
+      fsCanvas = $("fsCanvasCanvas");
+      if (fsCanvas) fsCtx = fsCanvas.getContext("2d");
+    }
+    if (fsCanvas && fsCtx) {
+      renderFullscreenCanvas();
+    }
+    // Also update DOM-based preview
     if(window.lucide) lucide.createIcons();
   }
 
-  // ===== MAP PICKER (with Google Places recommendations) =====
+  // ===== MAP PICKER =====
   function initMap() {
     if (map) return;
     map = L.map("venueMap", { zoomControl: true }).setView([-30.5595, 22.9375], 5);
@@ -1242,7 +1519,6 @@ document.addEventListener("DOMContentLoaded", function(){
       .catch(function(err){ console.error(err); updateMapInfo("Search failed. Please try again."); });
   }
 
-  // ===== GOOGLE PLACES API (NEW) — searchNearby =====
   async function recommendVenues() {
     if (!placesKey) {
       showToast("Set your Google Places API key first", "error", 4000);
@@ -1264,7 +1540,6 @@ document.addEventListener("DOMContentLoaded", function(){
     resultsBox.innerHTML = '<div class="map-results-empty">🔍 Searching nearby venues…</div>';
     $("recommendBtn").disabled = true;
 
-    // Clear previous recommendation markers (keep the selected-pin marker)
     mapMarkersList.forEach(function(m){ map.removeLayer(m); });
     mapMarkersList = [];
 
@@ -1315,15 +1590,13 @@ document.addEventListener("DOMContentLoaded", function(){
       var data = await res.json();
       var places = (data.places || []);
 
-      // Filter by price level if requested
       if (wantedPriceLevels.length > 0) {
         places = places.filter(function(p) {
-          if (!p.priceLevel) return true; // If no price data, include it
+          if (!p.priceLevel) return true;
           return wantedPriceLevels.indexOf(p.priceLevel) !== -1;
         });
       }
 
-      // Sort by rating desc
       places.sort(function(a, b) {
         var ra = a.rating || 0, rb = b.rating || 0;
         return rb - ra;
@@ -1362,7 +1635,6 @@ document.addEventListener("DOMContentLoaded", function(){
     var box = $("mapResults");
     box.innerHTML = "";
 
-    // Add bounding to fit all markers
     var bounds = L.latLngBounds();
     var hasLoc = false;
 
@@ -1373,7 +1645,6 @@ document.addEventListener("DOMContentLoaded", function(){
       hasLoc = true;
       bounds.extend([lat, lng]);
 
-      // Add marker
       var m = L.marker([lat, lng]).addTo(map);
       var popupHtml = '<b>' + escapeHtml(p.displayName ? p.displayName.text : "Venue") + '</b>';
       if (p.formattedAddress) popupHtml += '<br>' + escapeHtml(p.formattedAddress);
@@ -1381,7 +1652,6 @@ document.addEventListener("DOMContentLoaded", function(){
       m._place = p;
       mapMarkersList.push(m);
 
-      // Add list item
       var item = document.createElement("div");
       item.className = "map-result-item";
       var name = p.displayName ? p.displayName.text : "Venue";
@@ -1400,15 +1670,12 @@ document.addEventListener("DOMContentLoaded", function(){
         '</div>';
 
       item.addEventListener("click", function() {
-        // Highlight this item
         box.querySelectorAll(".map-result-item").forEach(function(x){ x.classList.remove("selected"); });
         item.classList.add("selected");
 
-        // Fly to marker
         map.setView([lat, lng], 17);
         m.openPopup();
 
-        // Set pending pick
         pendingPick = {
           lat: lat,
           lng: lng,
@@ -1432,7 +1699,6 @@ document.addEventListener("DOMContentLoaded", function(){
 
   function extractCityFromAddress(addr) {
     if (!addr) return "";
-    // Very naive: assume comma-separated, take 2nd or 3rd token
     var parts = addr.split(",").map(function(s){ return s.trim(); });
     if (parts.length >= 3) return parts[1] || parts[0];
     return parts[0] || "";
@@ -1442,7 +1708,6 @@ document.addEventListener("DOMContentLoaded", function(){
     $("mapOverlay").classList.add("open");
     document.body.style.overflow = "hidden";
     refreshApiHint();
-    // Sync form event type / price range to map defaults
     $("mapEventType").value = $("eventType").value || "general";
     $("mapPriceRange").value = $("priceRange").value || "any";
 
@@ -1492,11 +1757,17 @@ document.addEventListener("DOMContentLoaded", function(){
       var pos = getSectionPos(s);
       var lv = levels.find(function(x){return x.id === pos.levelId;});
       var rows = [];
+      var exclusions = seatExclusions[s] || [];
       for (var r = 0; r < rowCount; r++) {
         var seats = [];
         var seatCount = getSeatsForRow(s, r);
-        for (var i = 0; i < seatCount; i++) seats.push({ seat: i + 1, tier: map_[r] });
-        rows.push({ row: rowLabel(r), seats: seats });
+        var rowLbl = rowLabel(r);
+        for (var i = 0; i < seatCount; i++) {
+          var seatKey = rowLbl + "-" + (i + 1);
+          if (exclusions.indexOf(seatKey) !== -1) continue;
+          seats.push({ seat: i + 1, tier: map_[r] });
+        }
+        rows.push({ row: rowLbl, seats: seats });
       }
       sections.push({ name: getSectionName(s), level: (devMode && lv) ? lv.name : null, x: pos.x, y: pos.y, scale: pos.scale, rotation: pos.rotation, tierOverride: getSectionTierOverride(s), rowCount: rowCount, rows: rows });
     }
@@ -1512,7 +1783,12 @@ document.addEventListener("DOMContentLoaded", function(){
       sections: buildSectionsData(),
       venueCoords: venueCoords,
       eventType: $("eventType").value,
-      priceRange: $("priceRange").value
+      priceRange: $("priceRange").value,
+      curvedMode: curvedMode,
+      curvedConfig: curvedConfig,
+      aisleEveryN: aisleEveryN,
+      aisleWidth: aisleWidth,
+      seatExclusions: seatExclusions
     };
   }
 
@@ -1606,7 +1882,41 @@ document.addEventListener("DOMContentLoaded", function(){
   $("sectionRotationInput").addEventListener("input", function() { setSectionPos(currentEditingSection, "rotation", parseInt(this.value)||0); renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
   $("sectionScaleInput").addEventListener("input", function() { var v = parseFloat(this.value) || 1; setSectionPos(currentEditingSection, "scale", v); $("sectionScaleBadge").textContent = v.toFixed(2) + "×"; renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
 
-  $("openFullscreen").addEventListener("click", function() { $("fullscreenOverlay").classList.add("open"); document.body.style.overflow = "hidden"; renderFullscreen(); });
+  // Curved mode wiring
+  $("curvedModeToggle").addEventListener("change", function() {
+    curvedMode = this.checked;
+    $("curvedConfigPanel").style.display = curvedMode ? "block" : "none";
+    renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+  });
+  ["curveCenterX","curveCenterY","curveRadiusStart","curveRadiusStep","curveArcAngle"].forEach(function(id) {
+    $(id).addEventListener("input", function() {
+      curvedConfig.centerX = parseInt($("curveCenterX").value) || 600;
+      curvedConfig.centerY = parseInt($("curveCenterY").value) || 400;
+      curvedConfig.radiusStart = parseInt($("curveRadiusStart").value) || 150;
+      curvedConfig.radiusStep = parseInt($("curveRadiusStep").value) || 22;
+      curvedConfig.arcAngle = parseInt($("curveArcAngle").value) || 90;
+      renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+    });
+  });
+
+  // Aisle wiring
+  $("aisleEveryN").addEventListener("input", function() { aisleEveryN = Math.max(0, parseInt(this.value) || 0); renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
+  $("aisleWidth").addEventListener("input", function() { aisleWidth = Math.max(1, Math.min(5, parseInt(this.value) || 1)); renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
+
+  // Seat masking wiring
+  $("seatMaskInput").addEventListener("input", function() {
+    var lines = this.value.split("\n").map(function(s){ return s.trim(); }).filter(function(s){ return s.length > 0; });
+    seatExclusions[currentEditingSection] = lines;
+    calculateCapacity(); renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+  });
+
+  $("openFullscreen").addEventListener("click", function() {
+    $("fullscreenOverlay").classList.add("open");
+    document.body.style.overflow = "hidden";
+    fsCanvas = $("fsCanvasCanvas");
+    if (fsCanvas) fsCtx = fsCanvas.getContext("2d");
+    renderFullscreen();
+  });
   $("closeFullscreen").addEventListener("click", function() { $("fullscreenOverlay").classList.remove("open"); document.body.style.overflow = ""; });
   $("fsToggleGrid").addEventListener("click", function() { showGrid = !showGrid; this.classList.toggle("active", showGrid); renderFullscreen(); });
   $("fsResetView").addEventListener("click", function() { if (!confirm("Reset all section positions, scales and rotations?")) return; sectionPositions = {}; renderSeatingPlan(); renderFullscreen(); refreshSectionInputs(); });
@@ -1614,7 +1924,7 @@ document.addEventListener("DOMContentLoaded", function(){
   $("clearAllOverrides").addEventListener("click", function() {
     if (!confirm("Clear all section overrides and reset positions?")) return;
     sectionRowOverrides = {}; sectionRowCounts = {}; sectionNames = {};
-    sectionTierOverrides = {}; sectionPositions = {};
+    sectionTierOverrides = {}; sectionPositions = {}; seatExclusions = {};
     levels = [{ id: 0, name: "Ground Floor", color: "#22d3ee", visible: true }];
     nextLevelId = 1; currentEditingSection = 0;
     rebuildLevelsList(); rebuildLevelSelect();
@@ -1631,7 +1941,6 @@ document.addEventListener("DOMContentLoaded", function(){
   $("recommendBtn").addEventListener("click", recommendVenues);
   $("useMapCenterBtn").addEventListener("click", function() {
     if (!map) return;
-    var c = map.getCenter();
     showToast("Searching around map center", "info", 1500);
     recommendVenues();
   });
@@ -1674,9 +1983,13 @@ document.addEventListener("DOMContentLoaded", function(){
   // ===== INIT =====
   rebuildLevelsList(); rebuildLevelSelect(); rebuildSectionTabs(); refreshSectionInputs();
   rebuildRowOverrides(); calculateCapacity(); updateTicketPreview(); renderSeatingPlan(); updateTierSummary();
+
+  // Initialize canvas
+  fsCanvas = $("fsCanvasCanvas");
+  if (fsCanvas) fsCtx = fsCanvas.getContext("2d");
 });
 
 })();
 </script>
 </body>
-                                                                             </html>
+            </html>
