@@ -139,6 +139,7 @@ h3{font-size:1.2rem}
 .carousel-dot:hover:not(.active){background:rgba(255,255,255,0.6);transform:scale(1.2)}
 
 @keyframes carouselZoom { from { transform: scale(1); } to { transform: scale(1.08); } }
+@keyframes fadeUp { from { opacity:0; transform: translateY(20px); } to { opacity:1; transform: translateY(0); } }
 
 .section{padding:48px 0}
 @media (min-width:1024px){.section{padding:60px 0}}
@@ -800,31 +801,20 @@ h3{font-size:1.2rem}
 
 <div class="toast" id="toast"></div>
 
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
-
 <script>
 (function(){
 'use strict';
 
-/* ============ NEW NOVA FIREBASE CONFIG ============ */
-var FIREBASE = {
-  apiKey: "AIzaSyBsS6MQm7S3d1AWK1lNs6OjKKYwOJd1x9Q",
-  authDomain: "nova-94010.firebaseapp.com",
-  projectId: "nova-94010",
-  storageBucket: "nova-94010.firebasestorage.app",
-  messagingSenderId: "688687224553",
-  appId: "1:688687224553:web:03d69511d28e672baac278"
-};
+/* ============================================================
+   PURE FRONT-END BUILD
+   No Firebase, no backend, no network calls.
+   Accounts + session are stored in localStorage.
+   Events below are static demo data.
+   ============================================================ */
 
-var auth = null, db = null, fbReady = false;
-try {
-  if (!firebase.apps.length) firebase.initializeApp(FIREBASE);
-  auth = firebase.auth();
-  db = firebase.firestore();
-  fbReady = true;
-} catch(e){ console.error("Firebase init failed", e); }
+var SESSION_KEY = "novalink_session";
+var USERS_KEY   = "novalink_users";
+var ADMIN_EMAILS = ["admin@novalink.co.za"];
 
 var currentUser = null;
 var isAdmin = false;
@@ -832,15 +822,77 @@ var authMode = "signin";
 var carouselTimer = null;
 var carouselIndex = 0;
 
+/* ---------- Static demo event data ---------- */
+var DEMO_EVENTS = [
+  {
+    id: "demo-1",
+    eventName: "Sunset Rooftop Sessions",
+    startDate: "2025-12-06",
+    startTime: "18:00",
+    city: "Johannesburg",
+    cost: "R150",
+    totalAttendees: 220
+  },
+  {
+    id: "demo-2",
+    eventName: "Cape Town Jazz Gala",
+    startDate: "2025-12-13",
+    startTime: "19:30",
+    city: "Cape Town",
+    cost: "R450",
+    totalAttendees: 480
+  },
+  {
+    id: "demo-3",
+    eventName: "Durban Beach Festival",
+    startDate: "2026-01-10",
+    startTime: "12:00",
+    city: "Durban",
+    cost: "R250",
+    totalAttendees: 1200
+  },
+  {
+    id: "demo-4",
+    eventName: "Pretoria Tech Conference",
+    startDate: "2026-02-21",
+    startTime: "08:30",
+    city: "Pretoria",
+    cost: "Free",
+    totalAttendees: 350
+  },
+  {
+    id: "demo-5",
+    eventName: "Winelands Food & Wine Fair",
+    startDate: "2026-03-14",
+    startTime: "11:00",
+    city: "Stellenbosch",
+    cost: "R320",
+    totalAttendees: 800
+  },
+  {
+    id: "demo-6",
+    eventName: "Soweto Marathon Expo",
+    startDate: "2026-04-05",
+    startTime: "07:00",
+    city: "Soweto",
+    cost: "R100",
+    totalAttendees: 2500
+  }
+];
+
+/* ---------- Helpers ---------- */
 function $(id){ return document.getElementById(id); }
 function icon(n){ return '<i data-lucide="'+n+'"></i>'; }
 function refreshIcons(){ if(window.lucide) lucide.createIcons(); }
 function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function uid(){ return "u_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
+
 function initialsFrom(name,email){
   if(name && name.trim()){ var p = name.trim().split(/\s+/); if(p.length>=2) return (p[0][0]+p[1][0]).toUpperCase(); return p[0].slice(0,2).toUpperCase(); }
   if(email) return email.slice(0,2).toUpperCase();
   return "??";
 }
+
 function showToast(msg,type,ms){
   type = type || "info"; ms = ms || 3000;
   var t = $("toast");
@@ -853,9 +905,91 @@ function showToast(msg,type,ms){
   showToast._t = setTimeout(function(){ t.classList.remove("show"); }, ms);
 }
 
+/* ---------- Local "database" ---------- */
+function getUsers(){
+  try { return JSON.parse(localStorage.getItem(USERS_KEY) || "[]"); }
+  catch(e){ return []; }
+}
+function saveUsers(list){
+  try { localStorage.setItem(USERS_KEY, JSON.stringify(list)); } catch(e){}
+}
+function findUserByEmail(email){
+  email = String(email || "").toLowerCase();
+  var users = getUsers();
+  for(var i=0;i<users.length;i++){ if(users[i].email.toLowerCase() === email) return users[i]; }
+  return null;
+}
+function saveSession(u){
+  try {
+    if(u) localStorage.setItem(SESSION_KEY, JSON.stringify({ uid: u.uid, email: u.email }));
+    else localStorage.removeItem(SESSION_KEY);
+  } catch(e){}
+}
+function readSession(){
+  try { return JSON.parse(localStorage.getItem(SESSION_KEY) || "null"); }
+  catch(e){ return null; }
+}
+
+/* ---------- Auth actions ---------- */
+function signUp(name, email, password){
+  if(findUserByEmail(email)) throw new Error("An account with that email already exists.");
+  var users = getUsers();
+  var user = {
+    uid: uid(),
+    name: name || email.split("@")[0],
+    email: email,
+    password: password,
+    createdAt: new Date().toISOString()
+  };
+  users.push(user);
+  saveUsers(users);
+  return user;
+}
+function signIn(email, password){
+  var user = findUserByEmail(email);
+  if(!user) throw new Error("No account found with that email.");
+  if(user.password !== password) throw new Error("Incorrect password.");
+  return user;
+}
+function signOutUser(){ currentUser = null; isAdmin = false; saveSession(null); applyAuthState(null); }
+function deleteUserAccount(u){
+  var users = getUsers().filter(function(x){ return x.uid !== u.uid; });
+  saveUsers(users);
+  saveSession(null);
+}
+
+/* ---------- UI state ---------- */
+function applyAuthState(user){
+  currentUser = user;
+  isAdmin = !!(user && ADMIN_EMAILS.indexOf(String(user.email).toLowerCase()) !== -1);
+
+  if(user){
+    var display = user.name || user.email.split("@")[0];
+    $("signInBtn").style.display = "none";
+    $("userMenuBtn").style.display = "inline-flex";
+    $("userName").textContent = display;
+    $("userAvatar").textContent = initialsFrom(user.name, user.email);
+    $("ddName").textContent = display;
+    $("ddEmail").textContent = user.email;
+    $("adminBadge").style.display = isAdmin ? "inline-block" : "none";
+    $("ddAdminBadge").style.display = isAdmin ? "inline-block" : "none";
+  } else {
+    $("signInBtn").style.display = "inline-flex";
+    $("userMenuBtn").style.display = "none";
+    $("adminBadge").style.display = "none";
+    $("ddAdminBadge").style.display = "none";
+    $("userDropdown").classList.remove("open");
+  }
+  refreshIcons();
+}
+
+/* ---------- Scroll reveal ---------- */
 function initScrollReveal() {
   var reveals = document.querySelectorAll(".reveal");
-  if (!reveals.length) return;
+  if (!reveals.length || !("IntersectionObserver" in window)) {
+    reveals.forEach(function(el){ el.classList.add("active"); });
+    return;
+  }
   var observer = new IntersectionObserver(function(entries) {
     entries.forEach(function(entry) {
       if (entry.isIntersecting) {
@@ -883,21 +1017,20 @@ function startCarousel(){
     slides.forEach(function(s, i){ s.classList.toggle("active", i === idx); });
     dots.forEach(function(d, i){ d.classList.toggle("active", i === idx); });
   }
+  function restart(){
+    if(carouselTimer) clearInterval(carouselTimer);
+    carouselTimer = setInterval(function(){
+      carouselIndex = (carouselIndex + 1) % slides.length;
+      show(carouselIndex);
+    }, 6000);
+  }
   dots.forEach(function(dot){
     dot.addEventListener("click", function(){
       show(parseInt(dot.dataset.slide, 10));
-      if(carouselTimer) clearInterval(carouselTimer);
-      carouselTimer = setInterval(function(){
-        carouselIndex = (carouselIndex + 1) % slides.length;
-        show(carouselIndex);
-      }, 6000);
+      restart();
     });
   });
-  if(carouselTimer) clearInterval(carouselTimer);
-  carouselTimer = setInterval(function(){
-    carouselIndex = (carouselIndex + 1) % slides.length;
-    show(carouselIndex);
-  }, 6000);
+  restart();
 }
 
 function initTabs(){
@@ -922,80 +1055,63 @@ function initTabs(){
   });
 }
 
-/* ============ LOAD FEATURED EVENTS FROM FIRESTORE ============ */
+/* ---------- Featured events (static demo data) ---------- */
 function loadFeaturedEvents() {
-  var container = document.getElementById("eventsScroll");
+  var container = $("eventsScroll");
   if (!container) return;
 
-  if (!db) {
-    container.innerHTML = '<p style="color: var(--text-muted); padding: 20px; font-size: 14px;">Firebase not connected.</p>';
+  container.innerHTML = "";
+
+  if (!DEMO_EVENTS.length) {
+    container.innerHTML = '<p style="color: var(--text-muted); padding: 20px; font-size: 14px;">No events yet. Be the first to create one!</p>';
     return;
   }
 
-  container.innerHTML = '<p style="color: var(--text-muted); padding: 20px; font-size: 14px;">Loading events…</p>';
+  var gradients = [
+    "linear-gradient(135deg, #22d3ee 0%, #0891b2 100%)",
+    "linear-gradient(135deg, #facc15 0%, #eab308 100%)",
+    "linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%)",
+    "linear-gradient(135deg, #fb7185 0%, #e11d48 100%)",
+    "linear-gradient(135deg, #34d399 0%, #059669 100%)"
+  ];
 
-  db.collection("events")
-    .orderBy("createdAt", "desc")
-    .limit(20)
-    .get()
-    .then(function(snapshot) {
-      container.innerHTML = "";
+  DEMO_EVENTS.forEach(function(e, idx) {
+    var card = document.createElement("div");
+    card.className = "event-card";
+    card.style.cursor = "pointer";
 
-      if (snapshot.empty) {
-        container.innerHTML = '<p style="color: var(--text-muted); padding: 20px; font-size: 14px;">No events yet. Be the first to create one!</p>';
-        return;
-      }
+    var gradient = gradients[idx % gradients.length];
 
-      snapshot.forEach(function(doc) {
-        var e = doc.data();
-        var card = document.createElement("div");
-        card.className = "event-card";
-        card.style.cursor = "pointer";
+    var dateStr = e.startDate || "";
+    if (e.startTime) dateStr += " · " + e.startTime;
+    var location = e.city || "Venue";
+    var costStr = e.cost || "Free";
+    var eventName = e.eventName || "Untitled Event";
+    var seats = e.totalAttendees || 0;
 
-        var gradients = [
-          "linear-gradient(135deg, #22d3ee 0%, #0891b2 100%)",
-          "linear-gradient(135deg, #facc15 0%, #eab308 100%)",
-          "linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%)",
-          "linear-gradient(135deg, #fb7185 0%, #e11d48 100%)",
-          "linear-gradient(135deg, #34d399 0%, #059669 100%)"
-        ];
-        var gradient = gradients[doc.id.charCodeAt(0) % gradients.length];
+    card.innerHTML =
+      '<div class="event-card-img" style="background:' + gradient + '">' +
+        '<span class="event-card-badge">EVENT</span>' +
+      '</div>' +
+      '<div class="event-card-body">' +
+        '<h3>' + esc(eventName) + '</h3>' +
+        '<div class="event-card-meta">' + icon("calendar") + ' ' + esc(dateStr) + '</div>' +
+        '<div class="event-card-meta">' + icon("map-pin") + ' ' + esc(location) + '</div>' +
+        '<div class="event-card-meta">' + icon("users") + ' ' + seats + ' seats</div>' +
+        '<div class="event-card-price">From <span>' + esc(costStr) + '</span></div>' +
+      '</div>';
 
-        var dateStr = e.startDate || "";
-        if (e.startTime) dateStr += " · " + e.startTime;
-        var location = e.city || e.venueAddress || "Venue";
-        var costStr = e.cost || "Free";
-        var eventName = e.eventName || "Untitled Event";
-        var seats = e.totalAttendees || 0;
-
-        card.innerHTML =
-          '<div class="event-card-img" style="background:' + gradient + '">' +
-            '<span class="event-card-badge">EVENT</span>' +
-          '</div>' +
-          '<div class="event-card-body">' +
-            '<h3>' + esc(eventName) + '</h3>' +
-            '<div class="event-card-meta"><i data-lucide="calendar"></i> ' + esc(dateStr) + '</div>' +
-            '<div class="event-card-meta"><i data-lucide="map-pin"></i> ' + esc(location) + '</div>' +
-            '<div class="event-card-meta"><i data-lucide="users"></i> ' + seats + ' seats</div>' +
-            '<div class="event-card-price">From <span>' + esc(costStr) + '</span></div>' +
-          '</div>';
-
-        card.addEventListener("click", function() {
-          window.location.href = "view-event.html?id=" + doc.id;
-        });
-
-        container.appendChild(card);
-      });
-
-      refreshIcons();
-    })
-    .catch(function(err) {
-      console.error("Failed to load events:", err);
-      container.innerHTML = '<p style="color: var(--text-muted); padding: 20px; font-size: 14px;">Could not load events. Please try again later.</p>';
+    card.addEventListener("click", function() {
+      window.location.href = "view-event.html?id=" + encodeURIComponent(e.id);
     });
+
+    container.appendChild(card);
+  });
+
+  refreshIcons();
 }
 
-/* ============ AUTH HANDLERS ============ */
+/* ---------- Modal wiring ---------- */
 $("signInBtn").addEventListener("click", function(){ $("authModal").classList.add("open"); document.body.style.overflow = "hidden"; });
 $("authClose").addEventListener("click", function(){ $("authModal").classList.remove("open"); document.body.style.overflow = ""; });
 $("authModal").addEventListener("click", function(e){ if(e.target === this) { this.classList.remove("open"); document.body.style.overflow = ""; } });
@@ -1005,132 +1121,164 @@ document.querySelectorAll(".auth-tab").forEach(function(tab){
     authMode = tab.dataset.mode;
     document.querySelectorAll(".auth-tab").forEach(function(t){ t.classList.toggle("active", t === tab); });
     if(authMode === "signup"){
-      $("authTitle").textContent = "Create account"; $("authSubtitle").textContent = "Join Novalink to start ticketing.";
-      $("nameGroup").style.display = "block"; $("authSubmit").innerHTML = icon("user-plus") + " Create account"; $("authPassword").autocomplete = "new-password";
+      $("authTitle").textContent = "Create account";
+      $("authSubtitle").textContent = "Join Novalink to start ticketing.";
+      $("nameGroup").style.display = "block";
+      $("authSubmit").innerHTML = icon("user-plus") + " Create account";
+      $("authPassword").autocomplete = "new-password";
     } else {
-      $("authTitle").textContent = "Welcome back"; $("authSubtitle").textContent = "Sign in to continue.";
-      $("nameGroup").style.display = "none"; $("authSubmit").innerHTML = icon("log-in") + " Sign in"; $("authPassword").autocomplete = "current-password";
+      $("authTitle").textContent = "Welcome back";
+      $("authSubtitle").textContent = "Sign in to continue.";
+      $("nameGroup").style.display = "none";
+      $("authSubmit").innerHTML = icon("log-in") + " Sign in";
+      $("authPassword").autocomplete = "current-password";
     }
     refreshIcons();
   });
 });
 
-$("authForm").addEventListener("submit", async function(e){
+$("authForm").addEventListener("submit", function(e){
   e.preventDefault();
-  var email = $("authEmail").value.trim(); var password = $("authPassword").value; var name = $("authName").value.trim();
+  var email = $("authEmail").value.trim();
+  var password = $("authPassword").value;
+  var name = $("authName").value.trim();
+
   if(!email || !password) { showToast("Please fill in all fields", "error"); return; }
-  $("authSubmit").disabled = true; $("authSubmit").innerHTML = '<span class="spinner"></span> Processing...';
-  try {
-    if(authMode === "signup"){
-      var cred = await auth.createUserWithEmailAndPassword(email, password);
-      if(name) await cred.user.updateProfile({ displayName: name });
-      await db.collection("users").doc(cred.user.uid).set({
-        name: name || email.split("@")[0],
-        email: email,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-      showToast("Account created successfully", "success");
-    } else {
-      await auth.signInWithEmailAndPassword(email, password);
-      showToast("Signed in successfully", "success");
-    }
-    $("authModal").classList.remove("open"); document.body.style.overflow = "";
-  } catch(err){
-    console.error(err); showToast(err.message, "error");
-  } finally {
-    $("authSubmit").disabled = false;
-    if(authMode === "signup") $("authSubmit").innerHTML = icon("user-plus") + " Create account"; else $("authSubmit").innerHTML = icon("log-in") + " Sign in";
-    refreshIcons();
-  }
-});
+  if(authMode === "signup" && password.length < 6){ showToast("Password must be at least 6 characters", "error"); return; }
 
-$("googleBtn").addEventListener("click", async function(){
-  var provider = new firebase.auth.GoogleAuthProvider();
-  try {
-    var result = await auth.signInWithPopup(provider);
-    var user = result.user;
-    var docRef = db.collection("users").doc(user.uid); var doc = await docRef.get();
-    if(!doc.exists){
-      await docRef.set({
-        name: user.displayName || user.email.split("@")[0],
-        email: user.email,
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      });
-    }
-    showToast("Signed in with Google", "success");
-    $("authModal").classList.remove("open"); document.body.style.overflow = "";
-  } catch(err){
-    console.error(err);
-    if(err.code !== 'auth/popup-closed-by-user') showToast(err.message, "error");
-  }
-});
+  $("authSubmit").disabled = true;
+  $("authSubmit").innerHTML = '<span class="spinner"></span> Processing...';
 
-if(fbReady){
-  auth.onAuthStateChanged(async function(user){
-    currentUser = user;
-    if(user){
-      try { var tokenResult = await user.getIdTokenResult(); isAdmin = tokenResult.claims.admin === true; } catch(e){ isAdmin = false; }
-      $("signInBtn").style.display = "none"; $("userMenuBtn").style.display = "inline-flex";
-      $("userName").textContent = user.displayName || user.email.split("@")[0];
-      $("userAvatar").textContent = initialsFrom(user.displayName, user.email);
-      $("ddName").textContent = user.displayName || user.email.split("@")[0];
-      $("ddEmail").textContent = user.email;
-      if(isAdmin){
-        $("adminBadge").style.display = "inline-block";
-        $("ddAdminBadge").style.display = "inline-block";
+  setTimeout(function(){
+    try {
+      var user;
+      if(authMode === "signup"){
+        user = signUp(name, email, password);
+        showToast("Account created successfully", "success");
       } else {
-        $("adminBadge").style.display = "none";
-        $("ddAdminBadge").style.display = "none";
+        user = signIn(email, password);
+        showToast("Signed in successfully", "success");
       }
-    } else {
-      isAdmin = false; currentUser = null;
-      $("signInBtn").style.display = "inline-flex"; $("userMenuBtn").style.display = "none";
-      $("adminBadge").style.display = "none"; $("ddAdminBadge").style.display = "none";
-      $("userDropdown").classList.remove("open");
+      saveSession(user);
+      applyAuthState(user);
+      $("authModal").classList.remove("open");
+      document.body.style.overflow = "";
+      $("authForm").reset();
+    } catch(err){
+      showToast(err.message, "error");
+    } finally {
+      $("authSubmit").disabled = false;
+      if(authMode === "signup") $("authSubmit").innerHTML = icon("user-plus") + " Create account";
+      else $("authSubmit").innerHTML = icon("log-in") + " Sign in";
+      refreshIcons();
     }
-  });
-}
+  }, 400);
+});
 
-$("userMenuBtn").addEventListener("click", function(e){ e.stopPropagation(); $("userDropdown").classList.toggle("open"); });
-document.addEventListener("click", function(){ $("userDropdown").classList.remove("open"); });
-$("ddSignOut").addEventListener("click", async function(){ try { await auth.signOut(); showToast("Signed out", "success"); } catch(err){ showToast(err.message, "error"); } });
-$("ddMyEvents").addEventListener("click", function(){ window.location.href = "events.html"; $("userDropdown").classList.remove("open"); });
+$("googleBtn").addEventListener("click", function(){
+  // Simulated Google sign-in (front-end only demo)
+  $("googleBtn").disabled = true;
+  setTimeout(function(){
+    try {
+      var email = "demo.google@gmail.com";
+      var user = findUserByEmail(email);
+      if(!user){
+        user = signUp("Demo Google User", email, "google-demo-" + Math.random().toString(36).slice(2, 8));
+      }
+      saveSession(user);
+      applyAuthState(user);
+      showToast("Signed in with Google", "success");
+      $("authModal").classList.remove("open");
+      document.body.style.overflow = "";
+    } catch(err){
+      showToast(err.message, "error");
+    } finally {
+      $("googleBtn").disabled = false;
+    }
+  }, 500);
+});
+
+/* ---------- User dropdown ---------- */
+$("userMenuBtn").addEventListener("click", function(e){
+  e.stopPropagation();
+  var open = $("userDropdown").classList.toggle("open");
+  this.classList.toggle("active", open);
+});
+document.addEventListener("click", function(){
+  $("userDropdown").classList.remove("open");
+  $("userMenuBtn").classList.remove("active");
+});
+
+$("ddSignOut").addEventListener("click", function(){
+  signOutUser();
+  showToast("Signed out", "success");
+});
+
+$("ddMyEvents").addEventListener("click", function(){ window.location.href = "events.html"; });
 $("ddCreateEvent").addEventListener("click", function(){ window.location.href = "create-event.html"; });
 $("ddMyCards").addEventListener("click", function(){ window.location.href = "view-card.html"; });
+
+/* ---------- Delete account ---------- */
 $("ddDeleteAccount").addEventListener("click", function(){
-  $("deleteAccountModal").classList.add("open"); document.body.style.overflow = "hidden";
-  $("deleteAccountConfirmInput").value = ""; $("deleteAccountConfirmBtn").disabled = true;
+  $("deleteAccountModal").classList.add("open");
+  document.body.style.overflow = "hidden";
+  $("deleteAccountConfirmInput").value = "";
+  $("deleteAccountConfirmBtn").disabled = true;
   $("userDropdown").classList.remove("open");
+  $("userMenuBtn").classList.remove("active");
 });
 
-$("deleteAccountClose").addEventListener("click", function(){ $("deleteAccountModal").classList.remove("open"); document.body.style.overflow = ""; });
-$("deleteAccountCancelBtn").addEventListener("click", function(){ $("deleteAccountModal").classList.remove("open"); document.body.style.overflow = ""; });
-$("deleteAccountModal").addEventListener("click", function(e){ if(e.target === this) { this.classList.remove("open"); document.body.style.overflow = ""; } });
+function closeDeleteModal(){
+  $("deleteAccountModal").classList.remove("open");
+  document.body.style.overflow = "";
+}
+$("deleteAccountClose").addEventListener("click", closeDeleteModal);
+$("deleteAccountCancelBtn").addEventListener("click", closeDeleteModal);
+$("deleteAccountModal").addEventListener("click", function(e){ if(e.target === this) closeDeleteModal(); });
+
 $("deleteAccountConfirmInput").addEventListener("input", function(e){
   $("deleteAccountConfirmBtn").disabled = e.target.value.trim().toUpperCase() !== "DELETE MY ACCOUNT";
 });
-$("deleteAccountConfirmBtn").addEventListener("click", async function(){
+
+$("deleteAccountConfirmBtn").addEventListener("click", function(){
+  if(!currentUser) { closeDeleteModal(); return; }
   if(!confirm("Are you absolutely sure? This action cannot be undone.")) return;
-  try {
-    showToast("Account deletion requires admin approval. Please contact support.", "info", 6000);
-    $("deleteAccountModal").classList.remove("open"); document.body.style.overflow = "";
-  } catch(err){ showToast(err.message, "error"); }
+  var email = currentUser.email;
+  deleteUserAccount(currentUser);
+  applyAuthState(null);
+  closeDeleteModal();
+  showToast("Account for " + email + " deleted.", "success", 5000);
 });
 
+/* ---------- Boot ---------- */
 document.addEventListener("DOMContentLoaded", function(){
   $("year").textContent = new Date().getFullYear();
-  startCarousel(); initTabs(); initScrollReveal(); initHeaderScroll(); refreshIcons();
+  startCarousel();
+  initTabs();
+  initScrollReveal();
+  initHeaderScroll();
+  refreshIcons();
+
+  // Restore session (front-end only)
+  var session = readSession();
+  if(session && session.uid){
+    var users = getUsers();
+    var found = null;
+    for(var i=0;i<users.length;i++){ if(users[i].uid === session.uid){ found = users[i]; break; } }
+    applyAuthState(found);
+  } else {
+    applyAuthState(null);
+  }
 
   // Auto-open auth modal if URL is index.html#signin
   if (window.location.hash === "#signin") {
     setTimeout(function(){ $("authModal").classList.add("open"); }, 300);
   }
 
-  // Load events from Firestore
   loadFeaturedEvents();
 });
 
 })();
 </script>
 </body>
-                                                                                  </html>
+            </html>
