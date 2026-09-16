@@ -39,7 +39,8 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .form-group input:focus, .form-group select:focus, .form-group textarea:focus{outline:none;border-color:var(--cyan-500);box-shadow:0 0 0 3px rgba(6,182,212,0.15);background:#fff}
 .form-hint{font-size:11.5px;color:var(--text-muted);margin-top:6px;line-height:1.5;font-style:italic;}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-@media (max-width:600px){.form-row{grid-template-columns:1fr}}
+.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+@media (max-width:600px){.form-row,.form-row-3{grid-template-columns:1fr}}
 .section-divider{margin:24px 0;border-top:1px dashed var(--border);position:relative;text-align:center}
 .section-divider span{background:var(--surface);padding:0 12px;font-size:11px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;position:relative;top:-10px}
 .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:10px;margin-bottom:12px}
@@ -57,6 +58,8 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .btn-ghost:hover{background:var(--surface-2);border-color:var(--cyan-500);color:var(--cyan-700)}
 .btn i{width:18px;height:18px}
 .form-actions{margin-top:28px;display:flex;flex-direction:column;gap:12px}
+.export-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.export-actions .btn{padding:10px 14px;font-size:13px}
 .seat-builder{display:flex;gap:10px;align-items:center;}
 .seat-builder .seat-part{flex:1;text-align:center;font-weight:800;text-transform:uppercase;letter-spacing:2px;font-size:16px;padding:12px 8px;}
 .seat-builder .seat-part.seat-num{letter-spacing:0.5px;}
@@ -75,6 +78,86 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .tier-dist-summary{font-size:11.5px;color:var(--text-muted);margin-top:8px;font-style:italic;}
 .tier-dist-summary.error{color:#b91c1c;font-weight:700;}
 
+/* ===== LEVELS MANAGER ===== */
+.levels-panel {
+  margin-top: 12px;
+  padding: 12px;
+  background: var(--bg-2);
+  border: 1px solid var(--border-2);
+  border-radius: 10px;
+}
+.levels-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  margin-bottom: 10px;
+  max-height: 200px;
+  overflow-y: auto;
+}
+.level-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border-2);
+  border-radius: 8px;
+}
+.level-item .level-swatch {
+  width: 14px;
+  height: 14px;
+  border-radius: 4px;
+  flex-shrink: 0;
+  border: 1px solid rgba(0,0,0,0.1);
+}
+.level-item .level-name-input {
+  flex: 1;
+  padding: 5px 8px;
+  font-size: 12.5px;
+  font-weight: 700;
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 6px;
+  font-family: inherit;
+  color: var(--text);
+}
+.level-item .level-name-input:hover {
+  border-color: var(--border-2);
+  background: var(--bg-2);
+}
+.level-item .level-name-input:focus {
+  outline: none;
+  border-color: var(--cyan-500);
+  background: #fff;
+}
+.level-visible-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--text-muted);
+  cursor: pointer;
+  user-select: none;
+}
+.level-item .btn-trash {
+  padding: 4px 6px;
+  border-radius: 6px;
+  border: 1px solid var(--border-2);
+  background: transparent;
+  color: var(--text-muted);
+  cursor: pointer;
+  font-family: inherit;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+.level-item .btn-trash:hover {
+  border-color: #dc2626;
+  color: #dc2626;
+}
+
+/* Row Overrides */
 .row-overrides-section{margin-top:12px;padding:12px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:10px;}
 .row-overrides-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px;flex-wrap:wrap;}
 .section-tabs{display:flex;gap:6px;flex-wrap:wrap;flex:1;}
@@ -117,12 +200,28 @@ h1,h2,h3{line-height:1.15;font-weight:700}
   letter-spacing: 0.5px;
   flex: 1;
 }
-.section-rows-row input {
-  width: 80px;
+.section-rows-row input, .section-rows-row select {
+  width: 100px;
   padding: 6px 8px;
   text-align: center;
   font-size: 13px;
   font-weight: 700;
+  background: var(--bg-2);
+  border: 1px solid var(--border-2);
+  border-radius: 8px;
+  font-family: inherit;
+  color: var(--text);
+}
+.section-rows-row input[type="text"] {
+  width: 200px;
+  text-align: left;
+  font-weight: 600;
+}
+.section-rows-row input[type="range"] {
+  padding: 0;
+  border: none;
+  background: transparent;
+  width: 200px;
 }
 .section-rows-badge {
   font-size: 11px;
@@ -131,43 +230,10 @@ h1,h2,h3{line-height:1.15;font-weight:700}
   background: var(--cyan-50);
   padding: 3px 8px;
   border-radius: 6px;
-}
-.location-btn-group {
-  display: flex;
-  gap: 4px;
-  background: var(--bg-2);
-  padding: 3px;
-  border-radius: 8px;
-  border: 1px solid var(--border-2);
-}
-.location-btn {
-  padding: 5px 12px;
-  border-radius: 6px;
-  border: none;
-  background: transparent;
-  font-size: 11.5px;
-  font-weight: 700;
-  cursor: pointer;
-  font-family: inherit;
-  color: var(--text-muted);
-  transition: all 0.15s;
-}
-.location-btn:hover { color: var(--cyan-700); }
-.location-btn.active {
-  background: #0a0f14;
-  color: #fff;
-}
-.section-location-row select {
-  width: 220px;
-  padding: 6px 10px;
-  font-size: 12px;
-  font-weight: 700;
-  background: var(--bg-2);
-  border: 1px solid var(--border-2);
-  border-radius: 8px;
-  font-family: inherit;
+  white-space: nowrap;
 }
 
+/* Preview Column */
 .preview-column { position: sticky; top: 40px; display: flex; flex-direction: column; gap: 24px; }
 .preview-label { text-align: center; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
 .ticket-card { border-radius: 18px; padding: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); display: flex; flex-direction: column; gap: 20px; position: relative; overflow: hidden; border: 1px solid rgba(0,0,0,0.05); transition: all 0.4s ease; }
@@ -254,60 +320,169 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .layout-legend .lg-swatch.silver { background: #cbd5e1; }
 .layout-legend .lg-swatch.cyan { background: #22d3ee; }
 
-.fullscreen-overlay { position: fixed; inset: 0; background: #0a0f14; z-index: 9999; display: none; flex-direction: column; padding: 20px; }
+/* ===== FULL SCREEN VIEW (Freeform Canvas) ===== */
+.fullscreen-overlay { position: fixed; inset: 0; background: #0a0f14; z-index: 9999; display: none; flex-direction: column; padding: 16px; }
 .fullscreen-overlay.open { display: flex; }
-.fs-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; color: #fff; gap: 12px; flex-wrap: wrap; }
-.fs-header h2 { color: #fff; font-size: 1.2rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+.fs-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; color: #fff; gap: 10px; flex-wrap: wrap; }
+.fs-header h2 { color: #fff; font-size: 1.1rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
 .fs-header h2 span { color: #22d3ee; }
-.fs-actions { display: flex; gap: 8px; flex-wrap: wrap; }
-.fs-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: 700; font-size: 12px; }
+.fs-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.fs-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: 700; font-size: 11.5px; }
 .fs-btn:hover { background: #22d3ee; color: #04161c; border-color: #22d3ee; }
 .fs-btn-close:hover { background: #dc2626; color: #fff; border-color: #dc2626; }
-.fs-hint { text-align: center; color: rgba(255,255,255,0.5); font-size: 11px; font-style: italic; margin-bottom: 12px; padding: 6px; }
-.fs-canvas { flex: 1; position: relative; background: radial-gradient(circle at 50% 0%, rgba(34,211,238,0.08), transparent 60%), #f6f8fb; border-radius: 12px; overflow: auto; padding: 40px; display: flex; flex-direction: column; align-items: center; gap: 24px; }
-.fs-stage { display: inline-block; padding: 14px 50px; background: linear-gradient(135deg, #1e2f4d, #2a4365); color: #fff; font-weight: 800; letter-spacing: 5px; font-size: 14px; border-radius: 8px; text-transform: uppercase; box-shadow: 0 8px 24px rgba(30,47,77,0.35); flex-shrink: 0; }
-.fs-sections-stack { display: flex; flex-direction: column; gap: 30px; width: 100%; align-items: center; }
-.fs-row-band { display: flex; gap: 40px; justify-content: center; align-items: flex-start; flex-wrap: wrap; width: 100%; min-height: 40px; position: relative; }
-.fs-row-band[data-band="top"]::before,
-.fs-row-band[data-band="middle"]::before,
-.fs-row-band[data-band="low"]::before {
-  content: attr(data-band-label);
+.fs-btn.active { background: #22d3ee; color: #04161c; border-color: #22d3ee; }
+
+.fs-level-bar {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+  align-items: center;
+  color: #fff;
+  font-size: 11.5px;
+  margin-bottom: 8px;
+  padding: 6px 0;
+}
+.fs-level-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.05);
+  cursor: pointer;
+  color: #fff;
+  font-family: inherit;
+  font-size: 11.5px;
+  font-weight: 700;
+  transition: all 0.15s;
+}
+.fs-level-pill:hover { border-color: #22d3ee; }
+.fs-level-pill.on { background: rgba(34,211,238,0.15); border-color: #22d3ee; }
+.fs-level-pill.off { opacity: 0.4; }
+.fs-level-pill .pill-swatch {
+  width: 10px;
+  height: 10px;
+  border-radius: 3px;
+  border: 1px solid rgba(255,255,255,0.2);
+}
+
+.fs-canvas-outer {
+  flex: 1;
+  overflow: auto;
+  background: #f6f8fb;
+  border-radius: 12px;
+  padding: 20px;
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  justify-content: center;
+}
+.fs-canvas {
+  position: relative;
+  background: #ffffff;
+  border: 2px solid #d3dbe5;
+  border-radius: 8px;
+  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
+  flex-shrink: 0;
+}
+.fs-canvas.show-grid {
+  background-image:
+    linear-gradient(to right, rgba(34,211,238,0.12) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(34,211,238,0.12) 1px, transparent 1px);
+  background-size: var(--grid-size, 50px) var(--grid-size, 50px);
+}
+
+.fs-stage-marker {
   position: absolute;
-  top: 50%;
-  left: -10px;
-  transform: translate(-100%, -50%) rotate(-90deg);
-  transform-origin: right center;
-  font-size: 9px;
+  background: linear-gradient(135deg, #1e2f4d, #2a4365);
+  color: #fff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
   font-weight: 800;
-  color: rgba(30,47,77,0.4);
-  letter-spacing: 3px;
+  letter-spacing: 4px;
   text-transform: uppercase;
+  border-radius: 6px;
+  box-shadow: 0 6px 20px rgba(30,47,77,0.4);
+  z-index: 5;
+  white-space: nowrap;
+  padding: 4px 10px;
+  pointer-events: none;
+}
+
+.fs-section {
+  position: absolute;
+  background: #fff;
+  border: 2px solid #e4e9f0;
+  border-radius: 10px;
+  padding: 8px;
+  box-shadow: 0 4px 14px rgba(10,15,20,0.08);
+  transform-origin: center center;
+  z-index: 10;
+}
+.fs-section-title {
+  font-size: 10px;
+  font-weight: 900;
+  color: #0e7490;
+  letter-spacing: 0.5px;
+  margin-bottom: 4px;
+  text-align: center;
   white-space: nowrap;
 }
-.fs-section-frame { transition: transform 0.2s ease; transform-origin: center center; flex-shrink: 0; position: relative; }
-.fs-section-inner { background: #fff; border: 2px solid #e4e9f0; border-radius: 12px; padding: 14px; min-width: 300px; box-shadow: 0 6px 18px rgba(10,15,20,0.06); position: relative; }
-.fs-section-title { font-size: 12px; font-weight: 900; color: #0e7490; letter-spacing: 0.5px; margin-bottom: 6px; text-align: center; }
-.fs-section-location { text-align: center; font-size: 9px; font-weight: 800; color: #6b7787; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
-.fs-section-stage { text-align: center; font-size: 9px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: #fff; background: linear-gradient(135deg, #1e2f4d, #2a4365); padding: 6px; border-radius: 5px; margin-bottom: 10px; }
-.fs-rows-area { position: relative; min-height: 60px; }
-.fs-row { display: grid; grid-template-columns: 46px 1fr 52px; align-items: center; gap: 5px; margin-bottom: 3px; padding: 3px; border-radius: 5px; }
-.fs-row-label { font-size: 9px; font-weight: 800; color: #6b7787; text-align: right; text-transform: uppercase; }
+.fs-section-location {
+  text-align: center;
+  font-size: 8px;
+  font-weight: 800;
+  color: #6b7787;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 4px;
+}
+.fs-section-stage {
+  text-align: center;
+  font-size: 7px;
+  font-weight: 800;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #fff;
+  background: linear-gradient(135deg, #1e2f4d, #2a4365);
+  padding: 3px;
+  border-radius: 4px;
+  margin-bottom: 6px;
+}
+.fs-rows-area { position: relative; }
+.fs-row { display: grid; grid-template-columns: 34px 1fr 38px; align-items: center; gap: 3px; margin-bottom: 2px; padding: 2px; border-radius: 4px; }
+.fs-row-label { font-size: 8px; font-weight: 800; color: #6b7787; text-align: right; text-transform: uppercase; }
 .fs-row-seats { display: flex; gap: 2px; justify-content: center; }
-.fs-seat { width: 16px; height: 16px; border-radius: 2px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; font-family: ui-monospace, monospace; font-size: 7px; font-weight: 800; }
+.fs-seat { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; font-family: ui-monospace, monospace; font-size: 6px; font-weight: 800; }
 .fs-seat.black { background: #1a202c; color: #fff; }
 .fs-seat.gold { background: #ecc94b; color: #744210; }
 .fs-seat.silver { background: #cbd5e1; color: #4a5568; }
 .fs-seat.cyan { background: #22d3ee; color: #04161c; }
-.fs-tier-tag { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+.fs-tier-tag { font-size: 7px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
 .fs-tier-tag.black { color: #1a202c; }
 .fs-tier-tag.gold { color: #92700c; }
 .fs-tier-tag.silver { color: #4a5568; }
 .fs-tier-tag.cyan { color: #0e7490; }
 
-.fs-controls { margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; align-items: center; }
-.fs-rotation-control, .fs-spacing-control { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 12px; display: flex; align-items: center; gap: 8px; font-weight: 700; }
-.fs-rotation-control input, .fs-spacing-control input { width: 70px; padding: 5px 6px; text-align: center; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); color: #fff; border-radius: 6px; font-family: ui-monospace, monospace; font-weight: 800; font-size: 12px; }
-.fs-rotation-control input:focus, .fs-spacing-control input:focus { outline: none; border-color: #22d3ee; }
+.fs-empty-hint {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #6b7787;
+  font-size: 12px;
+  text-align: center;
+  max-width: 300px;
+}
+
+/* Toast */
+.toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(120%); background: #0a0f14; color: #fff; padding: 12px 18px; border-radius: 12px; font-size: 13.5px; z-index: 200; transition: transform .4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease; max-width: calc(100vw - 40px); display: flex; align-items: center; gap: 10px; pointer-events: none; opacity: 0; }
+.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
+.toast.success { background: #065f46; }
+.toast.error { background: #991b1b; }
 </style>
 </head>
 <body>
@@ -326,7 +501,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
     <div class="form-card">
       <div class="form-header">
         <h1>Event Studio</h1>
-        <p>Design your seating layout and generate a live security pass.</p>
+        <p>Design your venue layout freely — position, scale, levels and stage.</p>
       </div>
 
       <form id="createEventForm">
@@ -342,43 +517,45 @@ h1,h2,h3{line-height:1.15;font-weight:700}
           <div class="form-group"><label for="startTime">Start Time</label><input type="time" id="startTime" required /></div>
         </div>
 
-        <div class="section-divider"><span>Venue Specifics</span></div>
+        <div class="section-divider"><span>Event Details</span></div>
         <div class="form-group"><label for="eventName">Event Name</label><input type="text" id="eventName" placeholder="e.g., Neon Nights Live" required /></div>
         <div class="form-group"><label for="venueAddress">Venue Name & Address</label><input type="text" id="venueAddress" placeholder="e.g., Grand Amphitheatre, 123 Main Rd" required /></div>
 
-        <div class="section-divider"><span>Layout Configuration</span></div>
-        <div class="form-group">
-          <label for="venueType">Venue Type</label>
-          <select id="venueType" required>
-            <option value="event" selected>Event (Standard Layout)</option>
-            <option value="hall">Hall (Tables &amp; Chairs)</option>
-          </select>
+        <div class="section-divider"><span>Venue Canvas & Stage</span></div>
+        <div class="form-row">
+          <div class="form-group"><label for="canvasWidth">Canvas Width (px)</label><input type="number" id="canvasWidth" min="400" max="3000" value="1200" /></div>
+          <div class="form-group"><label for="canvasHeight">Canvas Height (px)</label><input type="number" id="canvasHeight" min="400" max="3000" value="800" /></div>
         </div>
         <div class="form-group">
           <label for="stageName">Stage / Performance Area Name</label>
-          <input type="text" id="stageName" placeholder="e.g., STAGE · STAGE A · PERFORMANCE AREA" value="STAGE" />
-          <p class="form-hint">This name appears above the seating grid in the preview.</p>
+          <input type="text" id="stageName" placeholder="e.g., STAGE · MAIN STAGE · PERFORMANCE AREA" value="STAGE" />
         </div>
-
-        <div id="hallToggleGroup" class="toggle-row" style="display:none;">
-          <span class="toggle-label">Use Tables & Chairs layout</span>
-          <label class="toggle-switch"><input type="checkbox" id="hallLayoutToggle" /><span class="toggle-slider"></span></label>
+        <div class="form-row-3">
+          <div class="form-group"><label for="stageX">Stage X (px)</label><input type="number" id="stageX" min="0" value="500" /></div>
+          <div class="form-group"><label for="stageY">Stage Y (px)</label><input type="number" id="stageY" min="0" value="60" /></div>
+          <div class="form-group"><label for="stageW">Stage Width (px)</label><input type="number" id="stageW" min="40" value="200" /></div>
         </div>
-
-        <div class="form-group" id="tableShapeGroup" style="display:none;">
-          <label for="tableShape">Table Type</label>
-          <select id="tableShape">
-            <option value="circular">Circular Table (Max 10 chairs around)</option>
-            <option value="rectangular">Rectangular Table (Max 1 chair on short sides)</option>
-            <option value="square">Square Table (Max 2 chairs each side)</option>
-          </select>
-          <p class="form-hint" id="tableShapeHint">Up to 10 chairs placed evenly around the table.</p>
-        </div>
-
         <div class="form-row">
-          <div class="form-group"><label id="label-level1" for="totalLevel1">Sections / Blocks</label><input type="number" id="totalLevel1" min="1" max="26" value="3" /></div>
-          <div class="form-group" id="group-level2"><label id="label-level2" for="totalLevel2">Default Rows per Section</label><input type="number" id="totalLevel2" min="1" max="52" value="6" /></div>
-          <div class="form-group"><label id="label-level3" for="totalLevel3">Default Seats per Row (min 4, max 90)</label><input type="number" id="totalLevel3" min="4" max="90" value="8" /></div>
+          <div class="form-group"><label for="stageH">Stage Height (px)</label><input type="number" id="stageH" min="20" value="60" /></div>
+          <div class="form-group"><label for="gridSize">Grid Size (px)</label><input type="number" id="gridSize" min="10" max="200" value="50" /></div>
+        </div>
+        <div class="toggle-row">
+          <span class="toggle-label">Snap to Grid</span>
+          <label class="toggle-switch"><input type="checkbox" id="snapToggle" checked /><span class="toggle-slider"></span></label>
+        </div>
+
+        <div class="section-divider"><span>Levels / Floors</span></div>
+        <div class="levels-panel">
+          <div class="row-overrides-hint">Group sections into levels (e.g., Ground, Mezzanine, Balcony). Toggle visibility to isolate a level in the Full Screen view.</div>
+          <div class="levels-list" id="levelsList"></div>
+          <button type="button" class="btn-mini" id="addLevelBtn">+ Add Level</button>
+        </div>
+
+        <div class="section-divider"><span>Sections</span></div>
+        <div class="form-row">
+          <div class="form-group"><label id="label-level1" for="totalLevel1">Number of Sections</label><input type="number" id="totalLevel1" min="1" max="26" value="3" /></div>
+          <div class="form-group"><label for="totalLevel2">Default Rows per Section</label><input type="number" id="totalLevel2" min="1" max="52" value="6" /></div>
+          <div class="form-group"><label for="totalLevel3">Default Seats per Row (4–90)</label><input type="number" id="totalLevel3" min="4" max="90" value="8" /></div>
         </div>
 
         <div class="form-group" id="rowOverridesGroup">
@@ -391,50 +568,61 @@ h1,h2,h3{line-height:1.15;font-weight:700}
             </div>
 
             <div class="section-rows-row">
+              <label for="sectionNameInput">Section Name</label>
+              <input type="text" id="sectionNameInput" placeholder="e.g., VIP Stand" maxlength="40" />
+            </div>
+
+            <div class="section-rows-row">
+              <label for="sectionLevelSelect">Level</label>
+              <select id="sectionLevelSelect"></select>
+            </div>
+
+            <div class="section-rows-row">
               <label for="sectionRowsInput">Rows in this section</label>
               <span class="section-rows-badge" id="sectionRowsBadge">6 rows</span>
               <input type="number" id="sectionRowsInput" min="1" max="52" value="6" />
             </div>
 
-            <div class="section-location-row">
-              <label>Vertical Position</label>
-              <div class="location-btn-group" id="verticalBtnGroup">
-                <button type="button" class="location-btn" data-vertical="top">Top</button>
-                <button type="button" class="location-btn active" data-vertical="middle">Middle</button>
-                <button type="button" class="location-btn" data-vertical="low">Low</button>
-              </div>
-            </div>
-
-            <div class="section-location-row">
-              <label for="sectionCompass">Compass Direction</label>
-              <select id="sectionCompass">
-                <option value="N">N — North</option>
-                <option value="NNE">NNE — North-North-East</option>
-                <option value="NE">NE — North-East</option>
-                <option value="ENE">ENE — East-North-East</option>
-                <option value="E">E — East</option>
-                <option value="ESE">ESE — East-South-East</option>
-                <option value="SE">SE — South-East</option>
-                <option value="SSE">SSE — South-South-East</option>
-                <option value="S">S — South</option>
-                <option value="SSW">SSW — South-South-West</option>
-                <option value="SW">SW — South-West</option>
-                <option value="WSW">WSW — West-South-West</option>
-                <option value="W">W — West</option>
-                <option value="WNW">WNW — West-North-West</option>
-                <option value="NW">NW — North-West</option>
-                <option value="NNW">NNW — North-North-West</option>
+            <div class="section-rows-row">
+              <label for="sectionTierOverride">Section Tier Override</label>
+              <select id="sectionTierOverride">
+                <option value="">— Use Row Distribution —</option>
+                <option value="black">Elite (Black)</option>
+                <option value="gold">Gold (VIP)</option>
+                <option value="silver">Silver</option>
+                <option value="cyan">Cyan (Standard)</option>
               </select>
             </div>
 
-            <div class="row-overrides-hint">Each section has its own row count, seat counts, and venue location. Switch tabs to configure each section independently.</div>
+            <div class="form-row-3" style="margin: 6px 0 10px;">
+              <div class="form-group" style="margin-bottom:0;">
+                <label for="sectionXInput" style="font-size:10px;">X Position (px)</label>
+                <input type="number" id="sectionXInput" min="0" max="3000" value="100" style="text-align:center;padding:8px;" />
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label for="sectionYInput" style="font-size:10px;">Y Position (px)</label>
+                <input type="number" id="sectionYInput" min="0" max="3000" value="200" style="text-align:center;padding:8px;" />
+              </div>
+              <div class="form-group" style="margin-bottom:0;">
+                <label for="sectionRotationInput" style="font-size:10px;">Rotation (°)</label>
+                <input type="number" id="sectionRotationInput" min="-360" max="360" value="0" style="text-align:center;padding:8px;" />
+              </div>
+            </div>
+
+            <div class="section-rows-row">
+              <label for="sectionScaleInput">Scale (0.5× – 2×)</label>
+              <span class="section-rows-badge" id="sectionScaleBadge">1.00×</span>
+              <input type="range" id="sectionScaleInput" min="0.5" max="2" step="0.05" value="1" />
+            </div>
+
+            <div class="row-overrides-hint">Each section has its own position, scale, level and row configuration.</div>
             <div class="row-overrides-grid" id="rowOverridesGrid"></div>
           </div>
         </div>
 
         <div class="form-group" id="rowTierGroup">
-          <label>Row Tier Distribution (applies front-to-back per section)</label>
-          <p class="form-hint" style="margin-top:0;margin-bottom:8px;">Assign tiers to rows (front to back). Any leftover rows default to Cyan.</p>
+          <label>Row Tier Distribution (front-to-back per section)</label>
+          <p class="form-hint" style="margin-top:0;margin-bottom:8px;">Assign tiers to rows. Ignored if section has a tier override.</p>
           <div class="tier-dist-grid">
             <div class="tier-dist-item"><div class="swatch elite"></div><label for="tierRowsElite">Elite (Black)</label><input type="number" id="tierRowsElite" min="0" value="2" /></div>
             <div class="tier-dist-item"><div class="swatch gold"></div><label for="tierRowsGold">Gold (VIP)</label><input type="number" id="tierRowsGold" min="0" value="2" /></div>
@@ -449,7 +637,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
           <input type="text" id="totalCapacity" readonly value="1" style="background:var(--surface-2);font-weight:bold;color:var(--cyan-700);" />
         </div>
 
-        <div class="section-divider"><span>Ticket Design & Allocation</span></div>
+        <div class="section-divider"><span>Ticket Preview</span></div>
         <div class="form-group">
           <label for="tierColor">Card Colour Tier</label>
           <select id="tierColor" required>
@@ -469,13 +657,13 @@ h1,h2,h3{line-height:1.15;font-weight:700}
             <span class="seat-sep">—</span>
             <input type="number" id="seatNum" class="seat-part seat-num" placeholder="1" min="1" />
           </div>
-          <div class="seat-builder" id="seatBuilderTables" style="display:none;">
-            <input type="number" id="tableNum" class="seat-part seat-num" placeholder="Table" min="1" />
-            <span class="seat-sep">—</span>
-            <input type="number" id="chairNum" class="seat-part seat-num" placeholder="Chair" min="1" />
-          </div>
           <div class="seat-preview-display empty" id="seatPreviewDisplay">Enter block, row and seat to preview</div>
           <p class="form-hint" id="seatHint">Format: <strong>Block</strong> + <strong>Row</strong> + space + <strong>Seat</strong>. E.g., <code>AA 1</code>.</p>
+        </div>
+
+        <div class="export-actions">
+          <button type="button" class="btn btn-ghost" id="exportJsonBtn"><i data-lucide="download"></i> Export JSON</button>
+          <button type="button" class="btn btn-ghost" id="exportCsvBtn"><i data-lucide="table"></i> Export CSV</button>
         </div>
 
         <div class="form-actions">
@@ -521,20 +709,26 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 
 <div class="fullscreen-overlay" id="fullscreenOverlay">
   <div class="fs-header">
-    <h2>Full Layout View · <span id="fsStageName">STAGE</span></h2>
+    <h2>Full Venue Layout · <span id="fsStageName">STAGE</span></h2>
     <div class="fs-actions">
-      <button type="button" class="fs-btn" id="resetSectionPositions">↺ Reset View</button>
+      <button type="button" class="fs-btn active" id="fsToggleGrid">Grid</button>
+      <button type="button" class="fs-btn" id="fsResetView">↺ Reset</button>
       <button type="button" class="fs-btn fs-btn-close" id="closeFullscreen">✕ Close</button>
     </div>
   </div>
-  <div class="fs-hint">💡 Sections auto-arrange by their Top/Middle/Low position and compass direction. Adjust spacing and rotation below.</div>
-  <div class="fs-canvas" id="fsCanvas">
-    <div class="fs-stage" id="fsStageLabel">STAGE</div>
-    <div class="fs-sections-stack" id="fsSectionsStack"></div>
+  <div class="fs-level-bar" id="fsLevelBar"></div>
+  <div class="fs-canvas-outer">
+    <div class="fs-canvas" id="fsCanvas">
+      <div class="fs-stage-marker" id="fsStageMarker">STAGE</div>
+      <div class="fs-empty-hint" id="fsEmptyHint" style="display:none;">Add sections to see them placed here</div>
+    </div>
   </div>
-  <div class="fs-controls" id="fsControls"></div>
 </div>
 
+<div class="toast" id="toast"></div>
+
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script src="routing-engine.js"></script>
 <script>
 (function(){
@@ -542,45 +736,97 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 
 function $(id){ return document.getElementById(id); }
 
+var FIREBASE = {
+  apiKey: "AIzaSyBdb-NEf2kwzF-rzIyPnEYV9YoSZ9OdyoI",
+  authDomain: "novalink-5e3c3.firebaseapp.com",
+  projectId: "novalink-5e3c3",
+  storageBucket: "novalink-5e3c3.firebasestorage.app",
+  messagingSenderId: "483408592364",
+  appId: "1:483408592364:web:c150c0d7e3c908fd1354c9"
+};
+
+var db = null;
+try {
+  if (!firebase.apps.length) firebase.initializeApp(FIREBASE);
+  db = firebase.firestore();
+} catch(e){ console.error("Firebase init failed", e); }
+
+// ===== STATE =====
+var canvasWidth = 1200;
+var canvasHeight = 800;
+var gridSize = 50;
+var snapToGrid = true;
+var showGrid = true;
+
+var stage = { x: 500, y: 60, width: 200, height: 60, name: "STAGE" };
+
+var levels = [
+  { id: 0, name: "Ground Floor", color: "#22d3ee", visible: true }
+];
+var nextLevelId = 1;
+
 var sectionRowOverrides = {};
 var sectionRowCounts = {};
-var sectionRotations = {};
-var sectionLocations = {}; // { sectionIdx: { vertical: "top"|"middle"|"low", compass: "N"|... } }
-var sectionSpacingMeters = 2;
+var sectionNames = {};
+var sectionTierOverrides = {};
+var sectionPositions = {}; // { idx: { x, y, scale, rotation, levelId } }
 var currentEditingSection = 0;
 
-var PX_PER_METER = 20;
+var levelColors = ["#22d3ee", "#facc15", "#a78bfa", "#fb7185", "#34d399", "#60a5fa", "#f97316", "#e879f9"];
 
-// Compass angle from stage's perspective (0° = West, 90° = North, 180° = East, 270° = South)
-var compassAngle = {
-  "W": 0, "WNW": 22.5, "NW": 45, "NNW": 67.5,
-  "N": 90, "NNE": 112.5, "NE": 135, "ENE": 157.5,
-  "E": 180, "ESE": 202.5, "SE": 225, "SSE": 247.5,
-  "S": 270, "SSW": 292.5, "SW": 315, "WSW": 337.5
-};
+function showToast(msg, type, ms) {
+  type = type || "info"; ms = ms || 3000;
+  var t = $("toast");
+  var i = type === "error" ? "alert-circle" : (type === "success" ? "check-circle" : "info");
+  t.className = "toast " + type;
+  t.innerHTML = '<i data-lucide="' + i + '"></i><span>' + msg + '</span>';
+  if (window.lucide) lucide.createIcons();
+  requestAnimationFrame(function(){ t.classList.add("show"); });
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(function(){ t.classList.remove("show"); }, ms);
+}
 
 document.addEventListener("DOMContentLoaded", function(){
   if(window.lucide) lucide.createIcons();
-  var liveRef = "NL-" + Math.random().toString(36).substring(2, 8).toUpperCase();
-  $("prevRef").textContent = "Ref: " + liveRef;
 
-  function isTablesMode() { return $("venueType").value === "hall" && $("hallLayoutToggle").checked; }
-  function buildCurrentSeatCode() {
-    if (isTablesMode()) return NovalinkRoutingEngine.buildTableChairCode($("tableNum").value, $("chairNum").value);
-    return NovalinkRoutingEngine.buildSeatCode($("seatBlock").value, $("seatRow").value, $("seatNum").value);
-  }
-  function refreshSeatPreview() {
-    var code = buildCurrentSeatCode();
-    var display = $("seatPreviewDisplay");
-    if (code) { display.textContent = code; display.classList.remove("empty"); }
-    else { display.textContent = isTablesMode() ? "Enter table and chair numbers" : "Enter block, row and seat to preview"; display.classList.add("empty"); }
-    updateTicketPreview();
-  }
+  // ===== HELPERS =====
   function rowLabel(index) { var n = index, label = ""; do { label = String.fromCharCode(65 + (n % 26)) + label; n = Math.floor(n / 26) - 1; } while (n >= 0); return label; }
   function blockLabel(index) { return String.fromCharCode(65 + index); }
   function tierTagText(t) { return t === "black" ? "Elite" : t === "gold" ? "Gold" : t === "silver" ? "Silver" : "Cyan"; }
+  function snap(v) { return snapToGrid ? Math.round(v / gridSize) * gridSize : v; }
+  function getSectionName(idx) { return sectionNames[idx] || ("Section " + blockLabel(idx)); }
+  function setSectionName(idx, name) { if (name && name.trim()) sectionNames[idx] = name.trim(); else delete sectionNames[idx]; }
+  function getSectionTierOverride(idx) { return sectionTierOverrides[idx] || null; }
+  function setSectionTierOverride(idx, tier) { if (tier) sectionTierOverrides[idx] = tier; else delete sectionTierOverrides[idx]; }
+  function getRowCount(idx) {
+    if (sectionRowCounts[idx] !== undefined) return sectionRowCounts[idx];
+    return parseInt($("totalLevel2").value) || 6;
+  }
+  function setRowCount(idx, v) { sectionRowCounts[idx] = Math.max(1, Math.min(52, v)); }
+  function getSeatsForRow(sIdx, rIdx) {
+    var d = sectionRowOverrides[sIdx];
+    if (d && d[rIdx] !== undefined) return d[rIdx];
+    return parseInt($("totalLevel3").value) || 10;
+  }
+  function getSectionPos(idx) {
+    if (sectionPositions[idx]) return sectionPositions[idx];
+    // Auto-position: spread sections in a row near the bottom
+    var count = parseInt($("totalLevel1").value) || 1;
+    var gap = canvasWidth / (count + 1);
+    var pos = { x: Math.round(gap * (idx + 1) - 120), y: 300, scale: 1, rotation: 0, levelId: levels[0].id };
+    sectionPositions[idx] = pos;
+    return pos;
+  }
+  function setSectionPos(idx, key, val) {
+    if (!sectionPositions[idx]) getSectionPos(idx);
+    sectionPositions[idx][key] = val;
+  }
 
-  function buildRowTierMap(totalRows) {
+  function buildRowTierMap(totalRows, sectionIdx) {
+    var override = (sectionIdx !== undefined) ? getSectionTierOverride(sectionIdx) : null;
+    if (override) {
+      var m = []; for (var i = 0; i < totalRows; i++) m.push(override); return m;
+    }
     var e = parseInt($("tierRowsElite").value)||0, g = parseInt($("tierRowsGold").value)||0, s = parseInt($("tierRowsSilver").value)||0, c = parseInt($("tierRowsCyan").value)||0;
     var map = [];
     for (var i = 0; i < e && map.length < totalRows; i++) map.push("black");
@@ -590,37 +836,126 @@ document.addEventListener("DOMContentLoaded", function(){
     while (map.length < totalRows) map.push("cyan");
     return map;
   }
-  function updateTierDistributionSummary() {
-    var defaultRows = parseInt($("totalLevel2").value) || 0;
-    var sum = (parseInt($("tierRowsElite").value)||0) + (parseInt($("tierRowsGold").value)||0) + (parseInt($("tierRowsSilver").value)||0) + (parseInt($("tierRowsCyan").value)||0);
-    var s = $("tierDistSummary");
-    s.className = "tier-dist-summary";
-    if (sum === defaultRows) s.textContent = "✓ Perfect — " + sum + " rows assigned (default per section).";
-    else if (sum < defaultRows) s.textContent = "Tier sum: " + sum + ". Rows beyond this in each section default to Cyan.";
-    else s.textContent = "Tier sum: " + sum + " rows (applied per section, extras ignored).";
+
+  function calculateCapacity() {
+    var sections = parseInt($("totalLevel1").value) || 0;
+    var total = 0;
+    for (var s = 0; s < sections; s++) {
+      var rows = getRowCount(s);
+      for (var r = 0; r < rows; r++) total += getSeatsForRow(s, r);
+    }
+    $("totalCapacity").value = total;
   }
 
-  function getRowCount(sectionIdx) {
-    if (sectionRowCounts[sectionIdx] !== undefined) return sectionRowCounts[sectionIdx];
-    return parseInt($("totalLevel2").value) || 6;
-  }
-  function setRowCount(sectionIdx, v) {
-    v = Math.max(1, Math.min(52, v));
-    sectionRowCounts[sectionIdx] = v;
-  }
-  function getSectionLocation(sectionIdx) {
-    if (sectionLocations[sectionIdx]) return sectionLocations[sectionIdx];
-    return { vertical: "middle", compass: "N" };
-  }
-  function setSectionLocation(sectionIdx, vertical, compass) {
-    if (!sectionLocations[sectionIdx]) sectionLocations[sectionIdx] = { vertical: "middle", compass: "N" };
-    if (vertical) sectionLocations[sectionIdx].vertical = vertical;
-    if (compass) sectionLocations[sectionIdx].compass = compass;
-  }
-  function getRotation(sectionIdx) {
-    return sectionRotations[sectionIdx] !== undefined ? sectionRotations[sectionIdx] : 0;
+  function updateTicketPreview() {
+    $("prevEventName").textContent = $("eventName").value || "EVENT NAME";
+    $("prevDateVenue").textContent = ($("startDate").value || "DATE") + " · " + ($("venueAddress").value || "VENUE");
+    $("prevGuestName").textContent = $("guestName").value || "GUEST NAME";
+    var seatCode = NovalinkRoutingEngine.buildSeatCode($("seatBlock").value, $("seatRow").value, $("seatNum").value);
+    if (seatCode) $("prevSeat").textContent = seatCode;
+    else $("prevSeat").textContent = "Seat not assigned";
+    $("prevVenueLocation").textContent = $("venueAddress").value || "VENUE";
+    $("prevTierBadge").textContent = $("tierColor").value.toUpperCase();
+    $("dynamicTicket").className = "ticket-card " + $("tierColor").value;
   }
 
+  function buildLegend() {
+    var legend = document.createElement("div"); legend.className = "layout-legend";
+    [{ cls: "black", label: "Elite (Black)" }, { cls: "gold", label: "Gold (VIP)" }, { cls: "silver", label: "Silver" }, { cls: "cyan", label: "Cyan (Standard)" }].forEach(function(it) {
+      var el = document.createElement("div"); el.className = "lg-item";
+      el.innerHTML = '<div class="lg-swatch ' + it.cls + '"></div> ' + it.label; legend.appendChild(el);
+    });
+    return legend;
+  }
+
+  // ===== LEVELS UI =====
+  function rebuildLevelsList() {
+    var list = $("levelsList");
+    list.innerHTML = "";
+    levels.forEach(function(lv, i) {
+      var item = document.createElement("div");
+      item.className = "level-item";
+
+      var swatch = document.createElement("div");
+      swatch.className = "level-swatch";
+      swatch.style.background = lv.color;
+      item.appendChild(swatch);
+
+      var nameInput = document.createElement("input");
+      nameInput.type = "text";
+      nameInput.className = "level-name-input";
+      nameInput.value = lv.name;
+      nameInput.addEventListener("input", function() {
+        lv.name = nameInput.value || "Untitled Level";
+        rebuildLevelSelect();
+        renderFullscreen();
+      });
+      item.appendChild(nameInput);
+
+      var visLabel = document.createElement("label");
+      visLabel.className = "level-visible-toggle";
+      var chk = document.createElement("input");
+      chk.type = "checkbox";
+      chk.checked = lv.visible;
+      chk.addEventListener("change", function() {
+        lv.visible = chk.checked;
+        renderFullscreen();
+        rebuildLevelPills();
+      });
+      visLabel.appendChild(chk);
+      visLabel.appendChild(document.createTextNode("Visible"));
+      item.appendChild(visLabel);
+
+      if (levels.length > 1) {
+        var trash = document.createElement("button");
+        trash.type = "button";
+        trash.className = "btn-trash";
+        trash.innerHTML = '<i data-lucide="trash-2" style="width:14px;height:14px;"></i>';
+        trash.addEventListener("click", function() {
+          if (!confirm("Delete this level? Sections on this level will be moved to the first level.")) return;
+          var firstId = levels.find(function(x){ return x.id !== lv.id; }).id;
+          Object.keys(sectionPositions).forEach(function(k) {
+            if (sectionPositions[k].levelId === lv.id) sectionPositions[k].levelId = firstId;
+          });
+          levels.splice(i, 1);
+          rebuildLevelsList();
+          rebuildLevelSelect();
+          renderSeatingPlan();
+          renderFullscreen();
+        });
+        item.appendChild(trash);
+      }
+
+      list.appendChild(item);
+    });
+    if(window.lucide) lucide.createIcons();
+  }
+
+  function rebuildLevelSelect() {
+    var sel = $("sectionLevelSelect");
+    sel.innerHTML = "";
+    levels.forEach(function(lv) {
+      var opt = document.createElement("option");
+      opt.value = lv.id;
+      opt.textContent = lv.name;
+      sel.appendChild(opt);
+    });
+    if (currentEditingSection !== undefined) {
+      var pos = getSectionPos(currentEditingSection);
+      sel.value = pos.levelId;
+    }
+  }
+
+  function addLevel() {
+    var id = nextLevelId++;
+    var color = levelColors[levels.length % levelColors.length];
+    levels.push({ id: id, name: "Level " + levels.length, color: color, visible: true });
+    rebuildLevelsList();
+    rebuildLevelSelect();
+    renderFullscreen();
+  }
+
+  // ===== SECTION TABS =====
   function rebuildSectionTabs() {
     var sections = parseInt($("totalLevel1").value) || 1;
     if (currentEditingSection >= sections) currentEditingSection = 0;
@@ -630,13 +965,12 @@ document.addEventListener("DOMContentLoaded", function(){
       var btn = document.createElement("button");
       btn.type = "button";
       btn.className = "section-tab" + (i === currentEditingSection ? " active" : "");
-      btn.textContent = "Section " + blockLabel(i);
+      btn.textContent = getSectionName(i);
       (function(idx) {
         btn.addEventListener("click", function() {
           currentEditingSection = idx;
           rebuildSectionTabs();
-          refreshSectionRowsInput();
-          refreshSectionLocationInputs();
+          refreshSectionInputs();
           rebuildRowOverrides();
         });
       })(i);
@@ -644,19 +978,27 @@ document.addEventListener("DOMContentLoaded", function(){
     }
   }
 
-  function refreshSectionRowsInput() {
-    var v = getRowCount(currentEditingSection);
-    $("sectionRowsInput").value = v;
-    $("sectionRowsBadge").textContent = v + " rows";
-  }
-  function refreshSectionLocationInputs() {
-    var loc = getSectionLocation(currentEditingSection);
-    // Vertical button group
-    document.querySelectorAll("#verticalBtnGroup .location-btn").forEach(function(b) {
-      b.classList.toggle("active", b.dataset.vertical === loc.vertical);
-    });
-    // Compass select
-    $("sectionCompass").value = loc.compass;
+  // ===== SECTION INPUTS =====
+  function refreshSectionInputs() {
+    var idx = currentEditingSection;
+    // Name
+    $("sectionNameInput").value = sectionNames[idx] || "";
+    $("sectionNameInput").placeholder = "e.g., VIP Stand (currently " + getSectionName(idx) + ")";
+    // Level
+    $("sectionLevelSelect").value = getSectionPos(idx).levelId;
+    // Rows
+    var rows = getRowCount(idx);
+    $("sectionRowsInput").value = rows;
+    $("sectionRowsBadge").textContent = rows + " rows";
+    // Tier override
+    $("sectionTierOverride").value = sectionTierOverrides[idx] || "";
+    // Position
+    var pos = getSectionPos(idx);
+    $("sectionXInput").value = pos.x;
+    $("sectionYInput").value = pos.y;
+    $("sectionRotationInput").value = pos.rotation;
+    $("sectionScaleInput").value = pos.scale;
+    $("sectionScaleBadge").textContent = pos.scale.toFixed(2) + "×";
   }
 
   function rebuildRowOverrides() {
@@ -694,70 +1036,19 @@ document.addEventListener("DOMContentLoaded", function(){
     }
   }
 
-  function getSeatsForRow(sectionIdx, rowIdx) {
-    var sectionData = sectionRowOverrides[sectionIdx];
-    if (sectionData && sectionData[rowIdx] !== undefined) return sectionData[rowIdx];
-    return parseInt($("totalLevel3").value) || 10;
-  }
-
-  function updateSeatingUI() {
-    var tablesMode = isTablesMode();
-    if ($("venueType").value === "hall") { $("hallToggleGroup").style.display = "flex"; }
-    else { $("hallToggleGroup").style.display = "none"; $("hallLayoutToggle").checked = false; }
-    if (tablesMode) { $("tableShapeGroup").style.display = "block"; updateTableShapeHint(); }
-    else { $("tableShapeGroup").style.display = "none"; }
-    if (tablesMode) { $("rowTierGroup").style.display = "none"; $("rowOverridesGroup").style.display = "none"; }
-    else { $("rowTierGroup").style.display = "block"; $("rowOverridesGroup").style.display = "block"; updateTierDistributionSummary(); }
-
-    if (tablesMode) {
-      $("seatBuilderStandard").style.display = "none"; $("seatBuilderTables").style.display = "flex";
-      $("seatLabel").textContent = "Table & Chair (Preview)";
-      $("seatHint").innerHTML = 'Format: <strong>T</strong>[table] + <strong>C</strong>[chair]. E.g., <code>T1 C4</code>.';
-    } else {
-      $("seatBuilderStandard").style.display = "flex"; $("seatBuilderTables").style.display = "none";
-      $("seatLabel").textContent = "Seat Identifier (Preview)";
-      $("seatHint").innerHTML = 'Format: <strong>Block</strong> + <strong>Row</strong> + space + <strong>Seat</strong>. E.g., <code>AA 1</code>.';
-    }
-    calculateCapacity();
-    refreshSeatPreview();
-  }
-  function updateTableShapeHint() { var meta = NovalinkRoutingEngine.resolveTableShape($("tableShape").value); $("tableShapeHint").textContent = meta.description; }
-
-  function calculateCapacity() {
-    if (isTablesMode()) {
-      var tables = parseInt($("totalLevel1").value) || 0;
-      var chairs = parseInt($("totalLevel3").value) || 0;
-      $("totalCapacity").value = tables * chairs;
-      return;
-    }
-    var sections = parseInt($("totalLevel1").value) || 0;
-    var total = 0;
-    for (var s = 0; s < sections; s++) {
-      var rows = getRowCount(s);
-      for (var r = 0; r < rows; r++) total += getSeatsForRow(s, r);
-    }
-    $("totalCapacity").value = total;
-  }
-
-  function buildLegend() {
-    var legend = document.createElement("div"); legend.className = "layout-legend";
-    [{ cls: "black", label: "Elite (Black)" }, { cls: "gold", label: "Gold (VIP)" }, { cls: "silver", label: "Silver" }, { cls: "cyan", label: "Cyan (Standard)" }].forEach(function(it) {
-      var el = document.createElement("div"); el.className = "lg-item";
-      el.innerHTML = '<div class="lg-swatch ' + it.cls + '"></div> ' + it.label; legend.appendChild(el);
-    });
-    return legend;
-  }
-
+  // ===== LEFT PANEL PREVIEW (stacked list of blocks) =====
   function renderStandardLayout(container, sections) {
     var stageName = ($("stageName").value || "STAGE").trim().toUpperCase();
     for (var b = 0; b < sections; b++) {
       var rowCount = getRowCount(b);
-      var map = buildRowTierMap(rowCount);
+      var map = buildRowTierMap(rowCount, b);
+      var pos = getSectionPos(b);
+      var lvl = levels.find(function(x){return x.id === pos.levelId;});
       var blockEl = document.createElement("div");
       blockEl.className = "block";
       var bl = document.createElement("div");
       bl.className = "block-label";
-      bl.textContent = "Section " + blockLabel(b) + " · " + rowCount + " rows";
+      bl.textContent = getSectionName(b) + " · " + rowCount + " rows" + (lvl ? " · " + lvl.name : "");
       blockEl.appendChild(bl);
       var stageLine = document.createElement("div");
       stageLine.className = "stage-line";
@@ -777,16 +1068,15 @@ document.addEventListener("DOMContentLoaded", function(){
         rowEl.appendChild(rl);
         var seatsWrap = document.createElement("div");
         seatsWrap.className = "row-seats";
-        var seatsInner = document.createElement("div");
-        seatsInner.className = "row-seats-inner";
+        var inner = document.createElement("div");
+        inner.className = "row-seats-inner";
         for (var s = 0; s < seatCount; s++) {
           var seat = document.createElement("div");
           seat.className = "row-seat " + tier;
           seat.textContent = (s + 1);
-          seat.title = "Section " + blockLabel(b) + " · Row " + rowLabel(r) + " · Seat " + (s + 1);
-          seatsInner.appendChild(seat);
+          inner.appendChild(seat);
         }
-        seatsWrap.appendChild(seatsInner);
+        seatsWrap.appendChild(inner);
         rowEl.appendChild(seatsWrap);
         var tt = document.createElement("div");
         tt.className = "row-tier-tag " + tier;
@@ -800,110 +1090,81 @@ document.addEventListener("DOMContentLoaded", function(){
     container.appendChild(buildLegend());
   }
 
-  function renderTablesLayout(container, l1, l3) {
-    var tier = $("tierColor").value;
-    var wrapper = document.createElement("div"); wrapper.className = "tables-wrapper";
-    var shape = $("tableShape").value;
-    var renderTables = Math.min(l1, 12);
-    var dist = NovalinkRoutingEngine.distributeChairs(shape, l3);
-    for (var t = 0; t < renderTables; t++) {
-      var item = document.createElement("div"); item.className = "table-item";
-      var cEl = document.createElement("div"); cEl.className = "table-shape-container";
-      var tbl = document.createElement("div"); tbl.className = "table-shape " + shape; tbl.textContent = "T" + (t + 1); cEl.appendChild(tbl);
-      if (shape === "circular") {
-        var n = dist.count, radius = 42;
-        for (var c = 0; c < n; c++) {
-          var angle = (2 * Math.PI * c) / n - (Math.PI / 2);
-          placeChair(cEl, shape, 60 + radius * Math.cos(angle), 60 + radius * Math.sin(angle), tier);
-        }
-      } else if (shape === "rectangular") {
-        for (var i = 0; i < dist.top; i++) placeChair(cEl, shape, 20 + (80 / (dist.top + 1)) * (i + 1), 15, tier);
-        for (var i = 0; i < dist.bottom; i++) placeChair(cEl, shape, 20 + (80 / (dist.bottom + 1)) * (i + 1), 105, tier);
-        if (dist.left > 0) placeChair(cEl, shape, 12, 60, tier);
-        if (dist.right > 0) placeChair(cEl, shape, 108, 60, tier);
-      } else if (shape === "square") {
-        for (var i = 0; i < dist.top; i++) placeChair(cEl, shape, dist.top === 1 ? 60 : (45 + i * 30), 18, tier);
-        for (var i = 0; i < dist.bottom; i++) placeChair(cEl, shape, dist.bottom === 1 ? 60 : (45 + i * 30), 102, tier);
-        for (var i = 0; i < dist.left; i++) placeChair(cEl, shape, 18, dist.left === 1 ? 60 : (45 + i * 30), tier);
-        for (var i = 0; i < dist.right; i++) placeChair(cEl, shape, 102, dist.right === 1 ? 60 : (45 + i * 30), tier);
-      }
-      item.appendChild(cEl);
-      var label = document.createElement("div"); label.className = "table-number-label";
-      label.textContent = "Table " + (t + 1) + " · " + dist.total + " chairs"; item.appendChild(label);
-      if (dist.capped) {
-        var warn = document.createElement("div"); warn.className = "cap-warning";
-        warn.textContent = "Capped at max for this shape (" + (shape === "circular" ? 10 : 8) + ")"; item.appendChild(warn);
-      }
-      wrapper.appendChild(item);
-    }
-    container.appendChild(wrapper);
-  }
-  function placeChair(parent, shape, cx, cy, tier) {
-    var chair = document.createElement("div"); chair.className = "chair-around " + shape + " " + tier;
-    chair.style.left = (cx - 7) + "px"; chair.style.top = (cy - 7) + "px"; parent.appendChild(chair);
-  }
-
   function renderSeatingPlan() {
     var container = $("seatingPlanPreview");
     container.innerHTML = "";
     var l1 = parseInt($("totalLevel1").value) || 0;
-    var l3 = parseInt($("totalLevel3").value) || 0;
-    if (l1 === 0 || l3 === 0) {
-      container.innerHTML = '<div class="seating-plan-title">Enter seating details to generate layout</div>';
-      return;
-    }
-    if (isTablesMode()) { renderTablesLayout(container, l1, l3); return; }
-    renderStandardLayout(container, Math.min(l1, 6));
+    if (l1 === 0) { container.innerHTML = '<div class="seating-plan-title">Add sections to begin</div>'; return; }
+    renderStandardLayout(container, Math.min(l1, 8));
   }
 
-  // ============ FULL SCREEN VIEW ============
-  function buildSectionFrame(sectionIdx) {
+  // ===== FULL SCREEN =====
+  function rebuildLevelPills() {
+    var bar = $("fsLevelBar");
+    bar.innerHTML = "";
+    var label = document.createElement("span");
+    label.textContent = "Levels:";
+    label.style.opacity = "0.7";
+    label.style.fontWeight = "700";
+    bar.appendChild(label);
+
+    levels.forEach(function(lv) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "fs-level-pill " + (lv.visible ? "on" : "off");
+      var sw = document.createElement("span");
+      sw.className = "pill-swatch";
+      sw.style.background = lv.color;
+      btn.appendChild(sw);
+      btn.appendChild(document.createTextNode(lv.name));
+      btn.addEventListener("click", function() {
+        lv.visible = !lv.visible;
+        rebuildLevelsList();
+        rebuildLevelPills();
+        renderFullscreen();
+      });
+      bar.appendChild(btn);
+    });
+  }
+
+  function buildFSSection(sectionIdx) {
     var rowCount = getRowCount(sectionIdx);
-    var map = buildRowTierMap(rowCount);
+    var map = buildRowTierMap(rowCount, sectionIdx);
+    var pos = getSectionPos(sectionIdx);
+    var lv = levels.find(function(x){return x.id === pos.levelId;});
     var stageName = ($("stageName").value || "STAGE").trim().toUpperCase();
-    var loc = getSectionLocation(sectionIdx);
 
-    var frame = document.createElement("div");
-    frame.className = "fs-section-frame";
-    frame.dataset.section = sectionIdx;
-
-    var rotation = getRotation(sectionIdx);
-    frame.style.transform = rotation ? "rotate(" + rotation + "deg)" : "none";
-
-    var inner = document.createElement("div");
-    inner.className = "fs-section-inner";
+    var el = document.createElement("div");
+    el.className = "fs-section";
+    el.dataset.section = sectionIdx;
 
     var title = document.createElement("div");
     title.className = "fs-section-title";
-    title.textContent = "Section " + blockLabel(sectionIdx) + " · " + rowCount + " rows";
-    inner.appendChild(title);
+    title.textContent = getSectionName(sectionIdx);
+    el.appendChild(title);
 
-    var locLbl = document.createElement("div");
-    locLbl.className = "fs-section-location";
-    locLbl.textContent = loc.vertical.toUpperCase() + " · " + loc.compass;
-    inner.appendChild(locLbl);
+    var loc = document.createElement("div");
+    loc.className = "fs-section-location";
+    loc.textContent = (lv ? lv.name.toUpperCase() : "—") + " · " + rowCount + " rows";
+    if (lv) loc.style.color = lv.color;
+    el.appendChild(loc);
 
-    var stageLbl = document.createElement("div");
-    stageLbl.className = "fs-section-stage";
-    stageLbl.textContent = stageName;
-    inner.appendChild(stageLbl);
+    var stage = document.createElement("div");
+    stage.className = "fs-section-stage";
+    stage.textContent = stageName;
+    el.appendChild(stage);
 
     var rowsArea = document.createElement("div");
     rowsArea.className = "fs-rows-area";
-
     for (var r = 0; r < rowCount; r++) {
       var tier = map[r] || "cyan";
-      var seatCount = getSeatsForRow(sectionIdx, r);
-      seatCount = Math.max(4, Math.min(90, seatCount));
-
+      var seatCount = Math.max(4, Math.min(90, getSeatsForRow(sectionIdx, r)));
       var rowEl = document.createElement("div");
       rowEl.className = "fs-row";
-
       var rl = document.createElement("div");
       rl.className = "fs-row-label";
       rl.textContent = "Row " + rowLabel(r);
       rowEl.appendChild(rl);
-
       var seatsWrap = document.createElement("div");
       seatsWrap.className = "fs-row-seats";
       for (var s = 0; s < seatCount; s++) {
@@ -913,251 +1174,346 @@ document.addEventListener("DOMContentLoaded", function(){
         seatsWrap.appendChild(seat);
       }
       rowEl.appendChild(seatsWrap);
-
       var tt = document.createElement("div");
       tt.className = "fs-tier-tag " + tier;
       tt.textContent = tierTagText(tier);
       rowEl.appendChild(tt);
-
       rowsArea.appendChild(rowEl);
     }
+    el.appendChild(rowsArea);
 
-    inner.appendChild(rowsArea);
-    frame.appendChild(inner);
-    return frame;
+    // Apply transform: center the section at (pos.x, pos.y)
+    el.style.transformOrigin = "center center";
+    el.style.transform = "rotate(" + pos.rotation + "deg) scale(" + pos.scale + ")";
+    el.style.left = pos.x + "px";
+    el.style.top = pos.y + "px";
+    return el;
   }
 
   function renderFullscreen() {
-    var sections = parseInt($("totalLevel1").value) || 0;
+    var canvas = $("fsCanvas");
+    // Remove existing sections
+    canvas.querySelectorAll(".fs-section").forEach(function(el) { el.remove(); });
+
+    canvas.style.width = canvasWidth + "px";
+    canvas.style.height = canvasHeight + "px";
+    canvas.style.setProperty("--grid-size", gridSize + "px");
+    canvas.className = "fs-canvas" + (showGrid ? " show-grid" : "");
+
+    // Stage
     var stageName = ($("stageName").value || "STAGE").trim().toUpperCase();
-
+    var sm = $("fsStageMarker");
+    sm.textContent = stageName;
+    sm.style.left = stage.x + "px";
+    sm.style.top = stage.y + "px";
+    sm.style.width = stage.width + "px";
+    sm.style.height = stage.height + "px";
     $("fsStageName").textContent = stageName;
-    $("fsStageLabel").textContent = stageName;
 
-    // Group sections by vertical position
-    var groups = { top: [], middle: [], low: [] };
+    // Sections
+    var sections = parseInt($("totalLevel1").value) || 0;
+    var anyVisible = false;
     for (var i = 0; i < sections; i++) {
-      var loc = getSectionLocation(i);
-      var bucket = groups[loc.vertical] || groups.middle;
-      bucket.push(i);
+      var pos = getSectionPos(i);
+      var lv = levels.find(function(x){return x.id === pos.levelId;});
+      if (!lv || !lv.visible) continue;
+      anyVisible = true;
+      canvas.appendChild(buildFSSection(i));
     }
-    // Sort each group by compass angle
-    ["top", "middle", "low"].forEach(function(v) {
-      groups[v].sort(function(a, b) {
-        var ca = compassAngle[getSectionLocation(a).compass];
-        var cb = compassAngle[getSectionLocation(b).compass];
-        if (ca === undefined) ca = 0;
-        if (cb === undefined) cb = 0;
-        return ca - cb;
-      });
-    });
 
-    var stack = $("fsSectionsStack");
-    stack.innerHTML = "";
+    $("fsEmptyHint").style.display = anyVisible ? "none" : "block";
 
-    var gapPx = sectionSpacingMeters * PX_PER_METER;
+    // Level pills
+    rebuildLevelPills();
 
-    ["top", "middle", "low"].forEach(function(bandName) {
-      var band = document.createElement("div");
-      band.className = "fs-row-band";
-      band.dataset.band = bandName;
-      band.dataset.bandLabel = bandName.toUpperCase();
-      band.style.gap = gapPx + "px";
-      if (groups[bandName].length === 0) {
-        // Empty band still takes up some space
-        band.style.minHeight = "20px";
-        band.style.opacity = "0.4";
+    if(window.lucide) lucide.createIcons();
+  }
+
+  // ===== BUILD DATA FOR EXPORT =====
+  function buildSectionsData() {
+    var sections = [];
+    var count = parseInt($("totalLevel1").value) || 0;
+    for (var s = 0; s < count; s++) {
+      var rowCount = getRowCount(s);
+      var map = buildRowTierMap(rowCount, s);
+      var pos = getSectionPos(s);
+      var lv = levels.find(function(x){return x.id === pos.levelId;});
+      var rows = [];
+      for (var r = 0; r < rowCount; r++) {
+        var seats = [];
+        var seatCount = getSeatsForRow(s, r);
+        for (var i = 0; i < seatCount; i++) seats.push({ seat: i + 1, tier: map[r] });
+        rows.push({ row: rowLabel(r), seats: seats });
       }
-      groups[bandName].forEach(function(idx) {
-        band.appendChild(buildSectionFrame(idx));
+      sections.push({
+        name: getSectionName(s),
+        level: lv ? lv.name : null,
+        x: pos.x, y: pos.y, scale: pos.scale, rotation: pos.rotation,
+        tierOverride: getSectionTierOverride(s),
+        rowCount: rowCount,
+        rows: rows
       });
-      stack.appendChild(band);
-    });
+    }
+    return sections;
+  }
 
-    // Controls
-    var controls = $("fsControls");
-    controls.innerHTML = "";
+  function buildVenuePayload() {
+    return {
+      canvasWidth: canvasWidth, canvasHeight: canvasHeight,
+      gridSize: gridSize, snapToGrid: snapToGrid,
+      stage: { x: stage.x, y: stage.y, width: stage.width, height: stage.height, name: stage.name },
+      levels: levels.map(function(l){ return { id: l.id, name: l.name, color: l.color, visible: l.visible }; }),
+      sections: buildSectionsData()
+    };
+  }
 
-    var spacingCtl = document.createElement("div");
-    spacingCtl.className = "fs-spacing-control";
-    spacingCtl.innerHTML = "📏 Section Spacing:";
-    var spacingInput = document.createElement("input");
-    spacingInput.type = "number";
-    spacingInput.min = 0;
-    spacingInput.max = 50;
-    spacingInput.step = 0.5;
-    spacingInput.value = sectionSpacingMeters;
-    spacingInput.addEventListener("input", function() {
-      var v = parseFloat(spacingInput.value);
-      if (isNaN(v) || v < 0) v = 0;
-      sectionSpacingMeters = v;
-      document.querySelectorAll(".fs-row-band").forEach(function(b) {
-        b.style.gap = (v * PX_PER_METER) + "px";
-      });
-    });
-    spacingCtl.appendChild(spacingInput);
-    spacingCtl.appendChild(document.createTextNode(" m"));
-    controls.appendChild(spacingCtl);
-
-    for (var b2 = 0; b2 < sections; b2++) {
-      (function(idx) {
-        var c = document.createElement("div");
-        c.className = "fs-rotation-control";
-        c.innerHTML = "Section " + blockLabel(idx) + " ↻";
-        var inp = document.createElement("input");
-        inp.type = "number";
-        inp.min = -360;
-        inp.max = 360;
-        inp.step = 5;
-        inp.value = getRotation(idx);
-        inp.addEventListener("input", function() {
-          var v = parseInt(inp.value);
-          if (isNaN(v)) v = 0;
-          sectionRotations[idx] = v;
-          var frame = document.querySelector('.fs-section-frame[data-section="' + idx + '"]');
-          if (frame) frame.style.transform = v ? "rotate(" + v + "deg)" : "none";
+  // ===== EXPORT =====
+  function downloadFile(content, filename, mime) {
+    var blob = new Blob([content], { type: mime });
+    var url = URL.createObjectURL(blob);
+    var a = document.createElement("a");
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click();
+    setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
+  }
+  function exportJson() {
+    var name = $("eventName").value || "Untitled Event";
+    var payload = Object.assign({
+      eventName: name, hostName: $("hostName").value, hostEmail: $("hostEmail").value,
+      city: $("city").value, cost: $("cost").value,
+      startDate: $("startDate").value, startTime: $("startTime").value,
+      venueAddress: $("venueAddress").value,
+      totalAttendees: parseInt($("totalCapacity").value) || 0,
+      exportedAt: new Date().toISOString()
+    }, buildVenuePayload());
+    downloadFile(JSON.stringify(payload, null, 2), name.toLowerCase().replace(/[^a-z0-9]+/g,"-") + "-venue.json", "application/json");
+    showToast("Venue exported as JSON", "success");
+  }
+  function exportCsv() {
+    var name = $("eventName").value || "Untitled Event";
+    var lines = ["Section,Level,Row,Seat,Tier,X,Y,Scale,Rotation"];
+    buildSectionsData().forEach(function(sec) {
+      sec.rows.forEach(function(row) {
+        row.seats.forEach(function(seat) {
+          lines.push(['"' + sec.name + '"', '"' + (sec.level||"") + '"', row.row, seat.seat, seat.tier, sec.x, sec.y, sec.scale, sec.rotation].join(","));
         });
-        c.appendChild(inp);
-        c.appendChild(document.createTextNode("°"));
-        controls.appendChild(c);
-      })(b2);
+      });
+    });
+    downloadFile(lines.join("\n"), name.toLowerCase().replace(/[^a-z0-9]+/g,"-") + "-venue.csv", "text/csv");
+    showToast("Venue exported as CSV", "success");
+  }
+
+  // ===== SAVE =====
+  async function saveEvent() {
+    if (!db) { showToast("Firebase not connected", "error", 5000); return false; }
+    var payload = Object.assign({
+      eventName: $("eventName").value, hostName: $("hostName").value, hostEmail: $("hostEmail").value,
+      city: $("city").value, cost: $("cost").value,
+      startDate: $("startDate").value, startTime: $("startTime").value,
+      venueAddress: $("venueAddress").value,
+      tierColor: $("tierColor").value,
+      totalAttendees: parseInt($("totalCapacity").value) || 0,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+    }, buildVenuePayload());
+    try {
+      var ref = await db.collection("events").add(payload);
+      console.log("Saved:", ref.id);
+      showToast("Event saved successfully!", "success");
+      return true;
+    } catch(err) {
+      console.error(err);
+      showToast("Save failed: " + err.message, "error", 5000);
+      return false;
     }
   }
 
-  function openFullscreen() {
+  // ===== WIRING =====
+  // Canvas
+  $("canvasWidth").addEventListener("change", function() { canvasWidth = Math.max(400, Math.min(3000, parseInt(this.value)||1200)); this.value = canvasWidth; renderFullscreen(); });
+  $("canvasHeight").addEventListener("change", function() { canvasHeight = Math.max(400, Math.min(3000, parseInt(this.value)||800)); this.value = canvasHeight; renderFullscreen(); });
+  $("gridSize").addEventListener("change", function() { gridSize = Math.max(10, Math.min(200, parseInt(this.value)||50)); this.value = gridSize; renderFullscreen(); });
+  $("snapToggle").addEventListener("change", function() { snapToGrid = this.checked; });
+
+  // Stage
+  function readStageInputs() {
+    stage.x = parseInt($("stageX").value) || 0;
+    stage.y = parseInt($("stageY").value) || 0;
+    stage.width = Math.max(40, parseInt($("stageW").value) || 200);
+    stage.height = Math.max(20, parseInt($("stageH").value) || 60);
+    stage.name = $("stageName").value || "STAGE";
+    renderFullscreen();
+  }
+  ["stageX","stageY","stageW","stageH","stageName"].forEach(function(id){ $(id).addEventListener("input", readStageInputs); });
+
+  // Levels
+  $("addLevelBtn").addEventListener("click", addLevel);
+
+  // Sections count
+  $("totalLevel1").addEventListener("input", function() {
+    var v = parseInt(this.value) || 1;
+    v = Math.max(1, Math.min(26, v));
+    rebuildSectionTabs(); refreshSectionInputs(); rebuildRowOverrides();
+    calculateCapacity(); renderSeatingPlan();
+    if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+  });
+
+  $("totalLevel2").addEventListener("change", function() {
+    var v = Math.max(1, Math.min(52, parseInt(this.value)||6)); this.value = v;
+    refreshSectionInputs(); rebuildRowOverrides(); calculateCapacity(); renderSeatingPlan();
+  });
+  $("totalLevel3").addEventListener("change", function() {
+    var v = Math.max(4, Math.min(90, parseInt(this.value)||10)); this.value = v;
+    rebuildRowOverrides(); calculateCapacity(); renderSeatingPlan();
+  });
+
+  // Section name
+  $("sectionNameInput").addEventListener("input", function() {
+    setSectionName(currentEditingSection, this.value);
+    rebuildSectionTabs();
+    renderSeatingPlan();
+    if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+  });
+
+  // Section level
+  $("sectionLevelSelect").addEventListener("change", function() {
+    setSectionPos(currentEditingSection, "levelId", parseInt(this.value));
+    renderSeatingPlan();
+    if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+  });
+
+  // Section rows
+  $("sectionRowsInput").addEventListener("input", function() {
+    var v = parseInt(this.value); if (isNaN(v)) return;
+    setRowCount(currentEditingSection, v);
+    $("sectionRowsBadge").textContent = v + " rows";
+    rebuildRowOverrides(); calculateCapacity(); renderSeatingPlan();
+    if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+  });
+
+  // Section tier override
+  $("sectionTierOverride").addEventListener("change", function() {
+    setSectionTierOverride(currentEditingSection, this.value || null);
+    renderSeatingPlan();
+    if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+  });
+
+  // Position inputs
+  $("sectionXInput").addEventListener("input", function() {
+    setSectionPos(currentEditingSection, "x", snap(parseInt(this.value)||0));
+    renderSeatingPlan();
+    if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+  });
+  $("sectionYInput").addEventListener("input", function() {
+    setSectionPos(currentEditingSection, "y", snap(parseInt(this.value)||0));
+    renderSeatingPlan();
+    if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+  });
+  $("sectionRotationInput").addEventListener("input", function() {
+    setSectionPos(currentEditingSection, "rotation", parseInt(this.value)||0);
+    renderSeatingPlan();
+    if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+  });
+  $("sectionScaleInput").addEventListener("input", function() {
+    var v = parseFloat(this.value) || 1;
+    setSectionPos(currentEditingSection, "scale", v);
+    $("sectionScaleBadge").textContent = v.toFixed(2) + "×";
+    renderSeatingPlan();
+    if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+  });
+
+  // Fullscreen open/close
+  $("openFullscreen").addEventListener("click", function() {
     $("fullscreenOverlay").classList.add("open");
     document.body.style.overflow = "hidden";
     renderFullscreen();
-  }
-  function closeFullscreen() {
+  });
+  $("closeFullscreen").addEventListener("click", function() {
     $("fullscreenOverlay").classList.remove("open");
     document.body.style.overflow = "";
-  }
-  function resetFullscreen() {
-    if (!confirm("Reset all rotations and spacing to default?")) return;
-    sectionRotations = {};
-    sectionSpacingMeters = 2;
+  });
+  $("fsToggleGrid").addEventListener("click", function() {
+    showGrid = !showGrid;
+    this.classList.toggle("active", showGrid);
     renderFullscreen();
-  }
-
-  function updateTicketPreview() {
-    $("prevEventName").textContent = $("eventName").value || "EVENT NAME";
-    $("prevDateVenue").textContent = ($("startDate").value || "DATE") + " · " + ($("venueAddress").value || "VENUE");
-    $("prevGuestName").textContent = $("guestName").value || "GUEST NAME";
-    var seatCode = buildCurrentSeatCode();
-    if (seatCode) $("prevSeat").textContent = seatCode;
-    else $("prevSeat").textContent = isTablesMode() ? "Table not assigned" : "Seat not assigned";
-    $("prevVenueLocation").textContent = $("venueAddress").value || "VENUE";
-    $("prevTierBadge").textContent = $("tierColor").value.toUpperCase();
-    $("dynamicTicket").className = "ticket-card " + $("tierColor").value;
-  }
-
-  // ============ LISTENERS ============
-  var formInputs = document.querySelectorAll("#createEventForm input, #createEventForm select");
-  formInputs.forEach(function(input) {
-    input.addEventListener("input", function() { updateTicketPreview(); calculateCapacity(); renderSeatingPlan(); updateTierDistributionSummary(); });
-    input.addEventListener("change", function() { updateTicketPreview(); calculateCapacity(); renderSeatingPlan(); updateTierDistributionSummary(); });
   });
-  ["seatBlock","seatRow","seatNum","tableNum","chairNum"].forEach(function(id) {
-    var el = $(id);
-    el.addEventListener("input", function() {
-      if (id === "seatBlock" || id === "seatRow") el.value = el.value.toUpperCase().replace(/[^A-Z]/g, "").slice(0,1);
-      refreshSeatPreview();
-    });
-  });
-
-  $("venueType").addEventListener("change", function() { updateSeatingUI(); renderSeatingPlan(); });
-  $("hallLayoutToggle").addEventListener("change", function() { updateSeatingUI(); renderSeatingPlan(); });
-  $("tableShape").addEventListener("change", function() { updateTableShapeHint(); renderSeatingPlan(); });
-  $("stageName").addEventListener("input", function() {
+  $("fsResetView").addEventListener("click", function() {
+    if (!confirm("Reset all section positions, scales and rotations?")) return;
+    sectionPositions = {};
     renderSeatingPlan();
-    if ($("fullscreenOverlay").classList.contains("open")) {
-      var stageName = ($("stageName").value || "STAGE").trim().toUpperCase();
-      $("fsStageName").textContent = stageName;
-      $("fsStageLabel").textContent = stageName;
-      document.querySelectorAll(".fs-section-stage").forEach(function(el) { el.textContent = stageName; });
+    renderFullscreen();
+    refreshSectionInputs();
+  });
+
+  // Clear all overrides
+  $("clearAllOverrides").addEventListener("click", function() {
+    if (!confirm("Clear all section overrides and reset positions?")) return;
+    sectionRowOverrides = {}; sectionRowCounts = {}; sectionNames = {};
+    sectionTierOverrides = {}; sectionPositions = {};
+    levels = [{ id: 0, name: "Ground Floor", color: "#22d3ee", visible: true }];
+    nextLevelId = 1;
+    currentEditingSection = 0;
+    rebuildLevelsList(); rebuildLevelSelect();
+    rebuildSectionTabs(); refreshSectionInputs(); rebuildRowOverrides();
+    calculateCapacity(); renderSeatingPlan();
+  });
+
+  // Exports
+  $("exportJsonBtn").addEventListener("click", exportJson);
+  $("exportCsvBtn").addEventListener("click", exportCsv);
+
+  // Ticket preview inputs
+  ["eventName","startDate","venueAddress","guestName","seatBlock","seatRow","seatNum"].forEach(function(id) {
+    $(id).addEventListener("input", updateTicketPreview);
+  });
+  ["tierColor"].forEach(function(id) {
+    $(id).addEventListener("change", updateTicketPreview);
+  });
+  ["seatBlock","seatRow"].forEach(function(id) {
+    $(id).addEventListener("input", function() { this.value = this.value.toUpperCase().replace(/[^A-Z]/g,"").slice(0,1); });
+  });
+
+  // Tier distribution summary
+  function updateTierSummary() {
+    var defaultRows = parseInt($("totalLevel2").value) || 0;
+    var sum = (parseInt($("tierRowsElite").value)||0) + (parseInt($("tierRowsGold").value)||0) + (parseInt($("tierRowsSilver").value)||0) + (parseInt($("tierRowsCyan").value)||0);
+    var s = $("tierDistSummary");
+    s.className = "tier-dist-summary";
+    if (sum === defaultRows) s.textContent = "✓ Perfect — " + sum + " rows assigned.";
+    else if (sum < defaultRows) s.textContent = "Assigned " + sum + ". Rows beyond default to Cyan.";
+    else s.textContent = "Sum " + sum + " (extras ignored per section).";
+  }
+  ["tierRowsElite","tierRowsGold","tierRowsSilver","tierRowsCyan"].forEach(function(id) {
+    $(id).addEventListener("input", function() { updateTierSummary(); renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
+  });
+
+  // Submit
+  $("createEventForm").addEventListener("submit", async function(e) {
+    e.preventDefault();
+    var btn = $("submitBtn"); var orig = btn.innerHTML;
+    btn.disabled = true; btn.innerHTML = 'Saving...';
+    await saveEvent();
+    btn.disabled = false; btn.innerHTML = orig;
+    if(window.lucide) lucide.createIcons();
+  });
+
+  // Keyboard esc
+  document.addEventListener("keydown", function(e) {
+    if (e.key === "Escape" && $("fullscreenOverlay").classList.contains("open")) {
+      $("fullscreenOverlay").classList.remove("open");
+      document.body.style.overflow = "";
     }
   });
 
-  $("totalLevel1").addEventListener("input", function() { rebuildSectionTabs(); refreshSectionRowsInput(); refreshSectionLocationInputs(); rebuildRowOverrides(); calculateCapacity(); renderSeatingPlan(); });
-
-  $("totalLevel2").addEventListener("change", function() {
-    var v = parseInt(this.value) || 6;
-    v = Math.max(1, Math.min(52, v));
-    this.value = v;
-    refreshSectionRowsInput();
-    rebuildRowOverrides();
-    calculateCapacity(); renderSeatingPlan();
-  });
-
-  $("totalLevel3").addEventListener("change", function() {
-    var v = parseInt(this.value) || 10;
-    v = Math.max(4, Math.min(90, v));
-    this.value = v;
-    rebuildRowOverrides();
-    calculateCapacity(); renderSeatingPlan();
-  });
-
-  $("sectionRowsInput").addEventListener("input", function() {
-    var v = parseInt(this.value);
-    if (isNaN(v)) return;
-    v = Math.max(1, Math.min(52, v));
-    setRowCount(currentEditingSection, v);
-    $("sectionRowsBadge").textContent = v + " rows";
-    rebuildRowOverrides();
-    calculateCapacity(); renderSeatingPlan();
-    if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
-  });
-
-  // Vertical button group
-  document.querySelectorAll("#verticalBtnGroup .location-btn").forEach(function(btn) {
-    btn.addEventListener("click", function() {
-      setSectionLocation(currentEditingSection, btn.dataset.vertical, null);
-      refreshSectionLocationInputs();
-      if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
-    });
-  });
-
-  // Compass select
-  $("sectionCompass").addEventListener("change", function() {
-    setSectionLocation(currentEditingSection, null, this.value);
-    if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
-  });
-
-  $("clearAllOverrides").addEventListener("click", function() {
-    if (!confirm("Clear all per-section overrides?")) return;
-    sectionRowOverrides = {};
-    sectionRowCounts = {};
-    sectionLocations = {};
-    currentEditingSection = 0;
-    rebuildSectionTabs();
-    refreshSectionRowsInput();
-    refreshSectionLocationInputs();
-    rebuildRowOverrides();
-    calculateCapacity();
-    renderSeatingPlan();
-  });
-
-  $("openFullscreen").addEventListener("click", openFullscreen);
-  $("closeFullscreen").addEventListener("click", closeFullscreen);
-  $("resetSectionPositions").addEventListener("click", resetFullscreen);
-
-  document.addEventListener("keydown", function(e) {
-    if (e.key === "Escape" && $("fullscreenOverlay").classList.contains("open")) closeFullscreen();
-  });
-
-  updateSeatingUI();
+  // ===== INIT =====
+  rebuildLevelsList();
+  rebuildLevelSelect();
   rebuildSectionTabs();
-  refreshSectionRowsInput();
-  refreshSectionLocationInputs();
+  refreshSectionInputs();
   rebuildRowOverrides();
+  calculateCapacity();
   updateTicketPreview();
   renderSeatingPlan();
-
-  $("createEventForm").addEventListener("submit", function(e){
-    e.preventDefault();
-    alert("Event Saved! Your ticket design is locked in.\nSeat Code: " + (buildCurrentSeatCode() || "(none)"));
-  });
+  updateTierSummary();
 });
 
 })();
