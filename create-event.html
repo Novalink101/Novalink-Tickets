@@ -135,6 +135,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .tier-color-item .tier-color-swatch{width:18px;height:18px;border-radius:5px;flex-shrink:0;border:1px solid rgba(0,0,0,0.12);transition:background 0.2s;}
 .tier-color-item label{flex:1;min-width:0;font-size:12px;font-weight:700;color:var(--text-2);text-transform:none;letter-spacing:0;margin:0;word-break:break-word;}
 .tier-color-item input[type="color"]{width:46px;height:32px;padding:2px 4px;border-radius:8px;border:1px solid var(--border-2);background:#fff;cursor:pointer;flex-shrink:0;}
+.tier-color-item input[type="color"]:disabled{cursor:not-allowed;opacity:0.55;}
 .tier-color-actions{margin-top:10px;display:flex;justify-content:flex-end;}
 
 .levels-panel { margin-top: 12px; padding: 12px; background: var(--bg-2); border: 1px solid var(--border-2); border-radius: 10px; }
@@ -481,6 +482,11 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
 .toast.success { background: #065f46; }
 .toast.error { background: #991b1b; }
+
+/* Plan feature notice */
+.plan-feature-note{margin-top:10px;padding:9px 12px;border-radius:10px;background:var(--bg-2);border:1px dashed var(--border-2);font-size:11px;font-weight:700;color:var(--text-2);line-height:1.6;word-break:break-word;}
+.plan-feature-note b{color:var(--cyan-700);}
+.plan-locked-badge{display:inline-flex;align-items:center;gap:5px;font-size:10px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:#92400e;background:#fffbeb;border:1px solid #fde68a;padding:3px 8px;border-radius:99px;margin-left:8px;vertical-align:middle;}
 </style>
 </head>
 <body>
@@ -574,34 +580,35 @@ h1,h2,h3{line-height:1.15;font-weight:700}
         <div class="section-divider"><span>Pricing Plan</span></div>
         <div class="form-group">
           <label>Choose a Novalink plan</label>
-          <p class="form-hint" style="margin-top:0;margin-bottom:8px;">Plan determines the fee Novalink takes per ticket. No monthly fees — you only pay when you sell.</p>
+          <p class="form-hint" style="margin-top:0;margin-bottom:8px;">Plan determines the fee Novalink takes per ticket <em>and</em> which studio features you can use. No monthly fees — you only pay when you sell.</p>
           <div class="plan-grid" id="planGrid">
             <label class="plan-card" data-plan="basic">
               <input type="radio" name="plan" value="basic" data-fee="5" data-limit="100" />
               <div class="plan-name">Basic</div>
               <div class="plan-fee">5<small>% per ticket</small></div>
-              <div class="plan-desc">Up to 100 tickets · QR scanning · 2 scanner staff</div>
+              <div class="plan-desc">Up to 100 tickets · 4 fixed tiers · Fixed colours · No seating plan</div>
             </label>
             <label class="plan-card featured" data-plan="standard">
               <span class="plan-badge">Most popular</span>
               <input type="radio" name="plan" value="standard" data-fee="7" data-limit="500" checked />
               <div class="plan-name">Standard</div>
               <div class="plan-fee">7<small>% per ticket</small></div>
-              <div class="plan-desc">Up to 500 tickets · QR + barcode · 5 scanner staff</div>
+              <div class="plan-desc">Up to 500 tickets · Tables &amp; chairs seating · Editable colours · Up to 4 tiers</div>
             </label>
             <label class="plan-card" data-plan="premium">
               <input type="radio" name="plan" value="premium" data-fee="10" data-limit="2000" />
               <div class="plan-name">Premium</div>
               <div class="plan-fee">10<small>% per ticket</small></div>
-              <div class="plan-desc">Up to 2,000 tickets · QR + barcode + vertical · 15 scanner staff</div>
+              <div class="plan-desc">Up to 2,000 tickets · Rows + tables seating · Venue layout editor · Editable colours</div>
             </label>
             <label class="plan-card" data-plan="enterprise">
               <input type="radio" name="plan" value="enterprise" data-fee="12" data-limit="999999" />
               <div class="plan-name">Enterprise</div>
               <div class="plan-fee">12<small>% per ticket</small></div>
-              <div class="plan-desc">Unlimited tickets · White-label · Dedicated account manager</div>
+              <div class="plan-desc">Unlimited tickets · Everything unlocked · White-label · Dedicated account manager</div>
             </label>
           </div>
+          <div class="plan-feature-note" id="planFeatureHint"></div>
         </div>
 
         <div class="section-divider"><span>Tier Names &amp; Pricing</span></div>
@@ -629,7 +636,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
             </div>
             <div class="tier-price-row" data-tier-row="gold">
               <span class="tier-swatch" style="background:var(--tier-gold)"></span>
-              <input type="text" class="tier-name-input" data-tier="gold" value="Gold" maxlength="20" placeholder="Gold" />
+              <input type="text" class="tier-name-input" data-tier="gold" value="VIP" maxlength="20" placeholder="VIP" />
               <span class="tier-qty-badge" data-qty-badge="gold">0 seats</span>
               <div class="currency-input compact"><span class="currency-prefix">R</span><input type="number" class="tier-price-input" data-tier="gold" min="0" step="0.01" value="0" /></div>
               <span class="tier-revenue" data-rev-row="gold">R 0.00</span>
@@ -903,7 +910,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
             </div>
             <div class="tier-dist-item" data-tier-dist="gold">
               <div class="swatch" style="background:var(--tier-gold)"></div>
-              <label for="tierRowsGold">Gold (VIP)</label>
+              <label for="tierRowsGold">VIP (Gold)</label>
               <input type="number" class="tier-rows-input" data-tier="gold" id="tierRowsGold" min="0" value="2" />
             </div>
             <div class="tier-dist-item" data-tier-dist="silver">
@@ -913,7 +920,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
             </div>
             <div class="tier-dist-item" data-tier-dist="cyan">
               <div class="swatch" style="background:var(--tier-cyan)"></div>
-              <label for="tierRowsCyan">Cyan (Standard)</label>
+              <label for="tierRowsCyan">Standard (Cyan)</label>
               <input type="number" class="tier-rows-input" data-tier="cyan" id="tierRowsCyan" min="0" value="1" />
             </div>
             <div class="tier-dist-item" data-tier-dist="tier5" style="display:none;">
@@ -936,7 +943,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
           <p class="form-hint" style="margin-top:0;margin-bottom:8px;">Edit the tier colours. Applied to seats, tables, the seating plan legend, and both sides of the live ticket preview.</p>
           <div class="tier-color-grid">
             <div class="tier-color-item" data-tier-color="black"><span class="tier-color-swatch" id="tierSwatchBlack"></span><label for="tierColorBlack">Elite</label><input type="color" class="tier-color-input" data-tier="black" id="tierColorBlack" value="#1a202c" /></div>
-            <div class="tier-color-item" data-tier-color="gold"><span class="tier-color-swatch" id="tierSwatchGold"></span><label for="tierColorGold">Gold</label><input type="color" class="tier-color-input" data-tier="gold" id="tierColorGold" value="#ecc94b" /></div>
+            <div class="tier-color-item" data-tier-color="gold"><span class="tier-color-swatch" id="tierSwatchGold"></span><label for="tierColorGold">VIP</label><input type="color" class="tier-color-input" data-tier="gold" id="tierColorGold" value="#ecc94b" /></div>
             <div class="tier-color-item" data-tier-color="silver"><span class="tier-color-swatch" id="tierSwatchSilver"></span><label for="tierColorSilver">Silver</label><input type="color" class="tier-color-input" data-tier="silver" id="tierColorSilver" value="#cbd5e1" /></div>
             <div class="tier-color-item" data-tier-color="cyan"><span class="tier-color-swatch" id="tierSwatchCyan"></span><label for="tierColorCyan">Standard</label><input type="color" class="tier-color-input" data-tier="cyan" id="tierColorCyan" value="#00FFFF" /></div>
             <div class="tier-color-item" data-tier-color="tier5" style="display:none;"><span class="tier-color-swatch" id="tierSwatchTier5"></span><label for="tierColorTier5">Platinum</label><input type="color" class="tier-color-input" data-tier="tier5" id="tierColorTier5" value="#a855f7" /></div>
@@ -1145,7 +1152,7 @@ var ticketFlipped = false;
 // ===== TIER SYSTEM =====
 var TIER_KEYS = ["black", "gold", "silver", "cyan", "tier5", "tier6"];
 var TIER_DEFAULTS = { black: "#1a202c", gold: "#ecc94b", silver: "#cbd5e1", cyan: "#00FFFF", tier5: "#a855f7", tier6: "#f472b6" };
-var TIER_DEFAULT_NAMES = { black: "Elite", gold: "Gold", silver: "Silver", cyan: "Standard", tier5: "Platinum", tier6: "Diamond" };
+var TIER_DEFAULT_NAMES = { black: "Elite", gold: "VIP", silver: "Silver", cyan: "Standard", tier5: "Platinum", tier6: "Diamond" };
 var TIER_COLORS = Object.assign({}, TIER_DEFAULTS);
 var TIER_NAMES = Object.assign({}, TIER_DEFAULT_NAMES);
 var TIER_PRICES = { black: 0, gold: 0, silver: 0, cyan: 0, tier5: 0, tier6: 0 };
@@ -1162,6 +1169,70 @@ function tierIdToCap(t){ return t.charAt(0).toUpperCase() + t.slice(1); }
 function getTierLabel(tier){ return TIER_NAMES[tier] || tier; }
 
 var currentPlan = { id: "standard", fee: 7, limit: 500 };
+
+/* ============================================================
+   PLAN FEATURE MATRIX
+   ------------------------------------------------------------
+   basic      : NO seating plan, NO venue layout, fixed tier
+                colours + fixed tier names, 4 tiers only.
+   standard   : Tables & chairs seating ONLY (no rows / no venue
+                layout editor), editable colours, up to 4 tiers.
+   premium    : Rows + tables seating, venue layout editor,
+                annotations, levels, editable colours/names.
+   enterprise : Everything unlocked.
+   ============================================================ */
+var PLAN_FEATURES = {
+  basic: {
+    seatingPlan:     false,   // no seating plan at all
+    rowsMode:        false,
+    tableMode:       false,
+    venueLayout:     false,   // no canvas / stage / fullscreen / annotations / levels
+    annotations:     false,
+    levels:          false,
+    editTierColors:  false,
+    editTierNames:   false,
+    maxTiers:        4,
+    lockTiers:       true
+  },
+  standard: {
+    seatingPlan:     true,
+    rowsMode:        false,   // tables & chairs only
+    tableMode:       true,
+    venueLayout:     false,
+    annotations:     false,
+    levels:          false,
+    editTierColors:  true,
+    editTierNames:   true,
+    maxTiers:        4,
+    lockTiers:       false
+  },
+  premium: {
+    seatingPlan:     true,
+    rowsMode:        true,
+    tableMode:       true,
+    venueLayout:     true,
+    annotations:     true,
+    levels:          true,
+    editTierColors:  true,
+    editTierNames:   true,
+    maxTiers:        6,
+    lockTiers:       false
+  },
+  enterprise: {
+    seatingPlan:     true,
+    rowsMode:        true,
+    tableMode:       true,
+    venueLayout:     true,
+    annotations:     true,
+    levels:          true,
+    editTierColors:  true,
+    editTierNames:   true,
+    maxTiers:        6,
+    lockTiers:       false
+  }
+};
+var FEATURES = PLAN_FEATURES.standard;
+function getPlanFeatures(planId){ return PLAN_FEATURES[planId] || PLAN_FEATURES.standard; }
 
 var MARKER_TYPES = {
   exit:     { color: '#10b981', icon: '↗',  defaultLabel: 'EXIT' },
@@ -1368,27 +1439,185 @@ document.addEventListener("DOMContentLoaded", function(){
     return total;
   }
 
+  /* ============================================================
+     PLAN FEATURE GATING HELPERS
+     ============================================================ */
+  function findDivider(text){
+    var divs = document.querySelectorAll(".section-divider");
+    for (var i = 0; i < divs.length; i++){
+      if (divs[i].textContent.trim().toLowerCase() === text.toLowerCase()) return divs[i];
+    }
+    return null;
+  }
+
+  /**
+   * Hide (or restore) a divider and every sibling up to the next divider.
+   * Elements whose display is controlled elsewhere get re-set by their own
+   * functions right after this runs.
+   */
+  function hideSectionGroup(dividerText, hide){
+    var d = findDivider(dividerText);
+    if (!d) return;
+    d.style.display = hide ? "none" : "";
+    var n = d.nextElementSibling;
+    while (n && !n.classList.contains("section-divider")) {
+      n.style.display = hide ? "none" : "";
+      n = n.nextElementSibling;
+    }
+  }
+
+  function applyTierNameLock(){
+    var editable = FEATURES.editTierNames;
+    document.querySelectorAll(".tier-name-input").forEach(function(inp){
+      inp.readOnly = !editable;
+      inp.style.background = editable ? "" : "var(--surface-2)";
+      inp.style.cursor = editable ? "" : "not-allowed";
+      inp.title = editable ? "" : "Tier names are fixed on your current plan";
+    });
+  }
+
+  function applyTierColourLock(){
+    var editable = FEATURES.editTierColors;
+    document.querySelectorAll(".tier-color-input").forEach(function(inp){ inp.disabled = !editable; });
+    var rb = $("resetTierColorsBtn");
+    if (rb) rb.style.display = editable ? "" : "none";
+    if (!editable) {
+      // Force the default palette when colour editing is locked
+      TIER_KEYS.forEach(function(k){
+        TIER_COLORS[k] = TIER_DEFAULTS[k];
+        var el = document.querySelector('.tier-color-input[data-tier="' + k + '"]');
+        if (el) el.value = TIER_DEFAULTS[k];
+      });
+      applyTierColors();
+    }
+  }
+
+  function resetTierNamesToDefaults(){
+    TIER_KEYS.forEach(function(k){
+      TIER_NAMES[k] = TIER_DEFAULT_NAMES[k];
+      var el = document.querySelector('.tier-name-input[data-tier="' + k + '"]');
+      if (el) el.value = TIER_DEFAULT_NAMES[k];
+    });
+    syncTierNamesEverywhere();
+  }
+
+  function updatePlanFeatureHint(){
+    var pfh = $("planFeatureHint");
+    if (!pfh) return;
+    var f = FEATURES;
+    var bits = [];
+    bits.push(f.seatingPlan ? (f.rowsMode ? "Rows + tables seating" : "Tables &amp; chairs seating") : "No seating plan");
+    bits.push(f.venueLayout ? "Venue layout &amp; annotations" : "No venue layout editor");
+    bits.push(f.editTierColors ? "Editable tier colours" : "Fixed tier colours");
+    bits.push(f.editTierNames ? "Editable tier names" : "Fixed tier names");
+    bits.push("Up to " + f.maxTiers + " tiers");
+    pfh.innerHTML = "<b>Your plan includes:</b> " + bits.join(" · ");
+  }
+
+  function applyPlanFeatures(){
+    FEATURES = getPlanFeatures(currentPlan.id);
+    var f = FEATURES;
+
+    // --- Right column: seating plan preview card ---
+    var spWrap = $("seatingPlanPreview") ? $("seatingPlanPreview").parentElement : null;
+    if (spWrap) spWrap.style.display = f.seatingPlan ? "" : "none";
+
+    // --- Venue-layout-related blocks ---
+    hideSectionGroup("Venue Canvas & Stage", !f.venueLayout);
+    hideSectionGroup("Canvas Annotations", !f.annotations);
+    hideSectionGroup("Levels / Floors", !f.levels);
+
+    // --- Whole Sections region (basic has none) ---
+    hideSectionGroup("Sections", !f.seatingPlan);
+
+    // --- Tier colour editor ---
+    hideSectionGroup("Tier Colours", !f.editTierColors);
+
+    // --- Seating mode toggle (rows ⇄ tables) ---
+    var tmToggle = $("tableModeToggle");
+    var tmRow = tmToggle ? tmToggle.closest(".toggle-row") : null;
+    if (tmRow) tmRow.style.display = (!f.seatingPlan || !f.rowsMode) ? "none" : "";
+    if (tmToggle) {
+      if (!f.rowsMode) { tmToggle.checked = true; tmToggle.disabled = true; }
+      else { tmToggle.disabled = false; }
+    }
+
+    // --- Buttons that open gated views ---
+    var fsBtn = $("openFullscreen");
+    if (fsBtn) fsBtn.style.display = f.venueLayout ? "" : "none";
+    var spFull = $("viewSeatingPlanFull");
+    if (spFull) spFull.style.display = f.seatingPlan ? "" : "none";
+
+    // --- Locks on names / colours ---
+    applyTierNameLock();
+    if (!f.editTierNames) resetTierNamesToDefaults();
+    applyTierColourLock();
+
+    // --- Tier count limits ---
+    if (f.lockTiers) {
+      activeTierCount = 4;
+      var tsel = $("tierCount");
+      if (tsel) tsel.value = "4";
+    }
+    updateTierCountOptions();
+    updateTierVisibility();
+
+    // --- Apply the seating mode + re-render everything ---
+    if (f.seatingPlan) {
+      applyTableModeUI();
+    } else {
+      calculateCapacity();
+      updateRevenueCalculator();
+    }
+
+    // --- Close any overlay that is no longer permitted ---
+    if (!f.venueLayout && $("fullscreenOverlay").classList.contains("open")) {
+      $("fullscreenOverlay").classList.remove("open");
+      document.body.style.overflow = "";
+    }
+    if (!f.seatingPlan && $("seatingPlanOverlay").classList.contains("open")) {
+      $("seatingPlanOverlay").classList.remove("open");
+      document.body.style.overflow = "";
+    }
+
+    updatePlanFeatureHint();
+    renderSeatingPlan();
+    updateTableSummary();
+    updateRevenueCalculator();
+  }
+
   /* ============ TIER MANAGEMENT ============ */
   function updateTierCountOptions(){
     var sel = $("tierCount");
     if (!sel) return;
     var capacity = calculateCapacity();
     var allowExtra = capacity > LARGE_VENUE_THRESHOLD;
+    var planMax = (FEATURES && FEATURES.maxTiers) ? FEATURES.maxTiers : MAX_TIERS;
+    var hardMax = Math.min(planMax, allowExtra ? MAX_TIERS : 4);
+
     Array.from(sel.options).forEach(function(opt){
       var n = parseInt(opt.value, 10);
-      if (n > 4 && !allowExtra) opt.disabled = true;
-      else opt.disabled = false;
+      opt.disabled = (n > planMax) || (n > 4 && !allowExtra);
     });
-    if (!allowExtra && activeTierCount > 4) {
-      activeTierCount = 4;
-      sel.value = "4";
-      showToast("Venue capacity dropped below 5,000 — tier count reduced to 4.", "info", 4000);
+
+    sel.disabled = !!(FEATURES && FEATURES.lockTiers);
+
+    if (activeTierCount > hardMax) {
+      activeTierCount = hardMax;
+      sel.value = String(hardMax);
+      updateTierVisibility();
     }
+
     var hint = $("tierCountHint");
     if (hint) {
-      hint.textContent = allowExtra
-        ? "Venue capacity is above 5,000 — you can use up to 6 tiers."
-        : "Minimum 2 tiers. Venue capacity must exceed 5,000 to enable 5 or 6 tiers.";
+      var parts = ["Minimum 2 tiers."];
+      if (planMax < MAX_TIERS) parts.push("Your plan allows up to " + planMax + " tiers.");
+      if (planMax >= 5) {
+        parts.push(allowExtra
+          ? "Venue capacity is above 5,000 — 5 and 6 tiers unlocked."
+          : "Venue capacity must exceed 5,000 to enable 5 or 6 tiers.");
+      }
+      hint.textContent = parts.join(" ");
     }
   }
 
@@ -2425,6 +2654,18 @@ document.addEventListener("DOMContentLoaded", function(){
 
   function renderSeatingPlan() {
     var container = $("seatingPlanPreview");
+    if (!container) return;
+
+    // Feature gate — Basic has no seating plan at all
+    if (!FEATURES.seatingPlan) {
+      container.innerHTML = '<div class="seating-plan-title">Seating plans are not available on the Basic plan</div>';
+      if ($("seatingPlanOverlay").classList.contains("open")) {
+        $("seatingPlanOverlay").classList.remove("open");
+        document.body.style.overflow = "";
+      }
+      return;
+    }
+
     container.innerHTML = "";
     var l1 = parseInt($("totalLevel1").value) || 0;
     if (l1 === 0) {
@@ -2442,6 +2683,7 @@ document.addEventListener("DOMContentLoaded", function(){
   function renderSeatingPlanFull() {
     var container = $("seatingPlanFullInner");
     if (!container) return;
+    if (!FEATURES.seatingPlan) return;
     container.innerHTML = "";
     var l1 = parseInt($("totalLevel1").value) || 0;
     if (l1 === 0) {
@@ -2815,6 +3057,15 @@ document.addEventListener("DOMContentLoaded", function(){
       tierNames: TIER_NAMES,
       tierPrices: TIER_PRICES,
       plan: { id: currentPlan.id, fee: currentPlan.fee, limit: currentPlan.limit },
+      features: {
+        seatingPlan: FEATURES.seatingPlan,
+        rowsMode: FEATURES.rowsMode,
+        tableMode: FEATURES.tableMode,
+        venueLayout: FEATURES.venueLayout,
+        editTierColors: FEATURES.editTierColors,
+        editTierNames: FEATURES.editTierNames,
+        maxTiers: FEATURES.maxTiers
+      },
       seatingMode: tableMode ? "tables" : "rows",
       tableConfig: tableMode ? {
         shape: tableConfig.shape, chairsAround: tableConfig.chairsAround, chairsPerSide: tableConfig.chairsPerSide,
@@ -2986,6 +3237,10 @@ document.addEventListener("DOMContentLoaded", function(){
   }
 
   function applyTableModeUI() {
+    // Plan gate: if rows mode isn't allowed, force tables mode
+    if (!FEATURES.rowsMode && $("tableModeToggle")) {
+      $("tableModeToggle").checked = true;
+    }
     tableMode = $("tableModeToggle").checked;
     $("tableOptionsPanel").style.display = tableMode ? "block" : "none";
     $("rowsPerSectionGroup").style.display = tableMode ? "none" : "";
@@ -3009,6 +3264,7 @@ document.addEventListener("DOMContentLoaded", function(){
         limit: parseInt(this.dataset.limit) || 500
       };
       updatePlanDisplay();
+      applyPlanFeatures();   // <-- gate the studio UI to the new plan
     });
   });
 
@@ -3054,6 +3310,11 @@ document.addEventListener("DOMContentLoaded", function(){
     var v = parseInt(this.value, 10);
     if (isNaN(v)) v = DEFAULT_TIERS;
     v = Math.max(MIN_TIERS, Math.min(MAX_TIERS, v));
+    var planMax = (FEATURES && FEATURES.maxTiers) ? FEATURES.maxTiers : MAX_TIERS;
+    if (v > planMax) {
+      v = planMax;
+      showToast("Your plan allows up to " + planMax + " tiers.", "error", 4000);
+    }
     var capacity = calculateCapacity();
     var allowExtra = capacity > LARGE_VENUE_THRESHOLD;
     if (v > 4 && !allowExtra) {
@@ -3069,12 +3330,10 @@ document.addEventListener("DOMContentLoaded", function(){
   $("flipTicketBtn").addEventListener("click", function(){
     setTicketFlipped(!ticketFlipped);
   });
-  // Also allow clicking the ticket itself to flip
   var flipContainer = $("ticketFlipInner");
   if (flipContainer) {
     flipContainer.style.cursor = "pointer";
     flipContainer.addEventListener("click", function(e){
-      // Ignore clicks on interactive elements
       if (e.target.closest("button, input, select, a")) return;
       setTicketFlipped(!ticketFlipped);
     });
@@ -3083,6 +3342,10 @@ document.addEventListener("DOMContentLoaded", function(){
   /* ===== TIER NAME INPUTS ===== */
   document.querySelectorAll(".tier-name-input").forEach(function(inp){
     inp.addEventListener("input", function(){
+      if (!FEATURES.editTierNames) {
+        this.value = TIER_NAMES[this.dataset.tier] || TIER_DEFAULT_NAMES[this.dataset.tier];
+        return;
+      }
       var t = this.dataset.tier;
       var v = this.value.trim() || TIER_DEFAULT_NAMES[t] || t;
       TIER_NAMES[t] = v;
@@ -3129,6 +3392,7 @@ document.addEventListener("DOMContentLoaded", function(){
   /* ===== TIER COLOUR PICKERS ===== */
   document.querySelectorAll(".tier-color-input").forEach(function(el){
     el.addEventListener("input", function(){
+      if (!FEATURES.editTierColors) return;   // plan lock
       var t = this.dataset.tier;
       TIER_COLORS[t] = this.value;
       applyTierColors();
@@ -3139,6 +3403,7 @@ document.addEventListener("DOMContentLoaded", function(){
   var resetBtn = $("resetTierColorsBtn");
   if (resetBtn) {
     resetBtn.addEventListener("click", function(){
+      if (!FEATURES.editTierColors) return;
       TIER_KEYS.forEach(function(name){
         TIER_COLORS[name] = TIER_DEFAULTS[name];
         var el = document.querySelector('.tier-color-input[data-tier="' + name + '"]');
@@ -3195,7 +3460,10 @@ document.addEventListener("DOMContentLoaded", function(){
   ["stageX","stageY","stageW","stageH","stageName"].forEach(function(id){ $(id).addEventListener("input", readStageInputs); });
 
   $("addLevelBtn").addEventListener("click", addLevel);
-  $("tableModeToggle").addEventListener("change", applyTableModeUI);
+  $("tableModeToggle").addEventListener("change", function(){
+    if (!FEATURES.rowsMode) { this.checked = true; return; }
+    applyTableModeUI();
+  });
   ["chairsAround","chairsPerSide","chairsLongSide","chairsShortSide","tableWidth","tableHeight","tableSpacing"]
     .forEach(function(id) { $(id).addEventListener("input", onTableConfigChange); });
 
@@ -3310,7 +3578,10 @@ document.addEventListener("DOMContentLoaded", function(){
     if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
   });
 
-  $("openFullscreen").addEventListener("click", function() { $("fullscreenOverlay").classList.add("open"); document.body.style.overflow = "hidden"; renderFullscreen(); });
+  $("openFullscreen").addEventListener("click", function() {
+    if (!FEATURES.venueLayout) { showToast("The venue layout editor is available on Premium and Enterprise plans.", "error", 4200); return; }
+    $("fullscreenOverlay").classList.add("open"); document.body.style.overflow = "hidden"; renderFullscreen();
+  });
   $("closeFullscreen").addEventListener("click", function() { $("fullscreenOverlay").classList.remove("open"); document.body.style.overflow = ""; });
   $("fsToggleGrid").addEventListener("click", function() { showGrid = !showGrid; this.classList.toggle("active", showGrid); renderFullscreen(); });
   $("fsToggleAuto").addEventListener("click", function() {
@@ -3337,6 +3608,7 @@ document.addEventListener("DOMContentLoaded", function(){
   });
 
   $("viewSeatingPlanFull").addEventListener("click", function() {
+    if (!FEATURES.seatingPlan) { showToast("Seating plans are not available on the Basic plan.", "error", 4200); return; }
     $("seatingPlanOverlay").classList.add("open");
     document.body.style.overflow = "hidden";
     lastFoundSeat = null;
@@ -3427,11 +3699,12 @@ document.addEventListener("DOMContentLoaded", function(){
   updateTierCountOptions();
   updateTierVisibility();
   updateRevenueCalculator();
+
+  // Apply plan-based feature gating last so it wins over all defaults
+  applyPlanFeatures();
 });
 n
 })();
 </script>
 </body>
   </html>
-
-Certian features arent supposed to be available to every tier dont include tge image in code
