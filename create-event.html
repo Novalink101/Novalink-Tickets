@@ -1,519 +1,328 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="theme-color" content="#0a0f14" />
-<title>Create an Event - Novalink Studio</title>
-<script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
-<style>
-:root{
-  --cyan-50:#ecfeff;--cyan-100:#cffafe;--cyan-400:#22d3ee;--cyan-500:#06b6d4;--cyan-600:#0891b2;--cyan-700:#0e7490;
-  --bg:#ffffff;--bg-2:#f6f8fb;--surface:#ffffff;--surface-2:#f1f4f8;
-  --border:#e4e9f0;--border-2:#d3dbe5;
-  --text:#0a0f14;--text-2:#2b3644;--text-muted:#6b7787;
-  --radius:14px;--max-width:1180px;
-  --font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
-  --navy:#1e2f4d;--cyan-logo:#7dd3e8;
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-height:1.6;min-height:100vh;display:flex;flex-direction:column}
-.container{max-width:var(--max-width);margin:0 auto;padding:0 24px;width:100%}
-h1,h2,h3{line-height:1.15;font-weight:700}
-.site-header{background:var(--bg);border-bottom:1px solid var(--border);padding:16px 0}
-.header-inner{display:flex;align-items:center;justify-content:space-between}
-.novalink-logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none}
-.novalink-logo .mark{width:32px;height:39px}
-.novalink-logo .wordmark{font-weight:800;font-size:1.1rem;color:var(--navy)}
-.studio-badge{background:#0a0f14;color:#22d3ee;font-size:11px;font-weight:800;padding:4px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:0.05em}
-.form-wrapper{flex:1;padding:40px 0;display:flex;align-items:flex-start}
-.studio-layout{display:grid;grid-template-columns:1fr 1fr;gap:40px;align-items:start;width:100%}
-@media (max-width:900px){.studio-layout{grid-template-columns:1fr;gap:24px}}
-.form-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:32px;box-shadow:0 10px 30px rgba(10,15,20,0.05);width:100%}
-.form-header{text-align:center;margin-bottom:28px}
-.form-header h1{font-size:1.8rem;color:var(--navy);margin-bottom:8px}
-.form-header p{color:var(--text-muted);font-size:14px}
-.form-group{margin-bottom:20px}
-.form-group label{display:block;font-size:12px;font-weight:700;color:var(--text-2);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em}
-.form-group input, .form-group select, .form-group textarea{width:100%;padding:12px 16px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:10px;color:var(--text);font-size:14.5px;font-family:inherit;transition:border-color 0.2s, box-shadow 0.2s}
-.form-group input:focus, .form-group select:focus, .form-group textarea:focus{outline:none;border-color:var(--cyan-500);box-shadow:0 0 0 3px rgba(6,182,212,0.15);background:#fff}
-.form-hint{font-size:11.5px;color:var(--text-muted);margin-top:6px;line-height:1.5;font-style:italic;}
-.form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
-@media (max-width:600px){.form-row,.form-row-3{grid-template-columns:1fr}}
-.section-divider{margin:24px 0;border-top:1px dashed var(--border);position:relative;text-align:center}
-.section-divider span{background:var(--surface);padding:0 12px;font-size:11px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;position:relative;top:-10px}
-.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:10px;margin-bottom:12px}
-.toggle-row .toggle-label{font-size:13px;font-weight:600;color:var(--text)}
-.toggle-switch{position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0}
-.toggle-switch input{opacity:0;width:0;height:0}
-.toggle-slider{position:absolute;cursor:pointer;inset:0;background:#cbd5e1;transition:.3s;border-radius:34px}
-.toggle-slider:before{position:absolute;content:"";height:18px;width:18px;left:3px;bottom:3px;background:white;transition:.3s;border-radius:50%}
-.toggle-switch input:checked + .toggle-slider{background:var(--cyan-500)}
-.toggle-switch input:checked + .toggle-slider:before{transform:translateX(20px)}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 24px;border-radius:12px;font-weight:700;font-size:15px;border:1px solid transparent;cursor:pointer;transition:all 0.2s ease;font-family:inherit;width:100%;text-decoration:none}
-.btn-accent{background:linear-gradient(135deg,var(--cyan-400),var(--cyan-600));color:#04161c}
-.btn-accent:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(6,182,212,0.35)}
-.btn-ghost{background:transparent;color:var(--text-2);border:1px solid var(--border-2)}
-.btn-ghost:hover{background:var(--surface-2);border-color:var(--cyan-500);color:var(--cyan-700)}
-.btn i{width:18px;height:18px}
-.form-actions{margin-top:28px;display:flex;flex-direction:column;gap:12px}
-.export-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
-.export-actions .btn{padding:10px 14px;font-size:13px}
-.seat-builder{display:flex;gap:10px;align-items:center;}
-.seat-builder .seat-part{flex:1;text-align:center;font-weight:800;text-transform:uppercase;letter-spacing:2px;font-size:16px;padding:12px 8px;}
-.seat-builder .seat-part.seat-num{letter-spacing:0.5px;}
-.seat-builder .seat-sep{color:var(--text-muted);font-weight:800;font-size:16px;flex-shrink:0;}
-.seat-preview-display{margin-top:10px;padding:10px 14px;background:var(--surface-2);border:1px dashed var(--cyan-500);border-radius:8px;font-family:ui-monospace,monospace;font-weight:800;font-size:16px;color:var(--cyan-700);text-align:center;letter-spacing:1px;min-height:42px;display:flex;align-items:center;justify-content:center;}
-.seat-preview-display.empty{color:var(--text-muted);font-weight:600;font-family:var(--font);font-size:12px;letter-spacing:0;border-color:var(--border-2);border-style:solid;}
-.tier-dist-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:8px;}
-.tier-dist-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:10px;}
-.tier-dist-item .swatch{width:14px;height:14px;border-radius:4px;flex-shrink:0;}
-.tier-dist-item .swatch.elite{background:#1a202c}
-.tier-dist-item .swatch.gold{background:#ecc94b}
-.tier-dist-item .swatch.silver{background:#cbd5e1}
-.tier-dist-item .swatch.cyan{background:#22d3ee}
-.tier-dist-item label{flex:1;font-size:12px;font-weight:600;margin:0;text-transform:none;letter-spacing:0;color:var(--text);}
-.tier-dist-item input{width:60px;padding:6px 8px;text-align:center;font-size:13px;}
-.tier-dist-summary{font-size:11.5px;color:var(--text-muted);margin-top:8px;font-style:italic;}
-.tier-dist-summary.error{color:#b91c1c;font-weight:700;}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Venue Shapes · Rectangular Stadium Builder · Drag & Drop</title>
+  <script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
+  <style>
+    /* ===== GLOBAL ===== */
+    :root {
+      --cyan-50: #ecfeff; --cyan-100: #cffafe; --cyan-400: #22d3ee; --cyan-500: #06b6d4; --cyan-600: #0891b2; --cyan-700: #0e7490;
+      --bg: #ffffff; --bg-2: #f6f8fb; --surface: #ffffff; --surface-2: #f1f4f8;
+      --border: #e4e9f0; --border-2: #d3dbe5;
+      --text: #0a0f14; --text-2: #2b3644; --text-muted: #6b7787;
+      --radius: 14px; --max-width: 1320px;
+      --font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      --navy: #1e2f4d; --cyan-logo: #7dd3e8;
+    }
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: var(--font);
+      background: var(--bg-2);
+      color: var(--text);
+      line-height: 1.6;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    .container { max-width: var(--max-width); margin: 0 auto; padding: 0 24px; width: 100%; }
+    h1, h2, h3 { line-height: 1.15; font-weight: 700; }
 
-/* Dev toggle */
-.dev-settings-toggle {
-  margin-bottom: 20px;
-  padding: 14px 16px;
-  background: linear-gradient(135deg, #0a0f14, #1a2129);
-  border: 1px solid #0a0f14;
-  border-radius: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-}
-.dev-settings-toggle .info {
-  display: flex;
-  flex-direction: column;
-  color: #fff;
-}
-.dev-settings-toggle .info .title {
-  font-size: 13px;
-  font-weight: 800;
-  letter-spacing: 0.5px;
-  text-transform: uppercase;
-  color: #22d3ee;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.dev-settings-toggle .info .title i { width: 15px; height: 15px; }
-.dev-settings-toggle .info .desc {
-  font-size: 11px;
-  color: rgba(255,255,255,0.55);
-  font-style: italic;
-  margin-top: 2px;
-}
-.dev-only { display: none; }
-body.dev-on .dev-only { display: block; }
-body.dev-on .dev-only.form-row-3,
-body.dev-on .dev-only.form-row { display: grid; }
-body.dev-on .dev-only.toggle-row { display: flex; }
-body.dev-on .dev-only.section-rows-row { display: flex; }
+    /* ===== HEADER ===== */
+    .site-header {
+      background: var(--bg); border-bottom: 1px solid var(--border); padding: 16px 0;
+    }
+    .header-inner { display: flex; align-items: center; justify-content: space-between; }
+    .novalink-logo { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; }
+    .novalink-logo .mark { width: 32px; height: 39px; }
+    .novalink-logo .wordmark { font-weight: 800; font-size: 1.1rem; color: var(--navy); }
+    .studio-badge {
+      background: #0a0f14; color: #22d3ee; font-size: 11px; font-weight: 800;
+      padding: 4px 10px; border-radius: 99px; text-transform: uppercase; letter-spacing: 0.05em;
+    }
 
-.levels-panel {
-  margin-top: 12px;
-  padding: 12px;
-  background: var(--bg-2);
-  border: 1px solid var(--border-2);
-  border-radius: 10px;
-}
-.levels-list {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  margin-bottom: 10px;
-  max-height: 200px;
-  overflow-y: auto;
-}
-.level-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 10px;
-  background: var(--surface);
-  border: 1px solid var(--border-2);
-  border-radius: 8px;
-}
-.level-item .level-swatch {
-  width: 14px;
-  height: 14px;
-  border-radius: 4px;
-  flex-shrink: 0;
-  border: 1px solid rgba(0,0,0,0.1);
-}
-.level-item .level-name-input {
-  flex: 1;
-  padding: 5px 8px;
-  font-size: 12.5px;
-  font-weight: 700;
-  background: transparent;
-  border: 1px solid transparent;
-  border-radius: 6px;
-  font-family: inherit;
-  color: var(--text);
-}
-.level-item .level-name-input:hover {
-  border-color: var(--border-2);
-  background: var(--bg-2);
-}
-.level-item .level-name-input:focus {
-  outline: none;
-  border-color: var(--cyan-500);
-  background: #fff;
-}
-.level-visible-toggle {
-  display: inline-flex;
-  align-items: center;
-  gap: 5px;
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--text-muted);
-  cursor: pointer;
-  user-select: none;
-}
-.level-item .btn-trash {
-  padding: 4px 6px;
-  border-radius: 6px;
-  border: 1px solid var(--border-2);
-  background: transparent;
-  color: var(--text-muted);
-  cursor: pointer;
-  font-family: inherit;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-}
-.level-item .btn-trash:hover {
-  border-color: #dc2626;
-  color: #dc2626;
-}
+    /* ===== LAYOUT ===== */
+    .form-wrapper { flex: 1; padding: 40px 0; display: flex; align-items: flex-start; }
+    .studio-layout { display: grid; grid-template-columns: 1fr 1.2fr; gap: 40px; align-items: start; width: 100%; }
+    @media (max-width: 1000px) { .studio-layout { grid-template-columns: 1fr; gap: 24px; } }
 
-.row-overrides-section{margin-top:12px;padding:12px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:10px;}
-.row-overrides-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px;flex-wrap:wrap;}
-.section-tabs{display:flex;gap:6px;flex-wrap:wrap;flex:1;}
-.section-tab{
-  padding:6px 12px;border-radius:8px;border:1px solid var(--border-2);
-  background:var(--surface);font-size:11.5px;font-weight:700;cursor:pointer;
-  font-family:inherit;transition:all 0.15s;color:var(--text-2);
-}
-.section-tab:hover{border-color:var(--cyan-500);color:var(--cyan-700);}
-.section-tab.active{background:#0a0f14;color:#fff;border-color:#0a0f14;}
-.btn-mini{
-  padding:6px 10px;border-radius:8px;border:1px solid var(--border-2);
-  background:transparent;font-size:11px;font-weight:700;cursor:pointer;
-  font-family:inherit;color:var(--text-muted);
-}
-.btn-mini:hover{border-color:var(--cyan-500);color:var(--cyan-700);}
-.btn-mini.fs-btn{background:#0a0f14;color:#22d3ee;border-color:#0a0f14;}
-.btn-mini.fs-btn:hover{background:#1a2129;border-color:#1a2129;color:#22d3ee;}
-.row-overrides-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;max-height:200px;overflow-y:auto;}
-.row-override-item{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border-2);border-radius:8px;padding:6px 8px;}
-.row-override-label{font-size:11px;font-weight:800;color:var(--text-2);letter-spacing:0.5px;flex:1;}
-.row-override-item input{width:56px;padding:5px 6px;text-align:center;font-size:13px;}
-.row-overrides-hint{font-size:11px;color:var(--text-muted);margin-bottom:8px;font-style:italic;}
+    /* ===== CARDS ===== */
+    .form-card {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 32px; box-shadow: 0 10px 30px rgba(10, 15, 20, 0.05); width: 100%;
+    }
+    .form-header { text-align: center; margin-bottom: 28px; }
+    .form-header h1 { font-size: 1.8rem; color: var(--navy); margin-bottom: 8px; }
+    .form-header p { color: var(--text-muted); font-size: 14px; }
 
-.section-rows-row, .section-location-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 10px;
-  padding: 8px 10px;
-  background: var(--surface);
-  border: 1px solid var(--border-2);
-  border-radius: 8px;
-}
-.section-rows-row label, .section-location-row label {
-  font-size: 11px;
-  font-weight: 800;
-  color: var(--text-2);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  flex: 1;
-}
-.section-rows-row input, .section-rows-row select {
-  width: 100px;
-  padding: 6px 8px;
-  text-align: center;
-  font-size: 13px;
-  font-weight: 700;
-  background: var(--bg-2);
-  border: 1px solid var(--border-2);
-  border-radius: 8px;
-  font-family: inherit;
-  color: var(--text);
-}
-.section-rows-row input[type="text"] {
-  width: 200px;
-  text-align: left;
-  font-weight: 600;
-}
-.section-rows-row input[type="range"] {
-  padding: 0;
-  border: none;
-  background: transparent;
-  width: 200px;
-}
-.section-rows-badge {
-  font-size: 11px;
-  font-weight: 700;
-  color: var(--cyan-700);
-  background: var(--cyan-50);
-  padding: 3px 8px;
-  border-radius: 6px;
-  white-space: nowrap;
-}
+    /* ===== FORM ===== */
+    .form-group { margin-bottom: 20px; }
+    .form-group label {
+      display: block; font-size: 12px; font-weight: 700; color: var(--text-2);
+      margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.05em;
+    }
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%; padding: 12px 16px; background: var(--bg-2);
+      border: 1px solid var(--border-2); border-radius: 10px; color: var(--text);
+      font-size: 14.5px; font-family: inherit; transition: border-color 0.2s, box-shadow 0.2s;
+    }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus {
+      outline: none; border-color: var(--cyan-500);
+      box-shadow: 0 0 0 3px rgba(6, 182, 212, 0.15); background: #fff;
+    }
+    .form-hint { font-size: 11.5px; color: var(--text-muted); margin-top: 6px; line-height: 1.5; font-style: italic; }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    @media (max-width: 600px) { .form-row { grid-template-columns: 1fr; } }
 
-/* Venue picker row */
-.venue-pick-row {
-  display: flex;
-  gap: 8px;
-  align-items: stretch;
-}
-.venue-pick-row input { flex: 1; }
-.venue-pick-btn {
-  flex-shrink: 0;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 12px 16px;
-  border-radius: 10px;
-  border: 1px solid var(--border-2);
-  background: #0a0f14;
-  color: #22d3ee;
-  font-family: inherit;
-  font-weight: 800;
-  font-size: 12.5px;
-  cursor: pointer;
-  transition: all 0.15s;
-  white-space: nowrap;
-}
-.venue-pick-btn:hover { background: #1a2129; border-color: #1a2129; color: #22d3ee; }
-.venue-pick-btn i { width: 16px; height: 16px; }
-.venue-coords-hint {
-  margin-top: 6px;
-  font-size: 11.5px;
-  color: var(--cyan-700);
-  font-weight: 700;
-  display: none;
-}
-.venue-coords-hint.show { display: block; }
+    .section-divider { margin: 24px 0; border-top: 1px dashed var(--border); position: relative; text-align: center; }
+    .section-divider span {
+      background: var(--surface); padding: 0 12px; font-size: 11px; font-weight: 800;
+      color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.05em;
+      position: relative; top: -10px;
+    }
 
-.preview-column { position: sticky; top: 40px; display: flex; flex-direction: column; gap: 24px; }
-.preview-label { text-align: center; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
-.ticket-card { border-radius: 18px; padding: 24px; box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25); display: flex; flex-direction: column; gap: 20px; position: relative; overflow: hidden; border: 1px solid rgba(0,0,0,0.05); transition: all 0.4s ease; }
-.ticket-card.cyan { background: linear-gradient(135deg, #ecfeff, #cffafe); color: #0a0f14; }
-.ticket-card.silver { background: linear-gradient(135deg, #f1f4f8, #cbd5e1); color: #0a0f14; }
-.ticket-card.gold { background: linear-gradient(135deg, #fef9c3, #ecc94b); color: #0a0f14; }
-.ticket-card.black { background: linear-gradient(135deg, #1a202c, #0a0f14); color: #ffffff; }
-.ticket-card.black .badge-public, .ticket-card.black .badge-tier { background: rgba(255,255,255,0.15); color: #fff; }
-.ticket-card.black .ticket-logo { color: #22d3ee; }
-.ticket-card.black .ticket-qr-box { background: #fff; }
-.ticket-card.black .barcode { background: #fff; }
-.ticket-card.black .location-text { color: #a0aec0; }
-.ticket-header-row { display: flex; justify-content: space-between; align-items: center; }
-.ticket-logo { font-weight: 800; font-size: 13px; letter-spacing: 1.5px; color: var(--navy); }
-.ticket-badges { display: flex; gap: 8px; }
-.badge-public, .badge-tier { font-size: 9px; font-weight: 800; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; }
-.badge-public { background: rgba(0,0,0,0.08); color: #4a5568; }
-.badge-tier { background: rgba(0,0,0,0.15); color: #1a202c; font-weight: 900; }
-.ticket-body-row { display: flex; justify-content: space-between; align-items: flex-end; }
-.ticket-info-left { display: flex; flex-direction: column; gap: 4px; flex: 1; }
-.event-title { font-size: 20px; font-weight: 900; line-height: 1.1; text-transform: uppercase; letter-spacing: -0.5px; word-break: break-word; }
-.event-meta { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: rgba(0,0,0,0.6); }
-.ticket-card.black .event-meta { color: rgba(255,255,255,0.6); }
-.guest-title { font-size: 14px; font-weight: 800; margin-top: 8px; }
-.guest-meta { font-size: 11px; font-weight: 600; color: rgba(0,0,0,0.6); }
-.ticket-card.black .guest-meta { color: rgba(255,255,255,0.6); }
-.ref-meta { font-size: 10px; font-weight: 700; font-family: monospace; color: rgba(0,0,0,0.5); margin-top: 4px; }
-.ticket-card.black .ref-meta { color: rgba(255,255,255,0.5); }
-.ticket-qr-box { width: 70px; height: 70px; background: #fff; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); flex-shrink: 0; }
-.ticket-location-row { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: rgba(0,0,0,0.6); }
-.location-text { text-transform: uppercase; letter-spacing: 0.5px; }
-.ticket-barcode-wrap { background: #fff; border-radius: 6px; padding: 8px; display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: 4px; }
-.barcode { width: 100%; height: 30px; background: repeating-linear-gradient(to right, #000 0px, #000 2px, #fff 2px, #fff 4px, #000 4px, #000 6px, #fff 6px, #fff 10px, #000 10px, #000 12px, #fff 12px, #fff 16px); }
-.barcode-num { font-family: monospace; font-size: 10px; font-weight: 700; color: #000; letter-spacing: 2px; }
+    /* ===== BUTTONS ===== */
+    .btn {
+      display: inline-flex; align-items: center; justify-content: center; gap: 8px;
+      padding: 14px 24px; border-radius: 12px; font-weight: 700; font-size: 15px;
+      border: 1px solid transparent; cursor: pointer; transition: all 0.2s ease;
+      font-family: inherit; width: 100%; text-decoration: none;
+    }
+    .btn-accent { background: linear-gradient(135deg, var(--cyan-400), var(--cyan-600)); color: #04161c; }
+    .btn-accent:hover { transform: translateY(-2px); box-shadow: 0 8px 24px rgba(6, 182, 212, 0.35); }
+    .btn-ghost { background: transparent; color: var(--text-2); border: 1px solid var(--border-2); }
+    .btn-ghost:hover { background: var(--surface-2); border-color: var(--cyan-500); color: var(--cyan-700); }
+    .btn i { width: 18px; height: 18px; }
+    .form-actions { margin-top: 28px; display: flex; flex-direction: column; gap: 12px; }
 
-.seating-plan-preview { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; max-height: 640px; overflow-y: auto; box-shadow: 0 10px 20px rgba(10,15,20,0.05); }
-.seating-plan-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 16px; text-align: center; }
-.blocks-wrapper { display: flex; flex-direction: column; gap: 20px; }
-.block { background: var(--bg-2); padding: 12px; border-radius: 10px; border: 1px solid var(--border-2); }
-.block-label { font-size: 13px; font-weight: 900; margin-bottom: 10px; color: var(--cyan-700); letter-spacing: 0.5px; }
-.stage-line { text-align: center; font-size: 10px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: #fff; background: linear-gradient(135deg, var(--navy), #2a4365); padding: 8px; border-radius: 5px; margin-bottom: 10px; }
-.rows-stack { display: flex; flex-direction: column; gap: 4px; }
-.horizontal-row { display: grid; grid-template-columns: 52px 1fr 58px; align-items: center; gap: 6px; }
-.row-label { font-size: 10px; font-weight: 800; color: var(--text-muted); text-align: right; letter-spacing: 0.5px; text-transform: uppercase; }
-.row-seats { overflow-x: auto; overflow-y: hidden; padding-bottom: 4px; scrollbar-width: thin; }
-.row-seats::-webkit-scrollbar { height: 5px; }
-.row-seats::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 3px; }
-.row-seats::-webkit-scrollbar-track { background: transparent; }
-.row-seats-inner { display: flex; gap: 3px; justify-content: center; width: max-content; min-width: 100%; margin: 0 auto; }
-.row-seat { min-width: 22px; height: 22px; padding: 0 4px; border-radius: 3px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; font-family: ui-monospace, monospace; font-size: 9px; font-weight: 800; letter-spacing: 0; transition: transform 0.12s; cursor: default; user-select: none; }
-.row-seat:hover { transform: scale(1.15); z-index: 5; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
-.row-seat.black { background: #1a202c; color: #ffffff; }
-.row-seat.gold { background: #ecc94b; color: #744210; }
-.row-seat.silver { background: #cbd5e1; color: #4a5568; }
-.row-seat.cyan { background: #22d3ee; color: #04161c; }
-.row-tier-tag { font-size: 9px; font-weight: 800; text-align: left; letter-spacing: 0.5px; text-transform: uppercase; }
-.row-tier-tag.black { color: #1a202c; }
-.row-tier-tag.gold { color: #92700c; }
-.row-tier-tag.silver { color: #4a5568; }
-.row-tier-tag.cyan { color: var(--cyan-700); }
+    /* ===== VENUE SPECIFIC ===== */
+    .venue-shape-panel {
+      background: var(--bg-2); border: 1px solid var(--border-2); border-radius: 12px;
+      padding: 16px; margin-bottom: 16px;
+    }
+    .venue-shape-panel h4 {
+      font-size: 12px; font-weight: 800; color: var(--navy); text-transform: uppercase;
+      letter-spacing: 0.05em; margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
+    }
+    .shape-selector {
+      display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 12px;
+    }
+    .shape-btn {
+      flex: 1; min-width: 70px; padding: 10px 12px; border-radius: 8px;
+      border: 2px solid var(--border-2); background: var(--surface);
+      font-size: 12px; font-weight: 700; cursor: pointer; font-family: inherit;
+      text-align: center; transition: all 0.15s;
+    }
+    .shape-btn.active { border-color: var(--cyan-500); background: var(--cyan-50); color: var(--cyan-700); }
+    .shape-btn:hover { border-color: var(--cyan-400); }
 
-.layout-legend { display: flex; justify-content: center; gap: 12px; margin-top: 16px; font-size: 10px; color: var(--text-muted); flex-wrap: wrap; }
-.layout-legend .lg-item { display: flex; align-items: center; gap: 4px; }
-.layout-legend .lg-swatch { width: 10px; height: 10px; border-radius: 2px; }
-.layout-legend .lg-swatch.black { background: #1a202c; }
-.layout-legend .lg-swatch.gold { background: #ecc94b; }
-.layout-legend .lg-swatch.silver { background: #cbd5e1; }
-.layout-legend .lg-swatch.cyan { background: #22d3ee; }
+    .stadium-config { margin-top: 12px; }
+    .side-config-row {
+      display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 8px;
+      margin-bottom: 8px; align-items: center;
+    }
+    .side-config-row .side-label {
+      font-size: 11px; font-weight: 800; color: var(--text-2); text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .side-config-row input {
+      width: 100%; padding: 8px 10px; font-size: 13px; border-radius: 8px;
+      border: 1px solid var(--border-2); background: var(--surface);
+    }
+    .side-config-row input:focus { outline: none; border-color: var(--cyan-500); }
 
-/* Full screen overlay (used for full layout AND map picker) */
-.fullscreen-overlay { position: fixed; inset: 0; background: #0a0f14; z-index: 9999; display: none; flex-direction: column; padding: 16px; }
-.fullscreen-overlay.open { display: flex; }
-.fs-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; color: #fff; gap: 10px; flex-wrap: wrap; }
-.fs-header h2 { color: #fff; font-size: 1.1rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
-.fs-header h2 span { color: #22d3ee; }
-.fs-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-.fs-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: 700; font-size: 11.5px; }
-.fs-btn:hover { background: #22d3ee; color: #04161c; border-color: #22d3ee; }
-.fs-btn-close:hover { background: #dc2626; color: #fff; border-color: #dc2626; }
-.fs-btn.active { background: #22d3ee; color: #04161c; border-color: #22d3ee; }
+    .stadium-summary {
+      font-size: 11px; color: var(--text-muted); margin-top: 8px; font-style: italic;
+      padding: 8px 10px; background: var(--surface); border-radius: 6px;
+      border: 1px solid var(--border);
+    }
 
-.fs-level-bar {
-  display: flex;
-  gap: 8px;
-  flex-wrap: wrap;
-  align-items: center;
-  color: #fff;
-  font-size: 11.5px;
-  margin-bottom: 8px;
-  padding: 6px 0;
-}
-.fs-level-pill {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  padding: 5px 10px;
-  border-radius: 8px;
-  border: 1px solid rgba(255,255,255,0.2);
-  background: rgba(255,255,255,0.05);
-  cursor: pointer;
-  color: #fff;
-  font-family: inherit;
-  font-size: 11.5px;
-  font-weight: 700;
-  transition: all 0.15s;
-}
-.fs-level-pill:hover { border-color: #22d3ee; }
-.fs-level-pill.on { background: rgba(34,211,238,0.15); border-color: #22d3ee; }
-.fs-level-pill.off { opacity: 0.4; }
-.fs-level-pill .pill-swatch { width: 10px; height: 10px; border-radius: 3px; border: 1px solid rgba(255,255,255,0.2); }
+    /* ===== PREVIEW COLUMN ===== */
+    .preview-column { position: sticky; top: 40px; display: flex; flex-direction: column; gap: 24px; }
+    .preview-label {
+      text-align: center; font-size: 11px; font-weight: 800; color: var(--text-muted);
+      text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px;
+    }
 
-.fs-canvas-outer { flex: 1; overflow: auto; background: #f6f8fb; border-radius: 12px; padding: 20px; position: relative; display: flex; align-items: flex-start; justify-content: center; }
-.fs-canvas { position: relative; background: #ffffff; border: 2px solid #d3dbe5; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); flex-shrink: 0; }
-.fs-canvas.show-grid {
-  background-image:
-    linear-gradient(to right, rgba(34,211,238,0.12) 1px, transparent 1px),
-    linear-gradient(to bottom, rgba(34,211,238,0.12) 1px, transparent 1px);
-  background-size: var(--grid-size, 50px) var(--grid-size, 50px);
-}
-.fs-stage-marker { position: absolute; background: linear-gradient(135deg, #1e2f4d, #2a4365); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; letter-spacing: 4px; text-transform: uppercase; border-radius: 6px; box-shadow: 0 6px 20px rgba(30,47,77,0.4); z-index: 5; white-space: nowrap; padding: 4px 10px; pointer-events: none; }
-.fs-section { position: absolute; background: #fff; border: 2px solid #e4e9f0; border-radius: 10px; padding: 8px; box-shadow: 0 4px 14px rgba(10,15,20,0.08); transform-origin: center center; z-index: 10; }
-.fs-section-title { font-size: 10px; font-weight: 900; color: #0e7490; letter-spacing: 0.5px; margin-bottom: 4px; text-align: center; white-space: nowrap; }
-.fs-section-location { text-align: center; font-size: 8px; font-weight: 800; color: #6b7787; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
-.fs-section-stage { text-align: center; font-size: 7px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: #fff; background: linear-gradient(135deg, #1e2f4d, #2a4365); padding: 3px; border-radius: 4px; margin-bottom: 6px; }
-.fs-rows-area { position: relative; }
-.fs-row { display: grid; grid-template-columns: 34px 1fr 38px; align-items: center; gap: 3px; margin-bottom: 2px; padding: 2px; border-radius: 4px; }
-.fs-row-label { font-size: 8px; font-weight: 800; color: #6b7787; text-align: right; text-transform: uppercase; }
-.fs-row-seats { display: flex; gap: 2px; justify-content: center; }
-.fs-seat { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; font-family: ui-monospace, monospace; font-size: 6px; font-weight: 800; }
-.fs-seat.black { background: #1a202c; color: #fff; }
-.fs-seat.gold { background: #ecc94b; color: #744210; }
-.fs-seat.silver { background: #cbd5e1; color: #4a5568; }
-.fs-seat.cyan { background: #22d3ee; color: #04161c; }
-.fs-tier-tag { font-size: 7px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
-.fs-tier-tag.black { color: #1a202c; }
-.fs-tier-tag.gold { color: #92700c; }
-.fs-tier-tag.silver { color: #4a5568; }
-.fs-tier-tag.cyan { color: #0e7490; }
-.fs-empty-hint { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #6b7787; font-size: 12px; text-align: center; max-width: 300px; }
+    /* ===== TICKET CARD ===== */
+    .ticket-card {
+      border-radius: 18px; padding: 24px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+      display: flex; flex-direction: column; gap: 20px; position: relative; overflow: hidden;
+      border: 1px solid rgba(0, 0, 0, 0.05); transition: all 0.4s ease;
+    }
+    .ticket-card.cyan { background: linear-gradient(135deg, #ecfeff, #cffafe); color: #0a0f14; }
+    .ticket-card.silver { background: linear-gradient(135deg, #f1f4f8, #cbd5e1); color: #0a0f14; }
+    .ticket-card.gold { background: linear-gradient(135deg, #fef9c3, #ecc94b); color: #0a0f14; }
+    .ticket-card.black { background: linear-gradient(135deg, #1a202c, #0a0f14); color: #ffffff; }
+    .ticket-card.black .badge-public, .ticket-card.black .badge-tier { background: rgba(255, 255, 255, 0.15); color: #fff; }
+    .ticket-card.black .ticket-logo { color: #22d3ee; }
+    .ticket-card.black .ticket-qr-box { background: #fff; }
+    .ticket-card.black .barcode { background: #fff; }
+    .ticket-card.black .location-text { color: #a0aec0; }
+    .ticket-header-row { display: flex; justify-content: space-between; align-items: center; }
+    .ticket-logo { font-weight: 800; font-size: 13px; letter-spacing: 1.5px; color: var(--navy); }
+    .ticket-badges { display: flex; gap: 8px; }
+    .badge-public, .badge-tier {
+      font-size: 9px; font-weight: 800; padding: 3px 8px; border-radius: 4px;
+      text-transform: uppercase; letter-spacing: 0.5px;
+    }
+    .badge-public { background: rgba(0, 0, 0, 0.08); color: #4a5568; }
+    .badge-tier { background: rgba(0, 0, 0, 0.15); color: #1a202c; font-weight: 900; }
+    .ticket-body-row { display: flex; justify-content: space-between; align-items: flex-end; }
+    .ticket-info-left { display: flex; flex-direction: column; gap: 4px; flex: 1; }
+    .event-title {
+      font-size: 20px; font-weight: 900; line-height: 1.1;
+      text-transform: uppercase; letter-spacing: -0.5px; word-break: break-word;
+    }
+    .event-meta {
+      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      letter-spacing: 1px; color: rgba(0, 0, 0, 0.6);
+    }
+    .ticket-card.black .event-meta { color: rgba(255, 255, 255, 0.6); }
+    .guest-title { font-size: 14px; font-weight: 800; margin-top: 8px; }
+    .guest-meta { font-size: 11px; font-weight: 600; color: rgba(0, 0, 0, 0.6); }
+    .ticket-card.black .guest-meta { color: rgba(255, 255, 255, 0.6); }
+    .ref-meta {
+      font-size: 10px; font-weight: 700; font-family: monospace;
+      color: rgba(0, 0, 0, 0.5); margin-top: 4px;
+    }
+    .ticket-card.black .ref-meta { color: rgba(255, 255, 255, 0.5); }
+    .ticket-qr-box { width: 70px; height: 70px; background: #fff; border-radius: 8px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1); flex-shrink: 0; }
+    .ticket-location-row {
+      display: flex; align-items: center; gap: 6px;
+      font-size: 11px; font-weight: 600; color: rgba(0, 0, 0, 0.6);
+    }
+    .location-text { text-transform: uppercase; letter-spacing: 0.5px; }
+    .ticket-barcode-wrap {
+      background: #fff; border-radius: 6px; padding: 8px;
+      display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: 4px;
+    }
+    .barcode {
+      width: 100%; height: 30px;
+      background: repeating-linear-gradient(to right, #000 0px, #000 2px, #fff 2px, #fff 4px, #000 4px, #000 6px, #fff 6px, #fff 10px, #000 10px, #000 12px, #fff 12px, #fff 16px);
+    }
+    .barcode-num { font-family: monospace; font-size: 10px; font-weight: 700; color: #000; letter-spacing: 2px; }
 
-/* ===== MAP PICKER MODAL ===== */
-#mapOverlay { z-index: 10000; }
-#venueMap { width: 100%; height: 100%; background: #e5e7eb; }
-.map-inner {
-  flex: 1;
-  position: relative;
-  border-radius: 12px;
-  overflow: hidden;
-  background: #e5e7eb;
-  min-height: 300px;
-}
-.map-hint {
-  position: absolute;
-  top: 12px;
-  left: 12px;
-  z-index: 999;
-  background: rgba(255,255,255,0.96);
-  padding: 8px 14px;
-  border-radius: 8px;
-  font-size: 12px;
-  font-weight: 700;
-  color: #0a0f14;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.18);
-  pointer-events: none;
-}
-.map-controls {
-  margin-top: 12px;
-  display: flex;
-  gap: 10px;
-  flex-wrap: wrap;
-  align-items: center;
-}
-.map-search-input {
-  flex: 1;
-  min-width: 220px;
-  padding: 12px 16px;
-  border-radius: 10px;
-  border: 1px solid rgba(255,255,255,0.2);
-  background: rgba(255,255,255,0.08);
-  color: #fff;
-  font-family: inherit;
-  font-size: 14px;
-  outline: none;
-}
-.map-search-input::placeholder { color: rgba(255,255,255,0.5); }
-.map-search-input:focus { border-color: #22d3ee; }
-.map-info-bar {
-  margin-top: 10px;
-  padding: 10px 14px;
-  border-radius: 8px;
-  background: rgba(255,255,255,0.08);
-  color: #fff;
-  font-size: 12.5px;
-  min-height: 42px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-.map-info-bar .map-info-name { font-weight: 800; color: #22d3ee; }
-.map-info-bar .map-info-addr { color: rgba(255,255,255,0.75); }
+    /* ===== SEATING PLAN PREVIEW / DRAG CANVAS ===== */
+    .seating-plan-preview {
+      background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
+      padding: 16px; height: 600px; overflow: hidden; position: relative;
+      box-shadow: 0 10px 20px rgba(10, 15, 20, 0.05);
+      user-select: none;
+      display: flex;
+      flex-direction: column;
+    }
+    .drag-canvas {
+      flex: 1; position: relative; background: #f9fbfd; border-radius: 8px;
+      border: 2px dashed var(--border-2); overflow: auto;
+      min-height: 400px; cursor: grab;
+      background-image: radial-gradient(circle at 20% 30%, rgba(34,211,238,0.04) 0%, transparent 40%),
+                        radial-gradient(circle at 80% 70%, rgba(6,182,212,0.04) 0%, transparent 40%);
+    }
+    .drag-canvas:active { cursor: grabbing; }
+    .drag-item {
+      position: absolute; background: #ffffff; border: 2px solid var(--border-2);
+      border-radius: 8px; padding: 6px 10px; font-size: 10px; font-weight: 700;
+      color: var(--navy); box-shadow: 0 4px 10px rgba(0,0,0,0.06);
+      cursor: move; user-select: none; display: flex; flex-direction: column;
+      align-items: center; justify-content: center; min-width: 60px; min-height: 40px;
+      transition: box-shadow 0.15s;
+      text-align: center; line-height: 1.2;
+      white-space: nowrap;
+      z-index: 10;
+    }
+    .drag-item:hover { box-shadow: 0 8px 18px rgba(0,0,0,0.12); border-color: var(--cyan-400); }
+    .drag-item .block-name { font-size: 10px; letter-spacing: 0.5px; }
+    .drag-item .block-meta { font-size: 8px; font-weight: 600; color: var(--text-muted); }
+    .drag-item.cyan { background: #22d3ee; color: #04161c; border-color: #0891b2; }
+    .drag-item.silver { background: #cbd5e1; color: #1e2f4d; border-color: #94a3b8; }
+    .drag-item.gold { background: #ecc94b; color: #744210; border-color: #b7791f; }
+    .drag-item.black { background: #1a202c; color: #fff; border-color: #0a0f14; }
+    .drag-item.black .block-meta { color: #a0aec0; }
 
-.toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(120%); background: #0a0f14; color: #fff; padding: 12px 18px; border-radius: 12px; font-size: 13.5px; z-index: 200; transition: transform .4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease; max-width: calc(100vw - 40px); display: flex; align-items: center; gap: 10px; pointer-events: none; opacity: 0; }
-.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-.toast.success { background: #065f46; }
-.toast.error { background: #991b1b; }
-</style>
+    .canvas-hint {
+      position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
+      font-size: 11px; color: var(--text-muted); background: rgba(255,255,255,0.9);
+      padding: 6px 16px; border-radius: 20px; border: 1px solid var(--border);
+      backdrop-filter: blur(4px); pointer-events: none; z-index: 20;
+      font-style: italic; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    }
+
+    .toolbar-row {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 12px; gap: 8px; flex-wrap: wrap;
+    }
+    .toolbar-btn {
+      background: var(--surface); border: 1px solid var(--border-2); border-radius: 8px;
+      padding: 8px 14px; font-size: 11px; font-weight: 700; cursor: pointer;
+      font-family: inherit; display: inline-flex; align-items: center; gap: 6px;
+      color: var(--text-2); transition: all 0.15s;
+    }
+    .toolbar-btn:hover { border-color: var(--cyan-500); background: var(--cyan-50); color: var(--cyan-700); }
+    .toolbar-btn.danger:hover { border-color: #dc2626; background: #fef2f2; color: #b91c1c; }
+    .toolbar-btn i { width: 14px; height: 14px; }
+
+    .fullscreen-overlay {
+      position: fixed; inset: 0; background: #0a0f14; z-index: 9999;
+      display: none; flex-direction: column; padding: 20px;
+    }
+    .fullscreen-overlay.open { display: flex; }
+    .fs-header {
+      display: flex; justify-content: space-between; align-items: center;
+      margin-bottom: 12px; color: #fff; gap: 12px; flex-wrap: wrap;
+    }
+    .fs-header h2 { color: #fff; font-size: 1.2rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+    .fs-header h2 span { color: #22d3ee; }
+    .fs-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+    .fs-btn {
+      background: rgba(255, 255, 255, 0.1); border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff; padding: 8px 16px; border-radius: 8px; cursor: pointer;
+      font-family: inherit; font-weight: 700; font-size: 12px;
+    }
+    .fs-btn:hover { background: #22d3ee; color: #04161c; border-color: #22d3ee; }
+    .fs-btn-close:hover { background: #dc2626; color: #fff; border-color: #dc2626; }
+    .fs-hint {
+      text-align: center; color: rgba(255, 255, 255, 0.5); font-size: 11px;
+      font-style: italic; margin-bottom: 12px; padding: 6px;
+    }
+    .fs-canvas {
+      flex: 1; position: relative;
+      background: radial-gradient(circle at 50% 0%, rgba(34, 211, 238, 0.08), transparent 60%), #f6f8fb;
+      border-radius: 12px; overflow: auto; padding: 40px;
+      display: flex; flex-direction: column; align-items: center; gap: 24px;
+    }
+    .fs-stage {
+      display: inline-block; padding: 14px 50px;
+      background: linear-gradient(135deg, #1e2f4d, #2a4365); color: #fff;
+      font-weight: 800; letter-spacing: 5px; font-size: 14px;
+      border-radius: 8px; text-transform: uppercase;
+      box-shadow: 0 8px 24px rgba(30, 47, 77, 0.35); flex-shrink: 0;
+    }
+    .fs-sections-stack { display: flex; flex-direction: column; gap: 30px; width: 100%; align-items: center; }
+    .fs-section-frame { transition: transform 0.2s ease; transform-origin: center center; flex-shrink: 0; position: relative; }
+    .fs-section-inner {
+      background: #fff; border: 2px solid #e4e9f0; border-radius: 12px;
+      padding: 14px; min-width: 200px; box-shadow: 0 6px 18px rgba(10, 15, 20, 0.06); position: relative;
+    }
+    .fs-section-title { font-size: 12px; font-weight: 900; color: #0e7490; letter-spacing: 0.5px; margin-bottom: 6px; text-align: center; }
+    .fs-section-location { text-align: center; font-size: 9px; font-weight: 800; color: #6b7787; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
+    .fs-section-stage { text-align: center; font-size: 9px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: #fff; background: linear-gradient(135deg, #1e2f4d, #2a4365); padding: 6px; border-radius: 5px; margin-bottom: 10px; }
+    .fs-rows-area { position: relative; min-height: 60px; }
+    .fs-row { display: grid; grid-template-columns: 46px 1fr 52px; align-items: center; gap: 5px; margin-bottom: 3px; padding: 3px; border-radius: 5px; }
+    .fs-row-label { font-size: 9px; font-weight: 800; color: #6b7787; text-align: right; text-transform: uppercase; }
+    .fs-row-seats { display: flex; gap: 2px; justify-content: center; }
+    .fs-seat { width: 16px; height: 16px; border-radius: 2px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; font-family: ui-monospace, monospace; font-size: 7px; font-weight: 800; }
+    .fs-seat.black { background: #1a202c; color: #fff; }
+    .fs-seat.gold { background: #ecc94b; color: #744210; }
+    .fs-seat.silver { background: #cbd5e1; color: #4a5568; }
+    .fs-seat.cyan { background: #22d3ee; color: #04161c; }
+    .fs-tier-tag { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+    .fs-tier-tag.black { color: #1a202c; }
+    .fs-tier-tag.gold { color: #92700c; }
+    .fs-tier-tag.silver { color: #4a5568; }
+    .fs-tier-tag.cyan { color: #0e7490; }
+  </style>
 </head>
 <body>
 <header class="site-header">
@@ -522,7 +331,7 @@ body.dev-on .dev-only.section-rows-row { display: flex; }
       <svg class="mark" viewBox="0 0 60 74"><path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/><path fill="#7dd3e8" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/></svg>
       <span class="wordmark">NOVALINK</span>
     </a>
-    <span class="studio-badge">Event Studio</span>
+    <span class="studio-badge">Event Studio · Drag</span>
   </div>
 </header>
 
@@ -530,222 +339,119 @@ body.dev-on .dev-only.section-rows-row { display: flex; }
   <div class="container studio-layout">
     <div class="form-card">
       <div class="form-header">
-        <h1>Event Studio</h1>
-        <p>Design your venue layout and generate a live security pass.</p>
+        <h1>Rectangular Stadium</h1>
+        <p>Add shapes (blocks) to the canvas & drag them anywhere.</p>
       </div>
 
-      <form id="createEventForm">
-        <div class="dev-settings-toggle">
-          <div class="info">
-            <div class="title"><i data-lucide="code-2"></i> Developer Settings</div>
-            <div class="desc">Reveal advanced controls: canvas size, stage position, grid, levels, and per-section placement.</div>
+      <form id="stadiumForm">
+        <div class="section-divider"><span>Venue Shape</span></div>
+        <div class="venue-shape-panel">
+          <h4><i data-lucide="layout-grid" style="width:14px;height:14px;"></i> Rectangular Stadium</h4>
+          <div class="shape-selector">
+            <button type="button" class="shape-btn active" data-shape="rectangular">⬛ Rectangular</button>
+            <button type="button" class="shape-btn" data-shape="oval">⭕ Oval</button>
+            <button type="button" class="shape-btn" data-shape="custom">🔷 Custom</button>
           </div>
-          <label class="toggle-switch">
-            <input type="checkbox" id="devModeToggle" />
-            <span class="toggle-slider"></span>
-          </label>
+          <p class="form-hint">Choose a base shape. The rectangular stadium uses 4 sides (A, B, C, D).</p>
         </div>
 
-        <div class="section-divider"><span>Organiser Details</span></div>
-        <div class="form-group"><label for="hostName">Host Name</label><input type="text" id="hostName" placeholder="e.g., John Doe" required /></div>
-        <div class="form-group"><label for="hostEmail">Host Email</label><input type="email" id="hostEmail" placeholder="e.g., john@example.com" required /></div>
+        <div class="section-divider"><span>Field Dimensions</span></div>
         <div class="form-row">
-          <div class="form-group"><label for="city">City</label><input type="text" id="city" placeholder="e.g., Johannesburg" required /></div>
-          <div class="form-group"><label for="cost">Cost / Price</label><input type="text" id="cost" placeholder="e.g., R150 or Free" required /></div>
-        </div>
-        <div class="form-row">
-          <div class="form-group"><label for="startDate">Start Date</label><input type="date" id="startDate" required /></div>
-          <div class="form-group"><label for="startTime">Start Time</label><input type="time" id="startTime" required /></div>
-        </div>
-
-        <div class="section-divider"><span>Event Details</span></div>
-        <div class="form-group"><label for="eventName">Event Name</label><input type="text" id="eventName" placeholder="e.g., Neon Nights Live" required /></div>
-
-        <div class="form-group">
-          <label for="venueAddress">Venue Name & Address</label>
-          <div class="venue-pick-row">
-            <input type="text" id="venueAddress" placeholder="e.g., Grand Amphitheatre, 123 Main Rd" required />
-            <button type="button" class="venue-pick-btn" id="openMapBtn">
-              <i data-lucide="map-pin"></i> Pick from Map
-            </button>
+          <div class="form-group">
+            <label for="fieldLength">Length (m)</label>
+            <input type="number" id="fieldLength" min="20" max="500" value="120" />
           </div>
-          <div class="venue-coords-hint" id="venueCoordsHint">
-            📍 <span id="venueCoordsText">—</span>
+          <div class="form-group">
+            <label for="fieldWidth">Width (m)</label>
+            <input type="number" id="fieldWidth" min="20" max="300" value="80" />
           </div>
-          <p class="form-hint">Search or tap on the map to auto-fill the venue name, address, city and coordinates.</p>
         </div>
+        <p class="form-hint">Standard soccer pitch: 100–110m × 64–75m.</p>
 
-        <div class="dev-only">
-          <div class="section-divider"><span>Venue Canvas & Stage</span></div>
+        <div class="section-divider"><span>Stands &amp; Blocks</span></div>
+        <div class="venue-shape-panel">
+          <h4><i data-lucide="layers" style="width:14px;height:14px;"></i> Blocks per Side</h4>
           <div class="form-row">
-            <div class="form-group"><label for="canvasWidth">Canvas Width (px)</label><input type="number" id="canvasWidth" min="400" max="3000" value="1200" /></div>
-            <div class="form-group"><label for="canvasHeight">Canvas Height (px)</label><input type="number" id="canvasHeight" min="400" max="3000" value="800" /></div>
-          </div>
-          <div class="form-row-3">
-            <div class="form-group"><label for="stageX">Stage X (px)</label><input type="number" id="stageX" min="0" value="500" /></div>
-            <div class="form-group"><label for="stageY">Stage Y (px)</label><input type="number" id="stageY" min="0" value="60" /></div>
-            <div class="form-group"><label for="stageW">Stage Width (px)</label><input type="number" id="stageW" min="40" value="200" /></div>
-          </div>
-          <div class="form-row">
-            <div class="form-group"><label for="stageH">Stage Height (px)</label><input type="number" id="stageH" min="20" value="60" /></div>
-            <div class="form-group"><label for="gridSize">Grid Size (px)</label><input type="number" id="gridSize" min="10" max="200" value="50" /></div>
-          </div>
-          <div class="toggle-row">
-            <span class="toggle-label">Snap to Grid</span>
-            <label class="toggle-switch"><input type="checkbox" id="snapToggle" checked /><span class="toggle-slider"></span></label>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label for="stageName">Stage / Performance Area Name</label>
-          <input type="text" id="stageName" placeholder="e.g., STAGE · MAIN STAGE" value="STAGE" />
-        </div>
-
-        <div class="dev-only">
-          <div class="section-divider"><span>Levels / Floors</span></div>
-          <div class="levels-panel">
-            <div class="row-overrides-hint">Group sections into levels (e.g., Ground, Mezzanine, Balcony). Toggle visibility to isolate a level in the Full Screen view.</div>
-            <div class="levels-list" id="levelsList"></div>
-            <button type="button" class="btn-mini" id="addLevelBtn">+ Add Level</button>
-          </div>
-        </div>
-
-        <div class="section-divider"><span>Sections</span></div>
-        <div class="form-row">
-          <div class="form-group"><label id="label-level1" for="totalLevel1">Number of Sections</label><input type="number" id="totalLevel1" min="1" max="26" value="3" /></div>
-          <div class="form-group"><label for="totalLevel2">Default Rows per Section</label><input type="number" id="totalLevel2" min="1" max="52" value="6" /></div>
-          <div class="form-group"><label for="totalLevel3">Default Seats per Row (4–90)</label><input type="number" id="totalLevel3" min="4" max="90" value="8" /></div>
-        </div>
-
-        <div class="form-group" id="rowOverridesGroup">
-          <label>Per-Section Configuration</label>
-          <div class="row-overrides-section">
-            <div class="row-overrides-header">
-              <div class="section-tabs" id="sectionTabs"></div>
-              <button type="button" class="btn-mini fs-btn" id="openFullscreen">⛶ Full Screen</button>
-              <button type="button" class="btn-mini" id="clearAllOverrides">Clear All</button>
+            <div class="form-group">
+              <label for="blocksPerSide">Blocks per side (A, B, C, D)</label>
+              <input type="number" id="blocksPerSide" min="1" max="26" value="3" />
             </div>
-
-            <div class="section-rows-row">
-              <label for="sectionNameInput">Section Name</label>
-              <input type="text" id="sectionNameInput" placeholder="e.g., VIP Stand" maxlength="40" />
-            </div>
-
-            <div class="section-rows-row dev-only">
-              <label for="sectionLevelSelect">Level</label>
-              <select id="sectionLevelSelect"></select>
-            </div>
-
-            <div class="section-rows-row">
-              <label for="sectionRowsInput">Rows in this section</label>
-              <span class="section-rows-badge" id="sectionRowsBadge">6 rows</span>
-              <input type="number" id="sectionRowsInput" min="1" max="52" value="6" />
-            </div>
-
-            <div class="section-rows-row">
-              <label for="sectionTierOverride">Section Tier Override</label>
-              <select id="sectionTierOverride">
-                <option value="">— Use Row Distribution —</option>
-                <option value="black">Elite (Black)</option>
-                <option value="gold">Gold (VIP)</option>
-                <option value="silver">Silver</option>
-                <option value="cyan">Cyan (Standard)</option>
+            <div class="form-group">
+              <label for="standLevels">Stand levels per side</label>
+              <select id="standLevels">
+                <option value="1">1 — Single tier</option>
+                <option value="2">2 — Top &amp; Low</option>
+                <option value="3" selected>3 — Top, Middle, Low</option>
               </select>
             </div>
+          </div>
+          <p class="form-hint">Each side gets the same number of blocks and stand levels.</p>
+        </div>
 
-            <div class="dev-only">
-              <div class="form-row-3" style="margin: 6px 0 10px;">
-                <div class="form-group" style="margin-bottom:0;">
-                  <label for="sectionXInput" style="font-size:10px;">X Position (px)</label>
-                  <input type="number" id="sectionXInput" min="0" max="3000" value="100" style="text-align:center;padding:8px;" />
-                </div>
-                <div class="form-group" style="margin-bottom:0;">
-                  <label for="sectionYInput" style="font-size:10px;">Y Position (px)</label>
-                  <input type="number" id="sectionYInput" min="0" max="3000" value="200" style="text-align:center;padding:8px;" />
-                </div>
-                <div class="form-group" style="margin-bottom:0;">
-                  <label for="sectionRotationInput" style="font-size:10px;">Rotation (°)</label>
-                  <input type="number" id="sectionRotationInput" min="-360" max="360" value="0" style="text-align:center;padding:8px;" />
-                </div>
-              </div>
+        <div class="venue-shape-panel stadium-config" id="stadiumConfigPanel">
+          <h4><i data-lucide="grid" style="width:14px;height:14px;"></i> Stand Configuration</h4>
+          <p class="form-hint" style="margin-bottom:10px;">Set rows and seats per block for each stand level.</p>
 
-              <div class="section-rows-row">
-                <label for="sectionScaleInput">Scale (0.5× – 2×)</label>
-                <span class="section-rows-badge" id="sectionScaleBadge">1.00×</span>
-                <input type="range" id="sectionScaleInput" min="0.5" max="2" step="0.05" value="1" />
-              </div>
-            </div>
+          <div class="side-config-row">
+            <span class="side-label">Top</span>
+            <input type="number" id="topRows" min="1" max="30" value="4" placeholder="Rows" />
+            <input type="number" id="topSeats" min="4" max="60" value="10" placeholder="Seats/row" />
+          </div>
+          <div class="side-config-row">
+            <span class="side-label">Middle</span>
+            <input type="number" id="middleRows" min="1" max="30" value="4" placeholder="Rows" />
+            <input type="number" id="middleSeats" min="4" max="60" value="12" placeholder="Seats/row" />
+          </div>
+          <div class="side-config-row">
+            <span class="side-label">Low</span>
+            <input type="number" id="lowRows" min="1" max="30" value="6" placeholder="Rows" />
+            <input type="number" id="lowSeats" min="4" max="60" value="14" placeholder="Seats/row" />
+          </div>
 
-            <div class="row-overrides-hint">Each section has its own name, rows, tier override and configuration.</div>
-            <div class="row-overrides-grid" id="rowOverridesGrid"></div>
+          <div class="stadium-summary" id="stadiumSummary">
+            Est. capacity: <strong>—</strong>
           </div>
         </div>
 
-        <div class="form-group" id="rowTierGroup">
-          <label>Row Tier Distribution (front-to-back per section)</label>
-          <p class="form-hint" style="margin-top:0;margin-bottom:8px;">Assign tiers to rows. Ignored if section has a tier override.</p>
-          <div class="tier-dist-grid">
-            <div class="tier-dist-item"><div class="swatch elite"></div><label for="tierRowsElite">Elite (Black)</label><input type="number" id="tierRowsElite" min="0" value="2" /></div>
-            <div class="tier-dist-item"><div class="swatch gold"></div><label for="tierRowsGold">Gold (VIP)</label><input type="number" id="tierRowsGold" min="0" value="2" /></div>
-            <div class="tier-dist-item"><div class="swatch silver"></div><label for="tierRowsSilver">Silver</label><input type="number" id="tierRowsSilver" min="0" value="1" /></div>
-            <div class="tier-dist-item"><div class="swatch cyan"></div><label for="tierRowsCyan">Cyan (Standard)</label><input type="number" id="tierRowsCyan" min="0" value="1" /></div>
-          </div>
-          <div class="tier-dist-summary" id="tierDistSummary">Total rows: 6</div>
-        </div>
-
-        <div class="form-group">
-          <label>Total Attendees (Auto-calculated)</label>
-          <input type="text" id="totalCapacity" readonly value="1" style="background:var(--surface-2);font-weight:bold;color:var(--cyan-700);" />
-        </div>
-
-        <div class="section-divider"><span>Ticket Preview</span></div>
+        <div class="section-divider"><span>Tier &amp; Colors</span></div>
         <div class="form-group">
           <label for="tierColor">Card Colour Tier</label>
-          <select id="tierColor" required>
+          <select id="tierColor">
             <option value="cyan" selected>Cyan (Standard)</option>
             <option value="silver">Silver (Mid Seating)</option>
             <option value="gold">Gold (VIP)</option>
             <option value="black">Black (Elite)</option>
           </select>
         </div>
-        <div class="form-group"><label for="guestName">Guest Name (Preview)</label><input type="text" id="guestName" placeholder="e.g., Jane Smith" /></div>
-
         <div class="form-group">
-          <label id="seatLabel">Seat Identifier (Preview)</label>
-          <div class="seat-builder" id="seatBuilderStandard">
-            <input type="text" id="seatBlock" class="seat-part" placeholder="A" maxlength="1" />
-            <input type="text" id="seatRow" class="seat-part" placeholder="A" maxlength="1" />
-            <span class="seat-sep">—</span>
-            <input type="number" id="seatNum" class="seat-part seat-num" placeholder="1" min="1" />
-          </div>
-          <div class="seat-preview-display empty" id="seatPreviewDisplay">Enter block, row and seat to preview</div>
-          <p class="form-hint" id="seatHint">Format: <strong>Block</strong> + <strong>Row</strong> + space + <strong>Seat</strong>. E.g., <code>AA 1</code>.</p>
-        </div>
-
-        <div class="export-actions">
-          <button type="button" class="btn btn-ghost" id="exportJsonBtn"><i data-lucide="download"></i> Export JSON</button>
-          <button type="button" class="btn btn-ghost" id="exportCsvBtn"><i data-lucide="table"></i> Export CSV</button>
+          <label for="guestName">Guest Name (Preview)</label>
+          <input type="text" id="guestName" placeholder="e.g., Jane Smith" />
         </div>
 
         <div class="form-actions">
-          <button type="submit" class="btn btn-accent" id="submitBtn"><i data-lucide="shield-check"></i> Save & Finalize Event</button>
-          <a href="create-trip.html" style="text-align:center; font-size:13.5px; color:var(--cyan-600); text-decoration:underline; margin-top:8px; display:block;">Creating a Trip instead? Switch to Trip Studio →</a>
+          <button type="submit" class="btn btn-accent" id="submitBtn">
+            <i data-lucide="shield-check"></i> Save &amp; Finalize Stadium
+          </button>
           <a href="index.html" class="btn btn-ghost">Cancel</a>
         </div>
       </form>
     </div>
 
+    <!-- PREVIEW COLUMN -->
     <div class="preview-column">
       <div>
         <div class="preview-label">Live Ticket Preview</div>
         <div class="ticket-card cyan" id="dynamicTicket">
           <div class="ticket-header-row">
             <div class="ticket-logo">NOVALINK</div>
-            <div class="ticket-badges"><span class="badge-public">PUBLIC</span><span class="badge-tier" id="prevTierBadge">CYAN</span></div>
+            <div class="ticket-badges">
+              <span class="badge-public">PUBLIC</span>
+              <span class="badge-tier" id="prevTierBadge">CYAN</span>
+            </div>
           </div>
           <div class="ticket-body-row">
             <div class="ticket-info-left">
-              <div class="event-title" id="prevEventName">EVENT NAME</div>
+              <div class="event-title" id="prevEventName">STADIUM EVENT</div>
               <div class="event-meta" id="prevDateVenue">DATE · VENUE</div>
               <div class="guest-title" id="prevGuestName">GUEST NAME</div>
               <div class="guest-meta" id="prevSeat">Seat not assigned</div>
@@ -753,844 +459,300 @@ body.dev-on .dev-only.section-rows-row { display: flex; }
             </div>
             <div class="ticket-qr-box"></div>
           </div>
-          <div class="ticket-location-row"><i data-lucide="map-pin" style="width:12px;height:12px;"></i> <span class="location-text" id="prevVenueLocation">VENUE</span></div>
-          <div class="ticket-barcode-wrap"><div class="barcode"></div><div class="barcode-num">0000 0000 0000 0000</div></div>
+          <div class="ticket-location-row">
+            <i data-lucide="map-pin" style="width:12px;height:12px;"></i>
+            <span class="location-text" id="prevVenueLocation">VENUE</span>
+          </div>
+          <div class="ticket-barcode-wrap">
+            <div class="barcode"></div>
+            <div class="barcode-num">0000 0000 0000 0000</div>
+          </div>
         </div>
       </div>
 
       <div>
-        <div class="preview-label">Seating Plan Preview</div>
+        <div class="preview-label">Drag & Drop Canvas · Add Shapes</div>
         <div class="seating-plan-preview" id="seatingPlanPreview">
-          <div class="seating-plan-title">Enter seating details to generate layout</div>
+          <div class="toolbar-row">
+            <button class="toolbar-btn" id="addBlockBtn"><i data-lucide="plus-circle"></i> Add Block</button>
+            <button class="toolbar-btn danger" id="clearCanvasBtn"><i data-lucide="trash-2"></i> Clear All</button>
+            <button class="toolbar-btn" id="resetCanvasBtn"><i data-lucide="rotate-ccw"></i> Reset</button>
+          </div>
+          <div class="drag-canvas" id="dragCanvas">
+            <!-- Draggable items will be added here dynamically -->
+          </div>
+          <div class="canvas-hint">Drag blocks to position them · Double-click to remove</div>
         </div>
       </div>
     </div>
   </div>
 </main>
 
-<!-- FULL LAYOUT OVERLAY -->
-<div class="fullscreen-overlay" id="fullscreenOverlay">
-  <div class="fs-header">
-    <h2>Full Venue Layout · <span id="fsStageName">STAGE</span></h2>
-    <div class="fs-actions">
-      <button type="button" class="fs-btn active dev-only" id="fsToggleGrid">Grid</button>
-      <button type="button" class="fs-btn" id="fsResetView">↺ Reset</button>
-      <button type="button" class="fs-btn fs-btn-close" id="closeFullscreen">✕ Close</button>
-    </div>
-  </div>
-  <div class="fs-level-bar dev-only" id="fsLevelBar"></div>
-  <div class="fs-canvas-outer">
-    <div class="fs-canvas" id="fsCanvas">
-      <div class="fs-stage-marker" id="fsStageMarker">STAGE</div>
-      <div class="fs-empty-hint" id="fsEmptyHint" style="display:none;">Add sections to see them placed here</div>
-    </div>
-  </div>
-</div>
-
-<!-- MAP PICKER OVERLAY -->
-<div class="fullscreen-overlay" id="mapOverlay">
-  <div class="fs-header">
-    <h2>Select Venue on Map</h2>
-    <div class="fs-actions">
-      <button type="button" class="fs-btn fs-btn-close" id="closeMapBtn">✕ Close</button>
-    </div>
-  </div>
-  <div class="map-inner">
-    <div class="map-hint">📌 Tap anywhere on the map to select a venue location</div>
-    <div id="venueMap"></div>
-  </div>
-  <div class="map-controls">
-    <input type="text" id="mapSearchInput" class="map-search-input" placeholder="Search a venue, city or address..." />
-    <button type="button" class="fs-btn" id="mapSearchBtn">🔍 Search</button>
-    <button type="button" class="fs-btn" id="mapUseLocationBtn">📍 Use My Location</button>
-    <button type="button" class="fs-btn" id="mapConfirmBtn" style="background:#22d3ee;color:#04161c;border-color:#22d3ee;">✓ Use This Location</button>
-  </div>
-  <div class="map-info-bar" id="mapInfoBar">
-    <span style="opacity:0.6;">No location selected yet. Tap the map or search above.</span>
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
-<script src="routing-engine.js"></script>
 <script>
 (function(){
-'use strict';
+  'use strict';
+  function $(id){ return document.getElementById(id); }
 
-function $(id){ return document.getElementById(id); }
+  // ---- STATE ----
+  var stadiumShape = 'rectangular';
+  var liveRef = 'NL-' + Math.random().toString(36).substring(2,8).toUpperCase();
+  var blockCounter = 0; // for unique IDs
 
-var FIREBASE = {
-  apiKey: "AIzaSyBdb-NEf2kwzF-rzIyPnEYV9YoSZ9OdyoI",
-  authDomain: "novalink-5e3c3.firebaseapp.com",
-  projectId: "novalink-5e3c3",
-  storageBucket: "novalink-5e3c3.firebasestorage.app",
-  messagingSenderId: "483408592364",
-  appId: "1:483408592364:web:c150c0d7e3c908fd1354c9"
-};
-
-var db = null;
-try {
-  if (!firebase.apps.length) firebase.initializeApp(FIREBASE);
-  db = firebase.firestore();
-} catch(e){ console.error("Firebase init failed", e); }
-
-// ===== STATE =====
-var devMode = false;
-var canvasWidth = 1200;
-var canvasHeight = 800;
-var gridSize = 50;
-var snapToGrid = true;
-var showGrid = true;
-
-var stage = { x: 500, y: 60, width: 200, height: 60, name: "STAGE" };
-var venueCoords = null; // { lat, lng, displayName, address, city }
-
-var levels = [{ id: 0, name: "Ground Floor", color: "#22d3ee", visible: true }];
-var nextLevelId = 1;
-
-var sectionRowOverrides = {};
-var sectionRowCounts = {};
-var sectionNames = {};
-var sectionTierOverrides = {};
-var sectionPositions = {};
-var currentEditingSection = 0;
-var levelColors = ["#22d3ee", "#facc15", "#a78bfa", "#fb7185", "#34d399", "#60a5fa", "#f97316", "#e879f9"];
-
-function showToast(msg, type, ms) {
-  type = type || "info"; ms = ms || 3000;
-  var t = $("toast");
-  var i = type === "error" ? "alert-circle" : (type === "success" ? "check-circle" : "info");
-  t.className = "toast " + type;
-  t.innerHTML = '<i data-lucide="' + i + '"></i><span>' + msg + '</span>';
-  if (window.lucide) lucide.createIcons();
-  requestAnimationFrame(function(){ t.classList.add("show"); });
-  clearTimeout(showToast._t);
-  showToast._t = setTimeout(function(){ t.classList.remove("show"); }, ms);
-}
-
-document.addEventListener("DOMContentLoaded", function(){
-  if(window.lucide) lucide.createIcons();
-
-  // ===== HELPERS =====
-  function rowLabel(index) { var n = index, label = ""; do { label = String.fromCharCode(65 + (n % 26)) + label; n = Math.floor(n / 26) - 1; } while (n >= 0); return label; }
-  function blockLabel(index) { return String.fromCharCode(65 + index); }
-  function tierTagText(t) { return t === "black" ? "Elite" : t === "gold" ? "Gold" : t === "silver" ? "Silver" : "Cyan"; }
-  function snap(v) { return snapToGrid ? Math.round(v / gridSize) * gridSize : v; }
-  function getSectionName(idx) { return sectionNames[idx] || ("Section " + blockLabel(idx)); }
-  function setSectionName(idx, name) { if (name && name.trim()) sectionNames[idx] = name.trim(); else delete sectionNames[idx]; }
-  function getSectionTierOverride(idx) { return sectionTierOverrides[idx] || null; }
-  function setSectionTierOverride(idx, tier) { if (tier) sectionTierOverrides[idx] = tier; else delete sectionTierOverrides[idx]; }
-  function getRowCount(idx) { if (sectionRowCounts[idx] !== undefined) return sectionRowCounts[idx]; return parseInt($("totalLevel2").value) || 6; }
-  function setRowCount(idx, v) { sectionRowCounts[idx] = Math.max(1, Math.min(52, v)); }
-  function getSeatsForRow(sIdx, rIdx) { var d = sectionRowOverrides[sIdx]; if (d && d[rIdx] !== undefined) return d[rIdx]; return parseInt($("totalLevel3").value) || 10; }
-  function getSectionPos(idx) {
-    if (sectionPositions[idx]) return sectionPositions[idx];
-    var count = parseInt($("totalLevel1").value) || 1;
-    var gap = canvasWidth / (count + 1);
-    var pos = { x: Math.round(gap * (idx + 1) - 120), y: 300, scale: 1, rotation: 0, levelId: levels[0].id };
-    sectionPositions[idx] = pos;
-    return pos;
-  }
-  function setSectionPos(idx, key, val) { if (!sectionPositions[idx]) getSectionPos(idx); sectionPositions[idx][key] = val; }
-
-  function buildRowTierMap(totalRows, sectionIdx) {
-    var override = (sectionIdx !== undefined) ? getSectionTierOverride(sectionIdx) : null;
-    if (override) { var m = []; for (var i = 0; i < totalRows; i++) m.push(override); return m; }
-    var e = parseInt($("tierRowsElite").value)||0, g = parseInt($("tierRowsGold").value)||0, s = parseInt($("tierRowsSilver").value)||0, c = parseInt($("tierRowsCyan").value)||0;
-    var map = [];
-    for (var i = 0; i < e && map.length < totalRows; i++) map.push("black");
-    for (var i = 0; i < g && map.length < totalRows; i++) map.push("gold");
-    for (var i = 0; i < s && map.length < totalRows; i++) map.push("silver");
-    for (var i = 0; i < c && map.length < totalRows; i++) map.push("cyan");
-    while (map.length < totalRows) map.push("cyan");
-    return map;
-  }
-
-  function calculateCapacity() {
-    var sections = parseInt($("totalLevel1").value) || 0;
-    var total = 0;
-    for (var s = 0; s < sections; s++) {
-      var rows = getRowCount(s);
-      for (var r = 0; r < rows; r++) total += getSeatsForRow(s, r);
-    }
-    $("totalCapacity").value = total;
-  }
+  // ---- HELPERS ----
+  function blockLabel(index) { return String.fromCharCode(65 + index); } // A, B, C...
 
   function updateTicketPreview() {
-    $("prevEventName").textContent = $("eventName").value || "EVENT NAME";
-    $("prevDateVenue").textContent = ($("startDate").value || "DATE") + " · " + ($("venueAddress").value || "VENUE");
-    $("prevGuestName").textContent = $("guestName").value || "GUEST NAME";
-    var seatCode = NovalinkRoutingEngine.buildSeatCode($("seatBlock").value, $("seatRow").value, $("seatNum").value);
-    if (seatCode) $("prevSeat").textContent = seatCode;
-    else $("prevSeat").textContent = "Seat not assigned";
-    $("prevVenueLocation").textContent = $("venueAddress").value || "VENUE";
-    $("prevTierBadge").textContent = $("tierColor").value.toUpperCase();
-    $("dynamicTicket").className = "ticket-card " + $("tierColor").value;
+    $('prevEventName').textContent = 'STADIUM EVENT';
+    $('prevDateVenue').textContent = 'DATE · VENUE';
+    $('prevGuestName').textContent = $('guestName').value || 'GUEST NAME';
+    $('prevSeat').textContent = 'Seat not assigned';
+    $('prevVenueLocation').textContent = 'STADIUM';
+    $('prevTierBadge').textContent = $('tierColor').value.toUpperCase();
+    $('dynamicTicket').className = 'ticket-card ' + $('tierColor').value;
+    $('prevRef').textContent = 'Ref: ' + liveRef;
   }
 
-  function buildLegend() {
-    var legend = document.createElement("div"); legend.className = "layout-legend";
-    [{ cls: "black", label: "Elite (Black)" }, { cls: "gold", label: "Gold (VIP)" }, { cls: "silver", label: "Silver" }, { cls: "cyan", label: "Cyan (Standard)" }].forEach(function(it) {
-      var el = document.createElement("div"); el.className = "lg-item";
-      el.innerHTML = '<div class="lg-swatch ' + it.cls + '"></div> ' + it.label; legend.appendChild(el);
-    });
-    return legend;
+  function getFieldLength() { return parseFloat($('fieldLength').value) || 120; }
+  function getFieldWidth() { return parseFloat($('fieldWidth').value) || 80; }
+  function getBlocksPerSide() { return Math.max(1, Math.min(26, parseInt($('blocksPerSide').value) || 3)); }
+  function getStandLevels() { return parseInt($('standLevels').value) || 3; }
+
+  function getStandConfig() {
+    return {
+      top: { rows: Math.max(1, Math.min(30, parseInt($('topRows').value) || 4)), seats: Math.max(4, Math.min(60, parseInt($('topSeats').value) || 10)) },
+      middle: { rows: Math.max(1, Math.min(30, parseInt($('middleRows').value) || 4)), seats: Math.max(4, Math.min(60, parseInt($('middleSeats').value) || 12)) },
+      low: { rows: Math.max(1, Math.min(30, parseInt($('lowRows').value) || 6)), seats: Math.max(4, Math.min(60, parseInt($('lowSeats').value) || 14)) }
+    };
   }
 
-  // ===== DEV MODE =====
-  function setDevMode(on) {
-    devMode = on;
-    document.body.classList.toggle("dev-on", on);
-    $("devModeToggle").checked = on;
-    if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
-    try { localStorage.setItem("novalink_dev_mode", on ? "1" : "0"); } catch(e){}
-  }
-  $("devModeToggle").addEventListener("change", function() { setDevMode(this.checked); });
-  try { if (localStorage.getItem("novalink_dev_mode") === "1") setDevMode(true); } catch(e){}
-
-  // ===== LEVELS UI =====
-  function rebuildLevelsList() {
-    var list = $("levelsList");
-    list.innerHTML = "";
-    levels.forEach(function(lv, i) {
-      var item = document.createElement("div");
-      item.className = "level-item";
-      var swatch = document.createElement("div");
-      swatch.className = "level-swatch"; swatch.style.background = lv.color;
-      item.appendChild(swatch);
-      var nameInput = document.createElement("input");
-      nameInput.type = "text"; nameInput.className = "level-name-input"; nameInput.value = lv.name;
-      nameInput.addEventListener("input", function() { lv.name = nameInput.value || "Untitled Level"; rebuildLevelSelect(); renderFullscreen(); });
-      item.appendChild(nameInput);
-      var visLabel = document.createElement("label");
-      visLabel.className = "level-visible-toggle";
-      var chk = document.createElement("input");
-      chk.type = "checkbox"; chk.checked = lv.visible;
-      chk.addEventListener("change", function() { lv.visible = chk.checked; renderFullscreen(); rebuildLevelPills(); });
-      visLabel.appendChild(chk); visLabel.appendChild(document.createTextNode("Visible"));
-      item.appendChild(visLabel);
-      if (levels.length > 1) {
-        var trash = document.createElement("button");
-        trash.type = "button"; trash.className = "btn-trash";
-        trash.innerHTML = '<i data-lucide="trash-2" style="width:14px;height:14px;"></i>';
-        trash.addEventListener("click", function() {
-          if (!confirm("Delete this level? Sections on it move to the first level.")) return;
-          var firstId = levels.find(function(x){ return x.id !== lv.id; }).id;
-          Object.keys(sectionPositions).forEach(function(k){ if (sectionPositions[k].levelId === lv.id) sectionPositions[k].levelId = firstId; });
-          levels.splice(i, 1);
-          rebuildLevelsList(); rebuildLevelSelect(); renderSeatingPlan(); renderFullscreen();
-        });
-        item.appendChild(trash);
+  function estimateCapacity() {
+    var blocks = getBlocksPerSide();
+    var levels = getStandLevels();
+    var config = getStandConfig();
+    var total = 0;
+    for (var s = 0; s < 4; s++) {
+      for (var b = 0; b < blocks; b++) {
+        if (levels >= 1) total += config.low.rows * config.low.seats;
+        if (levels >= 2) total += config.middle.rows * config.middle.seats;
+        if (levels >= 3) total += config.top.rows * config.top.seats;
       }
-      list.appendChild(item);
+    }
+    $('stadiumSummary').innerHTML = 'Est. capacity: <strong>' + total.toLocaleString() + '</strong> seats (' + (4 * blocks) + ' blocks across 4 sides)';
+    return total;
+  }
+
+  // =========================================================================
+  // DRAG & DROP CANVAS
+  // =========================================================================
+  var canvas = $('dragCanvas');
+  var draggables = [];
+  var blockCounter = 0;
+
+  // Create a new draggable block
+  function createBlock(x, y, name, tier, meta) {
+    var el = document.createElement('div');
+    el.className = 'drag-item ' + tier;
+    el.style.left = x + 'px';
+    el.style.top = y + 'px';
+    el.dataset.id = 'block-' + (blockCounter++);
+    el.dataset.tier = tier;
+    el.innerHTML = '<span class="block-name">' + name + '</span>' +
+                   (meta ? '<span class="block-meta">' + meta + '</span>' : '');
+    canvas.appendChild(el);
+
+    // --- DRAG LOGIC ---
+    var isDragging = false;
+    var startX, startY, origX, origY;
+
+    function onMouseDown(e) {
+      // only left click and not on remove (we'll use dblclick for remove)
+      if (e.button !== 0) return;
+      e.preventDefault();
+      isDragging = true;
+      startX = e.clientX;
+      startY = e.clientY;
+      origX = parseInt(el.style.left) || 0;
+      origY = parseInt(el.style.top) || 0;
+      el.style.zIndex = 1000; // bring to front while dragging
+      el.style.cursor = 'grabbing';
+      document.addEventListener('mousemove', onMouseMove);
+      document.addEventListener('mouseup', onMouseUp);
+    }
+
+    function onMouseMove(e) {
+      if (!isDragging) return;
+      e.preventDefault();
+      var dx = e.clientX - startX;
+      var dy = e.clientY - startY;
+      var newX = origX + dx;
+      var newY = origY + dy;
+
+      // boundary constraints (relative to canvas)
+      var maxX = canvas.clientWidth - el.offsetWidth;
+      var maxY = canvas.clientHeight - el.offsetHeight;
+      newX = Math.max(0, Math.min(newX, maxX));
+      newY = Math.max(0, Math.min(newY, maxY));
+
+      el.style.left = newX + 'px';
+      el.style.top = newY + 'px';
+    }
+
+    function onMouseUp(e) {
+      if (!isDragging) return;
+      isDragging = false;
+      el.style.zIndex = 10; // reset
+      el.style.cursor = 'move';
+      document.removeEventListener('mousemove', onMouseMove);
+      document.removeEventListener('mouseup', onMouseUp);
+    }
+
+    el.addEventListener('mousedown', onMouseDown);
+
+    // double-click to remove
+    el.addEventListener('dblclick', function(e) {
+      e.stopPropagation();
+      el.remove();
+      // remove from draggables array if needed (we don't maintain a separate list)
     });
-    if(window.lucide) lucide.createIcons();
-  }
 
-  function rebuildLevelSelect() {
-    var sel = $("sectionLevelSelect");
-    sel.innerHTML = "";
-    levels.forEach(function(lv) {
-      var opt = document.createElement("option"); opt.value = lv.id; opt.textContent = lv.name; sel.appendChild(opt);
-    });
-    if (currentEditingSection !== undefined) sel.value = getSectionPos(currentEditingSection).levelId;
-  }
-
-  function addLevel() {
-    var id = nextLevelId++;
-    var color = levelColors[levels.length % levelColors.length];
-    levels.push({ id: id, name: "Level " + levels.length, color: color, visible: true });
-    rebuildLevelsList(); rebuildLevelSelect(); renderFullscreen();
-  }
-
-  // ===== SECTION TABS =====
-  function rebuildSectionTabs() {
-    var sections = parseInt($("totalLevel1").value) || 1;
-    if (currentEditingSection >= sections) currentEditingSection = 0;
-    var container = $("sectionTabs"); container.innerHTML = "";
-    for (var i = 0; i < sections; i++) {
-      var btn = document.createElement("button");
-      btn.type = "button"; btn.className = "section-tab" + (i === currentEditingSection ? " active" : "");
-      btn.textContent = getSectionName(i);
-      (function(idx) {
-        btn.addEventListener("click", function() {
-          currentEditingSection = idx; rebuildSectionTabs(); refreshSectionInputs(); rebuildRowOverrides();
-        });
-      })(i);
-      container.appendChild(btn);
-    }
-  }
-
-  function refreshSectionInputs() {
-    var idx = currentEditingSection;
-    $("sectionNameInput").value = sectionNames[idx] || "";
-    $("sectionNameInput").placeholder = "e.g., VIP Stand (currently " + getSectionName(idx) + ")";
-    $("sectionLevelSelect").value = getSectionPos(idx).levelId;
-    var rows = getRowCount(idx);
-    $("sectionRowsInput").value = rows;
-    $("sectionRowsBadge").textContent = rows + " rows";
-    $("sectionTierOverride").value = sectionTierOverrides[idx] || "";
-    var pos = getSectionPos(idx);
-    $("sectionXInput").value = pos.x;
-    $("sectionYInput").value = pos.y;
-    $("sectionRotationInput").value = pos.rotation;
-    $("sectionScaleInput").value = pos.scale;
-    $("sectionScaleBadge").textContent = pos.scale.toFixed(2) + "×";
-  }
-
-  function rebuildRowOverrides() {
-    var rowCount = getRowCount(currentEditingSection);
-    var baseSeats = parseInt($("totalLevel3").value) || 10;
-    var container = $("rowOverridesGrid"); container.innerHTML = "";
-    if (rowCount <= 0) return;
-    var sectionData = sectionRowOverrides[currentEditingSection] || {};
-    for (var r = 0; r < rowCount; r++) {
-      var item = document.createElement("div"); item.className = "row-override-item";
-      var lbl = document.createElement("div"); lbl.className = "row-override-label"; lbl.textContent = "Row " + rowLabel(r);
-      var inp = document.createElement("input"); inp.type = "number"; inp.min = 4; inp.max = 90;
-      inp.value = sectionData[r] !== undefined ? sectionData[r] : baseSeats;
-      (function(sIdx, rIdx, input) {
-        input.addEventListener("input", function() {
-          var val = parseInt(input.value);
-          if (!sectionRowOverrides[sIdx]) sectionRowOverrides[sIdx] = {};
-          if (isNaN(val)) delete sectionRowOverrides[sIdx][rIdx];
-          else sectionRowOverrides[sIdx][rIdx] = Math.max(4, Math.min(90, val));
-          calculateCapacity(); renderSeatingPlan();
-          if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
-        });
-      })(currentEditingSection, r, inp);
-      item.appendChild(lbl); item.appendChild(inp); container.appendChild(item);
-    }
-  }
-
-  // ===== LEFT PANEL PREVIEW =====
-  function renderStandardLayout(container, sections) {
-    var stageName = ($("stageName").value || "STAGE").trim().toUpperCase();
-    for (var b = 0; b < sections; b++) {
-      var rowCount = getRowCount(b);
-      var map = buildRowTierMap(rowCount, b);
-      var pos = getSectionPos(b);
-      var lvl = levels.find(function(x){return x.id === pos.levelId;});
-      var blockEl = document.createElement("div"); blockEl.className = "block";
-      var bl = document.createElement("div"); bl.className = "block-label";
-      bl.textContent = getSectionName(b) + " · " + rowCount + " rows" + (devMode && lvl ? " · " + lvl.name : "");
-      blockEl.appendChild(bl);
-      var stageLine = document.createElement("div"); stageLine.className = "stage-line"; stageLine.textContent = stageName; blockEl.appendChild(stageLine);
-      var rowsStack = document.createElement("div"); rowsStack.className = "rows-stack";
-      for (var r = 0; r < rowCount; r++) {
-        var tier = map[r] || "cyan";
-        var seatCount = Math.max(4, Math.min(90, getSeatsForRow(b, r)));
-        var rowEl = document.createElement("div"); rowEl.className = "horizontal-row";
-        var rl = document.createElement("div"); rl.className = "row-label"; rl.textContent = "Row " + rowLabel(r); rowEl.appendChild(rl);
-        var seatsWrap = document.createElement("div"); seatsWrap.className = "row-seats";
-        var inner = document.createElement("div"); inner.className = "row-seats-inner";
-        for (var s = 0; s < seatCount; s++) {
-          var seat = document.createElement("div"); seat.className = "row-seat " + tier; seat.textContent = (s + 1); inner.appendChild(seat);
-        }
-        seatsWrap.appendChild(inner); rowEl.appendChild(seatsWrap);
-        var tt = document.createElement("div"); tt.className = "row-tier-tag " + tier; tt.textContent = tierTagText(tier); rowEl.appendChild(tt);
-        rowsStack.appendChild(rowEl);
-      }
-      blockEl.appendChild(rowsStack); container.appendChild(blockEl);
-    }
-    container.appendChild(buildLegend());
-  }
-
-  function renderSeatingPlan() {
-    var container = $("seatingPlanPreview"); container.innerHTML = "";
-    var l1 = parseInt($("totalLevel1").value) || 0;
-    if (l1 === 0) { container.innerHTML = '<div class="seating-plan-title">Add sections to begin</div>'; return; }
-    renderStandardLayout(container, Math.min(l1, 8));
-  }
-
-  // ===== FULL SCREEN =====
-  function rebuildLevelPills() {
-    var bar = $("fsLevelBar"); bar.innerHTML = "";
-    var label = document.createElement("span"); label.textContent = "Levels:"; label.style.opacity = "0.7"; label.style.fontWeight = "700"; bar.appendChild(label);
-    levels.forEach(function(lv) {
-      var btn = document.createElement("button");
-      btn.type = "button"; btn.className = "fs-level-pill " + (lv.visible ? "on" : "off");
-      var sw = document.createElement("span"); sw.className = "pill-swatch"; sw.style.background = lv.color; btn.appendChild(sw);
-      btn.appendChild(document.createTextNode(lv.name));
-      btn.addEventListener("click", function() {
-        lv.visible = !lv.visible; rebuildLevelsList(); rebuildLevelPills(); renderFullscreen();
+    // touch support (basic)
+    el.addEventListener('touchstart', function(e) {
+      var touch = e.touches[0];
+      var mouseEvent = new MouseEvent('mousedown', {
+        clientX: touch.clientX,
+        clientY: touch.clientY,
+        button: 0
       });
-      bar.appendChild(btn);
-    });
-  }
+      el.dispatchEvent(mouseEvent);
+    }, { passive: true });
 
-  function buildFSSection(sectionIdx) {
-    var rowCount = getRowCount(sectionIdx);
-    var map = buildRowTierMap(rowCount, sectionIdx);
-    var pos = getSectionPos(sectionIdx);
-    var lv = levels.find(function(x){return x.id === pos.levelId;});
-    var stageName = ($("stageName").value || "STAGE").trim().toUpperCase();
-    var el = document.createElement("div"); el.className = "fs-section"; el.dataset.section = sectionIdx;
-    var title = document.createElement("div"); title.className = "fs-section-title"; title.textContent = getSectionName(sectionIdx); el.appendChild(title);
-    var loc = document.createElement("div"); loc.className = "fs-section-location";
-    loc.textContent = (lv ? lv.name.toUpperCase() : "—") + " · " + rowCount + " rows";
-    if (lv) loc.style.color = lv.color;
-    el.appendChild(loc);
-    var stage = document.createElement("div"); stage.className = "fs-section-stage"; stage.textContent = stageName; el.appendChild(stage);
-    var rowsArea = document.createElement("div"); rowsArea.className = "fs-rows-area";
-    for (var r = 0; r < rowCount; r++) {
-      var tier = map[r] || "cyan";
-      var seatCount = Math.max(4, Math.min(90, getSeatsForRow(sectionIdx, r)));
-      var rowEl = document.createElement("div"); rowEl.className = "fs-row";
-      var rl = document.createElement("div"); rl.className = "fs-row-label"; rl.textContent = "Row " + rowLabel(r); rowEl.appendChild(rl);
-      var seatsWrap = document.createElement("div"); seatsWrap.className = "fs-row-seats";
-      for (var s = 0; s < seatCount; s++) { var seat = document.createElement("div"); seat.className = "fs-seat " + tier; seat.textContent = (s + 1); seatsWrap.appendChild(seat); }
-      rowEl.appendChild(seatsWrap);
-      var tt = document.createElement("div"); tt.className = "fs-tier-tag " + tier; tt.textContent = tierTagText(tier); rowEl.appendChild(tt);
-      rowsArea.appendChild(rowEl);
-    }
-    el.appendChild(rowsArea);
-    el.style.transformOrigin = "center center";
-    el.style.transform = "rotate(" + (pos.rotation||0) + "deg) scale(" + (pos.scale||1) + ")";
-    el.style.left = pos.x + "px"; el.style.top = pos.y + "px";
+    el.addEventListener('touchmove', function(e) {
+      e.preventDefault();
+      var touch = e.touches[0];
+      var mouseEvent = new MouseEvent('mousemove', {
+        clientX: touch.clientX,
+        clientY: touch.clientY
+      });
+      document.dispatchEvent(mouseEvent);
+    }, { passive: false });
+
+    el.addEventListener('touchend', function() {
+      var mouseEvent = new MouseEvent('mouseup', {});
+      document.dispatchEvent(mouseEvent);
+    });
+
     return el;
   }
 
-  function renderFullscreen() {
-    var canvas = $("fsCanvas");
-    canvas.querySelectorAll(".fs-section").forEach(function(el) { el.remove(); });
-    canvas.style.width = canvasWidth + "px"; canvas.style.height = canvasHeight + "px";
-    canvas.style.setProperty("--grid-size", gridSize + "px");
-    canvas.className = "fs-canvas" + ((devMode && showGrid) ? " show-grid" : "");
-    var stageName = ($("stageName").value || "STAGE").trim().toUpperCase();
-    var sm = $("fsStageMarker"); sm.textContent = stageName;
-    sm.style.left = stage.x + "px"; sm.style.top = stage.y + "px";
-    sm.style.width = stage.width + "px"; sm.style.height = stage.height + "px";
-    $("fsStageName").textContent = stageName;
-    var sections = parseInt($("totalLevel1").value) || 0;
-    var anyVisible = false;
-    for (var i = 0; i < sections; i++) {
-      var pos = getSectionPos(i);
-      var lv = levels.find(function(x){return x.id === pos.levelId;});
-      if (devMode && lv && !lv.visible) continue;
-      anyVisible = true;
-      canvas.appendChild(buildFSSection(i));
-    }
-    $("fsEmptyHint").style.display = anyVisible ? "none" : "block";
-    if (devMode) rebuildLevelPills(); else $("fsLevelBar").innerHTML = "";
-    if(window.lucide) lucide.createIcons();
+  // ---- ADD BLOCK ----
+  function addBlock() {
+    // Generate a unique name
+    var existing = canvas.querySelectorAll('.drag-item').length;
+    var name = 'BLK-' + String.fromCharCode(65 + (existing % 26)) + (Math.floor(existing / 26) + 1);
+    var tier = $('tierColor').value;
+    var config = getStandConfig();
+    var meta = config.low.rows + 'r × ' + config.low.seats + 's';
+
+    // Random position inside canvas (with margin)
+    var maxX = Math.max(10, canvas.clientWidth - 100);
+    var maxY = Math.max(10, canvas.clientHeight - 70);
+    var x = Math.floor(Math.random() * maxX);
+    var y = Math.floor(Math.random() * maxY);
+
+    createBlock(x, y, name, tier, meta);
   }
 
-  // ===== MAP PICKER =====
-  var map = null;
-  var mapMarker = null;
-  var pendingPick = null;
-
-  function initMap() {
-    if (map) return;
-    map = L.map("venueMap", { zoomControl: true }).setView([-30.5595, 22.9375], 5); // South Africa center
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
-      maxZoom: 19,
-      attribution: '© OpenStreetMap contributors'
-    }).addTo(map);
-    map.on("click", function(e) { placeMarker(e.latlng.lat, e.latlng.lng, true); });
-    // Force a re-render since the map container starts hidden
-    setTimeout(function(){ map.invalidateSize(); }, 200);
+  // ---- CLEAR CANVAS ----
+  function clearCanvas() {
+    var items = canvas.querySelectorAll('.drag-item');
+    items.forEach(function(el) { el.remove(); });
+    blockCounter = 0;
   }
 
-  function placeMarker(lat, lng, doReverse) {
-    if (mapMarker) map.removeLayer(mapMarker);
-    mapMarker = L.marker([lat, lng], { draggable: true }).addTo(map);
-    mapMarker.on("dragend", function() {
-      var p = mapMarker.getLatLng();
-      reverseGeocode(p.lat, p.lng);
-    });
-    pendingPick = { lat: lat, lng: lng, name: "", address: "", city: "", displayName: "" };
-    if (doReverse) reverseGeocode(lat, lng);
-    else {
-      updateMapInfo("📍 Lat " + lat.toFixed(5) + ", Lng " + lng.toFixed(5));
-    }
+  // ---- RESET CANVAS (re-add initial blocks) ----
+  function resetCanvas() {
+    clearCanvas();
+    // Add a few default blocks in a pleasing layout
+    var tier = $('tierColor').value;
+    var config = getStandConfig();
+    var meta = config.low.rows + 'r × ' + config.low.seats + 's';
+
+    // Side A blocks
+    createBlock(30, 20, 'A-LOW', tier, meta);
+    createBlock(150, 20, 'A-MID', tier, meta);
+    createBlock(270, 20, 'A-TOP', tier, meta);
+
+    // Side C blocks
+    createBlock(30, 400, 'C-LOW', tier, meta);
+    createBlock(150, 400, 'C-MID', tier, meta);
+    createBlock(270, 400, 'C-TOP', tier, meta);
+
+    // Side B & D
+    createBlock(30, 200, 'B-1', tier, meta);
+    createBlock(400, 200, 'D-1', tier, meta);
   }
 
-  function updateMapInfo(html) {
-    $("mapInfoBar").innerHTML = html;
+  // ---- INIT CANVAS ----
+  function initCanvas() {
+    // Set initial size
+    canvas.style.minHeight = '400px';
+    canvas.style.height = '100%';
+    resetCanvas();
   }
 
-  function reverseGeocode(lat, lng) {
-    updateMapInfo('<span style="opacity:0.6;">🔍 Looking up address…</span>');
-    var url = "https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=" + lat + "&lon=" + lng + "&zoom=18&addressdetails=1";
-    fetch(url, { headers: { "Accept": "application/json" } })
-      .then(function(r){ return r.json(); })
-      .then(function(data){
-        if (!data || !data.address) { updateMapInfo("📍 Lat " + lat.toFixed(5) + ", Lng " + lng.toFixed(5)); return; }
-        var a = data.address;
-        var venueName = data.name || a.amenity || a.building || a.leisure || a.tourism || a.shop || "";
-        var street = [a.house_number, a.road].filter(Boolean).join(" ");
-        var city = a.city || a.town || a.village || a.suburb || a.municipality || a.county || "";
-        var region = a.state || "";
-        var country = a.country || "";
-        var addressParts = [street, city, region, country].filter(Boolean);
-        pendingPick = {
-          lat: lat, lng: lng,
-          name: venueName,
-          address: addressParts.join(", "),
-          city: city,
-          displayName: data.display_name || ""
-        };
-        var html = "";
-        if (venueName) html += '<span class="map-info-name">' + venueName + '</span> ';
-        html += '<span class="map-info-addr">' + (addressParts.join(", ") || data.display_name || "") + '</span>';
-        updateMapInfo(html);
-      })
-      .catch(function(err){
-        console.error("Reverse geocode failed", err);
-        updateMapInfo("📍 Lat " + lat.toFixed(5) + ", Lng " + lng.toFixed(5) + " (address lookup failed)");
+  // ---- EVENT LISTENERS ----
+  ['fieldLength','fieldWidth','blocksPerSide','standLevels','topRows','topSeats','middleRows','middleSeats','lowRows','lowSeats','tierColor','guestName'].forEach(function(id) {
+    var el = $(id);
+    if (el) {
+      el.addEventListener('input', function() {
+        estimateCapacity();
+        updateTicketPreview();
+        // Also update the meta on existing blocks? Let's not, to keep drag positions stable.
       });
-  }
-
-  function forwardGeocode(query) {
-    if (!query) return;
-    updateMapInfo('<span style="opacity:0.6;">🔍 Searching…</span>');
-    var url = "https://nominatim.openstreetmap.org/search?format=jsonv2&q=" + encodeURIComponent(query) + "&limit=1&addressdetails=1";
-    fetch(url, { headers: { "Accept": "application/json" } })
-      .then(function(r){ return r.json(); })
-      .then(function(results){
-        if (!results || !results.length) { updateMapInfo("No results found for: " + query); return; }
-        var res = results[0];
-        var lat = parseFloat(res.lat), lng = parseFloat(res.lon);
-        map.setView([lat, lng], 16);
-        placeMarker(lat, lng, false);
-        var a = res.address || {};
-        var venueName = res.name || a.amenity || a.building || a.leisure || a.tourism || a.shop || "";
-        var street = [a.house_number, a.road].filter(Boolean).join(" ");
-        var city = a.city || a.town || a.village || a.suburb || a.municipality || a.county || "";
-        var region = a.state || "";
-        var country = a.country || "";
-        var addressParts = [street, city, region, country].filter(Boolean);
-        pendingPick = {
-          lat: lat, lng: lng,
-          name: venueName,
-          address: addressParts.join(", "),
-          city: city,
-          displayName: res.display_name || ""
-        };
-        var html = "";
-        if (venueName) html += '<span class="map-info-name">' + venueName + '</span> ';
-        html += '<span class="map-info-addr">' + (addressParts.join(", ") || res.display_name || "") + '</span>';
-        updateMapInfo(html);
-      })
-      .catch(function(err){
-        console.error("Forward geocode failed", err);
-        updateMapInfo("Search failed. Please try again.");
+      el.addEventListener('change', function() {
+        estimateCapacity();
+        updateTicketPreview();
       });
-  }
+    }
+  });
 
-  function openMapPicker() {
-    $("mapOverlay").classList.add("open");
-    document.body.style.overflow = "hidden";
-    setTimeout(function() {
-      initMap();
-      if (map) map.invalidateSize();
-      // If we already had a selected location, restore the marker
-      if (venueCoords && venueCoords.lat && venueCoords.lng) {
-        placeMarker(venueCoords.lat, venueCoords.lng, false);
-        var html = "";
-        if (venueCoords.name) html += '<span class="map-info-name">' + venueCoords.name + '</span> ';
-        if (venueCoords.address) html += '<span class="map-info-addr">' + venueCoords.address + '</span>';
-        updateMapInfo(html || ("📍 Lat " + venueCoords.lat.toFixed(5) + ", Lng " + venueCoords.lng.toFixed(5)));
-      } else {
-        updateMapInfo('<span style="opacity:0.6;">No location selected yet. Tap the map or search above.</span>');
+  // Shape selector
+  document.querySelectorAll('.shape-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.shape-btn').forEach(function(b) { b.classList.remove('active'); });
+      this.classList.add('active');
+      stadiumShape = this.dataset.shape;
+      if (stadiumShape !== 'rectangular') {
+        alert('Shape switching is visual only. Rectangular is fully configured.');
       }
-    }, 220);
-  }
-  function closeMapPicker() {
-    $("mapOverlay").classList.remove("open");
-    document.body.style.overflow = "";
-  }
-
-  function confirmMapPick() {
-    if (!pendingPick || (pendingPick.lat === undefined)) {
-      showToast("Tap on the map first to select a location", "error");
-      return;
-    }
-    venueCoords = {
-      lat: pendingPick.lat,
-      lng: pendingPick.lng,
-      name: pendingPick.name || "",
-      address: pendingPick.address || "",
-      city: pendingPick.city || "",
-      displayName: pendingPick.displayName || ""
-    };
-
-    // Fill venue address field
-    var composed = [];
-    if (venueCoords.name) composed.push(venueCoords.name);
-    if (venueCoords.address && composed.join(", ").indexOf(venueCoords.address) === -1) composed.push(venueCoords.address);
-    var finalAddress = composed.join(", ") || venueCoords.displayName || ("Lat " + venueCoords.lat.toFixed(5) + ", Lng " + venueCoords.lng.toFixed(5));
-    $("venueAddress").value = finalAddress;
-    if (venueCoords.city && !$("city").value) $("city").value = venueCoords.city;
-
-    // Show coords hint
-    $("venueCoordsText").textContent = venueCoords.lat.toFixed(5) + ", " + venueCoords.lng.toFixed(5) +
-      (venueCoords.name ? " · " + venueCoords.name : "");
-    $("venueCoordsHint").classList.add("show");
-
-    updateTicketPreview();
-    closeMapPicker();
-    showToast("Venue location set", "success");
-  }
-
-  // ===== EXPORT + SAVE =====
-  function buildSectionsData() {
-    var sections = [];
-    var count = parseInt($("totalLevel1").value) || 0;
-    for (var s = 0; s < count; s++) {
-      var rowCount = getRowCount(s);
-      var map_ = buildRowTierMap(rowCount, s);
-      var pos = getSectionPos(s);
-      var lv = levels.find(function(x){return x.id === pos.levelId;});
-      var rows = [];
-      for (var r = 0; r < rowCount; r++) {
-        var seats = [];
-        var seatCount = getSeatsForRow(s, r);
-        for (var i = 0; i < seatCount; i++) seats.push({ seat: i + 1, tier: map_[r] });
-        rows.push({ row: rowLabel(r), seats: seats });
-      }
-      sections.push({
-        name: getSectionName(s),
-        level: (devMode && lv) ? lv.name : null,
-        x: pos.x, y: pos.y, scale: pos.scale, rotation: pos.rotation,
-        tierOverride: getSectionTierOverride(s),
-        rowCount: rowCount, rows: rows
-      });
-    }
-    return sections;
-  }
-
-  function buildVenuePayload() {
-    return {
-      canvasWidth: canvasWidth, canvasHeight: canvasHeight,
-      gridSize: gridSize, snapToGrid: snapToGrid,
-      stage: { x: stage.x, y: stage.y, width: stage.width, height: stage.height, name: stage.name },
-      levels: levels.map(function(l){ return { id: l.id, name: l.name, color: l.color, visible: l.visible }; }),
-      sections: buildSectionsData(),
-      venueCoords: venueCoords
-    };
-  }
-
-  function downloadFile(content, filename, mime) {
-    var blob = new Blob([content], { type: mime });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement("a");
-    a.href = url; a.download = filename;
-    document.body.appendChild(a); a.click();
-    setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
-  }
-  function exportJson() {
-    var name = $("eventName").value || "Untitled Event";
-    var payload = Object.assign({
-      eventName: name, hostName: $("hostName").value, hostEmail: $("hostEmail").value,
-      city: $("city").value, cost: $("cost").value,
-      startDate: $("startDate").value, startTime: $("startTime").value,
-      venueAddress: $("venueAddress").value,
-      totalAttendees: parseInt($("totalCapacity").value) || 0,
-      exportedAt: new Date().toISOString()
-    }, buildVenuePayload());
-    downloadFile(JSON.stringify(payload, null, 2), name.toLowerCase().replace(/[^a-z0-9]+/g,"-") + "-venue.json", "application/json");
-    showToast("Venue exported as JSON", "success");
-  }
-  function exportCsv() {
-    var name = $("eventName").value || "Untitled Event";
-    var lines = ["Section,Level,Row,Seat,Tier,X,Y,Scale,Rotation"];
-    buildSectionsData().forEach(function(sec) {
-      sec.rows.forEach(function(row) {
-        row.seats.forEach(function(seat) {
-          lines.push(['"' + sec.name + '"', '"' + (sec.level||"") + '"', row.row, seat.seat, seat.tier, sec.x, sec.y, sec.scale, sec.rotation].join(","));
-        });
-      });
     });
-    downloadFile(lines.join("\n"), name.toLowerCase().replace(/[^a-z0-9]+/g,"-") + "-venue.csv", "text/csv");
-    showToast("Venue exported as CSV", "success");
-  }
-
-  async function saveEvent() {
-    if (!db) { showToast("Firebase not connected", "error", 5000); return false; }
-    var payload = Object.assign({
-      eventName: $("eventName").value, hostName: $("hostName").value, hostEmail: $("hostEmail").value,
-      city: $("city").value, cost: $("cost").value,
-      startDate: $("startDate").value, startTime: $("startTime").value,
-      venueAddress: $("venueAddress").value,
-      tierColor: $("tierColor").value,
-      totalAttendees: parseInt($("totalCapacity").value) || 0,
-      devModeUsed: devMode,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, buildVenuePayload());
-    try {
-      var ref = await db.collection("events").add(payload);
-      console.log("Saved:", ref.id);
-      showToast("Event saved successfully!", "success");
-      return true;
-    } catch(err) {
-      console.error(err);
-      showToast("Save failed: " + err.message, "error", 5000);
-      return false;
-    }
-  }
-
-  // ===== WIRING =====
-  $("canvasWidth").addEventListener("change", function() { canvasWidth = Math.max(400, Math.min(3000, parseInt(this.value)||1200)); this.value = canvasWidth; renderFullscreen(); });
-  $("canvasHeight").addEventListener("change", function() { canvasHeight = Math.max(400, Math.min(3000, parseInt(this.value)||800)); this.value = canvasHeight; renderFullscreen(); });
-  $("gridSize").addEventListener("change", function() { gridSize = Math.max(10, Math.min(200, parseInt(this.value)||50)); this.value = gridSize; renderFullscreen(); });
-  $("snapToggle").addEventListener("change", function() { snapToGrid = this.checked; });
-
-  function readStageInputs() {
-    stage.x = parseInt($("stageX").value) || 0;
-    stage.y = parseInt($("stageY").value) || 0;
-    stage.width = Math.max(40, parseInt($("stageW").value) || 200);
-    stage.height = Math.max(20, parseInt($("stageH").value) || 60);
-    stage.name = $("stageName").value || "STAGE";
-    renderFullscreen();
-  }
-  ["stageX","stageY","stageW","stageH","stageName"].forEach(function(id){ $(id).addEventListener("input", readStageInputs); });
-
-  $("addLevelBtn").addEventListener("click", addLevel);
-
-  $("totalLevel1").addEventListener("input", function() {
-    var v = Math.max(1, Math.min(26, parseInt(this.value) || 1));
-    rebuildSectionTabs(); refreshSectionInputs(); rebuildRowOverrides();
-    calculateCapacity(); renderSeatingPlan();
-    if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
-  });
-  $("totalLevel2").addEventListener("change", function() {
-    var v = Math.max(1, Math.min(52, parseInt(this.value)||6)); this.value = v;
-    refreshSectionInputs(); rebuildRowOverrides(); calculateCapacity(); renderSeatingPlan();
-  });
-  $("totalLevel3").addEventListener("change", function() {
-    var v = Math.max(4, Math.min(90, parseInt(this.value)||10)); this.value = v;
-    rebuildRowOverrides(); calculateCapacity(); renderSeatingPlan();
   });
 
-  $("sectionNameInput").addEventListener("input", function() {
-    setSectionName(currentEditingSection, this.value);
-    rebuildSectionTabs(); renderSeatingPlan();
-    if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
-  });
-  $("sectionLevelSelect").addEventListener("change", function() {
-    setSectionPos(currentEditingSection, "levelId", parseInt(this.value));
-    renderSeatingPlan();
-    if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
-  });
-  $("sectionRowsInput").addEventListener("input", function() {
-    var v = parseInt(this.value); if (isNaN(v)) return;
-    setRowCount(currentEditingSection, v);
-    $("sectionRowsBadge").textContent = v + " rows";
-    rebuildRowOverrides(); calculateCapacity(); renderSeatingPlan();
-    if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
-  });
-  $("sectionTierOverride").addEventListener("change", function() {
-    setSectionTierOverride(currentEditingSection, this.value || null);
-    renderSeatingPlan();
-    if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
-  });
-  $("sectionXInput").addEventListener("input", function() { setSectionPos(currentEditingSection, "x", snap(parseInt(this.value)||0)); renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
-  $("sectionYInput").addEventListener("input", function() { setSectionPos(currentEditingSection, "y", snap(parseInt(this.value)||0)); renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
-  $("sectionRotationInput").addEventListener("input", function() { setSectionPos(currentEditingSection, "rotation", parseInt(this.value)||0); renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
-  $("sectionScaleInput").addEventListener("input", function() {
-    var v = parseFloat(this.value) || 1;
-    setSectionPos(currentEditingSection, "scale", v);
-    $("sectionScaleBadge").textContent = v.toFixed(2) + "×";
-    renderSeatingPlan();
-    if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
-  });
+  // Canvas buttons
+  $('addBlockBtn').addEventListener('click', addBlock);
+  $('clearCanvasBtn').addEventListener('click', clearCanvas);
+  $('resetCanvasBtn').addEventListener('click', resetCanvas);
 
-  $("openFullscreen").addEventListener("click", function() {
-    $("fullscreenOverlay").classList.add("open"); document.body.style.overflow = "hidden"; renderFullscreen();
-  });
-  $("closeFullscreen").addEventListener("click", function() {
-    $("fullscreenOverlay").classList.remove("open"); document.body.style.overflow = "";
-  });
-  $("fsToggleGrid").addEventListener("click", function() { showGrid = !showGrid; this.classList.toggle("active", showGrid); renderFullscreen(); });
-  $("fsResetView").addEventListener("click", function() {
-    if (!confirm("Reset all section positions, scales and rotations?")) return;
-    sectionPositions = {}; renderSeatingPlan(); renderFullscreen(); refreshSectionInputs();
-  });
-
-  $("clearAllOverrides").addEventListener("click", function() {
-    if (!confirm("Clear all section overrides and reset positions?")) return;
-    sectionRowOverrides = {}; sectionRowCounts = {}; sectionNames = {};
-    sectionTierOverrides = {}; sectionPositions = {};
-    levels = [{ id: 0, name: "Ground Floor", color: "#22d3ee", visible: true }];
-    nextLevelId = 1; currentEditingSection = 0;
-    rebuildLevelsList(); rebuildLevelSelect();
-    rebuildSectionTabs(); refreshSectionInputs(); rebuildRowOverrides();
-    calculateCapacity(); renderSeatingPlan();
-  });
-
-  // Map picker wiring
-  $("openMapBtn").addEventListener("click", openMapPicker);
-  $("closeMapBtn").addEventListener("click", closeMapPicker);
-  $("mapConfirmBtn").addEventListener("click", confirmMapPick);
-  $("mapSearchBtn").addEventListener("click", function() { forwardGeocode($("mapSearchInput").value); });
-  $("mapSearchInput").addEventListener("keydown", function(e) { if (e.key === "Enter") { e.preventDefault(); forwardGeocode(this.value); } });
-  $("mapUseLocationBtn").addEventListener("click", function() {
-    if (!navigator.geolocation) { showToast("Geolocation not supported", "error"); return; }
-    showToast("Getting your location…", "info", 2000);
-    navigator.geolocation.getCurrentPosition(
-      function(pos) {
-        map.setView([pos.coords.latitude, pos.coords.longitude], 16);
-        placeMarker(pos.coords.latitude, pos.coords.longitude, true);
-      },
-      function() { showToast("Could not get your location", "error"); },
-      { enableHighAccuracy: true, timeout: 8000 }
-    );
-  });
-
-  $("exportJsonBtn").addEventListener("click", exportJson);
-  $("exportCsvBtn").addEventListener("click", exportCsv);
-
-  ["eventName","startDate","venueAddress","guestName","seatBlock","seatRow","seatNum"].forEach(function(id) { $(id).addEventListener("input", updateTicketPreview); });
-  ["tierColor"].forEach(function(id) { $(id).addEventListener("change", updateTicketPreview); });
-  ["seatBlock","seatRow"].forEach(function(id) { $(id).addEventListener("input", function() { this.value = this.value.toUpperCase().replace(/[^A-Z]/g,"").slice(0,1); }); });
-
-  function updateTierSummary() {
-    var defaultRows = parseInt($("totalLevel2").value) || 0;
-    var sum = (parseInt($("tierRowsElite").value)||0) + (parseInt($("tierRowsGold").value)||0) + (parseInt($("tierRowsSilver").value)||0) + (parseInt($("tierRowsCyan").value)||0);
-    var s = $("tierDistSummary"); s.className = "tier-dist-summary";
-    if (sum === defaultRows) s.textContent = "✓ Perfect — " + sum + " rows assigned.";
-    else if (sum < defaultRows) s.textContent = "Assigned " + sum + ". Rows beyond default to Cyan.";
-    else s.textContent = "Sum " + sum + " (extras ignored per section).";
-  }
-  ["tierRowsElite","tierRowsGold","tierRowsSilver","tierRowsCyan"].forEach(function(id) {
-    $(id).addEventListener("input", function() { updateTierSummary(); renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
-  });
-
-  $("createEventForm").addEventListener("submit", async function(e) {
+  // Form submit
+  $('stadiumForm').addEventListener('submit', function(e) {
     e.preventDefault();
-    var btn = $("submitBtn"); var orig = btn.innerHTML;
-    btn.disabled = true; btn.innerHTML = 'Saving...';
-    await saveEvent();
-    btn.disabled = false; btn.innerHTML = orig;
-    if(window.lucide) lucide.createIcons();
+    var cap = estimateCapacity();
+    var blockCount = canvas.querySelectorAll('.drag-item').length;
+    alert('Stadium configuration saved!\nEstimated capacity: ' + cap.toLocaleString() + ' seats\nShape: Rectangular Stadium\nBlocks on canvas: ' + blockCount);
   });
 
-  document.addEventListener("keydown", function(e) {
-    if (e.key === "Escape") {
-      if ($("mapOverlay").classList.contains("open")) closeMapPicker();
-      else if ($("fullscreenOverlay").classList.contains("open")) { $("fullscreenOverlay").classList.remove("open"); document.body.style.overflow = ""; }
-    }
-  });
-
-  // ===== INIT =====
-  rebuildLevelsList();
-  rebuildLevelSelect();
-  rebuildSectionTabs();
-  refreshSectionInputs();
-  rebuildRowOverrides();
-  calculateCapacity();
+  // ---- INIT ----
   updateTicketPreview();
-  renderSeatingPlan();
-  updateTierSummary();
-});
+  estimateCapacity();
+  initCanvas();
+  if (window.lucide) lucide.createIcons();
+
+  window.addEventListener('load', function() {
+    estimateCapacity();
+    initCanvas();
+  });
 
 })();
 </script>
 </body>
-                                                                                                                                                  </html>
+  </html>
