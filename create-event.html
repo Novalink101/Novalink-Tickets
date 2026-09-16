@@ -15,23 +15,10 @@
   --radius:14px;--max-width:1180px;
   --font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --navy:#1e2f4d;--cyan-logo:#00FFFF;
-  /* Editable tier colours (updated live via JS) */
-  --tier-black:#1a202c;
-  --tier-black-light:#e4e6ea;
-  --tier-black-text:#ffffff;
-  --tier-black-text-light:#101216;
-  --tier-gold:#ecc94b;
-  --tier-gold-light:#fbf3d3;
-  --tier-gold-text:#0a0f14;
-  --tier-gold-text-light:#846e28;
-  --tier-silver:#cbd5e1;
-  --tier-silver-light:#f0f3f7;
-  --tier-silver-text:#0a0f14;
-  --tier-silver-text-light:#6f757b;
-  --tier-cyan:#00FFFF;
-  --tier-cyan-light:#d9ffff;
-  --tier-cyan-text:#04161c;
-  --tier-cyan-text-light:#008c8c;
+  --tier-black:#1a202c;--tier-black-light:#e4e6ea;--tier-black-text:#ffffff;--tier-black-text-light:#101216;
+  --tier-gold:#ecc94b;--tier-gold-light:#fbf3d3;--tier-gold-text:#0a0f14;--tier-gold-text-light:#846e28;
+  --tier-silver:#cbd5e1;--tier-silver-light:#f0f3f7;--tier-silver-text:#0a0f14;--tier-silver-text-light:#6f757b;
+  --tier-cyan:#00FFFF;--tier-cyan-light:#d9ffff;--tier-cyan-text:#04161c;--tier-cyan-text-light:#008c8c;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-height:1.6;min-height:100vh;display:flex;flex-direction:column}
@@ -56,6 +43,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .form-group input:focus, .form-group select:focus, .form-group textarea:focus{outline:none;border-color:var(--cyan-500);box-shadow:0 0 0 3px rgba(0,255,255,0.15);background:#fff}
 .form-group select{appearance:none;-webkit-appearance:none;-moz-appearance:none;padding-right:36px;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7787' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:12px;cursor:pointer;}
 .form-hint{font-size:11.5px;color:var(--text-muted);margin-top:6px;line-height:1.5;font-style:italic;word-break:break-word}
+.form-hint.recommend{color:var(--cyan-700);font-weight:700;font-style:normal;}
 .form-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
 .form-row-3{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:12px}
 @media (max-width:600px){.form-row,.form-row-3{grid-template-columns:minmax(0,1fr)}}
@@ -85,19 +73,56 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .seat-preview-display{margin-top:10px;padding:10px 14px;background:var(--surface-2);border:1px dashed var(--cyan-500);border-radius:8px;font-family:ui-monospace,monospace;font-weight:800;font-size:16px;color:var(--cyan-700);text-align:center;letter-spacing:1px;min-height:42px;display:flex;align-items:center;justify-content:center;word-break:break-all;}
 .seat-preview-display.empty{color:var(--text-muted);font-weight:600;font-family:var(--font);font-size:12px;letter-spacing:0;border-color:var(--border-2);border-style:solid;word-break:normal;}
 
-/* Currency input with R prefix */
 .currency-input{display:flex;align-items:stretch;width:100%;}
 .currency-input .currency-prefix{display:inline-flex;align-items:center;justify-content:center;padding:0 14px;background:var(--bg-2);border:1px solid var(--border-2);border-right:none;border-radius:10px 0 0 10px;font-weight:800;color:var(--cyan-700);font-size:14.5px;flex-shrink:0;transition:border-color 0.2s, box-shadow 0.2s, background 0.2s;}
 .currency-input input{border-top-left-radius:0 !important;border-bottom-left-radius:0 !important;}
 .currency-input:focus-within .currency-prefix{border-color:var(--cyan-500);background:#fff;box-shadow:0 0 0 3px rgba(0,255,255,0.15);}
+.currency-input.compact .currency-prefix{padding:0 10px;font-size:13px;}
+.currency-input.compact input{padding:8px 10px;font-size:13.5px;font-weight:800;}
 
-/* Tier colour editor */
-.tier-color-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-top:8px;}
-.tier-color-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:10px;min-width:0;}
-.tier-color-item .tier-color-swatch{width:18px;height:18px;border-radius:5px;flex-shrink:0;border:1px solid rgba(0,0,0,0.12);transition:background 0.2s;}
-.tier-color-item label{flex:1;min-width:0;font-size:12px;font-weight:700;color:var(--text-2);text-transform:none;letter-spacing:0;margin:0;word-break:break-word;}
-.tier-color-item input[type="color"]{width:46px;height:32px;padding:2px 4px;border-radius:8px;border:1px solid var(--border-2);background:#fff;cursor:pointer;flex-shrink:0;}
-.tier-color-actions{margin-top:10px;display:flex;justify-content:flex-end;}
+/* Plan selector cards */
+.plan-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:8px;}
+.plan-card{position:relative;display:flex;flex-direction:column;gap:4px;padding:14px 14px 12px;background:var(--surface);border:2px solid var(--border-2);border-radius:12px;cursor:pointer;transition:all 0.2s ease;min-width:0;overflow:hidden;}
+.plan-card:hover{border-color:var(--cyan-400);transform:translateY(-2px);}
+.plan-card.featured{border-color:var(--cyan-500);background:linear-gradient(180deg,var(--cyan-50),#fff);}
+.plan-card input[type="radio"]{position:absolute;opacity:0;pointer-events:none;}
+.plan-card.selected{border-color:#0a0f14;background:#0a0f14;color:#fff;box-shadow:0 8px 20px rgba(10,15,20,0.2);}
+.plan-card.selected .plan-name, .plan-card.selected .plan-fee, .plan-card.selected .plan-desc{color:#fff;}
+.plan-card.selected .plan-fee small{color:#67e8f9;}
+.plan-badge{position:absolute;top:0;right:0;background:var(--cyan-500);color:#04161c;font-size:8.5px;font-weight:900;letter-spacing:0.06em;text-transform:uppercase;padding:3px 8px;border-radius:0 10px 0 8px;}
+.plan-name{font-size:13px;font-weight:800;color:var(--text);letter-spacing:-0.01em;}
+.plan-fee{font-size:20px;font-weight:900;color:var(--cyan-700);line-height:1;}
+.plan-fee small{font-size:10.5px;font-weight:700;color:var(--text-muted);margin-left:2px;}
+.plan-desc{font-size:10.5px;color:var(--text-muted);font-weight:600;margin-top:2px;line-height:1.3;}
+.plan-card.selected .plan-desc{color:rgba(255,255,255,0.7);}
+
+/* Tier pricing rows */
+.tier-pricing-list{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
+.tier-price-row{display:grid;grid-template-columns:18px minmax(80px,1.2fr) 70px minmax(90px,1fr) 90px;align-items:center;gap:8px;padding:8px 10px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:10px;min-width:0;}
+@media (max-width:600px){.tier-price-row{grid-template-columns:18px 1fr;grid-auto-rows:auto;gap:6px;}.tier-price-row .tier-qty-badge,.tier-price-row .currency-input,.tier-price-row .tier-revenue{grid-column:2 / -1;}}
+.tier-price-row .tier-swatch{width:18px;height:18px;border-radius:5px;border:1px solid rgba(0,0,0,0.12);flex-shrink:0;}
+.tier-price-row .tier-name-input{padding:7px 10px;font-size:13px;font-weight:800;background:#fff;border:1px solid var(--border-2);border-radius:8px;font-family:inherit;color:var(--text);min-width:0;width:100%;}
+.tier-price-row .tier-name-input:focus{outline:none;border-color:var(--cyan-500);box-shadow:0 0 0 2px rgba(0,255,255,0.15);}
+.tier-price-row .tier-qty-badge{font-size:10.5px;font-weight:800;color:var(--cyan-700);background:var(--cyan-50);padding:4px 8px;border-radius:6px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.tier-price-row .tier-revenue{font-size:12px;font-weight:800;color:var(--text-2);text-align:right;font-family:ui-monospace,monospace;white-space:nowrap;}
+
+/* Live revenue calculator */
+.revenue-card{background:linear-gradient(135deg,#0a0f14,#1a2129);color:#fff;border-radius:14px;padding:18px 20px;box-shadow:0 12px 30px rgba(10,15,20,0.2);border:1px solid #1f2937;margin-top:8px;}
+.revenue-card .rev-head{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#67e8f9;margin-bottom:12px;}
+.revenue-card .rev-head i{width:15px;height:15px;}
+.revenue-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0;font-size:13px;color:#c9d2dd;border-bottom:1px solid rgba(255,255,255,0.06);}
+.revenue-row:last-child{border-bottom:none;}
+.revenue-row span:first-child{font-weight:600;}
+.rev-amount{font-family:ui-monospace,monospace;font-weight:800;color:#fff;font-size:14px;}
+.revenue-row.fee .rev-amount{color:#fbbf24;}
+.revenue-row.net{padding-top:12px;margin-top:4px;border-top:1px dashed rgba(0,255,255,0.3);font-size:15px;}
+.revenue-row.net span:first-child{color:#fff;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;font-size:12px;}
+.revenue-row.net .rev-amount{color:#00FFFF;font-size:20px;font-weight:900;}
+.rev-plan-name{color:#00FFFF;font-weight:800;}
+.revenue-warning{margin-top:10px;background:#7f1d1d;color:#fecaca;padding:8px 12px;border-radius:8px;font-size:11.5px;font-weight:700;display:flex;align-items:flex-start;gap:8px;line-height:1.5;}
+.revenue-warning.hidden{display:none;}
+.revenue-warning .warn-icon{flex-shrink:0;font-weight:900;}
+.rev-divider{margin:6px 0;height:1px;background:rgba(255,255,255,0.06);}
 
 .tier-dist-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-top:8px;}
 .tier-dist-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:10px;min-width:0;}
@@ -110,6 +135,13 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .tier-dist-item input{width:60px;padding:6px 8px;text-align:center;font-size:13px;}
 .tier-dist-summary{font-size:11.5px;color:var(--text-muted);margin-top:8px;font-style:italic;word-break:break-word}
 .tier-dist-summary.error{color:#b91c1c;font-weight:700;}
+
+.tier-color-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-top:8px;}
+.tier-color-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:10px;min-width:0;}
+.tier-color-item .tier-color-swatch{width:18px;height:18px;border-radius:5px;flex-shrink:0;border:1px solid rgba(0,0,0,0.12);transition:background 0.2s;}
+.tier-color-item label{flex:1;min-width:0;font-size:12px;font-weight:700;color:var(--text-2);text-transform:none;letter-spacing:0;margin:0;word-break:break-word;}
+.tier-color-item input[type="color"]{width:46px;height:32px;padding:2px 4px;border-radius:8px;border:1px solid var(--border-2);background:#fff;cursor:pointer;flex-shrink:0;}
+.tier-color-actions{margin-top:10px;display:flex;justify-content:flex-end;}
 
 .levels-panel { margin-top: 12px; padding: 12px; background: var(--bg-2); border: 1px solid var(--border-2); border-radius: 10px; }
 .levels-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; max-height: 200px; overflow-y: auto; }
@@ -297,18 +329,8 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .row-seat.gold { background: var(--tier-gold); color: var(--tier-gold-text); }
 .row-seat.silver { background: var(--tier-silver); color: var(--tier-silver-text); }
 .row-seat.cyan { background: var(--tier-cyan); color: var(--tier-cyan-text); }
-.row-seat.seat-found {
-  outline: 3px solid #00FFFF;
-  outline-offset: 1px;
-  transform: scale(1.4);
-  z-index: 20;
-  position: relative;
-  animation: seatPulse 1.2s ease-in-out infinite;
-}
-@keyframes seatPulse {
-  0%, 100% { box-shadow: 0 0 0 3px rgba(0,255,255,0.4), 0 0 12px rgba(0,255,255,0.6); }
-  50%      { box-shadow: 0 0 0 5px rgba(0,255,255,0.75), 0 0 24px rgba(0,255,255,1); }
-}
+.row-seat.seat-found { outline: 3px solid #00FFFF; outline-offset: 1px; transform: scale(1.4); z-index: 20; position: relative; animation: seatPulse 1.2s ease-in-out infinite; }
+@keyframes seatPulse { 0%, 100% { box-shadow: 0 0 0 3px rgba(0,255,255,0.4), 0 0 12px rgba(0,255,255,0.6); } 50% { box-shadow: 0 0 0 5px rgba(0,255,255,0.75), 0 0 24px rgba(0,255,255,1); } }
 .row-tier-tag { font-size: 9px; font-weight: 800; text-align: left; letter-spacing: 0.5px; text-transform: uppercase; }
 .row-tier-tag.black { color: var(--tier-black-text-light); }
 .row-tier-tag.gold { color: var(--tier-gold-text-light); }
@@ -442,85 +464,164 @@ h1,h2,h3{line-height:1.15;font-weight:700}
             <label for="city">City</label>
             <select id="city" required>
               <option value="">Select a city / area…</option>
-              <option>Johannesburg</option>
-              <option>Sandton</option>
-              <option>Randburg</option>
-              <option>Roodepoort</option>
-              <option>Soweto</option>
-              <option>Midrand</option>
-              <option>Fourways</option>
-              <option>Bryanston</option>
-              <option>Rosebank</option>
-              <option>Bedfordview</option>
-              <option>Edenvale</option>
-              <option>Kempton Park</option>
-              <option>Benoni</option>
-              <option>Boksburg</option>
-              <option>Brakpan</option>
-              <option>Springs</option>
-              <option>Germiston</option>
-              <option>Alberton</option>
-              <option>Vereeniging</option>
-              <option>Vanderbijlpark</option>
-              <option>Meyerton</option>
-              <option>Heidelberg</option>
-              <option>Nigel</option>
-              <option>Bronkhorstspruit</option>
-              <option>Cullinan</option>
-              <option>Centurion</option>
-              <option>Pretoria</option>
-              <option>Tshwane</option>
-              <option>Akasia</option>
-              <option>Mamelodi</option>
-              <option>Atteridgeville</option>
-              <option>Soshanguve</option>
-              <option>Krugersdorp</option>
-              <option>Mogale City</option>
-              <option>Randfontein</option>
-              <option>Carletonville</option>
-              <option>Westonaria</option>
-              <option>Lenasia</option>
-              <option>Ennerdale</option>
-              <option>Orange Farm</option>
-              <option>Tembisa</option>
-              <option>Ivory Park</option>
-              <option>Diepsloot</option>
-              <option>Alexandra</option>
-              <option>Daveyton</option>
-              <option>Duduza</option>
-              <option>Tsakane</option>
-              <option>Sebokeng</option>
-              <option>Sharpeville</option>
-              <option>Boipatong</option>
-              <option>Evaton</option>
-              <option>Bophelong</option>
-              <option>Katlehong</option>
-              <option>Thokoza</option>
-              <option>Vosloorus</option>
-              <option>Zonkizizwe</option>
-              <option>Palm Ridge</option>
-              <option>Eden Park</option>
-              <option>Other (Gauteng)</option>
-              <option>Outside Gauteng</option>
+              <option>Johannesburg</option><option>Sandton</option><option>Randburg</option><option>Roodepoort</option><option>Soweto</option>
+              <option>Midrand</option><option>Fourways</option><option>Bryanston</option><option>Rosebank</option><option>Bedfordview</option>
+              <option>Edenvale</option><option>Kempton Park</option><option>Benoni</option><option>Boksburg</option><option>Brakpan</option>
+              <option>Springs</option><option>Germiston</option><option>Alberton</option><option>Vereeniging</option><option>Vanderbijlpark</option>
+              <option>Meyerton</option><option>Heidelberg</option><option>Nigel</option><option>Bronkhorstspruit</option><option>Cullinan</option>
+              <option>Centurion</option><option>Pretoria</option><option>Tshwane</option><option>Akasia</option><option>Mamelodi</option>
+              <option>Atteridgeville</option><option>Soshanguve</option><option>Krugersdorp</option><option>Mogale City</option><option>Randfontein</option>
+              <option>Carletonville</option><option>Westonaria</option><option>Lenasia</option><option>Ennerdale</option><option>Orange Farm</option>
+              <option>Tembisa</option><option>Ivory Park</option><option>Diepsloot</option><option>Alexandra</option><option>Daveyton</option>
+              <option>Duduza</option><option>Tsakane</option><option>Sebokeng</option><option>Sharpeville</option><option>Boipatong</option>
+              <option>Evaton</option><option>Bophelong</option><option>Katlehong</option><option>Thokoza</option><option>Vosloorus</option>
+              <option>Zonkizizwe</option><option>Palm Ridge</option><option>Eden Park</option><option>Other (Gauteng)</option><option>Outside Gauteng</option>
             </select>
           </div>
           <div class="form-group">
-            <label for="cost">Ticket Price (R)</label>
+            <label for="eventType">Event Type</label>
+            <select id="eventType">
+              <option value="" data-min="0" data-max="0">Select event type…</option>
+              <option value="church" data-min="20" data-max="50">Church Service / Small Gathering</option>
+              <option value="community" data-min="30" data-max="80">Community Event</option>
+              <option value="workshop" data-min="150" data-max="500">Workshop / Seminar</option>
+              <option value="concert" data-min="100" data-max="350">Concert / Live Music</option>
+              <option value="conference" data-min="500" data-max="2500">Conference</option>
+              <option value="gala" data-min="800" data-max="2500">Gala Dinner</option>
+              <option value="festival" data-min="200" data-max="800">Festival</option>
+              <option value="sports" data-min="50" data-max="500">Sports Event</option>
+              <option value="party" data-min="50" data-max="200">Party / Club Night</option>
+              <option value="wedding" data-min="0" data-max="0">Wedding (Free Entry)</option>
+              <option value="corporate" data-min="400" data-max="1500">Corporate Function</option>
+              <option value="other" data-min="50" data-max="500">Other</option>
+            </select>
+            <p class="form-hint recommend" id="eventTypeHint">Choose an event type to see a recommended price.</p>
+          </div>
+        </div>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="cost">Base Ticket Price (R)</label>
             <div class="currency-input">
               <span class="currency-prefix">R</span>
               <input type="number" id="cost" min="0" step="0.01" placeholder="25.50" required />
             </div>
-            <p class="form-hint">Numbers only — e.g. 25.50. Values under R30 are supported. Enter 0 for free events.</p>
+            <p class="form-hint">Numbers only. Values under R30 supported. Enter 0 for free events.</p>
+          </div>
+          <div class="form-group">
+            <label for="startTime">Start Time</label>
+            <input type="time" id="startTime" required />
           </div>
         </div>
         <div class="form-row">
           <div class="form-group"><label for="startDate">Start Date</label><input type="date" id="startDate" required /></div>
-          <div class="form-group"><label for="startTime">Start Time</label><input type="time" id="startTime" required /></div>
+          <div class="form-group">
+            <label for="tierColorPreviewNote">Preview Colour Tier</label>
+            <input type="text" id="tierColorPreviewNote" readonly value="Set in Ticket Preview below" style="background:var(--surface-2);font-size:12.5px;color:var(--text-muted);font-style:italic;" />
+          </div>
         </div>
 
         <div class="section-divider"><span>Event Details</span></div>
         <div class="form-group"><label for="eventName">Event Name</label><input type="text" id="eventName" placeholder="e.g., Neon Nights Live" required /></div>
         <div class="form-group"><label for="venueAddress">Venue Name & Address</label><input type="text" id="venueAddress" placeholder="e.g., Grand Amphitheatre, 123 Main Rd" required /></div>
+
+        <div class="section-divider"><span>Pricing Plan</span></div>
+        <div class="form-group">
+          <label>Choose a Novalink plan</label>
+          <p class="form-hint" style="margin-top:0;margin-bottom:8px;">Plan determines the fee Novalink takes per ticket. No monthly fees — you only pay when you sell.</p>
+          <div class="plan-grid" id="planGrid">
+            <label class="plan-card" data-plan="basic">
+              <input type="radio" name="plan" value="basic" data-fee="5" data-limit="100" />
+              <div class="plan-name">Basic</div>
+              <div class="plan-fee">5<small>% per ticket</small></div>
+              <div class="plan-desc">Up to 100 tickets · QR scanning · 2 scanner staff</div>
+            </label>
+            <label class="plan-card featured" data-plan="standard">
+              <span class="plan-badge">Most popular</span>
+              <input type="radio" name="plan" value="standard" data-fee="7" data-limit="500" checked />
+              <div class="plan-name">Standard</div>
+              <div class="plan-fee">7<small>% per ticket</small></div>
+              <div class="plan-desc">Up to 500 tickets · QR + barcode · 5 scanner staff</div>
+            </label>
+            <label class="plan-card" data-plan="premium">
+              <input type="radio" name="plan" value="premium" data-fee="10" data-limit="2000" />
+              <div class="plan-name">Premium</div>
+              <div class="plan-fee">10<small>% per ticket</small></div>
+              <div class="plan-desc">Up to 2,000 tickets · QR + barcode + vertical · 15 scanner staff</div>
+            </label>
+            <label class="plan-card" data-plan="enterprise">
+              <input type="radio" name="plan" value="enterprise" data-fee="12" data-limit="999999" />
+              <div class="plan-name">Enterprise</div>
+              <div class="plan-fee">12<small>% per ticket</small></div>
+              <div class="plan-desc">Unlimited tickets · White-label · Dedicated account manager</div>
+            </label>
+          </div>
+        </div>
+
+        <div class="section-divider"><span>Tier Names &amp; Pricing</span></div>
+        <div class="form-group">
+          <label>Customise each tier</label>
+          <p class="form-hint" style="margin-top:0;margin-bottom:8px;">Rename tiers and set the price per ticket. The ticket preview and seating plan update instantly.</p>
+          <div class="tier-pricing-list">
+            <div class="tier-price-row">
+              <span class="tier-swatch" style="background:var(--tier-black)"></span>
+              <input type="text" class="tier-name-input" data-tier="black" value="Elite" maxlength="20" placeholder="Elite" />
+              <span class="tier-qty-badge" id="qtyBadgeBlack">0 seats</span>
+              <div class="currency-input compact"><span class="currency-prefix">R</span><input type="number" class="tier-price-input" data-tier="black" min="0" step="0.01" value="0" /></div>
+              <span class="tier-revenue" id="revRowBlack">R 0.00</span>
+            </div>
+            <div class="tier-price-row">
+              <span class="tier-swatch" style="background:var(--tier-gold)"></span>
+              <input type="text" class="tier-name-input" data-tier="gold" value="Gold" maxlength="20" placeholder="Gold" />
+              <span class="tier-qty-badge" id="qtyBadgeGold">0 seats</span>
+              <div class="currency-input compact"><span class="currency-prefix">R</span><input type="number" class="tier-price-input" data-tier="gold" min="0" step="0.01" value="0" /></div>
+              <span class="tier-revenue" id="revRowGold">R 0.00</span>
+            </div>
+            <div class="tier-price-row">
+              <span class="tier-swatch" style="background:var(--tier-silver)"></span>
+              <input type="text" class="tier-name-input" data-tier="silver" value="Silver" maxlength="20" placeholder="Silver" />
+              <span class="tier-qty-badge" id="qtyBadgeSilver">0 seats</span>
+              <div class="currency-input compact"><span class="currency-prefix">R</span><input type="number" class="tier-price-input" data-tier="silver" min="0" step="0.01" value="0" /></div>
+              <span class="tier-revenue" id="revRowSilver">R 0.00</span>
+            </div>
+            <div class="tier-price-row">
+              <span class="tier-swatch" style="background:var(--tier-cyan)"></span>
+              <input type="text" class="tier-name-input" data-tier="cyan" value="Standard" maxlength="20" placeholder="Standard" />
+              <span class="tier-qty-badge" id="qtyBadgeCyan">0 seats</span>
+              <div class="currency-input compact"><span class="currency-prefix">R</span><input type="number" class="tier-price-input" data-tier="cyan" min="0" step="0.01" value="0" /></div>
+              <span class="tier-revenue" id="revRowCyan">R 0.00</span>
+            </div>
+          </div>
+          <p class="form-hint" style="margin-top:8px;">Tip: the base ticket price above auto-fills tier prices. You can then edit each tier independently.</p>
+        </div>
+
+        <div class="section-divider"><span>Live Revenue Calculator</span></div>
+        <div class="revenue-card">
+          <div class="rev-head"><i data-lucide="trending-up"></i> Live Estimate · Updates as you edit</div>
+          <div class="revenue-row">
+            <span>Plan</span>
+            <span class="rev-plan-name" id="revPlanName">Standard · 7%</span>
+          </div>
+          <div class="revenue-row">
+            <span>Total Tickets (capacity)</span>
+            <span id="revTotalTickets">0 / 500</span>
+          </div>
+          <div class="revenue-row">
+            <span>Gross Ticket Revenue</span>
+            <span class="rev-amount" id="revGross">R 0.00</span>
+          </div>
+          <div class="revenue-row fee">
+            <span>Novalink Fee (<span id="revFeePct">7%</span>)</span>
+            <span class="rev-amount" id="revFee">− R 0.00</span>
+          </div>
+          <div class="revenue-row net">
+            <span>Your Net Revenue</span>
+            <span class="rev-amount" id="revNet">R 0.00</span>
+          </div>
+          <div class="revenue-warning hidden" id="revWarning">
+            <span class="warn-icon">!</span>
+            <span id="revWarningText"></span>
+          </div>
+        </div>
 
         <div class="section-divider"><span>Venue Canvas & Stage</span></div>
         <div class="form-row">
@@ -738,28 +839,12 @@ h1,h2,h3{line-height:1.15;font-weight:700}
         <div class="section-divider"><span>Tier Colours</span></div>
         <div class="form-group" id="tierColorsGroup">
           <label>Tier Colours</label>
-          <p class="form-hint" style="margin-top:0;margin-bottom:8px;">Edit the four tier colours. These apply to seats, tables and the seating plan legend.</p>
+          <p class="form-hint" style="margin-top:0;margin-bottom:8px;">Edit the four tier colours. Applied to seats, tables and the seating plan legend.</p>
           <div class="tier-color-grid">
-            <div class="tier-color-item">
-              <span class="tier-color-swatch" id="tierSwatchBlack"></span>
-              <label for="tierColorBlack">Elite (Black)</label>
-              <input type="color" id="tierColorBlack" value="#1a202c" />
-            </div>
-            <div class="tier-color-item">
-              <span class="tier-color-swatch" id="tierSwatchGold"></span>
-              <label for="tierColorGold">Gold (VIP)</label>
-              <input type="color" id="tierColorGold" value="#ecc94b" />
-            </div>
-            <div class="tier-color-item">
-              <span class="tier-color-swatch" id="tierSwatchSilver"></span>
-              <label for="tierColorSilver">Silver</label>
-              <input type="color" id="tierColorSilver" value="#cbd5e1" />
-            </div>
-            <div class="tier-color-item">
-              <span class="tier-color-swatch" id="tierSwatchCyan"></span>
-              <label for="tierColorCyan">Cyan (Standard)</label>
-              <input type="color" id="tierColorCyan" value="#00FFFF" />
-            </div>
+            <div class="tier-color-item"><span class="tier-color-swatch" id="tierSwatchBlack"></span><label for="tierColorBlack">Elite</label><input type="color" id="tierColorBlack" value="#1a202c" /></div>
+            <div class="tier-color-item"><span class="tier-color-swatch" id="tierSwatchGold"></span><label for="tierColorGold">Gold</label><input type="color" id="tierColorGold" value="#ecc94b" /></div>
+            <div class="tier-color-item"><span class="tier-color-swatch" id="tierSwatchSilver"></span><label for="tierColorSilver">Silver</label><input type="color" id="tierColorSilver" value="#cbd5e1" /></div>
+            <div class="tier-color-item"><span class="tier-color-swatch" id="tierSwatchCyan"></span><label for="tierColorCyan">Standard</label><input type="color" id="tierColorCyan" value="#00FFFF" /></div>
           </div>
           <div class="tier-color-actions">
             <button type="button" class="btn-mini" id="resetTierColorsBtn">↺ Reset to defaults</button>
@@ -775,10 +860,10 @@ h1,h2,h3{line-height:1.15;font-weight:700}
         <div class="form-group">
           <label for="tierColor">Card Colour Tier</label>
           <select id="tierColor" required>
-            <option value="cyan" selected>Cyan (Standard)</option>
-            <option value="silver">Silver (Mid Seating)</option>
-            <option value="gold">Gold (VIP)</option>
-            <option value="black">Black (Elite)</option>
+            <option value="cyan" selected>Standard</option>
+            <option value="silver">Silver</option>
+            <option value="gold">Gold</option>
+            <option value="black">Elite</option>
           </select>
         </div>
         <div class="form-group"><label for="guestName">Guest Name (Preview)</label><input type="text" id="guestName" placeholder="e.g., Jane Smith" /></div>
@@ -812,7 +897,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
         <div class="ticket-card cyan" id="dynamicTicket">
           <div class="ticket-header-row">
             <div class="ticket-logo">NOVALINK</div>
-            <div class="ticket-badges"><span class="badge-public">PUBLIC</span><span class="badge-tier" id="prevTierBadge">CYAN</span></div>
+            <div class="ticket-badges"><span class="badge-public">PUBLIC</span><span class="badge-tier" id="prevTierBadge">STANDARD</span></div>
           </div>
           <div class="ticket-body-row">
             <div class="ticket-info-left">
@@ -925,9 +1010,19 @@ var nextCanvasElementId = 1;
 var expandedElementId = null;
 var lastFoundSeat = null;
 
-// ===== TIER COLOURS (editable) =====
+// ===== TIER COLOURS =====
 var TIER_DEFAULTS = { black: "#1a202c", gold: "#ecc94b", silver: "#cbd5e1", cyan: "#00FFFF" };
 var TIER_COLORS   = Object.assign({}, TIER_DEFAULTS);
+
+// ===== TIER NAMES (editable) =====
+var TIER_NAMES = { black: "Elite", gold: "Gold", silver: "Silver", cyan: "Standard" };
+function getTierLabel(tier){ return TIER_NAMES[tier] || tier; }
+
+// ===== TIER PRICES (editable) =====
+var TIER_PRICES = { black: 0, gold: 0, silver: 0, cyan: 0 };
+
+// ===== PLAN =====
+var currentPlan = { id: "standard", fee: 7, limit: 500 };
 
 var MARKER_TYPES = {
   exit:     { color: '#10b981', icon: '↗',  defaultLabel: 'EXIT' },
@@ -993,8 +1088,12 @@ function readCost(){
   return Math.round(v * 100) / 100;
 }
 function formatCurrency(v){
-  if (!v || v <= 0) return "Free";
-  return "R" + v.toFixed(2);
+  if (!v || v <= 0) return "R 0.00";
+  return "R " + v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+function formatCurrencyCompact(v){
+  if (v === undefined || v === null || isNaN(v)) return "R 0.00";
+  return "R " + Number(v).toFixed(2);
 }
 
 function showToast(msg, type, ms) {
@@ -1014,7 +1113,7 @@ document.addEventListener("DOMContentLoaded", function(){
 
   function rowLabel(index) { var n = index, label = ""; do { label = String.fromCharCode(65 + (n % 26)) + label; n = Math.floor(n / 26) - 1; } while (n >= 0); return label; }
   function blockLabel(index) { return String.fromCharCode(65 + index); }
-  function tierTagText(t) { return t === "black" ? "Elite" : t === "gold" ? "Gold" : t === "silver" ? "Silver" : "Cyan"; }
+  function tierTagText(t) { return getTierLabel(t); }
   function snap(v) { return snapToGrid ? Math.round(v / gridSize) * gridSize : v; }
   function clampInt(v, min, max, fallback) { var n = parseInt(v, 10); if (isNaN(n)) n = fallback; return Math.max(min, Math.min(max, n)); }
   function clampFloat(v, min, max, fallback) { var n = parseFloat(v); if (isNaN(n)) n = fallback; return Math.max(min, Math.min(max, n)); }
@@ -1072,6 +1171,115 @@ document.addEventListener("DOMContentLoaded", function(){
       }
     }
     $("totalCapacity").value = total;
+    return total;
+  }
+
+  /* ============ TIER SEAT COUNTING & REVENUE ============ */
+  function getTierSeatCounts() {
+    var counts = { black: 0, gold: 0, silver: 0, cyan: 0 };
+    var sections = parseInt($("totalLevel1").value) || 0;
+    if (tableMode) {
+      var cpt = chairsPerTable();
+      for (var s = 0; s < sections; s++) {
+        var tier = getSectionTierOverride(s) || "cyan";
+        var tables = getTableCount(s);
+        counts[tier] = (counts[tier] || 0) + tables * cpt;
+      }
+    } else {
+      for (var s2 = 0; s2 < sections; s2++) {
+        var rows = getRowCount(s2);
+        var map = buildRowTierMap(rows, s2);
+        for (var r = 0; r < rows; r++) {
+          var seats = getSeatsForRow(s2, r);
+          counts[map[r]] = (counts[map[r]] || 0) + seats;
+        }
+      }
+    }
+    return counts;
+  }
+
+  function updateRevenueCalculator() {
+    var counts = getTierSeatCounts();
+    var totalTickets = counts.black + counts.gold + counts.silver + counts.cyan;
+    var gross = 0;
+    ["black","gold","silver","cyan"].forEach(function(tier){
+      var qty = counts[tier] || 0;
+      var price = TIER_PRICES[tier] || 0;
+      var tierRev = qty * price;
+      gross += tierRev;
+      var revEl = $("revRow" + tier.charAt(0).toUpperCase() + tier.slice(1));
+      if (revEl) revEl.textContent = formatCurrencyCompact(tierRev);
+      var qtyEl = $("qtyBadge" + tier.charAt(0).toUpperCase() + tier.slice(1));
+      if (qtyEl) qtyEl.textContent = qty + (qty === 1 ? " seat" : " seats");
+    });
+    var fee = gross * (currentPlan.fee / 100);
+    var net = gross - fee;
+
+    // Ticket limit
+    var limit = currentPlan.limit;
+    var limitLabel = limit >= 999999 ? "unlimited" : limit;
+    $("revTotalTickets").textContent = totalTickets + " / " + limitLabel;
+    $("revGross").textContent = formatCurrency(gross);
+    $("revFee").textContent = "− " + formatCurrency(fee);
+    $("revNet").textContent = formatCurrency(net);
+
+    // Warning if capacity exceeds plan limit
+    var warn = $("revWarning"), warnTxt = $("revWarningText");
+    if (totalTickets > limit && limit < 999999) {
+      warnTxt.textContent = "Your capacity (" + totalTickets + ") exceeds the " + currentPlan.id.charAt(0).toUpperCase() + currentPlan.id.slice(1) + " plan limit of " + limit + " tickets. Upgrade to sell more, or reduce capacity.";
+      warn.classList.remove("hidden");
+    } else {
+      warn.classList.add("hidden");
+    }
+  }
+
+  function updatePlanDisplay() {
+    $("revPlanName").textContent = currentPlan.id.charAt(0).toUpperCase() + currentPlan.id.slice(1) + " · " + currentPlan.fee + "%";
+    $("revFeePct").textContent = currentPlan.fee + "%";
+    document.querySelectorAll(".plan-card").forEach(function(card){
+      var radio = card.querySelector("input[type=radio]");
+      card.classList.toggle("selected", radio && radio.checked);
+    });
+    updateRevenueCalculator();
+  }
+
+  /* ============ TIER LABEL / PRICE SYNC ============ */
+  function syncTierNamesEverywhere() {
+    // Update the tierColor dropdown options
+    var sel = $("tierColor");
+    if (sel) {
+      var current = sel.value;
+      var labels = { cyan: "Standard", silver: "Silver", gold: "Gold", black: "Elite" };
+      Array.from(sel.options).forEach(function(opt){
+        var t = opt.value;
+        if (labels[t] && TIER_NAMES[t]) opt.textContent = TIER_NAMES[t];
+      });
+      sel.value = current;
+    }
+    // Update tier colour labels in tier colour section
+    var labelMap = { black: "tierColorBlack", gold: "tierColorGold", silver: "tierColorSilver", cyan: "tierColorCyan" };
+    Object.keys(labelMap).forEach(function(t){
+      var label = document.querySelector("label[for='" + labelMap[t] + "']");
+      if (label) label.textContent = TIER_NAMES[t];
+    });
+    // Update row tier distribution labels
+    var distMap = { black: "tierRowsElite", gold: "tierRowsGold", silver: "tierRowsSilver", cyan: "tierRowsCyan" };
+    Object.keys(distMap).forEach(function(t){
+      var label = document.querySelector("label[for='" + distMap[t] + "']");
+      if (label) label.textContent = TIER_NAMES[t];
+    });
+    // Update section tier override dropdown options
+    var overrideSel = $("sectionTierOverride");
+    if (overrideSel) {
+      Array.from(overrideSel.options).forEach(function(opt){
+        if (opt.value && TIER_NAMES[opt.value]) opt.textContent = TIER_NAMES[opt.value];
+      });
+    }
+    // Update ticket preview badge
+    updateTicketPreview();
+    // Update legend + plan rendering
+    renderSeatingPlan();
+    if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
   }
 
   function updateTicketPreview() {
@@ -1082,15 +1290,17 @@ document.addEventListener("DOMContentLoaded", function(){
     if (seatCode) $("prevSeat").textContent = seatCode;
     else $("prevSeat").textContent = "Seat not assigned";
     $("prevVenueLocation").textContent = $("venueAddress").value || "VENUE";
-    $("prevTierBadge").textContent = $("tierColor").value.toUpperCase();
-    $("dynamicTicket").className = "ticket-card " + $("tierColor").value;
+    var tier = $("tierColor").value;
+    $("prevTierBadge").textContent = (TIER_NAMES[tier] || tier).toUpperCase();
+    $("dynamicTicket").className = "ticket-card " + tier;
   }
 
   function buildLegend() {
     var legend = document.createElement("div"); legend.className = "layout-legend";
-    [{ cls: "black", label: "Elite (Black)" }, { cls: "gold", label: "Gold (VIP)" }, { cls: "silver", label: "Silver" }, { cls: "cyan", label: "Cyan (Standard)" }].forEach(function(it) {
+    ["black","gold","silver","cyan"].forEach(function(t){
       var el = document.createElement("div"); el.className = "lg-item";
-      el.innerHTML = '<div class="lg-swatch ' + it.cls + '"></div> ' + it.label; legend.appendChild(el);
+      el.innerHTML = '<div class="lg-swatch ' + t + '"></div> ' + getTierLabel(t);
+      legend.appendChild(el);
     });
     return legend;
   }
@@ -1238,6 +1448,7 @@ document.addEventListener("DOMContentLoaded", function(){
           if (isNaN(val)) delete sectionRowOverrides[sIdx][rIdx];
           else sectionRowOverrides[sIdx][rIdx] = Math.max(4, Math.min(90, val));
           calculateCapacity();
+          updateRevenueCalculator();
           renderSeatingPlan();
           if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
         });
@@ -1310,6 +1521,7 @@ document.addEventListener("DOMContentLoaded", function(){
   function updateTableRowAggregates() {
     refreshSectionInputs();
     calculateCapacity();
+    updateRevenueCalculator();
     updateTableSummary();
     renderSeatingPlan();
     if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
@@ -2309,21 +2521,15 @@ document.addEventListener("DOMContentLoaded", function(){
       sectionSpacingPx: sectionSpacingPx,
       stage: { x: stage.x, y: stage.y, width: stage.width, height: stage.height, name: stage.name },
       levels: levels.map(function(l){ return { id: l.id, name: l.name, color: l.color, visible: l.visible }; }),
-      tierColours: {
-        black: TIER_COLORS.black,
-        gold: TIER_COLORS.gold,
-        silver: TIER_COLORS.silver,
-        cyan: TIER_COLORS.cyan
-      },
+      tierColours: { black: TIER_COLORS.black, gold: TIER_COLORS.gold, silver: TIER_COLORS.silver, cyan: TIER_COLORS.cyan },
+      tierNames: { black: TIER_NAMES.black, gold: TIER_NAMES.gold, silver: TIER_NAMES.silver, cyan: TIER_NAMES.cyan },
+      tierPrices: { black: TIER_PRICES.black, gold: TIER_PRICES.gold, silver: TIER_PRICES.silver, cyan: TIER_PRICES.cyan },
+      plan: { id: currentPlan.id, fee: currentPlan.fee, limit: currentPlan.limit },
       seatingMode: tableMode ? "tables" : "rows",
       tableConfig: tableMode ? {
-        shape: tableConfig.shape,
-        chairsAround: tableConfig.chairsAround,
-        chairsPerSide: tableConfig.chairsPerSide,
-        chairsLongSide: tableConfig.chairsLongSide,
-        chairsShortSide: tableConfig.chairsShortSide,
-        widthCm: wCm, lengthCm: lCm, spacingCm: spCm,
-        pxPerCm: pxPerCm,
+        shape: tableConfig.shape, chairsAround: tableConfig.chairsAround, chairsPerSide: tableConfig.chairsPerSide,
+        chairsLongSide: tableConfig.chairsLongSide, chairsShortSide: tableConfig.chairsShortSide,
+        widthCm: wCm, lengthCm: lCm, spacingCm: spCm, pxPerCm: pxPerCm,
         widthPx: Math.round(cmToPx(wCm)), lengthPx: Math.round(cmToPx(lCm)), spacingPx: Math.round(cmToPx(spCm)),
         chairsPerTable: chairsPerTable()
       } : null,
@@ -2346,9 +2552,8 @@ document.addEventListener("DOMContentLoaded", function(){
     var costVal = readCost();
     var payload = Object.assign({
       eventName: name, hostName: $("hostName").value, hostEmail: $("hostEmail").value,
-      city: $("city").value,
-      cost: costVal,
-      costFormatted: formatCurrency(costVal),
+      city: $("city").value, eventType: $("eventType").value,
+      cost: costVal, costFormatted: formatCurrency(costVal),
       startDate: $("startDate").value, startTime: $("startTime").value,
       venueAddress: $("venueAddress").value,
       exportedAt: new Date().toISOString()
@@ -2380,25 +2585,32 @@ document.addEventListener("DOMContentLoaded", function(){
     showToast("Venue exported as CSV", "success");
   }
 
-  // Pure front-end "save": store the event payload in localStorage and
-  // generate a local reference ID. No network calls.
   var STORAGE_KEY = "novalink_events";
   function generateLocalEventId() {
     return "local-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
   }
   function saveEvent() {
     var costVal = readCost();
+    var counts = getTierSeatCounts();
+    var totalTickets = counts.black + counts.gold + counts.silver + counts.cyan;
+    var gross = 0;
+    ["black","gold","silver","cyan"].forEach(function(t){ gross += (counts[t]||0) * (TIER_PRICES[t]||0); });
+    var fee = gross * (currentPlan.fee / 100);
+    var net = gross - fee;
+
     var payload = Object.assign({
       eventName: $("eventName").value,
       hostName: $("hostName").value,
       hostEmail: $("hostEmail").value,
       city: $("city").value,
+      eventType: $("eventType").value,
       cost: costVal,
       costFormatted: formatCurrency(costVal),
       startDate: $("startDate").value,
       startTime: $("startTime").value,
       venueAddress: $("venueAddress").value,
       tierColor: $("tierColor").value,
+      revenue: { gross: gross, fee: fee, net: net, planFeePct: currentPlan.fee, planId: currentPlan.id, totalTickets: totalTickets },
       createdAt: new Date().toISOString()
     }, buildVenuePayload());
     try {
@@ -2476,7 +2688,7 @@ document.addEventListener("DOMContentLoaded", function(){
   }
 
   function onTableConfigChange() {
-    readTableConfig(); applyShapeUI(); updateTableSummary(); calculateCapacity(); renderSeatingPlan();
+    readTableConfig(); applyShapeUI(); updateTableSummary(); calculateCapacity(); updateRevenueCalculator(); renderSeatingPlan();
     if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
   }
 
@@ -2489,8 +2701,137 @@ document.addEventListener("DOMContentLoaded", function(){
     $("rowTierGroup").style.display = tableMode ? "none" : "";
     autoLayoutAxis = tableMode ? "vertical" : "horizontal";
     applyShapeUI(); updateTableSummary(); refreshSectionInputs();
-    rebuildRowOverrides(); rebuildTableRowsEditor(); calculateCapacity(); renderSeatingPlan();
+    rebuildRowOverrides(); rebuildTableRowsEditor(); calculateCapacity(); updateRevenueCalculator(); renderSeatingPlan();
     if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+  }
+
+  /* ===== PLAN SELECTION ===== */
+  document.querySelectorAll('input[name="plan"]').forEach(function(radio){
+    radio.addEventListener("change", function(){
+      var card = this.closest(".plan-card");
+      if (!card) return;
+      currentPlan = {
+        id: this.value,
+        fee: parseFloat(this.dataset.fee) || 7,
+        limit: parseInt(this.dataset.limit) || 500
+      };
+      updatePlanDisplay();
+    });
+  });
+
+  /* ===== EVENT TYPE PICKER ===== */
+  $("eventType").addEventListener("change", function(){
+    var opt = this.options[this.selectedIndex];
+    var min = parseFloat(opt.dataset.min) || 0;
+    var max = parseFloat(opt.dataset.max) || 0;
+    var hint = $("eventTypeHint");
+    if (!this.value) {
+      hint.textContent = "Choose an event type to see a recommended price.";
+      return;
+    }
+    if (min === 0 && max === 0) {
+      hint.textContent = "Recommended: Free entry (R0) — no ticket price needed.";
+    } else {
+      hint.textContent = "Recommended price: R" + min.toFixed(2) + " – R" + max.toFixed(2) + " per ticket";
+    }
+    // Auto-fill base price with mid of recommended range
+    var mid = (min + max) / 2;
+    if (mid > 0) {
+      $("cost").value = mid.toFixed(2);
+      // Suggest tier prices based on multipliers
+      applyBasePriceToTiers(mid);
+      updateRevenueCalculator();
+    }
+  });
+
+  function applyBasePriceToTiers(base){
+    if (isNaN(base) || base < 0) return;
+    // Multipliers: cyan=1x (standard), silver=1.5x, gold=2.5x, black=4x
+    var suggested = {
+      cyan:   base,
+      silver: base * 1.5,
+      gold:   base * 2.5,
+      black:  base * 4
+    };
+    Object.keys(suggested).forEach(function(t){
+      var inp = document.querySelector('.tier-price-input[data-tier="' + t + '"]');
+      if (inp) inp.value = suggested[t].toFixed(2);
+      TIER_PRICES[t] = Math.round(suggested[t] * 100) / 100;
+    });
+    updateRevenueCalculator();
+  }
+
+  /* ===== TIER NAME INPUTS ===== */
+  document.querySelectorAll(".tier-name-input").forEach(function(inp){
+    inp.addEventListener("input", function(){
+      var t = this.dataset.tier;
+      var v = this.value.trim() || (TIER_DEFAULTS[t] ? t.charAt(0).toUpperCase() + t.slice(1) : t);
+      TIER_NAMES[t] = v;
+      syncTierNamesEverywhere();
+    });
+    inp.addEventListener("blur", function(){
+      if (!this.value.trim()) {
+        var t = this.dataset.tier;
+        this.value = TIER_NAMES[t] || (t.charAt(0).toUpperCase() + t.slice(1));
+      }
+    });
+  });
+
+  /* ===== TIER PRICE INPUTS ===== */
+  document.querySelectorAll(".tier-price-input").forEach(function(inp){
+    inp.addEventListener("input", function(){
+      var t = this.dataset.tier;
+      var v = parseFloat(this.value);
+      TIER_PRICES[t] = (isNaN(v) || v < 0) ? 0 : Math.round(v * 100) / 100;
+      updateRevenueCalculator();
+    });
+    inp.addEventListener("blur", function(){
+      var v = parseFloat(this.value);
+      if (isNaN(v) || v < 0) v = 0;
+      this.value = v.toFixed(2);
+      TIER_PRICES[this.dataset.tier] = v;
+      updateRevenueCalculator();
+    });
+  });
+
+  /* ===== BASE PRICE INPUT ===== */
+  var costInput = $("cost");
+  if (costInput) {
+    costInput.addEventListener("blur", function(){
+      var v = parseFloat(this.value);
+      if (isNaN(v) || v < 0) { this.value = ""; return; }
+      this.value = v.toFixed(2);
+    });
+    costInput.addEventListener("input", function(){
+      if (this.value && parseFloat(this.value) < 0) this.value = "";
+    });
+  }
+
+  /* ===== TIER COLOUR PICKERS ===== */
+  ["black","gold","silver","cyan"].forEach(function(name){
+    var id = "tierColor" + name.charAt(0).toUpperCase() + name.slice(1);
+    var el = $(id);
+    if (!el) return;
+    el.addEventListener("input", function(){
+      TIER_COLORS[name] = this.value;
+      applyTierColors();
+      renderSeatingPlan();
+      if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+    });
+  });
+  var resetBtn = $("resetTierColorsBtn");
+  if (resetBtn) {
+    resetBtn.addEventListener("click", function(){
+      ["black","gold","silver","cyan"].forEach(function(name){
+        TIER_COLORS[name] = TIER_DEFAULTS[name];
+        var id = "tierColor" + name.charAt(0).toUpperCase() + name.slice(1);
+        if ($(id)) $(id).value = TIER_DEFAULTS[name];
+      });
+      applyTierColors();
+      renderSeatingPlan();
+      if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+      showToast("Tier colours reset", "success");
+    });
   }
 
   /* ===== WIRING ===== */
@@ -2527,7 +2868,7 @@ document.addEventListener("DOMContentLoaded", function(){
     onTableConfigChange();
   });
 
-  $("tableCount").addEventListener("change", function() { var v = Math.max(1, Math.min(50, parseInt(this.value) || 4)); this.value = v; updateTableSummary(); });
+  $("tableCount").addEventListener("change", function() { var v = Math.max(1, Math.min(50, parseInt(this.value) || 4)); this.value = v; updateTableSummary(); updateRevenueCalculator(); });
   $("addTableRowBtn").addEventListener("click", addTableRow);
 
   document.querySelectorAll(".annotation-tab").forEach(function(btn) {
@@ -2573,17 +2914,17 @@ document.addEventListener("DOMContentLoaded", function(){
     var v = parseInt(this.value) || 1;
     v = Math.max(1, Math.min(26, v));
     rebuildSectionTabs(); refreshSectionInputs(); rebuildRowOverrides(); rebuildTableRowsEditor();
-    calculateCapacity(); renderSeatingPlan(); updateTableSummary();
+    calculateCapacity(); updateRevenueCalculator(); renderSeatingPlan(); updateTableSummary();
     if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
   });
 
   $("totalLevel2").addEventListener("change", function() {
     var v = Math.max(1, Math.min(52, parseInt(this.value)||6)); this.value = v;
-    refreshSectionInputs(); rebuildRowOverrides(); calculateCapacity(); renderSeatingPlan();
+    refreshSectionInputs(); rebuildRowOverrides(); calculateCapacity(); updateRevenueCalculator(); renderSeatingPlan();
   });
   $("totalLevel3").addEventListener("change", function() {
     var v = Math.max(4, Math.min(90, parseInt(this.value)||10)); this.value = v;
-    rebuildRowOverrides(); calculateCapacity(); renderSeatingPlan();
+    rebuildRowOverrides(); calculateCapacity(); updateRevenueCalculator(); renderSeatingPlan();
   });
 
   $("sectionNameInput").addEventListener("input", function() {
@@ -2600,11 +2941,11 @@ document.addEventListener("DOMContentLoaded", function(){
     setRowCount(currentEditingSection, v);
     var rc = getRowCount(currentEditingSection);
     $("sectionRowsBadge").textContent = rc + (rc === 1 ? " row" : " rows");
-    rebuildRowOverrides(); calculateCapacity(); renderSeatingPlan();
+    rebuildRowOverrides(); calculateCapacity(); updateRevenueCalculator(); renderSeatingPlan();
     if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
   });
 
-  $("sectionTierOverride").addEventListener("change", function() { setSectionTierOverride(currentEditingSection, this.value || null); renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
+  $("sectionTierOverride").addEventListener("change", function() { setSectionTierOverride(currentEditingSection, this.value || null); updateRevenueCalculator(); renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
 
   function disableAutoLayoutForManualEdit() {
     if (autoLayoutEnabled) {
@@ -2677,7 +3018,7 @@ document.addEventListener("DOMContentLoaded", function(){
     rebuildLevelsList(); rebuildLevelSelect();
     rebuildSectionTabs(); refreshSectionInputs(); rebuildRowOverrides(); rebuildTableRowsEditor();
     rebuildAnnotationList();
-    calculateCapacity(); renderSeatingPlan(); updateTableSummary();
+    calculateCapacity(); updateRevenueCalculator(); renderSeatingPlan(); updateTableSummary();
     if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
   });
 
@@ -2688,63 +3029,21 @@ document.addEventListener("DOMContentLoaded", function(){
   ["tierColor"].forEach(function(id) { $(id).addEventListener("change", updateTicketPreview); });
   ["seatBlock","seatRow"].forEach(function(id) { $(id).addEventListener("input", function() { this.value = this.value.toUpperCase().replace(/[^A-Z]/g,"").slice(0,1); }); });
 
-  // ===== Tier colour pickers =====
-  ["black","gold","silver","cyan"].forEach(function(name){
-    var id = "tierColor" + name.charAt(0).toUpperCase() + name.slice(1);
-    var el = $(id);
-    if (!el) return;
-    el.addEventListener("input", function(){
-      TIER_COLORS[name] = this.value;
-      applyTierColors();
-      renderSeatingPlan();
-      if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
-    });
-  });
-  var resetBtn = $("resetTierColorsBtn");
-  if (resetBtn) {
-    resetBtn.addEventListener("click", function(){
-      ["black","gold","silver","cyan"].forEach(function(name){
-        TIER_COLORS[name] = TIER_DEFAULTS[name];
-        var id = "tierColor" + name.charAt(0).toUpperCase() + name.slice(1);
-        if ($(id)) $(id).value = TIER_DEFAULTS[name];
-      });
-      applyTierColors();
-      renderSeatingPlan();
-      if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
-      showToast("Tier colours reset", "success");
-    });
-  }
-
-  // ===== Cost input =====
-  var costInput = $("cost");
-  if (costInput) {
-    costInput.addEventListener("blur", function(){
-      var v = parseFloat(this.value);
-      if (isNaN(v) || v < 0) { this.value = ""; return; }
-      this.value = v.toFixed(2);
-    });
-    costInput.addEventListener("input", function(){
-      // Prevent minus sign / scientific notation in some browsers
-      if (this.value && parseFloat(this.value) < 0) this.value = "";
-    });
-  }
-
   function updateTierSummary() {
     var defaultRows = parseInt($("totalLevel2").value) || 0;
     var sum = (parseInt($("tierRowsElite").value)||0) + (parseInt($("tierRowsGold").value)||0) + (parseInt($("tierRowsSilver").value)||0) + (parseInt($("tierRowsCyan").value)||0);
     var s = $("tierDistSummary");
     s.className = "tier-dist-summary";
     if (sum === defaultRows) s.textContent = "✓ Perfect — " + sum + " rows assigned.";
-    else if (sum < defaultRows) s.textContent = "Assigned " + sum + ". Rows beyond default to Cyan.";
+    else if (sum < defaultRows) s.textContent = "Assigned " + sum + ". Rows beyond default to " + getTierLabel("cyan") + ".";
     else s.textContent = "Sum " + sum + " (extras ignored per section).";
   }
   ["tierRowsElite","tierRowsGold","tierRowsSilver","tierRowsCyan"].forEach(function(id) {
-    $(id).addEventListener("input", function() { updateTierSummary(); renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
+    $(id).addEventListener("input", function() { updateTierSummary(); updateRevenueCalculator(); renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
   });
 
   $("createEventForm").addEventListener("submit", function(e) {
     e.preventDefault();
-    // Normalize cost before validation
     if (costInput) {
       var cv = parseFloat(costInput.value);
       if (isNaN(cv) || cv < 0) { showToast("Please enter a valid ticket price (0 or more).", "error"); costInput.focus(); return; }
@@ -2771,6 +3070,21 @@ document.addEventListener("DOMContentLoaded", function(){
 
   /* ===== INIT ===== */
   applyTierColors();
+  // Initialize tier names from inputs
+  document.querySelectorAll(".tier-name-input").forEach(function(inp){
+    TIER_NAMES[inp.dataset.tier] = inp.value || TIER_NAMES[inp.dataset.tier];
+  });
+  document.querySelectorAll(".tier-price-input").forEach(function(inp){
+    var v = parseFloat(inp.value);
+    TIER_PRICES[inp.dataset.tier] = (isNaN(v) || v < 0) ? 0 : v;
+  });
+  // Set default plan
+  var checkedPlan = document.querySelector('input[name="plan"]:checked');
+  if (checkedPlan) {
+    currentPlan = { id: checkedPlan.value, fee: parseFloat(checkedPlan.dataset.fee) || 7, limit: parseInt(checkedPlan.dataset.limit) || 500 };
+  }
+  updatePlanDisplay();
+
   rebuildLevelsList(); rebuildLevelSelect(); rebuildSectionTabs();
   readScale(); readTableConfig(); applyShapeUI();
   refreshSectionInputs(); rebuildRowOverrides(); rebuildTableRowsEditor();
@@ -2780,9 +3094,10 @@ document.addEventListener("DOMContentLoaded", function(){
   $("tableOptionsPanel").style.display = "none";
   $("fsSectionSpacing").value = sectionSpacingPx;
   applyTableModeUI();
+  updateRevenueCalculator();
 });
 
 })();
 </script>
 </body>
-  </html>
+                                        </html>
