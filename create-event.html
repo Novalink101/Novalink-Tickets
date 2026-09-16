@@ -1,1113 +1,3 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<meta name="theme-color" content="#0a0f14" />
-<title>Create an Event - Novalink Studio</title>
-<script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
-<style>
-:root{
-  --cyan-50:#e6ffff;--cyan-100:#b3ffff;--cyan-400:#00FFFF;--cyan-500:#00E5E5;--cyan-600:#00CCCC;--cyan-700:#009999;
-  --bg:#ffffff;--bg-2:#f6f8fb;--surface:#ffffff;--surface-2:#f1f4f8;
-  --border:#e4e9f0;--border-2:#d3dbe5;
-  --text:#0a0f14;--text-2:#2b3644;--text-muted:#6b7787;
-  --radius:14px;--max-width:1180px;
-  --font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
-  --navy:#1e2f4d;--cyan-logo:#00FFFF;
-  --tier-black:#1a202c;--tier-black-light:#e4e6ea;--tier-black-text:#ffffff;--tier-black-text-light:#101216;
-  --tier-gold:#ecc94b;--tier-gold-light:#fbf3d3;--tier-gold-text:#0a0f14;--tier-gold-text-light:#846e28;
-  --tier-silver:#cbd5e1;--tier-silver-light:#f0f3f7;--tier-silver-text:#0a0f14;--tier-silver-text-light:#6f757b;
-  --tier-cyan:#00FFFF;--tier-cyan-light:#d9ffff;--tier-cyan-text:#04161c;--tier-cyan-text-light:#008c8c;
-  --tier-tier5:#a855f7;--tier-tier5-light:#f3e8ff;--tier-tier5-text:#ffffff;--tier-tier5-text-light:#6b21a8;
-  --tier-tier6:#f472b6;--tier-tier6-light:#fce7f3;--tier-tier6-text:#0a0f14;--tier-tier6-text-light:#9d174d;
-}
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-height:1.6;min-height:100vh;display:flex;flex-direction:column}
-.container{max-width:var(--max-width);margin:0 auto;padding:0 24px;width:100%}
-h1,h2,h3{line-height:1.15;font-weight:700}
-.site-header{background:var(--bg);border-bottom:1px solid var(--border);padding:16px 0}
-.header-inner{display:flex;align-items:center;justify-content:space-between}
-.novalink-logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none}
-.novalink-logo .mark{width:32px;height:39px}
-.novalink-logo .wordmark{font-weight:800;font-size:1.1rem;color:var(--navy)}
-.studio-badge{background:#0a0f14;color:#00FFFF;font-size:11px;font-weight:800;padding:4px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:0.05em}
-.form-wrapper{flex:1;padding:40px 0;display:flex;align-items:flex-start}
-.studio-layout{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:40px;align-items:start;width:100%}
-@media (max-width:900px){.studio-layout{grid-template-columns:minmax(0,1fr);gap:24px}}
-.form-card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:32px;box-shadow:0 10px 30px rgba(10,15,20,0.05);width:100%;min-width:0;max-width:100%;}
-.form-header{text-align:center;margin-bottom:28px}
-.form-header h1{font-size:1.8rem;color:var(--navy);margin-bottom:8px}
-.form-header p{color:var(--text-muted);font-size:14px}
-.form-group{margin-bottom:20px;min-width:0}
-.form-group label{display:block;font-size:12px;font-weight:700;color:var(--text-2);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em}
-.form-group input, .form-group select, .form-group textarea{width:100%;padding:12px 16px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:10px;color:var(--text);font-size:14.5px;font-family:inherit;transition:border-color 0.2s, box-shadow 0.2s;min-width:0}
-.form-group input:focus, .form-group select:focus, .form-group textarea:focus{outline:none;border-color:var(--cyan-500);box-shadow:0 0 0 3px rgba(0,255,255,0.15);background:#fff}
-.form-group select{appearance:none;-webkit-appearance:none;-moz-appearance:none;padding-right:36px;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7787' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:12px;cursor:pointer;}
-.form-hint{font-size:11.5px;color:var(--text-muted);margin-top:6px;line-height:1.5;font-style:italic;word-break:break-word}
-.form-hint.recommend{color:var(--cyan-700);font-weight:700;font-style:normal;}
-.form-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
-.form-row-3{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:12px}
-@media (max-width:600px){.form-row,.form-row-3{grid-template-columns:minmax(0,1fr)}}
-.section-divider{margin:24px 0;border-top:1px dashed var(--border);position:relative;text-align:center}
-.section-divider span{background:var(--surface);padding:0 12px;font-size:11px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;position:relative;top:-10px}
-.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:10px;margin-bottom:12px;gap:12px}
-.toggle-row .toggle-label{font-size:13px;font-weight:600;color:var(--text);word-break:break-word}
-.toggle-switch{position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0}
-.toggle-switch input{opacity:0;width:0;height:0}
-.toggle-slider{position:absolute;cursor:pointer;inset:0;background:#cbd5e1;transition:.3s;border-radius:34px}
-.toggle-slider:before{position:absolute;content:"";height:18px;width:18px;left:3px;bottom:3px;background:white;transition:.3s;border-radius:50%}
-.toggle-switch input:checked + .toggle-slider{background:var(--cyan-500)}
-.toggle-switch input:checked + .toggle-slider:before{transform:translateX(20px)}
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:14px 24px;border-radius:12px;font-weight:700;font-size:15px;border:1px solid transparent;cursor:pointer;transition:all 0.2s ease;font-family:inherit;width:100%;text-decoration:none}
-.btn-accent{background:linear-gradient(135deg,var(--cyan-400),var(--cyan-600));color:#04161c}
-.btn-accent:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,255,255,0.35)}
-.btn-ghost{background:transparent;color:var(--text-2);border:1px solid var(--border-2)}
-.btn-ghost:hover{background:var(--surface-2);border-color:var(--cyan-500);color:var(--cyan-700)}
-.btn i{width:18px;height:18px}
-.form-actions{margin-top:28px;display:flex;flex-direction:column;gap:12px}
-.export-actions{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-top:12px}
-.export-actions .btn{padding:10px 14px;font-size:13px}
-.seat-builder{display:flex;gap:10px;align-items:center;}
-.seat-builder .seat-part{flex:1;min-width:0;text-align:center;font-weight:800;text-transform:uppercase;letter-spacing:2px;font-size:16px;padding:12px 8px;}
-.seat-builder .seat-part.seat-num{letter-spacing:0.5px;}
-.seat-builder .seat-sep{color:var(--text-muted);font-weight:800;font-size:16px;flex-shrink:0;}
-.seat-preview-display{margin-top:10px;padding:10px 14px;background:var(--surface-2);border:1px dashed var(--cyan-500);border-radius:8px;font-family:ui-monospace,monospace;font-weight:800;font-size:16px;color:var(--cyan-700);text-align:center;letter-spacing:1px;min-height:42px;display:flex;align-items:center;justify-content:center;word-break:break-all;}
-.seat-preview-display.empty{color:var(--text-muted);font-weight:600;font-family:var(--font);font-size:12px;letter-spacing:0;border-color:var(--border-2);border-style:solid;word-break:normal;}
-
-.currency-input{display:flex;align-items:stretch;width:100%;}
-.currency-input .currency-prefix{display:inline-flex;align-items:center;justify-content:center;padding:0 14px;background:var(--bg-2);border:1px solid var(--border-2);border-right:none;border-radius:10px 0 0 10px;font-weight:800;color:var(--cyan-700);font-size:14.5px;flex-shrink:0;transition:border-color 0.2s, box-shadow 0.2s, background 0.2s;}
-.currency-input input{border-top-left-radius:0 !important;border-bottom-left-radius:0 !important;}
-.currency-input:focus-within .currency-prefix{border-color:var(--cyan-500);background:#fff;box-shadow:0 0 0 3px rgba(0,255,255,0.15);}
-.currency-input.compact .currency-prefix{padding:0 10px;font-size:13px;}
-.currency-input.compact input{padding:8px 10px;font-size:13.5px;font-weight:800;}
-
-.plan-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:10px;margin-top:8px;}
-.plan-card{position:relative;display:flex;flex-direction:column;gap:4px;padding:14px 14px 12px;background:var(--surface);border:2px solid var(--border-2);border-radius:12px;cursor:pointer;transition:all 0.2s ease;min-width:0;overflow:hidden;}
-.plan-card:hover{border-color:var(--cyan-400);transform:translateY(-2px);}
-.plan-card.featured{border-color:var(--cyan-500);background:linear-gradient(180deg,var(--cyan-50),#fff);}
-.plan-card input[type="radio"]{position:absolute;opacity:0;pointer-events:none;}
-.plan-card.selected{border-color:#0a0f14;background:#0a0f14;color:#fff;box-shadow:0 8px 20px rgba(10,15,20,0.2);}
-.plan-card.selected .plan-name, .plan-card.selected .plan-fee, .plan-card.selected .plan-desc{color:#fff;}
-.plan-card.selected .plan-fee small{color:#67e8f9;}
-.plan-badge{position:absolute;top:0;right:0;background:var(--cyan-500);color:#04161c;font-size:8.5px;font-weight:900;letter-spacing:0.06em;text-transform:uppercase;padding:3px 8px;border-radius:0 10px 0 8px;}
-.plan-name{font-size:13px;font-weight:800;color:var(--text);letter-spacing:-0.01em;}
-.plan-fee{font-size:20px;font-weight:900;color:var(--cyan-700);line-height:1;}
-.plan-fee small{font-size:10.5px;font-weight:700;color:var(--text-muted);margin-left:2px;}
-.plan-desc{font-size:10.5px;color:var(--text-muted);font-weight:600;margin-top:2px;line-height:1.3;}
-.plan-card.selected .plan-desc{color:rgba(255,255,255,0.7);}
-
-.tier-pricing-list{display:flex;flex-direction:column;gap:8px;margin-top:8px;}
-.tier-price-row{display:grid;grid-template-columns:18px minmax(80px,1.2fr) 70px minmax(90px,1fr) 90px;align-items:center;gap:8px;padding:8px 10px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:10px;min-width:0;}
-@media (max-width:600px){.tier-price-row{grid-template-columns:18px 1fr;grid-auto-rows:auto;gap:6px;}.tier-price-row .tier-qty-badge,.tier-price-row .currency-input,.tier-price-row .tier-revenue{grid-column:2 / -1;}}
-.tier-price-row .tier-swatch{width:18px;height:18px;border-radius:5px;border:1px solid rgba(0,0,0,0.12);flex-shrink:0;}
-.tier-price-row .tier-name-input{padding:7px 10px;font-size:13px;font-weight:800;background:#fff;border:1px solid var(--border-2);border-radius:8px;font-family:inherit;color:var(--text);min-width:0;width:100%;}
-.tier-price-row .tier-name-input:focus{outline:none;border-color:var(--cyan-500);box-shadow:0 0 0 2px rgba(0,255,255,0.15);}
-.tier-price-row .tier-qty-badge{font-size:10.5px;font-weight:800;color:var(--cyan-700);background:var(--cyan-50);padding:4px 8px;border-radius:6px;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
-.tier-price-row .tier-revenue{font-size:12px;font-weight:800;color:var(--text-2);text-align:right;font-family:ui-monospace,monospace;white-space:nowrap;}
-
-.revenue-card{background:linear-gradient(135deg,#0a0f14,#1a2129);color:#fff;border-radius:14px;padding:18px 20px;box-shadow:0 12px 30px rgba(10,15,20,0.2);border:1px solid #1f2937;margin-top:8px;}
-.revenue-card .rev-head{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:#67e8f9;margin-bottom:12px;}
-.revenue-card .rev-head i{width:15px;height:15px;}
-.revenue-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 0;font-size:13px;color:#c9d2dd;border-bottom:1px solid rgba(255,255,255,0.06);}
-.revenue-row:last-child{border-bottom:none;}
-.revenue-row span:first-child{font-weight:600;}
-.rev-amount{font-family:ui-monospace,monospace;font-weight:800;color:#fff;font-size:14px;}
-.revenue-row.fee .rev-amount{color:#fbbf24;}
-.revenue-row.net{padding-top:12px;margin-top:4px;border-top:1px dashed rgba(0,255,255,0.3);font-size:15px;}
-.revenue-row.net span:first-child{color:#fff;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;font-size:12px;}
-.revenue-row.net .rev-amount{color:#00FFFF;font-size:20px;font-weight:900;}
-.rev-plan-name{color:#00FFFF;font-weight:800;}
-.revenue-warning{margin-top:10px;background:#7f1d1d;color:#fecaca;padding:8px 12px;border-radius:8px;font-size:11.5px;font-weight:700;display:flex;align-items:flex-start;gap:8px;line-height:1.5;}
-.revenue-warning.hidden{display:none;}
-.revenue-warning .warn-icon{flex-shrink:0;font-weight:900;}
-
-.tier-dist-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-top:8px;}
-.tier-dist-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:10px;min-width:0;}
-.tier-dist-item .swatch{width:14px;height:14px;border-radius:4px;flex-shrink:0;}
-.tier-dist-item label{flex:1;min-width:0;font-size:12px;font-weight:600;margin:0;text-transform:none;letter-spacing:0;color:var(--text);}
-.tier-dist-item input{width:60px;padding:6px 8px;text-align:center;font-size:13px;}
-.tier-dist-summary{font-size:11.5px;color:var(--text-muted);margin-top:8px;font-style:italic;word-break:break-word}
-.tier-dist-summary.error{color:#b91c1c;font-weight:700;}
-
-.tier-color-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-top:8px;}
-.tier-color-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:10px;min-width:0;}
-.tier-color-item .tier-color-swatch{width:18px;height:18px;border-radius:5px;flex-shrink:0;border:1px solid rgba(0,0,0,0.12);transition:background 0.2s;}
-.tier-color-item label{flex:1;min-width:0;font-size:12px;font-weight:700;color:var(--text-2);text-transform:none;letter-spacing:0;margin:0;word-break:break-word;}
-.tier-color-item input[type="color"]{width:46px;height:32px;padding:2px 4px;border-radius:8px;border:1px solid var(--border-2);background:#fff;cursor:pointer;flex-shrink:0;}
-.tier-color-actions{margin-top:10px;display:flex;justify-content:flex-end;}
-
-.levels-panel { margin-top: 12px; padding: 12px; background: var(--bg-2); border: 1px solid var(--border-2); border-radius: 10px; }
-.levels-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; max-height: 200px; overflow-y: auto; }
-.level-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--surface); border: 1px solid var(--border-2); border-radius: 8px; min-width:0; }
-.level-item .level-swatch { width: 14px; height: 14px; border-radius: 4px; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.1); }
-.level-item .level-name-input { flex: 1; min-width: 0; padding: 5px 8px; font-size: 12.5px; font-weight: 700; background: transparent; border: 1px solid transparent; border-radius: 6px; font-family: inherit; color: var(--text); }
-.level-item .level-name-input:hover { border-color: var(--border-2); background: var(--bg-2); }
-.level-item .level-name-input:focus { outline: none; border-color: var(--cyan-500); background: #fff; }
-.level-visible-toggle { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: var(--text-muted); cursor: pointer; user-select: none; flex-shrink: 0; }
-.level-item .btn-trash { padding: 4px 6px; border-radius: 6px; border: 1px solid var(--border-2); background: transparent; color: var(--text-muted); cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.level-item .btn-trash:hover { border-color: #dc2626; color: #dc2626; }
-
-.row-overrides-section{margin-top:12px;padding:12px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:10px;min-width:0;}
-.row-overrides-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px;flex-wrap:wrap;}
-.section-tabs{display:flex;gap:6px;flex-wrap:wrap;flex:1;min-width:0;}
-.section-tab{padding:6px 12px;border-radius:8px;border:1px solid var(--border-2);background:var(--surface);font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.15s;color:var(--text-2);max-width:100%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.section-tab:hover{border-color:var(--cyan-500);color:var(--cyan-700);}
-.section-tab.active{background:#0a0f14;color:#fff;border-color:#0a0f14;}
-.btn-mini{padding:6px 10px;border-radius:8px;border:1px solid var(--border-2);background:transparent;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--text-muted);flex-shrink:0;}
-.btn-mini:hover{border-color:var(--cyan-500);color:var(--cyan-700);}
-.btn-mini.fs-btn{background:#0a0f14;color:#00FFFF;border-color:#0a0f14;}
-.btn-mini.fs-btn:hover{background:#1a2129;border-color:#1a2129;color:#00FFFF;}
-.row-overrides-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(110px,1fr));gap:8px;max-height:200px;overflow-y:auto;}
-.row-override-item{display:flex;align-items:center;gap:8px;background:var(--surface);border:1px solid var(--border-2);border-radius:8px;padding:6px 8px;min-width:0;}
-.row-override-label{font-size:11px;font-weight:800;color:var(--text-2);letter-spacing:0.5px;flex:1;min-width:0;}
-.row-override-item input{width:56px;padding:5px 6px;text-align:center;font-size:13px;flex-shrink:0;}
-.row-overrides-hint{font-size:11px;color:var(--text-muted);margin-bottom:8px;font-style:italic;word-break:break-word;}
-
-.section-rows-row, .section-location-row {display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding: 8px 10px; background: var(--surface); border: 1px solid var(--border-2); border-radius: 8px; flex-wrap: wrap; min-width: 0;}
-.section-rows-row label, .section-location-row label {flex: 0 1 auto; min-width: 100px; max-width: 40%; font-size: 11px; font-weight: 800; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.5px; word-break: break-word; line-height: 1.3;}
-.section-rows-row input, .section-rows-row select {padding: 6px 10px; font-size: 13px; font-weight: 700; background-color: var(--bg-2); border: 1px solid var(--border-2); border-radius: 8px; font-family: inherit; color: var(--text); flex: 0 0 auto; min-width: 0; transition: border-color 0.15s, box-shadow 0.15s, background-color 0.15s;}
-.section-rows-row input[type="number"] { width: 100px; text-align: center; }
-.section-rows-row input[type="text"] { width: 220px; max-width: 100%; text-align: left; font-weight: 600; }
-.section-rows-row input[type="range"] { padding: 0; border: none; background: transparent; width: 200px; max-width: 100%; }
-.section-rows-row select {flex: 1 1 160px; min-width: 130px; max-width: 100%; width: auto; text-align: left; padding-left: 12px; padding-right: 30px; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7787' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 10px center; background-size: 11px; cursor: pointer;}
-.section-rows-row select:focus, .section-rows-row input:focus {outline: none; border-color: var(--cyan-500); box-shadow: 0 0 0 3px rgba(0,255,255,0.15); background-color: #fff;}
-.section-rows-badge {font-size: 11px; font-weight: 700; color: var(--cyan-700); background: var(--cyan-50); padding: 3px 8px; border-radius: 6px; white-space: nowrap; flex-shrink: 0; max-width: 100%; overflow: hidden; text-overflow: ellipsis;}
-
-.table-rows-panel{margin:6px 0 12px;padding:10px;background:var(--surface);border:1px solid var(--border-2);border-radius:10px;min-width:0;}
-.table-rows-list{display:flex;flex-direction:column;gap:6px;margin-bottom:10px;}
-.table-row-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:8px;min-width:0;flex-wrap:wrap;}
-.table-row-item .table-row-label{flex:0 0 auto;font-size:11px;font-weight:800;color:var(--cyan-700);background:var(--cyan-50);text-transform:uppercase;letter-spacing:0.5px;padding:3px 8px;border-radius:6px;text-align:center;min-width:52px;}
-.table-row-item input{width:70px;padding:6px 8px;text-align:center;font-size:13px;font-weight:700;background:#fff;border:1px solid var(--border-2);border-radius:8px;font-family:inherit;color:var(--text);flex-shrink:0;}
-.table-row-item input:focus{outline:none;border-color:var(--cyan-500);box-shadow:0 0 0 3px rgba(0,255,255,0.15);}
-.table-row-item .tr-hint{flex:1;min-width:0;font-size:11px;color:var(--text-muted);font-style:italic;}
-.table-row-item .btn-trash{padding:4px 6px;border-radius:6px;border:1px solid var(--border-2);background:transparent;color:var(--text-muted);cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;}
-.table-row-item .btn-trash:hover:not(:disabled){border-color:#dc2626;color:#dc2626;}
-.table-row-item .btn-trash:disabled{opacity:0.3;cursor:not-allowed;}
-
-.table-options-panel{margin-top:4px;padding:14px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:10px;min-width:0;}
-.table-options-title{font-size:11px;font-weight:800;color:var(--cyan-700);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;}
-.tbl-group{position:relative;margin:8px auto 4px;}
-.tbl-unit{position:absolute;}
-.tbl-shape{position:absolute;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;border:1.5px solid rgba(0,0,0,0.12);box-shadow:0 1px 4px rgba(0,0,0,0.08);}
-.tbl-shape.circular{border-radius:50%;}
-.tbl-shape.square{border-radius:5px;}
-.tbl-shape.rectangular{border-radius:5px;}
-.tbl-shape.black{background:var(--tier-black);color:var(--tier-black-text);border-color:var(--tier-black);}
-.tbl-shape.gold{background:var(--tier-gold);color:var(--tier-gold-text);border-color:var(--tier-gold);}
-.tbl-shape.silver{background:var(--tier-silver);color:var(--tier-silver-text);border-color:var(--tier-silver);}
-.tbl-shape.cyan{background:var(--tier-cyan-light);color:var(--tier-cyan-text-light);border-color:var(--tier-cyan);}
-.tbl-shape.tier5{background:var(--tier-tier5);color:var(--tier-tier5-text);border-color:var(--tier-tier5);}
-.tbl-shape.tier6{background:var(--tier-tier6-light);color:var(--tier-tier6-text-light);border-color:var(--tier-tier6);}
-.tbl-chair{position:absolute;}
-.tbl-chair.round{border-radius:50%;}
-.tbl-chair.black{background:var(--tier-black);}
-.tbl-chair.gold{background:var(--tier-gold);}
-.tbl-chair.silver{background:var(--tier-silver);}
-.tbl-chair.cyan{background:var(--tier-cyan);}
-.tbl-chair.tier5{background:var(--tier-tier5);}
-.tbl-chair.tier6{background:var(--tier-tier6);}
-.table-meta-line{font-size:11px;font-weight:700;color:var(--text-muted);text-align:center;margin-bottom:6px;letter-spacing:0.5px;word-break:break-word;}
-
-.table-standard-legend{font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6;padding:8px 10px;background:#fff;border:1px solid var(--border-2);border-radius:8px;word-break:break-word;}
-.table-standard-legend strong{color:var(--text-2);display:block;margin-bottom:2px;font-size:10.5px;text-transform:uppercase;letter-spacing:0.05em;}
-.table-standard-legend .std-line{display:flex;flex-wrap:wrap;gap:10px;}
-.table-standard-legend .std-chip{display:inline-flex;align-items:center;gap:4px;font-weight:700;color:var(--text-2);}
-.table-standard-legend .std-chip .dot{width:6px;height:6px;border-radius:50%;background:var(--cyan-500);flex-shrink:0;}
-
-.table-validation{margin-top:10px;display:flex;flex-direction:column;gap:6px;max-height:280px;overflow-y:auto;padding-right:2px;}
-.table-validation .tv-item{display:flex;gap:8px;align-items:flex-start;padding:9px 11px;border-radius:8px;font-size:11.5px;line-height:1.5;font-weight:600;border:1px solid;animation:tvFadeIn .22s ease;word-break:break-word;}
-@keyframes tvFadeIn{from{opacity:0;transform:translateY(-3px)}to{opacity:1;transform:translateY(0)}}
-.table-validation .tv-item .tv-icon{flex-shrink:0;font-weight:900;line-height:1.5;width:14px;text-align:center;}
-.table-validation .tv-item.error{background:#fef2f2;border-color:#fecaca;color:#991b1b;}
-.table-validation .tv-item.error .tv-icon{color:#dc2626;}
-.table-validation .tv-item.warn{background:#fffbeb;border-color:#fde68a;color:#92400e;}
-.table-validation .tv-item.warn .tv-icon{color:#d97706;}
-.table-validation .tv-item.info{background:#e6ffff;border-color:#b3ffff;color:#009999;}
-.table-validation .tv-item.info .tv-icon{color:#00CCCC;}
-.table-validation .tv-item.ok{background:#ecfdf5;border-color:#a7f3d0;color:#065f46;}
-.table-validation .tv-item.ok .tv-icon{color:#059669;}
-.table-validation .tv-item strong{font-weight:900;}
-
-.annotations-panel{margin-top:4px;padding:14px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:10px;min-width:0;}
-.annotations-title{font-size:11px;font-weight:800;color:var(--cyan-700);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;}
-.annotation-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px;}
-.annotation-tab{padding:6px 12px;border-radius:8px;border:1px solid var(--border-2);background:var(--surface);font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.15s;color:var(--text-2);display:inline-flex;align-items:center;gap:6px;}
-.annotation-tab:hover{border-color:var(--cyan-500);color:var(--cyan-700);}
-.annotation-tab.active{background:#0a0f14;color:#fff;border-color:#0a0f14;}
-.annotation-tab .tab-count{background:rgba(255,255,255,0.15);padding:0 6px;border-radius:10px;font-size:10px;line-height:16px;min-width:16px;text-align:center;}
-.annotation-tab.active .tab-count{background:rgba(255,255,255,0.2);}
-.annotation-body{padding:10px;background:var(--surface);border:1px solid var(--border-2);border-radius:10px;margin-bottom:10px;}
-.annotation-body .form-group{margin-bottom:10px;}
-.annotation-body .form-group:last-child{margin-bottom:0;}
-.annotation-body input[type="color"]{padding:4px 6px;height:38px;cursor:pointer;}
-.annotation-list{margin-top:10px;display:flex;flex-direction:column;gap:6px;max-height:520px;overflow-y:auto;}
-.annotation-item{display:flex;flex-direction:column;gap:0;padding:0;background:var(--surface);border:1px solid var(--border-2);border-radius:10px;min-width:0;overflow:hidden;transition:box-shadow 0.15s;}
-.annotation-item:hover{border-color:var(--border);}
-.annotation-item.expanded{border-color:var(--cyan-500);box-shadow:0 0 0 3px rgba(0,255,255,0.08);}
-.anno-header-row{display:flex;align-items:center;gap:8px;padding:8px 10px;min-width:0;cursor:pointer;user-select:none;background:transparent;transition:background 0.15s;}
-.anno-header-row:hover{background:var(--bg-2);}
-.anno-badge{flex:0 0 auto;font-size:10px;font-weight:800;color:#04161c;background:var(--cyan-400);padding:3px 8px;border-radius:6px;text-transform:uppercase;letter-spacing:0.5px;min-width:56px;text-align:center;}
-.anno-badge.line{background:#facc15;color:#744210;}
-.anno-badge.exit{background:#10b981;color:#ffffff;}
-.anno-badge.entrance{background:#3b82f6;color:#ffffff;}
-.anno-badge.bathroom{background:#a855f7;color:#ffffff;}
-.anno-name{flex:1;min-width:0;font-size:12.5px;font-weight:700;color:var(--text);word-break:break-word;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;}
-.anno-dims{font-size:10.5px;font-weight:700;color:var(--text-muted);flex-shrink:0;font-family:ui-monospace,monospace;white-space:nowrap;display:none;}
-@media (min-width: 640px){ .anno-dims{display:inline;} }
-.anno-icon-btn{padding:4px 6px;border-radius:6px;border:1px solid var(--border-2);background:transparent;color:var(--text-muted);cursor:pointer;font-family:inherit;display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;transition:all 0.15s;}
-.anno-icon-btn:hover{border-color:var(--cyan-500);color:var(--cyan-700);}
-.anno-icon-btn.danger:hover{border-color:#dc2626;color:#dc2626;}
-.anno-icon-btn.active{background:#0a0f14;color:#00FFFF;border-color:#0a0f14;}
-.annotation-editor{padding:10px 12px 12px;background:var(--bg-2);border-top:1px dashed var(--border-2);display:flex;flex-direction:column;gap:8px;}
-.annotation-editor .ed-row{display:flex;gap:8px;flex-wrap:wrap;}
-.annotation-editor .ed-field{flex:1 1 80px;min-width:72px;display:flex;flex-direction:column;gap:3px;}
-.annotation-editor .ed-field.wide{flex:1 1 140px;}
-.annotation-editor .ed-field label{font-size:10px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.5px;word-break:break-word;}
-.annotation-editor .ed-field input, .annotation-editor .ed-field select{padding:6px 8px;font-size:12.5px;font-weight:700;background:#fff;border:1px solid var(--border-2);border-radius:6px;font-family:inherit;color:var(--text);width:100%;min-width:0;}
-.annotation-editor .ed-field input[type="color"]{padding:2px 4px;height:32px;cursor:pointer;}
-.annotation-editor .ed-field input:focus, .annotation-editor .ed-field select:focus{outline:none;border-color:var(--cyan-500);box-shadow:0 0 0 2px rgba(0,255,255,0.15);}
-.annotation-empty{font-size:11.5px;color:var(--text-muted);font-style:italic;text-align:center;padding:12px;}
-
-.preview-column { position: sticky; top: 40px; display: flex; flex-direction: column; gap: 24px; min-width: 0; max-width: 100%; }
-.preview-column > div { min-width: 0; max-width: 100%; }
-.preview-label { text-align: center; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
-.preview-label-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; }
-.preview-label-row .preview-label { margin-bottom: 0; text-align: left; }
-
-/* ============ TICKET FLIP ============ */
-.ticket-flip-container { perspective: 1600px; width: 100%; }
-.ticket-flip-inner {
-  display: grid;
-  transition: transform 0.65s cubic-bezier(0.4, 0.0, 0.2, 1);
-  transform-style: preserve-3d;
-  width: 100%;
-}
-.ticket-flip-inner.flipped { transform: rotateY(180deg); }
-.ticket-flip-face {
-  grid-area: 1 / 1;
-  backface-visibility: hidden;
-  -webkit-backface-visibility: hidden;
-  display: flex;
-  min-width: 0;
-}
-.ticket-flip-face .ticket-card { flex: 1; width: 100%; min-height: 340px; }
-.ticket-flip-back { transform: rotateY(180deg); }
-
-/* ============ TICKET CARD ============ */
-.ticket-card {
-  border-radius: 18px; padding: 24px;
-  box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
-  display: flex; flex-direction: column; gap: 18px;
-  position: relative; overflow: hidden;
-  border: 1px solid rgba(0,0,0,0.05);
-  transition: background 0.4s ease, color 0.4s ease;
-  width: 100%; max-width: 100%; min-width: 0;
-  --ticket-bg-1: #e6ffff;
-  --ticket-bg-2: #b3ffff;
-  --ticket-text: #0a0f14;
-  --ticket-muted: rgba(0,0,0,0.6);
-  --ticket-logo: var(--navy);
-  --ticket-badge-bg: rgba(0,0,0,0.08);
-  --ticket-badge-text: #4a5568;
-  background: linear-gradient(135deg, var(--ticket-bg-1), var(--ticket-bg-2));
-  color: var(--ticket-text);
-}
-.ticket-header-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; flex-wrap: wrap; }
-.ticket-logo { font-weight: 800; font-size: 13px; letter-spacing: 1.5px; color: var(--ticket-logo); word-break: break-word; transition: color 0.3s ease; }
-.ticket-badges { display: flex; gap: 8px; flex-shrink: 0; }
-.badge-public, .badge-tier { font-size: 9px; font-weight: 800; padding: 3px 8px; border-radius: 4px; text-transform: uppercase; letter-spacing: 0.5px; background: var(--ticket-badge-bg); color: var(--ticket-badge-text); transition: background 0.3s ease, color 0.3s ease; }
-.badge-tier { font-weight: 900; }
-.ticket-body-row { display: flex; justify-content: space-between; align-items: flex-end; gap: 12px; min-width: 0; }
-.ticket-info-left { display: flex; flex-direction: column; gap: 4px; flex: 1; min-width: 0; }
-.event-title { font-size: 20px; font-weight: 900; line-height: 1.1; text-transform: uppercase; letter-spacing: -0.5px; word-break: break-word; overflow-wrap: anywhere; }
-.event-meta { font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; color: var(--ticket-muted); word-break: break-word; overflow-wrap: anywhere; transition: color 0.3s ease; }
-.guest-title { font-size: 14px; font-weight: 800; margin-top: 8px; word-break: break-word; overflow-wrap: anywhere; }
-.guest-meta { font-size: 11px; font-weight: 600; color: var(--ticket-muted); word-break: break-word; overflow-wrap: anywhere; transition: color 0.3s ease; }
-.ref-meta { font-size: 10px; font-weight: 700; font-family: monospace; color: var(--ticket-muted); margin-top: 4px; word-break: break-all; transition: color 0.3s ease; opacity: 0.85; }
-.ticket-qr-box { width: 70px; height: 70px; background: #fff; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); flex-shrink: 0; }
-.ticket-location-row { display: flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 600; color: var(--ticket-muted); min-width: 0; transition: color 0.3s ease; }
-.location-text { text-transform: uppercase; letter-spacing: 0.5px; word-break: break-word; overflow-wrap: anywhere; }
-.ticket-barcode-wrap { background: #fff; border-radius: 6px; padding: 8px; display: flex; flex-direction: column; align-items: center; gap: 4px; margin-top: 4px; }
-.barcode { width: 100%; height: 30px; background: repeating-linear-gradient(to right, #000 0px, #000 2px, #fff 2px, #fff 4px, #000 4px, #000 6px, #fff 6px, #fff 10px, #000 10px, #000 12px, #fff 12px, #fff 16px); }
-.barcode-num { font-family: monospace; font-size: 10px; font-weight: 700; color: #000; letter-spacing: 2px; word-break: break-all; }
-
-/* ============ TICKET BACK ============ */
-.ticket-back-card { gap: 14px; }
-.ticket-back-title { font-size: 11px; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ticket-muted); }
-.ticket-back-terms { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 6px; margin: 0; }
-.ticket-back-terms li { font-size: 11px; font-weight: 600; color: var(--ticket-text); position: relative; padding-left: 16px; line-height: 1.4; opacity: 0.92; }
-.ticket-back-terms li::before { content: '✓'; position: absolute; left: 0; top: 0; font-weight: 900; color: var(--ticket-logo); font-size: 11px; }
-.ticket-back-scan { display: flex; align-items: center; gap: 12px; border: 1px dashed var(--ticket-muted); border-radius: 10px; padding: 10px 12px; }
-.ticket-back-qr { width: 54px; height: 54px; background: #fff; border-radius: 6px; flex-shrink: 0; }
-.ticket-back-scan-text { display: flex; flex-direction: column; gap: 2px; min-width: 0; flex: 1; }
-.ticket-back-scan-label { font-size: 9px; font-weight: 900; letter-spacing: 1.2px; text-transform: uppercase; color: var(--ticket-muted); }
-.ticket-back-event-name { font-size: 13px; font-weight: 800; color: var(--ticket-text); word-break: break-word; overflow-wrap: anywhere; line-height: 1.15; }
-.ticket-back-ref { font-size: 10px; font-weight: 700; font-family: monospace; color: var(--ticket-muted); word-break: break-all; }
-.ticket-back-footer { display: flex; justify-content: space-between; gap: 8px; font-size: 9.5px; font-weight: 700; color: var(--ticket-muted); border-top: 1px dashed currentColor; padding-top: 8px; margin-top: auto; opacity: 0.65; }
-.ticket-flip-hint { position: absolute; top: 14px; right: 16px; font-size: 9px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: var(--ticket-muted); opacity: 0.55; pointer-events: none; }
-
-.seating-plan-preview { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius); padding: 20px; max-height: 640px; overflow-y: auto; overflow-x: auto; box-shadow: 0 10px 20px rgba(10,15,20,0.05); width: 100%; max-width: 100%; min-width: 0; }
-.seating-plan-title { font-size: 11px; font-weight: 800; text-transform: uppercase; letter-spacing: 1px; color: var(--text-muted); margin-bottom: 16px; text-align: center; word-break: break-word; }
-.block { background: var(--bg-2); padding: 12px; border-radius: 10px; border: 1px solid var(--border-2); width: max-content; min-width: 100%; max-width: none; }
-.block-label { font-size: 13px; font-weight: 900; margin-bottom: 10px; color: var(--cyan-700); letter-spacing: 0.5px; word-break: break-word; }
-.stage-line { text-align: center; font-size: 10px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: #fff; background: linear-gradient(135deg, var(--navy), #2a4365); padding: 8px; border-radius: 5px; margin-bottom: 10px; word-break: break-word; }
-.rows-stack { display: flex; flex-direction: column; gap: 4px; }
-.horizontal-row { display: grid; grid-template-columns: 52px 1fr 58px; align-items: center; gap: 6px; }
-.row-label { font-size: 10px; font-weight: 800; color: var(--text-muted); text-align: right; letter-spacing: 0.5px; text-transform: uppercase; }
-.row-seats { overflow-x: auto; overflow-y: hidden; padding-bottom: 4px; scrollbar-width: thin; }
-.row-seats::-webkit-scrollbar { height: 5px; }
-.row-seats::-webkit-scrollbar-thumb { background: var(--border-2); border-radius: 3px; }
-.row-seats::-webkit-scrollbar-track { background: transparent; }
-.row-seats-inner { display: flex; gap: 3px; justify-content: center; width: max-content; min-width: 100%; margin: 0 auto; }
-.row-seat { min-width: 22px; height: 22px; padding: 0 4px; border-radius: 3px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; font-family: ui-monospace, monospace; font-size: 9px; font-weight: 800; letter-spacing: 0; transition: transform 0.12s; cursor: default; user-select: none; }
-.row-seat:hover { transform: scale(1.15); z-index: 5; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
-.row-seat.black { background: var(--tier-black); color: var(--tier-black-text); }
-.row-seat.gold { background: var(--tier-gold); color: var(--tier-gold-text); }
-.row-seat.silver { background: var(--tier-silver); color: var(--tier-silver-text); }
-.row-seat.cyan { background: var(--tier-cyan); color: var(--tier-cyan-text); }
-.row-seat.tier5 { background: var(--tier-tier5); color: var(--tier-tier5-text); }
-.row-seat.tier6 { background: var(--tier-tier6); color: var(--tier-tier6-text); }
-.row-seat.seat-found { outline: 3px solid #00FFFF; outline-offset: 1px; transform: scale(1.4); z-index: 20; position: relative; animation: seatPulse 1.2s ease-in-out infinite; }
-@keyframes seatPulse { 0%, 100% { box-shadow: 0 0 0 3px rgba(0,255,255,0.4), 0 0 12px rgba(0,255,255,0.6); } 50% { box-shadow: 0 0 0 5px rgba(0,255,255,0.75), 0 0 24px rgba(0,255,255,1); } }
-.row-tier-tag { font-size: 9px; font-weight: 800; text-align: left; letter-spacing: 0.5px; text-transform: uppercase; }
-.row-tier-tag.black { color: var(--tier-black-text-light); }
-.row-tier-tag.gold { color: var(--tier-gold-text-light); }
-.row-tier-tag.silver { color: var(--tier-silver-text-light); }
-.row-tier-tag.cyan { color: var(--tier-cyan-text-light); }
-.row-tier-tag.tier5 { color: var(--tier-tier5-text-light); }
-.row-tier-tag.tier6 { color: var(--tier-tier6-text-light); }
-.layout-legend { display: flex; justify-content: center; gap: 12px; margin-top: 16px; font-size: 10px; color: var(--text-muted); flex-wrap: wrap; }
-.layout-legend .lg-item { display: flex; align-items: center; gap: 4px; }
-.layout-legend .lg-swatch { width: 10px; height: 10px; border-radius: 2px; }
-.layout-legend .lg-swatch.black { background: var(--tier-black); }
-.layout-legend .lg-swatch.gold { background: var(--tier-gold); }
-.layout-legend .lg-swatch.silver { background: var(--tier-silver); }
-.layout-legend .lg-swatch.cyan { background: var(--tier-cyan); }
-.layout-legend .lg-swatch.tier5 { background: var(--tier-tier5); }
-.layout-legend .lg-swatch.tier6 { background: var(--tier-tier6); }
-
-.fullscreen-overlay { position: fixed; inset: 0; background: #0a0f14; z-index: 9999; display: none; flex-direction: column; padding: 16px; }
-.fullscreen-overlay.open { display: flex; }
-.fs-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; color: #fff; gap: 10px; flex-wrap: wrap; }
-.fs-header h2 { color: #fff; font-size: 1.1rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
-.fs-header h2 span { color: #00FFFF; }
-.fs-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-.fs-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: 700; font-size: 11.5px; }
-.fs-btn:hover { background: #00FFFF; color: #04161c; border-color: #00FFFF; }
-.fs-btn-close:hover { background: #dc2626; color: #fff; border-color: #dc2626; }
-.fs-btn.active { background: #00FFFF; color: #04161c; border-color: #00FFFF; }
-.fs-field { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700; color: rgba(255,255,255,0.85); }
-.fs-field label { margin: 0; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; }
-.fs-field input { width: 62px; padding: 5px 8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; color: #fff; font-family: inherit; font-weight: 700; font-size: 11.5px; text-align: center; }
-.fs-field input:focus { outline: none; border-color: #00FFFF; background: rgba(0,255,255,0.15); }
-.fs-overlap-warning { background: #991b1b; color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 11.5px; font-weight: 700; margin-bottom: 8px; display: flex; align-items: center; gap: 8px; word-break: break-word; }
-.fs-overlap-warning.hidden { display: none; }
-.fs-overlap-warning .ow-icon { font-weight: 900; font-size: 14px; background: rgba(255,255,255,0.15); width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
-.fs-level-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; color: #fff; font-size: 11.5px; margin-bottom: 8px; padding: 6px 0; }
-.fs-level-pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); cursor: pointer; color: #fff; font-family: inherit; font-size: 11.5px; font-weight: 700; transition: all 0.15s; }
-.fs-level-pill:hover { border-color: #00FFFF; }
-.fs-level-pill.on { background: rgba(0,255,255,0.15); border-color: #00FFFF; }
-.fs-level-pill.off { opacity: 0.4; }
-.fs-level-pill .pill-swatch { width: 10px; height: 10px; border-radius: 3px; border: 1px solid rgba(255,255,255,0.2); }
-.fs-canvas-outer { flex: 1; overflow: auto; background: #f6f8fb; border-radius: 12px; padding: 20px; position: relative; display: flex; align-items: flex-start; justify-content: center; }
-.fs-canvas { position: relative; background: #ffffff; border: 2px solid #d3dbe5; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); flex-shrink: 0; }
-.fs-canvas.show-grid { background-image: linear-gradient(to right, rgba(0,255,255,0.12) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,255,255,0.12) 1px, transparent 1px); background-size: var(--grid-size, 50px) var(--grid-size, 50px); }
-.fs-stage-marker { position: absolute; background: linear-gradient(135deg, #1e2f4d, #2a4365); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; letter-spacing: 4px; text-transform: uppercase; border-radius: 6px; box-shadow: 0 6px 20px rgba(30,47,77,0.4); z-index: 5; white-space: nowrap; padding: 4px 10px; pointer-events: none; }
-.fs-section { position: absolute; background: #fff; border: 2px solid #e4e9f0; border-radius: 10px; padding: 8px; box-shadow: 0 4px 14px rgba(10,15,20,0.08); transform-origin: center center; z-index: 10; }
-.fs-section-title { font-size: 10px; font-weight: 900; color: #009999; letter-spacing: 0.5px; margin-bottom: 4px; text-align: center; white-space: nowrap; }
-.fs-section-location { text-align: center; font-size: 8px; font-weight: 800; color: #6b7787; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
-.fs-section-stage { text-align: center; font-size: 7px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: #fff; background: linear-gradient(135deg, #1e2f4d, #2a4365); padding: 3px; border-radius: 4px; margin-bottom: 6px; }
-.fs-rows-area { position: relative; }
-.fs-row { display: grid; grid-template-columns: 34px 1fr 38px; align-items: center; gap: 3px; margin-bottom: 2px; padding: 2px; border-radius: 4px; }
-.fs-row-label { font-size: 8px; font-weight: 800; color: #6b7787; text-align: right; text-transform: uppercase; }
-.fs-row-seats { display: flex; gap: 2px; justify-content: center; }
-.fs-seat { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; font-family: ui-monospace, monospace; font-size: 6px; font-weight: 800; }
-.fs-seat.black { background: var(--tier-black); color: var(--tier-black-text); }
-.fs-seat.gold { background: var(--tier-gold); color: var(--tier-gold-text); }
-.fs-seat.silver { background: var(--tier-silver); color: var(--tier-silver-text); }
-.fs-seat.cyan { background: var(--tier-cyan); color: var(--tier-cyan-text); }
-.fs-seat.tier5 { background: var(--tier-tier5); color: var(--tier-tier5-text); }
-.fs-seat.tier6 { background: var(--tier-tier6); color: var(--tier-tier6-text); }
-.fs-tier-tag { font-size: 7px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
-.fs-tier-tag.black { color: var(--tier-black-text-light); }
-.fs-tier-tag.gold { color: var(--tier-gold-text-light); }
-.fs-tier-tag.silver { color: var(--tier-silver-text-light); }
-.fs-tier-tag.cyan { color: var(--tier-cyan-text-light); }
-.fs-tier-tag.tier5 { color: var(--tier-tier5-text-light); }
-.fs-tier-tag.tier6 { color: var(--tier-tier6-text-light); }
-.fs-empty-hint { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #6b7787; font-size: 12px; text-align: center; max-width: 300px; }
-.fs-element{position:absolute;pointer-events:none;}
-.fs-element-shape{display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;padding:4px;text-align:center;overflow:hidden;transform-origin:center center;}
-.fs-element-shape.rectangle{border-radius:4px;}
-.fs-element-shape.square{border-radius:4px;}
-.fs-element-shape.circle{border-radius:50%;}
-.fs-element-line{height:0;transform-origin:0 0;position:absolute;}
-.fs-element-marker{display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;border-radius:6px;font-weight:900;font-size:9px;letter-spacing:0.5px;box-shadow:0 4px 10px rgba(0,0,0,0.25);border:2px solid rgba(255,255,255,0.4);transform-origin:center center;padding:2px;}
-.fs-element-marker .marker-icon{font-size:14px;line-height:1;margin-bottom:2px;}
-.fs-element-marker .marker-label{line-height:1;text-align:center;word-break:break-word;}
-
-.sp-fullscreen { position: fixed; inset: 0; background: #0a0f14; z-index: 9999; display: none; flex-direction: column; padding: 16px; }
-.sp-fullscreen.open { display: flex; }
-.sp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; color: #fff; gap: 10px; flex-wrap: wrap; }
-.sp-header h2 { color: #fff; font-size: 1.1rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
-.sp-header h2 span { color: #00FFFF; }
-.sp-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-.sp-body { flex: 1; overflow: auto; background: #f6f8fb; border-radius: 12px; padding: 24px; position: relative; }
-.sp-inner { background: var(--surface); border-radius: var(--radius); padding: 24px; min-width: max-content; max-width: none; margin: 0 auto; display: inline-block; box-shadow: 0 10px 30px rgba(10,15,20,0.08); }
-.sp-inner .block { margin-bottom: 16px; }
-.sp-inner .block:last-of-type { margin-bottom: 0; }
-
-.sp-seat-finder { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 10px 14px; background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.15); border-radius: 10px; margin-bottom: 10px; color: #fff; transition: opacity 0.2s; }
-.sp-seat-finder .spf-title { font-size: 11px; font-weight: 800; letter-spacing: 0.08em; text-transform: uppercase; color: #00FFFF; margin-right: 4px; display: inline-flex; align-items: center; gap: 5px; white-space: nowrap; }
-.sp-seat-finder .spf-field { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; font-weight: 700; color: rgba(255,255,255,0.85); }
-.sp-seat-finder .spf-field label { margin: 0; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; }
-.sp-seat-finder select, .sp-seat-finder input { padding: 5px 8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; color: #fff; font-family: inherit; font-weight: 700; font-size: 11.5px; }
-.sp-seat-finder select { padding-right: 26px; min-width: 100px; appearance: none; -webkit-appearance: none; -moz-appearance: none; background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' viewBox='0 0 24 24' fill='none' stroke='%2300FFFF' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; background-size: 10px; cursor: pointer; }
-.sp-seat-finder select option { color: #0a0f14; background: #ffffff; }
-.sp-seat-finder input[type="number"] { width: 66px; text-align: center; }
-.sp-seat-finder select:focus, .sp-seat-finder input:focus { outline: none; border-color: #00FFFF; background-color: rgba(0,255,255,0.15); }
-.sp-seat-finder .spf-btn { padding: 5px 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: #fff; cursor: pointer; font-family: inherit; font-weight: 700; font-size: 11.5px; transition: all 0.15s; }
-.sp-seat-finder .spf-btn:hover { background: #00FFFF; color: #04161c; border-color: #00FFFF; }
-.sp-seat-finder .spf-btn.primary { background: #00FFFF; color: #04161c; border-color: #00FFFF; }
-.sp-seat-finder .spf-btn.primary:hover { background: #00E5E5; border-color: #00E5E5; }
-.sp-seat-finder .spf-status { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 6px; margin-left: auto; white-space: nowrap; max-width: 100%; overflow: hidden; text-overflow: ellipsis; }
-.sp-seat-finder .spf-status.ok { background: rgba(16,185,129,0.2); color: #6ee7b7; border: 1px solid rgba(16,185,129,0.4); }
-.sp-seat-finder .spf-status.err { background: rgba(220,38,38,0.2); color: #fca5a5; border: 1px solid rgba(220,38,38,0.4); }
-.sp-seat-finder .spf-status.info { color: rgba(255,255,255,0.65); border: 1px solid rgba(255,255,255,0.15); }
-.sp-seat-finder.spf-disabled .spf-title, .sp-seat-finder.spf-disabled .spf-field, .sp-seat-finder.spf-disabled .spf-btn { opacity: 0.4; pointer-events: none; }
-
-.toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(120%); background: #0a0f14; color: #fff; padding: 12px 18px; border-radius: 12px; font-size: 13.5px; z-index: 200; transition: transform .4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease; max-width: calc(100vw - 40px); display: flex; align-items: center; gap: 10px; pointer-events: none; opacity: 0; word-break: break-word; }
-.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-.toast.success { background: #065f46; }
-.toast.error { background: #991b1b; }
-</style>
-</head>
-<body>
-<header class="site-header">
-  <div class="container header-inner">
-    <a href="index.html" class="novalink-logo">
-      <svg class="mark" viewBox="0 0 60 74"><path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/><path fill="#00FFFF" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/></svg>
-      <span class="wordmark">NOVALINK</span>
-    </a>
-    <span class="studio-badge">Event Studio</span>
-  </div>
-</header>
-
-<main class="form-wrapper">
-  <div class="container studio-layout">
-    <div class="form-card">
-      <div class="form-header">
-        <h1>Event Studio</h1>
-        <p>Design your venue layout freely — position, scale, levels and stage.</p>
-      </div>
-
-      <form id="createEventForm">
-        <div class="section-divider"><span>Organiser Details</span></div>
-        <div class="form-group"><label for="hostName">Host Name</label><input type="text" id="hostName" placeholder="e.g., John Doe" required /></div>
-        <div class="form-group"><label for="hostEmail">Host Email</label><input type="email" id="hostEmail" placeholder="e.g., john@example.com" required /></div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="city">City</label>
-            <select id="city" required>
-              <option value="">Select a city / area…</option>
-              <option>Johannesburg</option><option>Sandton</option><option>Randburg</option><option>Roodepoort</option><option>Soweto</option>
-              <option>Midrand</option><option>Fourways</option><option>Bryanston</option><option>Rosebank</option><option>Bedfordview</option>
-              <option>Edenvale</option><option>Kempton Park</option><option>Benoni</option><option>Boksburg</option><option>Brakpan</option>
-              <option>Springs</option><option>Germiston</option><option>Alberton</option><option>Vereeniging</option><option>Vanderbijlpark</option>
-              <option>Meyerton</option><option>Heidelberg</option><option>Nigel</option><option>Bronkhorstspruit</option><option>Cullinan</option>
-              <option>Centurion</option><option>Pretoria</option><option>Tshwane</option><option>Akasia</option><option>Mamelodi</option>
-              <option>Atteridgeville</option><option>Soshanguve</option><option>Krugersdorp</option><option>Mogale City</option><option>Randfontein</option>
-              <option>Carletonville</option><option>Westonaria</option><option>Lenasia</option><option>Ennerdale</option><option>Orange Farm</option>
-              <option>Tembisa</option><option>Ivory Park</option><option>Diepsloot</option><option>Alexandra</option><option>Daveyton</option>
-              <option>Duduza</option><option>Tsakane</option><option>Sebokeng</option><option>Sharpeville</option><option>Boipatong</option>
-              <option>Evaton</option><option>Bophelong</option><option>Katlehong</option><option>Thokoza</option><option>Vosloorus</option>
-              <option>Zonkizizwe</option><option>Palm Ridge</option><option>Eden Park</option><option>Other (Gauteng)</option><option>Outside Gauteng</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="eventType">Event Type</label>
-            <select id="eventType">
-              <option value="" data-min="0" data-max="0">Select event type…</option>
-              <option value="church" data-min="20" data-max="50">Church Service / Small Gathering</option>
-              <option value="community" data-min="30" data-max="80">Community Event</option>
-              <option value="workshop" data-min="150" data-max="500">Workshop / Seminar</option>
-              <option value="concert" data-min="100" data-max="350">Concert / Live Music</option>
-              <option value="conference" data-min="500" data-max="2500">Conference</option>
-              <option value="gala" data-min="800" data-max="2500">Gala Dinner</option>
-              <option value="festival" data-min="200" data-max="800">Festival</option>
-              <option value="sports" data-min="50" data-max="500">Sports Event</option>
-              <option value="party" data-min="50" data-max="200">Party / Club Night</option>
-              <option value="wedding" data-min="0" data-max="0">Wedding (Free Entry)</option>
-              <option value="corporate" data-min="400" data-max="1500">Corporate Function</option>
-              <option value="other" data-min="50" data-max="500">Other</option>
-            </select>
-            <p class="form-hint recommend" id="eventTypeHint">Choose an event type to see a recommended price.</p>
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group">
-            <label for="cost">Base Ticket Price (R)</label>
-            <div class="currency-input">
-              <span class="currency-prefix">R</span>
-              <input type="number" id="cost" min="0" step="0.01" placeholder="25.50" required />
-            </div>
-            <p class="form-hint">Numbers only. Values under R30 supported. Enter 0 for free events.</p>
-          </div>
-          <div class="form-group">
-            <label for="startTime">Start Time</label>
-            <input type="time" id="startTime" required />
-          </div>
-        </div>
-        <div class="form-row">
-          <div class="form-group"><label for="startDate">Start Date</label><input type="date" id="startDate" required /></div>
-          <div class="form-group">
-            <label for="tierColorPreviewNote">Preview Colour Tier</label>
-            <input type="text" id="tierColorPreviewNote" readonly value="Set in Ticket Preview below" style="background:var(--surface-2);font-size:12.5px;color:var(--text-muted);font-style:italic;" />
-          </div>
-        </div>
-
-        <div class="section-divider"><span>Event Details</span></div>
-        <div class="form-group"><label for="eventName">Event Name</label><input type="text" id="eventName" placeholder="e.g., Neon Nights Live" required /></div>
-        <div class="form-group"><label for="venueAddress">Venue Name & Address</label><input type="text" id="venueAddress" placeholder="e.g., Grand Amphitheatre, 123 Main Rd" required /></div>
-
-        <div class="section-divider"><span>Pricing Plan</span></div>
-        <div class="form-group">
-          <label>Choose a Novalink plan</label>
-          <p class="form-hint" style="margin-top:0;margin-bottom:8px;">Plan determines the fee Novalink takes per ticket. No monthly fees — you only pay when you sell.</p>
-          <div class="plan-grid" id="planGrid">
-            <label class="plan-card" data-plan="basic">
-              <input type="radio" name="plan" value="basic" data-fee="5" data-limit="100" />
-              <div class="plan-name">Basic</div>
-              <div class="plan-fee">5<small>% per ticket</small></div>
-              <div class="plan-desc">Up to 100 tickets · QR scanning · 2 scanner staff</div>
-            </label>
-            <label class="plan-card featured" data-plan="standard">
-              <span class="plan-badge">Most popular</span>
-              <input type="radio" name="plan" value="standard" data-fee="7" data-limit="500" checked />
-              <div class="plan-name">Standard</div>
-              <div class="plan-fee">7<small>% per ticket</small></div>
-              <div class="plan-desc">Up to 500 tickets · QR + barcode · 5 scanner staff</div>
-            </label>
-            <label class="plan-card" data-plan="premium">
-              <input type="radio" name="plan" value="premium" data-fee="10" data-limit="2000" />
-              <div class="plan-name">Premium</div>
-              <div class="plan-fee">10<small>% per ticket</small></div>
-              <div class="plan-desc">Up to 2,000 tickets · QR + barcode + vertical · 15 scanner staff</div>
-            </label>
-            <label class="plan-card" data-plan="enterprise">
-              <input type="radio" name="plan" value="enterprise" data-fee="12" data-limit="999999" />
-              <div class="plan-name">Enterprise</div>
-              <div class="plan-fee">12<small>% per ticket</small></div>
-              <div class="plan-desc">Unlimited tickets · White-label · Dedicated account manager</div>
-            </label>
-          </div>
-        </div>
-
-        <div class="section-divider"><span>Tier Names &amp; Pricing</span></div>
-        <div class="form-group">
-          <label for="tierCount">Number of Tiers</label>
-          <select id="tierCount">
-            <option value="2">2 Tiers (minimum)</option>
-            <option value="3">3 Tiers</option>
-            <option value="4" selected>4 Tiers (default)</option>
-            <option value="5">5 Tiers</option>
-            <option value="6">6 Tiers</option>
-          </select>
-          <p class="form-hint" id="tierCountHint">Minimum 2 tiers. Venue capacity must exceed 5,000 to enable 5 or 6 tiers.</p>
-        </div>
-        <div class="form-group">
-          <label>Customise each tier</label>
-          <p class="form-hint" style="margin-top:0;margin-bottom:8px;">Rename tiers and set the price per ticket. The ticket preview and seating plan update instantly.</p>
-          <div class="tier-pricing-list" id="tierPricingList">
-            <div class="tier-price-row" data-tier-row="black">
-              <span class="tier-swatch" style="background:var(--tier-black)"></span>
-              <input type="text" class="tier-name-input" data-tier="black" value="Elite" maxlength="20" placeholder="Elite" />
-              <span class="tier-qty-badge" data-qty-badge="black">0 seats</span>
-              <div class="currency-input compact"><span class="currency-prefix">R</span><input type="number" class="tier-price-input" data-tier="black" min="0" step="0.01" value="0" /></div>
-              <span class="tier-revenue" data-rev-row="black">R 0.00</span>
-            </div>
-            <div class="tier-price-row" data-tier-row="gold">
-              <span class="tier-swatch" style="background:var(--tier-gold)"></span>
-              <input type="text" class="tier-name-input" data-tier="gold" value="Gold" maxlength="20" placeholder="Gold" />
-              <span class="tier-qty-badge" data-qty-badge="gold">0 seats</span>
-              <div class="currency-input compact"><span class="currency-prefix">R</span><input type="number" class="tier-price-input" data-tier="gold" min="0" step="0.01" value="0" /></div>
-              <span class="tier-revenue" data-rev-row="gold">R 0.00</span>
-            </div>
-            <div class="tier-price-row" data-tier-row="silver">
-              <span class="tier-swatch" style="background:var(--tier-silver)"></span>
-              <input type="text" class="tier-name-input" data-tier="silver" value="Silver" maxlength="20" placeholder="Silver" />
-              <span class="tier-qty-badge" data-qty-badge="silver">0 seats</span>
-              <div class="currency-input compact"><span class="currency-prefix">R</span><input type="number" class="tier-price-input" data-tier="silver" min="0" step="0.01" value="0" /></div>
-              <span class="tier-revenue" data-rev-row="silver">R 0.00</span>
-            </div>
-            <div class="tier-price-row" data-tier-row="cyan">
-              <span class="tier-swatch" style="background:var(--tier-cyan)"></span>
-              <input type="text" class="tier-name-input" data-tier="cyan" value="Standard" maxlength="20" placeholder="Standard" />
-              <span class="tier-qty-badge" data-qty-badge="cyan">0 seats</span>
-              <div class="currency-input compact"><span class="currency-prefix">R</span><input type="number" class="tier-price-input" data-tier="cyan" min="0" step="0.01" value="0" /></div>
-              <span class="tier-revenue" data-rev-row="cyan">R 0.00</span>
-            </div>
-            <div class="tier-price-row" data-tier-row="tier5" style="display:none;">
-              <span class="tier-swatch" style="background:var(--tier-tier5)"></span>
-              <input type="text" class="tier-name-input" data-tier="tier5" value="Platinum" maxlength="20" placeholder="Platinum" />
-              <span class="tier-qty-badge" data-qty-badge="tier5">0 seats</span>
-              <div class="currency-input compact"><span class="currency-prefix">R</span><input type="number" class="tier-price-input" data-tier="tier5" min="0" step="0.01" value="0" /></div>
-              <span class="tier-revenue" data-rev-row="tier5">R 0.00</span>
-            </div>
-            <div class="tier-price-row" data-tier-row="tier6" style="display:none;">
-              <span class="tier-swatch" style="background:var(--tier-tier6)"></span>
-              <input type="text" class="tier-name-input" data-tier="tier6" value="Diamond" maxlength="20" placeholder="Diamond" />
-              <span class="tier-qty-badge" data-qty-badge="tier6">0 seats</span>
-              <div class="currency-input compact"><span class="currency-prefix">R</span><input type="number" class="tier-price-input" data-tier="tier6" min="0" step="0.01" value="0" /></div>
-              <span class="tier-revenue" data-rev-row="tier6">R 0.00</span>
-            </div>
-          </div>
-          <p class="form-hint" style="margin-top:8px;">Tip: the base ticket price above auto-fills tier prices. You can then edit each tier independently.</p>
-        </div>
-
-        <div class="section-divider"><span>Live Revenue Calculator</span></div>
-        <div class="revenue-card">
-          <div class="rev-head"><i data-lucide="trending-up"></i> Live Estimate · Updates as you edit</div>
-          <div class="revenue-row">
-            <span>Plan</span>
-            <span class="rev-plan-name" id="revPlanName">Standard · 7%</span>
-          </div>
-          <div class="revenue-row">
-            <span>Total Tickets (capacity)</span>
-            <span id="revTotalTickets">0 / 500</span>
-          </div>
-          <div class="revenue-row">
-            <span>Gross Ticket Revenue</span>
-            <span class="rev-amount" id="revGross">R 0.00</span>
-          </div>
-          <div class="revenue-row fee">
-            <span>Novalink Fee (<span id="revFeePct">7%</span>)</span>
-            <span class="rev-amount" id="revFee">− R 0.00</span>
-          </div>
-          <div class="revenue-row net">
-            <span>Your Net Revenue</span>
-            <span class="rev-amount" id="revNet">R 0.00</span>
-          </div>
-          <div class="revenue-warning hidden" id="revWarning">
-            <span class="warn-icon">!</span>
-            <span id="revWarningText"></span>
-          </div>
-        </div>
-
-        <div class="section-divider"><span>Venue Canvas & Stage</span></div>
-        <div class="form-row">
-          <div class="form-group"><label for="canvasWidth">Canvas Width (px)</label><input type="number" id="canvasWidth" min="400" max="3000" value="1200" /><p class="form-hint" id="canvasWidthCmHint">≈ 12.00 m wide</p></div>
-          <div class="form-group"><label for="canvasHeight">Canvas Height (px)</label><input type="number" id="canvasHeight" min="400" max="3000" value="800" /><p class="form-hint" id="canvasHeightCmHint">≈ 8.00 m deep</p></div>
-        </div>
-        <div class="form-group"><label for="stageName">Stage / Performance Area Name</label><input type="text" id="stageName" placeholder="e.g., STAGE" value="STAGE" /></div>
-        <div class="form-row-3">
-          <div class="form-group"><label for="stageX">Stage X (px)</label><input type="number" id="stageX" min="0" value="500" /></div>
-          <div class="form-group"><label for="stageY">Stage Y (px)</label><input type="number" id="stageY" min="0" value="60" /></div>
-          <div class="form-group"><label for="stageW">Stage Width (px)</label><input type="number" id="stageW" min="40" value="200" /></div>
-        </div>
-        <div class="form-row">
-          <div class="form-group"><label for="stageH">Stage Height (px)</label><input type="number" id="stageH" min="20" value="60" /></div>
-          <div class="form-group"><label for="gridSize">Grid Size (px)</label><input type="number" id="gridSize" min="10" max="200" value="50" /><p class="form-hint" id="gridSizeCmHint">= 50.0 cm</p></div>
-        </div>
-        <div class="form-row">
-          <div class="form-group"><label for="pxPerCm">Scale (px per cm)</label><input type="number" id="pxPerCm" min="0.05" max="20" step="0.05" value="1" /></div>
-          <div class="form-group"><label>Venue Size</label><input type="text" id="venueSizeOut" readonly value="12.00 m × 8.00 m" style="background:var(--surface-2);font-weight:bold;color:var(--cyan-700);" /></div>
-        </div>
-        <div class="toggle-row">
-          <span class="toggle-label">Snap to Grid</span>
-          <label class="toggle-switch"><input type="checkbox" id="snapToggle" checked /><span class="toggle-slider"></span></label>
-        </div>
-
-        <div class="section-divider"><span>Canvas Annotations</span></div>
-        <div class="annotations-panel">
-          <div class="annotations-title">
-            <span>Shapes, Lines &amp; Markers</span>
-            <span class="form-hint" style="margin:0;">Click any item to edit its properties</span>
-          </div>
-          <div class="annotation-tabs">
-            <button type="button" class="annotation-tab active" data-anno="shape">▭ Shapes <span class="tab-count" id="countShapes">0</span></button>
-            <button type="button" class="annotation-tab" data-anno="line">／ Lines <span class="tab-count" id="countLines">0</span></button>
-            <button type="button" class="annotation-tab" data-anno="exit">🚪 Markers <span class="tab-count" id="countExits">0</span></button>
-          </div>
-          <div class="annotation-body" id="annoShapeBody">
-            <div class="form-row">
-              <div class="form-group"><label for="shapeKind">Shape</label><select id="shapeKind"><option value="rectangle" selected>Rectangle</option><option value="square">Square</option><option value="circle">Circle</option></select></div>
-              <div class="form-group"><label for="shapeLabelInput">Label</label><input type="text" id="shapeLabelInput" placeholder="e.g., Bar" maxlength="20" /></div>
-            </div>
-            <div class="form-row-3">
-              <div class="form-group"><label for="shapeX">X (px)</label><input type="number" id="shapeX" min="0" max="3000" value="100" /></div>
-              <div class="form-group"><label for="shapeY">Y (px)</label><input type="number" id="shapeY" min="0" max="3000" value="100" /></div>
-              <div class="form-group"><label for="shapeZ">Z-index</label><input type="number" id="shapeZ" min="1" max="99" value="6" /></div>
-            </div>
-            <div class="form-row-3">
-              <div class="form-group"><label for="shapeW">Width (px)</label><input type="number" id="shapeW" min="10" max="2000" value="140" /></div>
-              <div class="form-group"><label for="shapeH">Height (px)</label><input type="number" id="shapeH" min="10" max="2000" value="100" /></div>
-              <div class="form-group"><label for="shapeRotation">Rotation (°)</label><input type="number" id="shapeRotation" min="-360" max="360" value="0" /></div>
-            </div>
-            <div class="form-row">
-              <div class="form-group"><label for="shapeColor">Colour</label><input type="color" id="shapeColor" value="#00FFFF" /></div>
-              <div class="form-group"><label for="shapeLevelSelect">Level</label><select id="shapeLevelSelect"></select></div>
-            </div>
-            <button type="button" class="btn btn-ghost" id="addShapeBtn" style="padding:10px 16px;font-size:13px;">+ Add Shape</button>
-          </div>
-          <div class="annotation-body" id="annoLineBody" style="display:none;">
-            <div class="form-row-3">
-              <div class="form-group"><label for="lineX1">From X</label><input type="number" id="lineX1" min="0" max="3000" value="100" /></div>
-              <div class="form-group"><label for="lineY1">From Y</label><input type="number" id="lineY1" min="0" max="3000" value="100" /></div>
-              <div class="form-group"><label for="lineZ">Z-index</label><input type="number" id="lineZ" min="1" max="99" value="6" /></div>
-            </div>
-            <div class="form-row-3">
-              <div class="form-group"><label for="lineX2">To X</label><input type="number" id="lineX2" min="0" max="3000" value="500" /></div>
-              <div class="form-group"><label for="lineY2">To Y</label><input type="number" id="lineY2" min="0" max="3000" value="500" /></div>
-              <div class="form-group"><label for="lineLength">Length (px)</label><input type="number" id="lineLength" min="1" max="5000" value="0" readonly style="background:var(--surface-2);" /></div>
-            </div>
-            <div class="form-row-3">
-              <div class="form-group"><label for="lineThickness">Thickness (px)</label><input type="number" id="lineThickness" min="1" max="40" value="2" /></div>
-              <div class="form-group"><label for="lineAngleOut">Angle (°)</label><input type="number" id="lineAngleOut" min="-360" max="360" value="0" readonly style="background:var(--surface-2);" /></div>
-              <div class="form-group"><label for="lineColor">Colour</label><input type="color" id="lineColor" value="#facc15" /></div>
-            </div>
-            <div class="form-row">
-              <div class="form-group"><label for="lineLabelInput">Label</label><input type="text" id="lineLabelInput" placeholder="e.g., Walkway" maxlength="20" /></div>
-              <div class="form-group"><label for="lineLevelSelect">Level</label><select id="lineLevelSelect"></select></div>
-            </div>
-            <button type="button" class="btn btn-ghost" id="addLineBtn" style="padding:10px 16px;font-size:13px;">+ Add Line</button>
-          </div>
-          <div class="annotation-body" id="annoExitBody" style="display:none;">
-            <div class="form-row">
-              <div class="form-group"><label for="markerKind">Marker Type</label><select id="markerKind"><option value="exit" selected>Exit</option><option value="entrance">Entrance</option><option value="bathroom">Bathroom</option></select></div>
-              <div class="form-group"><label for="exitLabelInput">Label</label><input type="text" id="exitLabelInput" value="EXIT" maxlength="14" /></div>
-            </div>
-            <div class="form-row-3">
-              <div class="form-group"><label for="exitX">X (px)</label><input type="number" id="exitX" min="0" max="3000" value="100" /></div>
-              <div class="form-group"><label for="exitY">Y (px)</label><input type="number" id="exitY" min="0" max="3000" value="600" /></div>
-              <div class="form-group"><label for="exitZInput">Z-index</label><input type="number" id="exitZInput" min="1" max="99" value="6" /></div>
-            </div>
-            <div class="form-row-3">
-              <div class="form-group"><label for="exitW">Width (px)</label><input type="number" id="exitW" min="20" max="300" value="56" /></div>
-              <div class="form-group"><label for="exitH">Height (px)</label><input type="number" id="exitH" min="20" max="300" value="56" /></div>
-              <div class="form-group"><label for="exitRotationInput">Rotation (°)</label><input type="number" id="exitRotationInput" min="-360" max="360" value="0" /></div>
-            </div>
-            <div class="form-group"><label for="exitLevelSelect">Level</label><select id="exitLevelSelect"></select></div>
-            <button type="button" class="btn btn-ghost" id="addExitBtn" style="padding:10px 16px;font-size:13px;">+ Add Marker</button>
-          </div>
-          <div class="annotation-list" id="annotationList">
-            <div class="annotation-empty">No elements added yet.</div>
-          </div>
-        </div>
-
-        <div class="section-divider"><span>Levels / Floors</span></div>
-        <div class="levels-panel">
-          <div class="row-overrides-hint">Group sections into levels. Toggle visibility to isolate a level in the Full Screen view.</div>
-          <div class="levels-list" id="levelsList"></div>
-          <button type="button" class="btn-mini" id="addLevelBtn">+ Add Level</button>
-        </div>
-
-        <div class="section-divider"><span>Sections</span></div>
-        <div class="toggle-row">
-          <span class="toggle-label">Chairs &amp; Tables Mode</span>
-          <label class="toggle-switch"><input type="checkbox" id="tableModeToggle" /><span class="toggle-slider"></span></label>
-        </div>
-        <div class="table-options-panel" id="tableOptionsPanel" style="display:none;">
-          <div class="table-options-title">Table Configuration · sizes in cm</div>
-          <div class="form-row">
-            <div class="form-group"><label for="tableShape">Table Shape</label><select id="tableShape"><option value="circular" selected>Circular (Round)</option><option value="square">Square</option><option value="rectangular">Rectangular</option></select></div>
-            <div class="form-group"><label for="tableCount">Default Tables per Row</label><input type="number" id="tableCount" min="1" max="50" value="4" /></div>
-          </div>
-          <div class="form-row">
-            <div class="form-group" id="chairsAroundGroup"><label for="chairsAround">Chairs Around Table (1–20)</label><input type="number" id="chairsAround" min="1" max="20" value="8" /></div>
-            <div class="form-group" id="chairsPerSideGroup" style="display:none;"><label for="chairsPerSide">Chairs Per Side (1–10)</label><input type="number" id="chairsPerSide" min="1" max="10" value="2" /></div>
-          </div>
-          <div class="form-row" id="rectChairsRow" style="display:none;">
-            <div class="form-group"><label for="chairsLongSide">Chairs Per Long Side (1–12)</label><input type="number" id="chairsLongSide" min="1" max="12" value="4" /></div>
-            <div class="form-group"><label for="chairsShortSide">Chairs Per Short Side (1–8)</label><input type="number" id="chairsShortSide" min="1" max="8" value="1" /></div>
-          </div>
-          <div class="form-row">
-            <div class="form-group"><label for="tableWidth" id="tableWidthLabel">Table Diameter (cm)</label><input type="number" id="tableWidth" min="20" max="600" step="1" value="150" /></div>
-            <div class="form-group" id="tableHeightGroup" style="display:none;"><label for="tableHeight" id="tableHeightLabel">Table Length (cm)</label><input type="number" id="tableHeight" min="20" max="600" step="1" value="180" /></div>
-          </div>
-          <div class="form-row">
-            <div class="form-group"><label for="tableSpacing">Table Spacing (cm)</label><input type="number" id="tableSpacing" min="0" max="500" step="1" value="65" /></div>
-            <div class="form-group"><label>Chairs per Table (auto)</label><input type="text" id="chairsPerTableOut" readonly value="8" style="background:var(--surface-2);font-weight:bold;color:var(--cyan-700);" /></div>
-          </div>
-          <div class="table-standard-legend">
-            <strong>Standard event ranges</strong>
-            <div class="std-line">
-              <span class="std-chip"><span class="dot"></span>Table width 90–102 cm</span>
-              <span class="std-chip"><span class="dot"></span>Spacing 61–76 cm</span>
-              <span class="std-chip"><span class="dot"></span>Per-person 41–51 cm</span>
-            </div>
-          </div>
-          <div class="tier-dist-summary" id="tableSummaryHint"></div>
-          <div class="table-validation" id="tableValidationOut"></div>
-        </div>
-
-        <div class="form-row">
-          <div class="form-group"><label for="totalLevel1">Number of Sections</label><input type="number" id="totalLevel1" min="1" max="26" value="3" /></div>
-          <div class="form-group" id="rowsPerSectionGroup"><label for="totalLevel2">Default Rows per Section</label><input type="number" id="totalLevel2" min="1" max="52" value="6" /></div>
-          <div class="form-group" id="seatsPerRowGroup"><label for="totalLevel3">Default Seats per Row (4–90)</label><input type="number" id="totalLevel3" min="4" max="90" value="8" /></div>
-        </div>
-
-        <div class="form-group" id="rowOverridesGroup">
-          <label>Per-Section Configuration</label>
-          <div class="row-overrides-section">
-            <div class="row-overrides-header">
-              <div class="section-tabs" id="sectionTabs"></div>
-              <button type="button" class="btn-mini fs-btn" id="openFullscreen">⛶ Full Screen</button>
-              <button type="button" class="btn-mini" id="clearAllOverrides">Clear All</button>
-            </div>
-            <div class="section-rows-row"><label for="sectionNameInput">Section Name</label><input type="text" id="sectionNameInput" placeholder="e.g., VIP Stand" maxlength="40" /></div>
-            <div class="section-rows-row"><label for="sectionLevelSelect">Level</label><select id="sectionLevelSelect"></select></div>
-            <div class="section-rows-row" id="sectionRowsRow">
-              <label for="sectionRowsInput" id="sectionRowsLabel">Rows in this section</label>
-              <span class="section-rows-badge" id="sectionRowsBadge">6 rows</span>
-              <input type="number" id="sectionRowsInput" min="1" max="52" value="6" />
-            </div>
-            <div class="table-rows-panel" id="tableRowsBlock" style="display:none;">
-              <div class="row-overrides-hint">Define each row of tables — e.g., Row A: 4 tables, Row B: 3 tables.</div>
-              <div class="table-rows-list" id="tableRowsList"></div>
-              <button type="button" class="btn-mini" id="addTableRowBtn">+ Add Table Row</button>
-            </div>
-            <div class="section-rows-row">
-              <label for="sectionTierOverride">Section Tier Override</label>
-              <select id="sectionTierOverride">
-                <option value="">— Use Row Distribution —</option>
-              </select>
-            </div>
-            <div class="form-row-3" style="margin: 6px 0 10px;">
-              <div class="form-group" style="margin-bottom:0;"><label for="sectionXInput" style="font-size:10px;">X Position (px)</label><input type="number" id="sectionXInput" min="0" max="3000" value="100" style="text-align:center;padding:8px;" /></div>
-              <div class="form-group" style="margin-bottom:0;"><label for="sectionYInput" style="font-size:10px;">Y Position (px)</label><input type="number" id="sectionYInput" min="0" max="3000" value="200" style="text-align:center;padding:8px;" /></div>
-              <div class="form-group" style="margin-bottom:0;"><label for="sectionRotationInput" style="font-size:10px;">Rotation (°)</label><input type="number" id="sectionRotationInput" min="-360" max="360" value="0" style="text-align:center;padding:8px;" /></div>
-            </div>
-            <p class="form-hint" style="margin:-4px 0 10px;">Sections auto-arrange. Editing X/Y switches to manual positioning.</p>
-            <div class="section-rows-row">
-              <label for="sectionScaleInput">Scale (0.5× – 2×)</label>
-              <span class="section-rows-badge" id="sectionScaleBadge">1.00×</span>
-              <input type="range" id="sectionScaleInput" min="0.5" max="2" step="0.05" value="1" />
-            </div>
-            <div id="rowOverridesBlock">
-              <div class="row-overrides-hint">Each section has its own position, scale, level and row configuration.</div>
-              <div class="row-overrides-grid" id="rowOverridesGrid"></div>
-            </div>
-          </div>
-        </div>
-
-        <div class="form-group" id="rowTierGroup">
-          <label>Row Tier Distribution (front-to-back per section)</label>
-          <p class="form-hint" style="margin-top:0;margin-bottom:8px;">Assign tiers to rows. Ignored if section has a tier override.</p>
-          <div class="tier-dist-grid" id="tierDistGrid">
-            <div class="tier-dist-item" data-tier-dist="black">
-              <div class="swatch" style="background:var(--tier-black)"></div>
-              <label for="tierRowsBlack">Elite (Black)</label>
-              <input type="number" class="tier-rows-input" data-tier="black" id="tierRowsBlack" min="0" value="2" />
-            </div>
-            <div class="tier-dist-item" data-tier-dist="gold">
-              <div class="swatch" style="background:var(--tier-gold)"></div>
-              <label for="tierRowsGold">Gold (VIP)</label>
-              <input type="number" class="tier-rows-input" data-tier="gold" id="tierRowsGold" min="0" value="2" />
-            </div>
-            <div class="tier-dist-item" data-tier-dist="silver">
-              <div class="swatch" style="background:var(--tier-silver)"></div>
-              <label for="tierRowsSilver">Silver</label>
-              <input type="number" class="tier-rows-input" data-tier="silver" id="tierRowsSilver" min="0" value="1" />
-            </div>
-            <div class="tier-dist-item" data-tier-dist="cyan">
-              <div class="swatch" style="background:var(--tier-cyan)"></div>
-              <label for="tierRowsCyan">Cyan (Standard)</label>
-              <input type="number" class="tier-rows-input" data-tier="cyan" id="tierRowsCyan" min="0" value="1" />
-            </div>
-            <div class="tier-dist-item" data-tier-dist="tier5" style="display:none;">
-              <div class="swatch" style="background:var(--tier-tier5)"></div>
-              <label for="tierRowsTier5">Platinum</label>
-              <input type="number" class="tier-rows-input" data-tier="tier5" id="tierRowsTier5" min="0" value="0" />
-            </div>
-            <div class="tier-dist-item" data-tier-dist="tier6" style="display:none;">
-              <div class="swatch" style="background:var(--tier-tier6)"></div>
-              <label for="tierRowsTier6">Diamond</label>
-              <input type="number" class="tier-rows-input" data-tier="tier6" id="tierRowsTier6" min="0" value="0" />
-            </div>
-          </div>
-          <div class="tier-dist-summary" id="tierDistSummary">Total rows: 6</div>
-        </div>
-
-        <div class="section-divider"><span>Tier Colours</span></div>
-        <div class="form-group" id="tierColorsGroup">
-          <label>Tier Colours</label>
-          <p class="form-hint" style="margin-top:0;margin-bottom:8px;">Edit the tier colours. Applied to seats, tables, the seating plan legend, and both sides of the live ticket preview.</p>
-          <div class="tier-color-grid">
-            <div class="tier-color-item" data-tier-color="black"><span class="tier-color-swatch" id="tierSwatchBlack"></span><label for="tierColorBlack">Elite</label><input type="color" class="tier-color-input" data-tier="black" id="tierColorBlack" value="#1a202c" /></div>
-            <div class="tier-color-item" data-tier-color="gold"><span class="tier-color-swatch" id="tierSwatchGold"></span><label for="tierColorGold">Gold</label><input type="color" class="tier-color-input" data-tier="gold" id="tierColorGold" value="#ecc94b" /></div>
-            <div class="tier-color-item" data-tier-color="silver"><span class="tier-color-swatch" id="tierSwatchSilver"></span><label for="tierColorSilver">Silver</label><input type="color" class="tier-color-input" data-tier="silver" id="tierColorSilver" value="#cbd5e1" /></div>
-            <div class="tier-color-item" data-tier-color="cyan"><span class="tier-color-swatch" id="tierSwatchCyan"></span><label for="tierColorCyan">Standard</label><input type="color" class="tier-color-input" data-tier="cyan" id="tierColorCyan" value="#00FFFF" /></div>
-            <div class="tier-color-item" data-tier-color="tier5" style="display:none;"><span class="tier-color-swatch" id="tierSwatchTier5"></span><label for="tierColorTier5">Platinum</label><input type="color" class="tier-color-input" data-tier="tier5" id="tierColorTier5" value="#a855f7" /></div>
-            <div class="tier-color-item" data-tier-color="tier6" style="display:none;"><span class="tier-color-swatch" id="tierSwatchTier6"></span><label for="tierColorTier6">Diamond</label><input type="color" class="tier-color-input" data-tier="tier6" id="tierColorTier6" value="#f472b6" /></div>
-          </div>
-          <div class="tier-color-actions">
-            <button type="button" class="btn-mini" id="resetTierColorsBtn">↺ Reset to defaults</button>
-          </div>
-        </div>
-
-        <div class="form-group">
-          <label>Total Attendees (Auto-calculated)</label>
-          <input type="text" id="totalCapacity" readonly value="1" style="background:var(--surface-2);font-weight:bold;color:var(--cyan-700);" />
-        </div>
-
-        <div class="section-divider"><span>Ticket Preview</span></div>
-        <div class="form-group">
-          <label for="tierColor">Card Colour Tier</label>
-          <select id="tierColor" required></select>
-        </div>
-        <div class="form-group"><label for="guestName">Guest Name (Preview)</label><input type="text" id="guestName" placeholder="e.g., Jane Smith" /></div>
-        <div class="form-group">
-          <label id="seatLabel">Seat Identifier (Preview)</label>
-          <div class="seat-builder" id="seatBuilderStandard">
-            <input type="text" id="seatBlock" class="seat-part" placeholder="A" maxlength="1" />
-            <input type="text" id="seatRow" class="seat-part" placeholder="A" maxlength="1" />
-            <span class="seat-sep">—</span>
-            <input type="number" id="seatNum" class="seat-part seat-num" placeholder="1" min="1" />
-          </div>
-          <div class="seat-preview-display empty" id="seatPreviewDisplay">Enter block, row and seat to preview</div>
-        </div>
-
-        <div class="export-actions">
-          <button type="button" class="btn btn-ghost" id="exportJsonBtn"><i data-lucide="download"></i> Export JSON</button>
-          <button type="button" class="btn btn-ghost" id="exportCsvBtn"><i data-lucide="table"></i> Export CSV</button>
-        </div>
-
-        <div class="form-actions">
-          <button type="submit" class="btn btn-accent" id="submitBtn"><i data-lucide="shield-check"></i> Save & Finalize Event</button>
-          <a href="create-trip.html" style="text-align:center; font-size:13.5px; color:var(--cyan-600); text-decoration:underline; margin-top:8px; display:block;">Creating a Trip instead? Switch to Trip Studio →</a>
-          <a href="index.html" class="btn btn-ghost">Cancel</a>
-        </div>
-      </form>
-    </div>
-
-    <div class="preview-column">
-      <div>
-        <div class="preview-label-row">
-          <span class="preview-label">Live Ticket Preview</span>
-          <button type="button" class="btn-mini fs-btn" id="flipTicketBtn" title="Flip to see the back">↻ Flip</button>
-        </div>
-        <div class="ticket-flip-container">
-          <div class="ticket-flip-inner" id="ticketFlipInner">
-            <!-- FRONT FACE -->
-            <div class="ticket-flip-face ticket-flip-front">
-              <div class="ticket-card" data-tier="cyan" id="dynamicTicket">
-                <div class="ticket-flip-hint">↻ Tap flip</div>
-                <div class="ticket-header-row">
-                  <div class="ticket-logo">NOVALINK</div>
-                  <div class="ticket-badges"><span class="badge-public">PUBLIC</span><span class="badge-tier" id="prevTierBadge">STANDARD</span></div>
-                </div>
-                <div class="ticket-body-row">
-                  <div class="ticket-info-left">
-                    <div class="event-title" id="prevEventName">EVENT NAME</div>
-                    <div class="event-meta" id="prevDateVenue">DATE · VENUE</div>
-                    <div class="guest-title" id="prevGuestName">GUEST NAME</div>
-                    <div class="guest-meta" id="prevSeat">Seat not assigned</div>
-                    <div class="ref-meta" id="prevRef">Ref: NL-XXXXXX</div>
-                  </div>
-                  <div class="ticket-qr-box"></div>
-                </div>
-                <div class="ticket-location-row"><i data-lucide="map-pin" style="width:12px;height:12px;"></i> <span class="location-text" id="prevVenueLocation">VENUE</span></div>
-                <div class="ticket-barcode-wrap"><div class="barcode"></div><div class="barcode-num">0000 0000 0000 0000</div></div>
-              </div>
-            </div>
-            <!-- BACK FACE -->
-            <div class="ticket-flip-face ticket-flip-back">
-              <div class="ticket-card ticket-back-card" id="dynamicTicketBack">
-                <div class="ticket-header-row">
-                  <div class="ticket-logo">NOVALINK</div>
-                  <div class="ticket-badges"><span class="badge-public">TICKET</span><span class="badge-tier" id="prevBackTierBadge">STANDARD</span></div>
-                </div>
-                <div class="ticket-back-title">Important Information</div>
-                <ul class="ticket-back-terms">
-                  <li>Non-transferable &amp; non-refundable.</li>
-                  <li>Valid for single entry only.</li>
-                  <li>Present this ticket (or QR) at the door.</li>
-                  <li>Right of admission reserved.</li>
-                </ul>
-                <div class="ticket-back-scan">
-                  <div class="ticket-back-qr"></div>
-                  <div class="ticket-back-scan-text">
-                    <div class="ticket-back-scan-label">Scan at entry</div>
-                    <div class="ticket-back-event-name" id="prevBackEventName">EVENT NAME</div>
-                    <div class="ticket-back-ref" id="prevBackRef">Ref: NL-XXXXXX</div>
-                  </div>
-                </div>
-                <div class="ticket-barcode-wrap"><div class="barcode"></div><div class="barcode-num">0000 0000 0000 0000</div></div>
-                <div class="ticket-back-footer">
-                  <span>novalink.co.za</span>
-                  <span>support@novalink</span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div>
-        <div class="preview-label-row">
-          <span class="preview-label">Seating Plan Preview</span>
-          <button type="button" class="btn-mini fs-btn" id="viewSeatingPlanFull" title="View seating plan in full screen">⛶ Full View</button>
-        </div>
-        <div class="seating-plan-preview" id="seatingPlanPreview">
-          <div class="seating-plan-title">Enter seating details to generate layout</div>
-        </div>
-      </div>
-    </div>
-  </div>
-</main>
-
-<div class="fullscreen-overlay" id="fullscreenOverlay">
-  <div class="fs-header">
-    <h2>Full Venue Layout · <span id="fsStageName">STAGE</span></h2>
-    <div class="fs-actions">
-      <span class="fs-field"><label for="fsSectionSpacing">Gap (px)</label><input type="number" id="fsSectionSpacing" min="0" max="500" step="1" value="40" /></span>
-      <button type="button" class="fs-btn active" id="fsToggleAuto">⇔ Auto Layout</button>
-      <button type="button" class="fs-btn" id="fsToggleAxis">↕ Vertical</button>
-      <button type="button" class="fs-btn active" id="fsToggleGrid">Grid</button>
-      <button type="button" class="fs-btn" id="fsResetView">↺ Reset</button>
-      <button type="button" class="fs-btn fs-btn-close" id="closeFullscreen">✕ Close</button>
-    </div>
-  </div>
-  <div class="fs-overlap-warning hidden" id="fsOverlapWarning"><span class="ow-icon">!</span><span id="fsOverlapText"></span></div>
-  <div class="fs-level-bar" id="fsLevelBar"></div>
-  <div class="fs-canvas-outer">
-    <div class="fs-canvas" id="fsCanvas">
-      <div class="fs-stage-marker" id="fsStageMarker">STAGE</div>
-      <div class="fs-empty-hint" id="fsEmptyHint" style="display:none;">Add sections to see them placed here</div>
-    </div>
-  </div>
-</div>
-
-<div class="sp-fullscreen" id="seatingPlanOverlay">
-  <div class="sp-header">
-    <h2>Seating Plan · <span id="spModeLabel">ROWS</span></h2>
-    <div class="sp-actions">
-      <span class="sp-info" id="spSummary" style="color:rgba(255,255,255,0.7);font-size:11.5px;font-weight:700;"></span>
-      <button type="button" class="fs-btn fs-btn-close" id="closeSeatingPlanFull">✕ Close</button>
-    </div>
-  </div>
-
-  <div class="sp-seat-finder" id="seatFinder">
-    <span class="spf-title">🔍 Seat Identifier</span>
-    <span class="spf-field"><label for="seatFinderSection">Section</label><select id="seatFinderSection"></select></span>
-    <span class="spf-field"><label for="seatFinderRow">Row</label><select id="seatFinderRow"></select></span>
-    <span class="spf-field"><label for="seatFinderSeat">Seat</label><input type="number" id="seatFinderSeat" min="1" value="1" /></span>
-    <button type="button" class="spf-btn primary" id="seatFinderFindBtn">Find Seat</button>
-    <button type="button" class="spf-btn" id="seatFinderClearBtn">Clear</button>
-    <span class="spf-status info" id="seatFinderStatus">Pick a section, row and seat</span>
-  </div>
-
-  <div class="sp-body" id="spBody">
-    <div class="sp-inner" id="seatingPlanFullInner">
-      <div class="seating-plan-title">Add sections to begin</div>
-    </div>
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
-
 <script src="routing-engine.js"></script>
 <script>
 (function(){
@@ -1151,7 +41,7 @@ var TIER_NAMES = Object.assign({}, TIER_DEFAULT_NAMES);
 var TIER_PRICES = { black: 0, gold: 0, silver: 0, cyan: 0, tier5: 0, tier6: 0 };
 
 var MAX_TIERS = 6;
-var MIN_TIERS = 2;                    // <-- minimum of 2
+var MIN_TIERS = 2;
 var DEFAULT_TIERS = 4;
 var LARGE_VENUE_THRESHOLD = 5000;
 var activeTierCount = DEFAULT_TIERS;
@@ -1161,7 +51,21 @@ function isTierActive(t){ return getActiveTiers().indexOf(t) !== -1; }
 function tierIdToCap(t){ return t.charAt(0).toUpperCase() + t.slice(1); }
 function getTierLabel(tier){ return TIER_NAMES[tier] || tier; }
 
-var currentPlan = { id: "standard", fee: 7, limit: 500 };
+// Updated Plan object to hold feature flags
+var currentPlan = { 
+  id: "standard", 
+  fee: 7, 
+  limit: 500,
+  features: {
+    barcode: true,
+    verticalBarcode: false,
+    customDesign: false,
+    scannerStaff: 5,
+    whiteLabel: false,
+    multiDay: false,
+    unlimitedScanners: false
+  }
+};
 
 var MARKER_TYPES = {
   exit:     { color: '#10b981', icon: '↗',  defaultLabel: 'EXIT' },
@@ -1404,12 +308,10 @@ document.addEventListener("DOMContentLoaded", function(){
       var distItem = document.querySelector('.tier-dist-item[data-tier-dist="' + t + '"]');
       if (distItem) distItem.style.display = display;
     });
-    // Clear any section override that points to a now-inactive tier
     var idx = currentEditingSection;
     if (sectionTierOverrides[idx] && !isTierActive(sectionTierOverrides[idx])) {
       delete sectionTierOverrides[idx];
     }
-    // If the preview is showing a now-inactive tier, switch to the lowest active tier
     var previewSel = $("tierColor");
     if (previewSel && !isTierActive(previewSel.value)) {
       var fallback = active[active.length - 1] || "cyan";
@@ -1528,6 +430,51 @@ document.addEventListener("DOMContentLoaded", function(){
     updateRevenueCalculator();
   }
 
+  /* ============ PLAN FEATURE RESTRICTIONS ============ */
+  function applyPlanRestrictions() {
+    updateRevenueCalculator();
+
+    // 1. Barcode Toggle (Assuming a UI element exists)
+    // Standard+ has barcode. Basic only has QR.
+    var barcodeToggle = $("barcodeToggle"); 
+    if (barcodeToggle) {
+        var barcodeRow = barcodeToggle.closest('.toggle-row');
+        barcodeToggle.disabled = !currentPlan.features.barcode;
+        if (barcodeRow) barcodeRow.classList.toggle('locked', !currentPlan.features.barcode);
+        if (!currentPlan.features.barcode && barcodeToggle.checked) {
+            barcodeToggle.checked = false;
+            barcodeToggle.dispatchEvent(new Event('change'));
+        }
+    }
+
+    // 2. Vertical Barcode / Custom Design (Premium+)
+    var customDesignToggle = $("customDesignToggle"); 
+    if (customDesignToggle) {
+        var designRow = customDesignToggle.closest('.toggle-row');
+        customDesignToggle.disabled = !currentPlan.features.customDesign;
+        if (designRow) designRow.classList.toggle('locked', !currentPlan.features.customDesign);
+        if (!currentPlan.features.customDesign && customDesignToggle.checked) {
+            customDesignToggle.checked = false;
+            customDesignToggle.dispatchEvent(new Event('change'));
+        }
+    }
+
+    // 3. White-label / Multi-day (Enterprise only)
+    var whiteLabelToggle = $("whiteLabelToggle"); 
+    if (whiteLabelToggle) {
+        var wlRow = whiteLabelToggle.closest('.toggle-row');
+        whiteLabelToggle.disabled = !currentPlan.features.whiteLabel;
+        if (wlRow) wlRow.classList.toggle('locked', !currentPlan.features.whiteLabel);
+        if (!currentPlan.features.whiteLabel && whiteLabelToggle.checked) {
+            whiteLabelToggle.checked = false;
+            whiteLabelToggle.dispatchEvent(new Event('change'));
+        }
+    }
+
+    // Optional: Display a toast warning
+    // showToast("Plan updated: " + currentPlan.id.toUpperCase() + " features applied.", "info");
+  }
+
   /* ============ TIER LABEL SYNC ============ */
   function syncTierNamesEverywhere() {
     rebuildTicketTierDropdown();
@@ -1551,18 +498,14 @@ document.addEventListener("DOMContentLoaded", function(){
     var seatCode = NovalinkRoutingEngine.buildSeatCode($("seatBlock").value, $("seatRow").value, $("seatNum").value);
     var venue = $("venueAddress").value || "VENUE";
 
-    // Front
     $("prevEventName").textContent = eventName;
     $("prevDateVenue").textContent = dateVenue;
     $("prevGuestName").textContent = guestName;
     $("prevSeat").textContent = seatCode || "Seat not assigned";
     $("prevVenueLocation").textContent = venue;
-
-    // Back
     $("prevBackEventName").textContent = eventName;
     $("prevBackRef").textContent = "Ref: " + (seatCode ? seatCode.replace(/\s/g, "") : "NL-XXXXXX");
 
-    // Tier labels + palette
     var tier = $("tierColor").value;
     if (!isTierActive(tier)) tier = getActiveTiers()[getActiveTiers().length - 1] || "cyan";
     var tierLabel = (TIER_NAMES[tier] || tier).toUpperCase();
@@ -2814,7 +1757,7 @@ document.addEventListener("DOMContentLoaded", function(){
       tierColours: TIER_COLORS,
       tierNames: TIER_NAMES,
       tierPrices: TIER_PRICES,
-      plan: { id: currentPlan.id, fee: currentPlan.fee, limit: currentPlan.limit },
+      plan: { id: currentPlan.id, fee: currentPlan.fee, limit: currentPlan.limit, features: currentPlan.features },
       seatingMode: tableMode ? "tables" : "rows",
       tableConfig: tableMode ? {
         shape: tableConfig.shape, chairsAround: tableConfig.chairsAround, chairsPerSide: tableConfig.chairsPerSide,
@@ -3003,12 +1946,24 @@ document.addEventListener("DOMContentLoaded", function(){
     radio.addEventListener("change", function(){
       var card = this.closest(".plan-card");
       if (!card) return;
+      
       currentPlan = {
         id: this.value,
         fee: parseFloat(this.dataset.fee) || 7,
-        limit: parseInt(this.dataset.limit) || 500
+        limit: parseInt(this.dataset.limit) || 500,
+        features: {
+          barcode: this.value !== "basic",
+          verticalBarcode: this.value === "premium" || this.value === "enterprise",
+          customDesign: this.value === "premium" || this.value === "enterprise",
+          scannerStaff: this.value === "basic" ? 2 : (this.value === "standard" ? 5 : (this.value === "premium" ? 15 : 9999)),
+          whiteLabel: this.value === "enterprise",
+          multiDay: this.value === "enterprise",
+          unlimitedScanners: this.value === "enterprise"
+        }
       };
+      
       updatePlanDisplay();
+      applyPlanRestrictions();
     });
   });
 
@@ -3069,12 +2024,10 @@ document.addEventListener("DOMContentLoaded", function(){
   $("flipTicketBtn").addEventListener("click", function(){
     setTicketFlipped(!ticketFlipped);
   });
-  // Also allow clicking the ticket itself to flip
   var flipContainer = $("ticketFlipInner");
   if (flipContainer) {
     flipContainer.style.cursor = "pointer";
     flipContainer.addEventListener("click", function(e){
-      // Ignore clicks on interactive elements
       if (e.target.closest("button, input, select, a")) return;
       setTicketFlipped(!ticketFlipped);
     });
@@ -3407,10 +2360,25 @@ document.addEventListener("DOMContentLoaded", function(){
     var v = parseFloat(inp.value);
     TIER_PRICES[inp.dataset.tier] = (isNaN(v) || v < 0) ? 0 : v;
   });
+  
   var checkedPlan = document.querySelector('input[name="plan"]:checked');
   if (checkedPlan) {
-    currentPlan = { id: checkedPlan.value, fee: parseFloat(checkedPlan.dataset.fee) || 7, limit: parseInt(checkedPlan.dataset.limit) || 500 };
+    currentPlan = { 
+      id: checkedPlan.value, 
+      fee: parseFloat(checkedPlan.dataset.fee) || 7, 
+      limit: parseInt(checkedPlan.dataset.limit) || 500,
+      features: {
+        barcode: checkedPlan.value !== "basic",
+        verticalBarcode: checkedPlan.value === "premium" || checkedPlan.value === "enterprise",
+        customDesign: checkedPlan.value === "premium" || checkedPlan.value === "enterprise",
+        scannerStaff: checkedPlan.value === "basic" ? 2 : (checkedPlan.value === "standard" ? 5 : (checkedPlan.value === "premium" ? 15 : 9999)),
+        whiteLabel: checkedPlan.value === "enterprise",
+        multiDay: checkedPlan.value === "enterprise",
+        unlimitedScanners: checkedPlan.value === "enterprise"
+      }
+    };
   }
+  
   updatePlanDisplay();
 
   rebuildLevelsList(); rebuildLevelSelect(); rebuildSectionTabs();
@@ -3427,11 +2395,8 @@ document.addEventListener("DOMContentLoaded", function(){
   updateTierCountOptions();
   updateTierVisibility();
   updateRevenueCalculator();
+  applyPlanRestrictions();
 });
 n
 })();
-</script>
-</body>
-  </html>
-
-Certian features arent supposed to be available to every tier dont include tge image in code
+  </script>
