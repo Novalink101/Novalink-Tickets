@@ -756,29 +756,12 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 
 <div class="toast" id="toast"></div>
 
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script src="routing-engine.js"></script>
 <script>
 (function(){
 'use strict';
 
 function $(id){ return document.getElementById(id); }
-
-var FIREBASE = {
-  apiKey: "AIzaSyBdb-NEf2kwzF-rzIyPnEYV9YoSZ9OdyoI",
-  authDomain: "novalink-5e3c3.firebaseapp.com",
-  projectId: "novalink-5e3c3",
-  storageBucket: "novalink-5e3c3.firebasestorage.app",
-  messagingSenderId: "483408592364",
-  appId: "1:483408592364:web:c150c0d7e3c908fd1354c9"
-};
-
-var db = null;
-try {
-  if (!firebase.apps.length) firebase.initializeApp(FIREBASE);
-  db = firebase.firestore();
-} catch(e){ console.error("Firebase init failed", e); }
 
 // ===== STATE =====
 var canvasWidth = 1200;
@@ -805,7 +788,6 @@ var canvasElements = [];
 var nextCanvasElementId = 1;
 var expandedElementId = null;
 var lastFoundSeat = null;
-var currentEventId = null;
 
 var MARKER_TYPES = {
   exit:     { color: '#10b981', icon: '↗',  defaultLabel: 'EXIT' },
@@ -2200,23 +2182,36 @@ document.addEventListener("DOMContentLoaded", function(){
     showToast("Venue exported as CSV", "success");
   }
 
-  async function saveEvent() {
-    if (!db) { showToast("Firebase not connected", "error", 5000); return false; }
+  // Pure front-end "save": store the event payload in localStorage and
+  // generate a local reference ID. No network calls.
+  var STORAGE_KEY = "novalink_events";
+  function generateLocalEventId() {
+    return "local-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
+  }
+  function saveEvent() {
     var payload = Object.assign({
-      eventName: $("eventName").value, hostName: $("hostName").value, hostEmail: $("hostEmail").value,
-      city: $("city").value, cost: $("cost").value,
-      startDate: $("startDate").value, startTime: $("startTime").value,
+      eventName: $("eventName").value,
+      hostName: $("hostName").value,
+      hostEmail: $("hostEmail").value,
+      city: $("city").value,
+      cost: $("cost").value,
+      startDate: $("startDate").value,
+      startTime: $("startTime").value,
       venueAddress: $("venueAddress").value,
       tierColor: $("tierColor").value,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
+      createdAt: new Date().toISOString()
     }, buildVenuePayload());
     try {
-      var ref = await db.collection("events").add(payload);
-      currentEventId = ref.id;
-      console.log("Saved:", ref.id);
-      showToast("Event saved · " + ref.id, "success");
+      var existing = [];
+      try { existing = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); } catch(e) { existing = []; }
+      if (!Array.isArray(existing)) existing = [];
+      var id = generateLocalEventId();
+      payload.id = id;
+      existing.push(payload);
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(existing));
+      showToast("Event saved locally · " + id, "success");
       return true;
-    } catch(err) {
+    } catch (err) {
       console.error(err);
       showToast("Save failed: " + err.message, "error", 5000);
       return false;
@@ -2506,11 +2501,11 @@ document.addEventListener("DOMContentLoaded", function(){
     $(id).addEventListener("input", function() { updateTierSummary(); renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
   });
 
-  $("createEventForm").addEventListener("submit", async function(e) {
+  $("createEventForm").addEventListener("submit", function(e) {
     e.preventDefault();
     var btn = $("submitBtn"); var orig = btn.innerHTML;
     btn.disabled = true; btn.innerHTML = 'Saving...';
-    await saveEvent();
+    saveEvent();
     btn.disabled = false; btn.innerHTML = orig;
     if(window.lucide) lucide.createIcons();
   });
@@ -2542,4 +2537,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-  </html>
+                                                                                                                                                          </html>
