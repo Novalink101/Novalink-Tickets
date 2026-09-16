@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Venue Shapes · Rectangular Stadium Builder · Drag & Drop</title>
+  <title>Venue Shapes · Rectangular Stadium Builder</title>
   <script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
   <style>
     /* ===== GLOBAL ===== */
@@ -12,7 +12,7 @@
       --bg: #ffffff; --bg-2: #f6f8fb; --surface: #ffffff; --surface-2: #f1f4f8;
       --border: #e4e9f0; --border-2: #d3dbe5;
       --text: #0a0f14; --text-2: #2b3644; --text-muted: #6b7787;
-      --radius: 14px; --max-width: 1320px;
+      --radius: 14px; --max-width: 1180px;
       --font: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
       --navy: #1e2f4d; --cyan-logo: #7dd3e8;
     }
@@ -44,8 +44,8 @@
 
     /* ===== LAYOUT ===== */
     .form-wrapper { flex: 1; padding: 40px 0; display: flex; align-items: flex-start; }
-    .studio-layout { display: grid; grid-template-columns: 1fr 1.2fr; gap: 40px; align-items: start; width: 100%; }
-    @media (max-width: 1000px) { .studio-layout { grid-template-columns: 1fr; gap: 24px; } }
+    .studio-layout { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; align-items: start; width: 100%; }
+    @media (max-width: 900px) { .studio-layout { grid-template-columns: 1fr; gap: 24px; } }
 
     /* ===== CARDS ===== */
     .form-card {
@@ -95,6 +95,23 @@
     .btn-ghost:hover { background: var(--surface-2); border-color: var(--cyan-500); color: var(--cyan-700); }
     .btn i { width: 18px; height: 18px; }
     .form-actions { margin-top: 28px; display: flex; flex-direction: column; gap: 12px; }
+
+    /* ===== TOGGLES ===== */
+    .toggle-row {
+      display: flex; align-items: center; justify-content: space-between;
+      padding: 14px 16px; background: var(--bg-2); border: 1px solid var(--border-2);
+      border-radius: 10px; margin-bottom: 12px;
+    }
+    .toggle-row .toggle-label { font-size: 13px; font-weight: 600; color: var(--text); }
+    .toggle-switch { position: relative; display: inline-block; width: 44px; height: 24px; flex-shrink: 0; }
+    .toggle-switch input { opacity: 0; width: 0; height: 0; }
+    .toggle-slider { position: absolute; cursor: pointer; inset: 0; background: #cbd5e1; transition: .3s; border-radius: 34px; }
+    .toggle-slider:before {
+      position: absolute; content: ""; height: 18px; width: 18px; left: 3px; bottom: 3px;
+      background: white; transition: .3s; border-radius: 50%;
+    }
+    .toggle-switch input:checked + .toggle-slider { background: var(--cyan-500); }
+    .toggle-switch input:checked + .toggle-slider:before { transform: translateX(20px); }
 
     /* ===== VENUE SPECIFIC ===== */
     .venue-shape-panel {
@@ -204,65 +221,53 @@
     }
     .barcode-num { font-family: monospace; font-size: 10px; font-weight: 700; color: #000; letter-spacing: 2px; }
 
-    /* ===== SEATING PLAN PREVIEW / DRAG CANVAS ===== */
+    /* ===== SEATING PLAN PREVIEW ===== */
     .seating-plan-preview {
       background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius);
-      padding: 16px; height: 600px; overflow: hidden; position: relative;
+      padding: 20px; max-height: 640px; overflow-y: auto;
       box-shadow: 0 10px 20px rgba(10, 15, 20, 0.05);
-      user-select: none;
-      display: flex;
-      flex-direction: column;
     }
-    .drag-canvas {
-      flex: 1; position: relative; background: #f9fbfd; border-radius: 8px;
-      border: 2px dashed var(--border-2); overflow: auto;
-      min-height: 400px; cursor: grab;
-      background-image: radial-gradient(circle at 20% 30%, rgba(34,211,238,0.04) 0%, transparent 40%),
-                        radial-gradient(circle at 80% 70%, rgba(6,182,212,0.04) 0%, transparent 40%);
+    .seating-plan-title {
+      font-size: 11px; font-weight: 800; text-transform: uppercase;
+      letter-spacing: 1px; color: var(--text-muted); margin-bottom: 16px; text-align: center;
     }
-    .drag-canvas:active { cursor: grabbing; }
-    .drag-item {
-      position: absolute; background: #ffffff; border: 2px solid var(--border-2);
-      border-radius: 8px; padding: 6px 10px; font-size: 10px; font-weight: 700;
-      color: var(--navy); box-shadow: 0 4px 10px rgba(0,0,0,0.06);
-      cursor: move; user-select: none; display: flex; flex-direction: column;
-      align-items: center; justify-content: center; min-width: 60px; min-height: 40px;
-      transition: box-shadow 0.15s;
-      text-align: center; line-height: 1.2;
-      white-space: nowrap;
-      z-index: 10;
+    .stadium-preview-wrapper {
+      display: flex; flex-direction: column; align-items: center; gap: 4px;
     }
-    .drag-item:hover { box-shadow: 0 8px 18px rgba(0,0,0,0.12); border-color: var(--cyan-400); }
-    .drag-item .block-name { font-size: 10px; letter-spacing: 0.5px; }
-    .drag-item .block-meta { font-size: 8px; font-weight: 600; color: var(--text-muted); }
-    .drag-item.cyan { background: #22d3ee; color: #04161c; border-color: #0891b2; }
-    .drag-item.silver { background: #cbd5e1; color: #1e2f4d; border-color: #94a3b8; }
-    .drag-item.gold { background: #ecc94b; color: #744210; border-color: #b7791f; }
-    .drag-item.black { background: #1a202c; color: #fff; border-color: #0a0f14; }
-    .drag-item.black .block-meta { color: #a0aec0; }
+    .stadium-side {
+      display: flex; flex-direction: column; align-items: center; gap: 2px;
+      width: 100%;
+    }
+    .stadium-side-label {
+      font-size: 9px; font-weight: 800; color: var(--cyan-700);
+      letter-spacing: 2px; text-transform: uppercase; margin: 4px 0;
+    }
+    .stadium-row {
+      display: flex; gap: 2px; justify-content: center; width: 100%;
+    }
+    .stadium-block {
+      background: #fff; border: 1px solid var(--border-2); border-radius: 4px;
+      padding: 4px 6px; font-size: 9px; font-weight: 700; color: var(--navy);
+      display: flex; align-items: center; justify-content: center;
+      min-width: 24px; min-height: 20px; flex-shrink: 0;
+      box-shadow: 0 1px 2px rgba(0,0,0,0.04);
+    }
+    .stadium-block.cyan { background: #22d3ee; color: #04161c; }
+    .stadium-block.silver { background: #cbd5e1; color: #4a5568; }
+    .stadium-block.gold { background: #ecc94b; color: #744210; }
+    .stadium-block.black { background: #1a202c; color: #fff; }
 
-    .canvas-hint {
-      position: absolute; bottom: 12px; left: 50%; transform: translateX(-50%);
-      font-size: 11px; color: var(--text-muted); background: rgba(255,255,255,0.9);
-      padding: 6px 16px; border-radius: 20px; border: 1px solid var(--border);
-      backdrop-filter: blur(4px); pointer-events: none; z-index: 20;
-      font-style: italic; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    .stadium-corner {
+      font-size: 8px; color: var(--text-muted); font-weight: 700;
+      letter-spacing: 1px; text-transform: uppercase;
     }
 
-    .toolbar-row {
-      display: flex; justify-content: space-between; align-items: center;
-      margin-bottom: 12px; gap: 8px; flex-wrap: wrap;
+    .field-diagram {
+      background: #e8f4f8; border: 2px solid #94a3b8; border-radius: 6px;
+      padding: 12px 8px; text-align: center; font-size: 10px; font-weight: 800;
+      color: var(--navy); letter-spacing: 2px; text-transform: uppercase;
+      min-width: 120px;
     }
-    .toolbar-btn {
-      background: var(--surface); border: 1px solid var(--border-2); border-radius: 8px;
-      padding: 8px 14px; font-size: 11px; font-weight: 700; cursor: pointer;
-      font-family: inherit; display: inline-flex; align-items: center; gap: 6px;
-      color: var(--text-2); transition: all 0.15s;
-    }
-    .toolbar-btn:hover { border-color: var(--cyan-500); background: var(--cyan-50); color: var(--cyan-700); }
-    .toolbar-btn.danger:hover { border-color: #dc2626; background: #fef2f2; color: #b91c1c; }
-    .toolbar-btn i { width: 14px; height: 14px; }
-
     .fullscreen-overlay {
       position: fixed; inset: 0; background: #0a0f14; z-index: 9999;
       display: none; flex-direction: column; padding: 20px;
@@ -331,7 +336,7 @@
       <svg class="mark" viewBox="0 0 60 74"><path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/><path fill="#7dd3e8" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/></svg>
       <span class="wordmark">NOVALINK</span>
     </a>
-    <span class="studio-badge">Event Studio · Drag</span>
+    <span class="studio-badge">Event Studio</span>
   </div>
 </header>
 
@@ -340,7 +345,7 @@
     <div class="form-card">
       <div class="form-header">
         <h1>Rectangular Stadium</h1>
-        <p>Add shapes (blocks) to the canvas & drag them anywhere.</p>
+        <p>Pick length, width, blocks per side, and up to 4 stands per side (Top / Middle / Low).</p>
       </div>
 
       <form id="stadiumForm">
@@ -352,7 +357,7 @@
             <button type="button" class="shape-btn" data-shape="oval">⭕ Oval</button>
             <button type="button" class="shape-btn" data-shape="custom">🔷 Custom</button>
           </div>
-          <p class="form-hint">Choose a base shape. The rectangular stadium uses 4 sides (A, B, C, D).</p>
+          <p class="form-hint">Choose a base shape. The rectangular stadium uses 4 sides (A, B, C, D) around a central field.</p>
         </div>
 
         <div class="section-divider"><span>Field Dimensions</span></div>
@@ -366,7 +371,7 @@
             <input type="number" id="fieldWidth" min="20" max="300" value="80" />
           </div>
         </div>
-        <p class="form-hint">Standard soccer pitch: 100–110m × 64–75m.</p>
+        <p class="form-hint">Standard soccer pitch: 100–110m × 64–75m. Adjust to your venue.</p>
 
         <div class="section-divider"><span>Stands &amp; Blocks</span></div>
         <div class="venue-shape-panel">
@@ -385,12 +390,12 @@
               </select>
             </div>
           </div>
-          <p class="form-hint">Each side gets the same number of blocks and stand levels.</p>
+          <p class="form-hint">Each side gets the same number of blocks and stand levels. Up to 4 stands per side (Top/Middle/Low).</p>
         </div>
 
         <div class="venue-shape-panel stadium-config" id="stadiumConfigPanel">
           <h4><i data-lucide="grid" style="width:14px;height:14px;"></i> Stand Configuration</h4>
-          <p class="form-hint" style="margin-bottom:10px;">Set rows and seats per block for each stand level.</p>
+          <p class="form-hint" style="margin-bottom:10px;">Set the number of rows and seats per block for each stand level. These apply to all sides.</p>
 
           <div class="side-config-row">
             <span class="side-label">Top</span>
@@ -471,17 +476,9 @@
       </div>
 
       <div>
-        <div class="preview-label">Drag & Drop Canvas · Add Shapes</div>
+        <div class="preview-label">Stadium Layout Preview</div>
         <div class="seating-plan-preview" id="seatingPlanPreview">
-          <div class="toolbar-row">
-            <button class="toolbar-btn" id="addBlockBtn"><i data-lucide="plus-circle"></i> Add Block</button>
-            <button class="toolbar-btn danger" id="clearCanvasBtn"><i data-lucide="trash-2"></i> Clear All</button>
-            <button class="toolbar-btn" id="resetCanvasBtn"><i data-lucide="rotate-ccw"></i> Reset</button>
-          </div>
-          <div class="drag-canvas" id="dragCanvas">
-            <!-- Draggable items will be added here dynamically -->
-          </div>
-          <div class="canvas-hint">Drag blocks to position them · Double-click to remove</div>
+          <div class="seating-plan-title">Configure stadium to generate layout</div>
         </div>
       </div>
     </div>
@@ -496,11 +493,9 @@
   // ---- STATE ----
   var stadiumShape = 'rectangular';
   var liveRef = 'NL-' + Math.random().toString(36).substring(2,8).toUpperCase();
-  var blockCounter = 0; // for unique IDs
 
   // ---- HELPERS ----
   function blockLabel(index) { return String.fromCharCode(65 + index); } // A, B, C...
-
   function updateTicketPreview() {
     $('prevEventName').textContent = 'STADIUM EVENT';
     $('prevDateVenue').textContent = 'DATE · VENUE';
@@ -530,6 +525,7 @@
     var levels = getStandLevels();
     var config = getStandConfig();
     var total = 0;
+    // 4 sides
     for (var s = 0; s < 4; s++) {
       for (var b = 0; b < blocks; b++) {
         if (levels >= 1) total += config.low.rows * config.low.seats;
@@ -541,164 +537,115 @@
     return total;
   }
 
-  // =========================================================================
-  // DRAG & DROP CANVAS
-  // =========================================================================
-  var canvas = $('dragCanvas');
-  var draggables = [];
-  var blockCounter = 0;
-
-  // Create a new draggable block
-  function createBlock(x, y, name, tier, meta) {
-    var el = document.createElement('div');
-    el.className = 'drag-item ' + tier;
-    el.style.left = x + 'px';
-    el.style.top = y + 'px';
-    el.dataset.id = 'block-' + (blockCounter++);
-    el.dataset.tier = tier;
-    el.innerHTML = '<span class="block-name">' + name + '</span>' +
-                   (meta ? '<span class="block-meta">' + meta + '</span>' : '');
-    canvas.appendChild(el);
-
-    // --- DRAG LOGIC ---
-    var isDragging = false;
-    var startX, startY, origX, origY;
-
-    function onMouseDown(e) {
-      // only left click and not on remove (we'll use dblclick for remove)
-      if (e.button !== 0) return;
-      e.preventDefault();
-      isDragging = true;
-      startX = e.clientX;
-      startY = e.clientY;
-      origX = parseInt(el.style.left) || 0;
-      origY = parseInt(el.style.top) || 0;
-      el.style.zIndex = 1000; // bring to front while dragging
-      el.style.cursor = 'grabbing';
-      document.addEventListener('mousemove', onMouseMove);
-      document.addEventListener('mouseup', onMouseUp);
-    }
-
-    function onMouseMove(e) {
-      if (!isDragging) return;
-      e.preventDefault();
-      var dx = e.clientX - startX;
-      var dy = e.clientY - startY;
-      var newX = origX + dx;
-      var newY = origY + dy;
-
-      // boundary constraints (relative to canvas)
-      var maxX = canvas.clientWidth - el.offsetWidth;
-      var maxY = canvas.clientHeight - el.offsetHeight;
-      newX = Math.max(0, Math.min(newX, maxX));
-      newY = Math.max(0, Math.min(newY, maxY));
-
-      el.style.left = newX + 'px';
-      el.style.top = newY + 'px';
-    }
-
-    function onMouseUp(e) {
-      if (!isDragging) return;
-      isDragging = false;
-      el.style.zIndex = 10; // reset
-      el.style.cursor = 'move';
-      document.removeEventListener('mousemove', onMouseMove);
-      document.removeEventListener('mouseup', onMouseUp);
-    }
-
-    el.addEventListener('mousedown', onMouseDown);
-
-    // double-click to remove
-    el.addEventListener('dblclick', function(e) {
-      e.stopPropagation();
-      el.remove();
-      // remove from draggables array if needed (we don't maintain a separate list)
-    });
-
-    // touch support (basic)
-    el.addEventListener('touchstart', function(e) {
-      var touch = e.touches[0];
-      var mouseEvent = new MouseEvent('mousedown', {
-        clientX: touch.clientX,
-        clientY: touch.clientY,
-        button: 0
-      });
-      el.dispatchEvent(mouseEvent);
-    }, { passive: true });
-
-    el.addEventListener('touchmove', function(e) {
-      e.preventDefault();
-      var touch = e.touches[0];
-      var mouseEvent = new MouseEvent('mousemove', {
-        clientX: touch.clientX,
-        clientY: touch.clientY
-      });
-      document.dispatchEvent(mouseEvent);
-    }, { passive: false });
-
-    el.addEventListener('touchend', function() {
-      var mouseEvent = new MouseEvent('mouseup', {});
-      document.dispatchEvent(mouseEvent);
-    });
-
-    return el;
-  }
-
-  // ---- ADD BLOCK ----
-  function addBlock() {
-    // Generate a unique name
-    var existing = canvas.querySelectorAll('.drag-item').length;
-    var name = 'BLK-' + String.fromCharCode(65 + (existing % 26)) + (Math.floor(existing / 26) + 1);
-    var tier = $('tierColor').value;
+  // ---- RENDER STADIUM PREVIEW ----
+  function renderStadiumPreview() {
+    var container = $('seatingPlanPreview');
+    container.innerHTML = '';
+    var blocksPerSide = getBlocksPerSide();
+    var standLevels = getStandLevels();
     var config = getStandConfig();
-    var meta = config.low.rows + 'r × ' + config.low.seats + 's';
 
-    // Random position inside canvas (with margin)
-    var maxX = Math.max(10, canvas.clientWidth - 100);
-    var maxY = Math.max(10, canvas.clientHeight - 70);
-    var x = Math.floor(Math.random() * maxX);
-    var y = Math.floor(Math.random() * maxY);
+    var wrapper = document.createElement('div');
+    wrapper.className = 'stadium-preview-wrapper';
 
-    createBlock(x, y, name, tier, meta);
+    // Helper to create a side row
+    function createSideRow(sideName, levelName, numBlocks, rows, seatsPerBlock) {
+      var sideDiv = document.createElement('div');
+      sideDiv.className = 'stadium-side';
+
+      var label = document.createElement('div');
+      label.className = 'stadium-side-label';
+      label.textContent = 'SIDE ' + sideName + ' · ' + levelName.toUpperCase();
+      sideDiv.appendChild(label);
+
+      // Render a few rows (visual representation)
+      var displayRows = Math.min(rows, 3); // Show max 3 rows per stand in preview
+      for (var r = 0; r < displayRows; r++) {
+        var rowDiv = document.createElement('div');
+        rowDiv.className = 'stadium-row';
+        for (var b = 0; b < numBlocks; b++) {
+          var blockEl = document.createElement('div');
+          blockEl.className = 'stadium-block ' + $('tierColor').value;
+          blockEl.textContent = blockLabel(b) + (r + 1);
+          blockEl.title = 'Side ' + sideName + ' · ' + levelName + ' · Block ' + blockLabel(b) + ' · Row ' + (r + 1) + ' · ' + seatsPerBlock + ' seats';
+          rowDiv.appendChild(blockEl);
+        }
+        sideDiv.appendChild(rowDiv);
+      }
+      if (rows > 3) {
+        var more = document.createElement('div');
+        more.className = 'stadium-corner';
+        more.textContent = '... ' + (rows - 3) + ' more rows';
+        sideDiv.appendChild(more);
+      }
+      return sideDiv;
+    }
+
+    // Sides: A, B, C, D (top, right, bottom, left visually)
+    // Top side (A)
+    if (standLevels >= 3) wrapper.appendChild(createSideRow('A', 'Top', blocksPerSide, config.top.rows, config.top.seats));
+    if (standLevels >= 2) wrapper.appendChild(createSideRow('A', 'Middle', blocksPerSide, config.middle.rows, config.middle.seats));
+    wrapper.appendChild(createSideRow('A', 'Low', blocksPerSide, config.low.rows, config.low.seats));
+
+    // Field
+    var fieldDiv = document.createElement('div');
+    fieldDiv.className = 'field-diagram';
+    fieldDiv.textContent = 'FIELD ' + getFieldLength() + 'm × ' + getFieldWidth() + 'm';
+    wrapper.appendChild(fieldDiv);
+
+    // Bottom side (C) - low to top visually
+    wrapper.appendChild(createSideRow('C', 'Low', blocksPerSide, config.low.rows, config.low.seats));
+    if (standLevels >= 2) wrapper.appendChild(createSideRow('C', 'Middle', blocksPerSide, config.middle.rows, config.middle.seats));
+    if (standLevels >= 3) wrapper.appendChild(createSideRow('C', 'Top', blocksPerSide, config.top.rows, config.top.seats));
+
+    // Note about left/right sides
+    var note = document.createElement('div');
+    note.className = 'stadium-corner';
+    note.style.marginTop = '8px';
+    note.textContent = 'Sides B & D also configured (left/right)';
+    wrapper.appendChild(note);
+
+    container.appendChild(wrapper);
+    container.appendChild(createLegend());
   }
 
-  // ---- CLEAR CANVAS ----
-  function clearCanvas() {
-    var items = canvas.querySelectorAll('.drag-item');
-    items.forEach(function(el) { el.remove(); });
-    blockCounter = 0;
+  function createLegend() {
+    var legend = document.createElement('div');
+    legend.className = 'layout-legend';
+    legend.style.display = 'flex';
+    legend.style.justifyContent = 'center';
+    legend.style.gap = '12px';
+    legend.style.marginTop = '16px';
+    legend.style.fontSize = '10px';
+    legend.style.color = 'var(--text-muted)';
+    legend.style.flexWrap = 'wrap';
+
+    [{ cls: 'black', label: 'Elite' }, { cls: 'gold', label: 'Gold' }, { cls: 'silver', label: 'Silver' }, { cls: 'cyan', label: 'Cyan' }].forEach(function(it) {
+      var el = document.createElement('div');
+      el.style.display = 'flex';
+      el.style.alignItems = 'center';
+      el.style.gap = '4px';
+      el.innerHTML = '<span style="width:10px;height:10px;border-radius:2px;background:' +
+        (it.cls === 'black' ? '#1a202c' : it.cls === 'gold' ? '#ecc94b' : it.cls === 'silver' ? '#cbd5e1' : '#22d3ee') +
+        ';display:inline-block;"></span> ' + it.label;
+      legend.appendChild(el);
+    });
+    return legend;
   }
 
-  // ---- RESET CANVAS (re-add initial blocks) ----
-  function resetCanvas() {
-    clearCanvas();
-    // Add a few default blocks in a pleasing layout
-    var tier = $('tierColor').value;
-    var config = getStandConfig();
-    var meta = config.low.rows + 'r × ' + config.low.seats + 's';
-
-    // Side A blocks
-    createBlock(30, 20, 'A-LOW', tier, meta);
-    createBlock(150, 20, 'A-MID', tier, meta);
-    createBlock(270, 20, 'A-TOP', tier, meta);
-
-    // Side C blocks
-    createBlock(30, 400, 'C-LOW', tier, meta);
-    createBlock(150, 400, 'C-MID', tier, meta);
-    createBlock(270, 400, 'C-TOP', tier, meta);
-
-    // Side B & D
-    createBlock(30, 200, 'B-1', tier, meta);
-    createBlock(400, 200, 'D-1', tier, meta);
-  }
-
-  // ---- INIT CANVAS ----
-  function initCanvas() {
-    // Set initial size
-    canvas.style.minHeight = '400px';
-    canvas.style.height = '100%';
-    resetCanvas();
-  }
+  // ---- SHAPE SELECTOR ----
+  document.querySelectorAll('.shape-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      document.querySelectorAll('.shape-btn').forEach(function(b) { b.classList.remove('active'); });
+      this.classList.add('active');
+      stadiumShape = this.dataset.shape;
+      // For now, only rectangular is fully functional; others just highlight
+      if (stadiumShape !== 'rectangular') {
+        alert('Shape switching is visual only for now. Rectangular is fully configured.');
+      }
+      renderStadiumPreview();
+    });
+  });
 
   // ---- EVENT LISTENERS ----
   ['fieldLength','fieldWidth','blocksPerSide','standLevels','topRows','topSeats','middleRows','middleSeats','lowRows','lowSeats','tierColor','guestName'].forEach(function(id) {
@@ -706,53 +653,37 @@
     if (el) {
       el.addEventListener('input', function() {
         estimateCapacity();
+        renderStadiumPreview();
         updateTicketPreview();
-        // Also update the meta on existing blocks? Let's not, to keep drag positions stable.
       });
       el.addEventListener('change', function() {
         estimateCapacity();
+        renderStadiumPreview();
         updateTicketPreview();
       });
     }
   });
 
-  // Shape selector
-  document.querySelectorAll('.shape-btn').forEach(function(btn) {
-    btn.addEventListener('click', function() {
-      document.querySelectorAll('.shape-btn').forEach(function(b) { b.classList.remove('active'); });
-      this.classList.add('active');
-      stadiumShape = this.dataset.shape;
-      if (stadiumShape !== 'rectangular') {
-        alert('Shape switching is visual only. Rectangular is fully configured.');
-      }
-    });
-  });
-
-  // Canvas buttons
-  $('addBlockBtn').addEventListener('click', addBlock);
-  $('clearCanvasBtn').addEventListener('click', clearCanvas);
-  $('resetCanvasBtn').addEventListener('click', resetCanvas);
-
-  // Form submit
+  // ---- FORM SUBMIT ----
   $('stadiumForm').addEventListener('submit', function(e) {
     e.preventDefault();
     var cap = estimateCapacity();
-    var blockCount = canvas.querySelectorAll('.drag-item').length;
-    alert('Stadium configuration saved!\nEstimated capacity: ' + cap.toLocaleString() + ' seats\nShape: Rectangular Stadium\nBlocks on canvas: ' + blockCount);
+    alert('Stadium configuration saved!\nEstimated capacity: ' + cap.toLocaleString() + ' seats\nShape: Rectangular Stadium');
   });
 
   // ---- INIT ----
   updateTicketPreview();
   estimateCapacity();
-  initCanvas();
+  renderStadiumPreview();
   if (window.lucide) lucide.createIcons();
 
+  // Ensure all blocks stay within bounds
   window.addEventListener('load', function() {
     estimateCapacity();
-    initCanvas();
+    renderStadiumPreview();
   });
 
 })();
 </script>
 </body>
-  </html>
+</html>
