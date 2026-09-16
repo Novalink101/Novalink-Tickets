@@ -544,8 +544,8 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 
         <div class="section-divider"><span>Venue Canvas & Stage</span></div>
         <div class="form-row">
-          <div class="form-group"><label for="canvasWidth">Canvas Width (px)</label><input type="number" id="canvasWidth" min="400" max="3000" value="1200" /></div>
-          <div class="form-group"><label for="canvasHeight">Canvas Height (px)</label><input type="number" id="canvasHeight" min="400" max="3000" value="800" /></div>
+          <div class="form-group"><label for="canvasWidth">Canvas Width (px)</label><input type="number" id="canvasWidth" min="400" max="3000" value="1200" /><p class="form-hint" id="canvasWidthCmHint">≈ 12.00 m wide</p></div>
+          <div class="form-group"><label for="canvasHeight">Canvas Height (px)</label><input type="number" id="canvasHeight" min="400" max="3000" value="800" /><p class="form-hint" id="canvasHeightCmHint">≈ 8.00 m deep</p></div>
         </div>
         <div class="form-group">
           <label for="stageName">Stage / Performance Area Name</label>
@@ -558,8 +558,13 @@ h1,h2,h3{line-height:1.15;font-weight:700}
         </div>
         <div class="form-row">
           <div class="form-group"><label for="stageH">Stage Height (px)</label><input type="number" id="stageH" min="20" value="60" /></div>
-          <div class="form-group"><label for="gridSize">Grid Size (px)</label><input type="number" id="gridSize" min="10" max="200" value="50" /></div>
+          <div class="form-group"><label for="gridSize">Grid Size (px)</label><input type="number" id="gridSize" min="10" max="200" value="50" /><p class="form-hint" id="gridSizeCmHint">= 50.0 cm</p></div>
         </div>
+        <div class="form-row">
+          <div class="form-group"><label for="pxPerCm">Scale (px per cm)</label><input type="number" id="pxPerCm" min="0.05" max="20" step="0.05" value="1" /></div>
+          <div class="form-group"><label>Venue Size</label><input type="text" id="venueSizeOut" readonly value="12.00 m × 8.00 m" style="background:var(--surface-2);font-weight:bold;color:var(--cyan-700);" /></div>
+        </div>
+        <p class="form-hint" style="margin-top:-8px;margin-bottom:14px;">Scale defines how many canvas pixels represent 1&nbsp;cm. All table dimensions and spacing are entered in <strong>centimetres</strong> and converted automatically.</p>
         <div class="toggle-row">
           <span class="toggle-label">Snap to Grid</span>
           <label class="toggle-switch"><input type="checkbox" id="snapToggle" checked /><span class="toggle-slider"></span></label>
@@ -580,7 +585,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
         </div>
 
         <div class="table-options-panel" id="tableOptionsPanel" style="display:none;">
-          <div class="table-options-title">Table Configuration</div>
+          <div class="table-options-title">Table Configuration · all sizes in cm</div>
 
           <div class="form-row">
             <div class="form-group">
@@ -613,29 +618,30 @@ h1,h2,h3{line-height:1.15;font-weight:700}
           <div class="form-row" id="rectChairsRow" style="display:none;">
             <div class="form-group">
               <label for="chairsLongSide">Chairs Per Long Side (1–12)</label>
-              <input type="number" id="chairsLongSide" min="1" max="12" value="3" />
+              <input type="number" id="chairsLongSide" min="1" max="12" value="4" />
             </div>
             <div class="form-group">
               <label for="chairsShortSide">Chairs Per Short Side (1–8)</label>
-              <input type="number" id="chairsShortSide" min="1" max="8" value="2" />
+              <input type="number" id="chairsShortSide" min="1" max="8" value="1" />
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-group">
-              <label for="tableWidth" id="tableWidthLabel">Table Diameter (px)</label>
-              <input type="number" id="tableWidth" min="20" max="400" value="70" />
+              <label for="tableWidth" id="tableWidthLabel">Table Diameter (cm)</label>
+              <input type="number" id="tableWidth" min="20" max="600" step="1" value="150" />
             </div>
             <div class="form-group" id="tableHeightGroup" style="display:none;">
-              <label for="tableHeight" id="tableHeightLabel">Table Length (px)</label>
-              <input type="number" id="tableHeight" min="20" max="400" value="120" />
+              <label for="tableHeight" id="tableHeightLabel">Table Length (cm)</label>
+              <input type="number" id="tableHeight" min="20" max="600" step="1" value="75" />
             </div>
           </div>
 
           <div class="form-row">
             <div class="form-group">
-              <label for="tableSpacing">Table Spacing (px)</label>
-              <input type="number" id="tableSpacing" min="0" max="200" value="24" />
+              <label for="tableSpacing">Table Spacing (cm)</label>
+              <input type="number" id="tableSpacing" min="0" max="500" step="1" value="60" />
+              <p class="form-hint">Clear gap between the edges of neighbouring tables.</p>
             </div>
             <div class="form-group">
               <label>Chairs per Table (auto)</label>
@@ -854,6 +860,9 @@ var gridSize = 50;
 var snapToGrid = true;
 var showGrid = true;
 
+/* ---- SCALE: how many canvas pixels represent 1 centimetre ---- */
+var pxPerCm = 1;
+
 var stage = { x: 500, y: 60, width: 200, height: 60, name: "STAGE" };
 
 var levels = [
@@ -868,18 +877,18 @@ var sectionTierOverrides = {};
 var sectionPositions = {}; // { idx: { x, y, scale, rotation, levelId } }
 var currentEditingSection = 0;
 
-/* ===== TABLE / CHAIR MODE STATE ===== */
+/* ===== TABLE / CHAIR MODE STATE (all lengths in centimetres) ===== */
 var tableMode = false;
 var sectionTableCounts = {};   // per-section table count overrides
 var tableConfig = {
   shape: "circular",           // circular | square | rectangular
   chairsAround: 8,             // circular: chairs around the table
   chairsPerSide: 2,            // square: chairs per each of 4 sides
-  chairsLongSide: 3,           // rectangular: chairs on long sides
-  chairsShortSide: 2,          // rectangular: chairs on short sides
-  width: 70,                   // diameter (circular) / side (square) / width (rect)
-  height: 120,                 // length (rectangular only)
-  spacing: 24                  // gap between tables
+  chairsLongSide: 4,           // rectangular: chairs on long sides
+  chairsShortSide: 1,          // rectangular: chairs on short sides
+  widthCm: 150,                // diameter (circular) / side (square) / width (rect)
+  heightCm: 75,                // length (rectangular only)
+  spacingCm: 60                // clear gap between table edges
 };
 
 var levelColors = ["#22d3ee", "#facc15", "#a78bfa", "#fb7185", "#34d399", "#60a5fa", "#f97316", "#e879f9"];
@@ -928,6 +937,12 @@ document.addEventListener("DOMContentLoaded", function(){
     if (c.shape === "square") return c.chairsPerSide * 4;
     return (c.chairsLongSide + c.chairsShortSide) * 2; // rectangular
   }
+
+  /* ---- centimetre helpers ---- */
+  function cmToPx(cm, extraScale) {
+    return cm * pxPerCm * (extraScale === undefined ? 1 : extraScale);
+  }
+  function pxToCm(px) { return px / pxPerCm; }
 
   function getSeatsForRow(sIdx, rIdx) {
     var d = sectionRowOverrides[sIdx];
@@ -1176,15 +1191,16 @@ document.addEventListener("DOMContentLoaded", function(){
     }
   }
 
-  // ===== TABLE GEOMETRY BUILDER =====
+  // ===== TABLE GEOMETRY BUILDER (cm → px) =====
   function buildTableUnit(shape, cfg, scale) {
     scale = scale || 1;
-    var chairSize = Math.max(4, Math.round(12 * scale));
-    var gap = Math.max(2, Math.round(4 * scale));
+    var k = pxPerCm * scale;                                          // px per cm at this render scale
+    var chairSize = Math.max(4, Math.min(60, Math.round(45 * k)));    // ≈ 45 cm chair
+    var gap = Math.max(2, Math.min(20, Math.round(5 * k)));           // ≈ 5 cm tuck-in gap
     var chairs = [], w, h;
 
     if (shape === "circular") {
-      var d = Math.max(20, cfg.width) * scale;
+      var d = Math.max(20, cfg.widthCm) * k;
       var ringR = d / 2 + gap + chairSize / 2;
       var n = Math.max(1, cfg.chairsAround);
       for (var i = 0; i < n; i++) {
@@ -1193,7 +1209,7 @@ document.addEventListener("DOMContentLoaded", function(){
       }
       w = d; h = d;
     } else if (shape === "square") {
-      var s = Math.max(20, cfg.width) * scale;
+      var s = Math.max(20, cfg.widthCm) * k;
       var nS = Math.max(1, cfg.chairsPerSide);
       var off = s / 2 + gap + chairSize / 2;
       for (var i2 = 0; i2 < nS; i2++) {
@@ -1208,8 +1224,8 @@ document.addEventListener("DOMContentLoaded", function(){
       }
       w = s; h = s;
     } else {
-      var W = Math.max(20, cfg.width) * scale;
-      var H = Math.max(20, cfg.height) * scale;
+      var W = Math.max(20, cfg.widthCm) * k;
+      var H = Math.max(20, cfg.heightCm) * k;
       var nl = Math.max(1, cfg.chairsLongSide);
       var ns = Math.max(1, cfg.chairsShortSide);
       var offY = H / 2 + gap + chairSize / 2;
@@ -1238,8 +1254,8 @@ document.addEventListener("DOMContentLoaded", function(){
     var unit = buildTableUnit(shape, cfg, scale);
     var cols = Math.max(1, Math.ceil(Math.sqrt(count)));
     var rows = Math.ceil(count / cols);
-    var gapX = Math.max(0, cfg.spacing) * scale;
-    var gapY = Math.max(0, cfg.spacing) * scale;
+    var gapX = Math.max(0, cmToPx(cfg.spacingCm, scale));
+    var gapY = Math.max(0, cmToPx(cfg.spacingCm, scale));
 
     var totalW = cols * unit.cellW + (cols - 1) * gapX;
     var totalH = rows * unit.cellH + (rows - 1) * gapY;
@@ -1341,6 +1357,12 @@ document.addEventListener("DOMContentLoaded", function(){
     return shape === "circular" ? "Circular" : (shape === "square" ? "Square" : "Rectangular");
   }
 
+  function dimsText() {
+    if (tableConfig.shape === "circular") return "⌀ " + tableConfig.widthCm + " cm";
+    if (tableConfig.shape === "square") return tableConfig.widthCm + " × " + tableConfig.widthCm + " cm";
+    return tableConfig.widthCm + " × " + tableConfig.heightCm + " cm";
+  }
+
   function renderTableLayout(container, sections) {
     var cfg = tableConfig;
     for (var b = 0; b < sections; b++) {
@@ -1359,10 +1381,10 @@ document.addEventListener("DOMContentLoaded", function(){
 
       var meta = document.createElement("div");
       meta.className = "table-meta-line";
-      meta.textContent = shapeLabel(cfg.shape) + " · " + chairsPerTable() + " chairs per table · " + tierTagText(tier);
+      meta.textContent = shapeLabel(cfg.shape) + " " + dimsText() + " · " + chairsPerTable() + " chairs/table · spacing " + cfg.spacingCm + " cm · " + tierTagText(tier);
       blockEl.appendChild(meta);
 
-      blockEl.appendChild(buildTableGroup(count, cfg.shape, cfg, tier, 0.75));
+      blockEl.appendChild(buildTableGroup(count, cfg.shape, cfg, tier, 0.5));
       container.appendChild(blockEl);
     }
     container.appendChild(buildLegend());
@@ -1437,7 +1459,7 @@ document.addEventListener("DOMContentLoaded", function(){
 
       var meta = document.createElement("div");
       meta.className = "fs-section-location";
-      meta.textContent = shapeLabel(tableConfig.shape).toUpperCase();
+      meta.textContent = shapeLabel(tableConfig.shape).toUpperCase() + " · " + dimsText() + " · GAP " + tableConfig.spacingCm + " CM";
       el.appendChild(meta);
 
       el.appendChild(buildTableGroup(count, tableConfig.shape, tableConfig, tier, 1));
@@ -1543,13 +1565,25 @@ document.addEventListener("DOMContentLoaded", function(){
         var tc = getTableCount(s);
         var tier = getSectionTierOverride(s) || "cyan";
         var cpt = chairsPerTable();
+        var lengthCm = (tableConfig.shape === "rectangular") ? tableConfig.heightCm : tableConfig.widthCm;
         var tables = [];
         for (var t = 0; t < tc; t++) {
-          tables.push({ table: t + 1, shape: tableConfig.shape, chairs: cpt, tier: tier });
+          tables.push({
+            table: t + 1,
+            shape: tableConfig.shape,
+            widthCm: tableConfig.widthCm,
+            lengthCm: lengthCm,
+            spacingCm: tableConfig.spacingCm,
+            chairs: cpt,
+            tier: tier
+          });
         }
         base.mode = "tables";
         base.tableCount = tc;
         base.tableShape = tableConfig.shape;
+        base.tableWidthCm = tableConfig.widthCm;
+        base.tableLengthCm = lengthCm;
+        base.tableSpacingCm = tableConfig.spacingCm;
         base.chairsPerTable = cpt;
         base.tables = tables;
         sections.push(base);
@@ -1576,6 +1610,7 @@ document.addEventListener("DOMContentLoaded", function(){
     return {
       canvasWidth: canvasWidth, canvasHeight: canvasHeight,
       gridSize: gridSize, snapToGrid: snapToGrid,
+      pxPerCm: pxPerCm,
       stage: { x: stage.x, y: stage.y, width: stage.width, height: stage.height, name: stage.name },
       levels: levels.map(function(l){ return { id: l.id, name: l.name, color: l.color, visible: l.visible }; }),
       seatingMode: tableMode ? "tables" : "rows",
@@ -1585,9 +1620,15 @@ document.addEventListener("DOMContentLoaded", function(){
         chairsPerSide: tableConfig.chairsPerSide,
         chairsLongSide: tableConfig.chairsLongSide,
         chairsShortSide: tableConfig.chairsShortSide,
-        width: tableConfig.width,
-        height: tableConfig.height,
-        spacing: tableConfig.spacing,
+        /* --- centimetre values (source of truth) --- */
+        widthCm: tableConfig.widthCm,
+        heightCm: tableConfig.heightCm,
+        spacingCm: tableConfig.spacingCm,
+        /* --- derived pixel values for rendering --- */
+        pxPerCm: pxPerCm,
+        widthPx: Math.round(cmToPx(tableConfig.widthCm)),
+        heightPx: Math.round(cmToPx(tableConfig.heightCm)),
+        spacingPx: Math.round(cmToPx(tableConfig.spacingCm)),
         chairsPerTable: chairsPerTable()
       } : null,
       sections: buildSectionsData()
@@ -1620,10 +1661,10 @@ document.addEventListener("DOMContentLoaded", function(){
     var name = $("eventName").value || "Untitled Event";
     var lines;
     if (tableMode) {
-      lines = ["Section,Level,Table,Shape,Chairs,Tier,X,Y,Scale,Rotation"];
+      lines = ["Section,Level,Table,Shape,Width(cm),Length(cm),Spacing(cm),Chairs,Tier,X,Y,Scale,Rotation"];
       buildSectionsData().forEach(function(sec) {
         sec.tables.forEach(function(t) {
-          lines.push(['"' + sec.name + '"', '"' + (sec.level||"") + '"', t.table, t.shape, t.chairs, t.tier, sec.x, sec.y, sec.scale, sec.rotation].join(","));
+          lines.push(['"' + sec.name + '"', '"' + (sec.level||"") + '"', t.table, t.shape, t.widthCm, t.lengthCm, t.spacingCm, t.chairs, t.tier, sec.x, sec.y, sec.scale, sec.rotation].join(","));
         });
       });
     } else {
@@ -1664,6 +1705,25 @@ document.addEventListener("DOMContentLoaded", function(){
     }
   }
 
+  /* ===== SCALE (px per cm) ===== */
+  function readScale() {
+    var v = parseFloat($("pxPerCm").value);
+    if (isNaN(v) || v <= 0) v = 1;
+    v = Math.max(0.05, Math.min(20, v));
+    $("pxPerCm").value = v;
+    pxPerCm = v;
+    updateScaleHints();
+  }
+
+  function updateScaleHints() {
+    var wM = (canvasWidth / pxPerCm) / 100;
+    var hM = (canvasHeight / pxPerCm) / 100;
+    $("canvasWidthCmHint").textContent  = "≈ " + wM.toFixed(2) + " m wide";
+    $("canvasHeightCmHint").textContent = "≈ " + hM.toFixed(2) + " m deep";
+    $("venueSizeOut").value = wM.toFixed(2) + " m × " + hM.toFixed(2) + " m";
+    $("gridSizeCmHint").textContent = "= " + (gridSize / pxPerCm).toFixed(1) + " cm";
+  }
+
   /* ===== TABLE MODE UI ===== */
   function readTableConfig() {
     tableConfig.shape = $("tableShape").value;
@@ -1674,20 +1734,23 @@ document.addEventListener("DOMContentLoaded", function(){
     var cp = parseInt($("chairsPerSide").value); if (isNaN(cp)) cp = 2;
     cp = Math.max(1, Math.min(10, cp)); $("chairsPerSide").value = cp; tableConfig.chairsPerSide = cp;
 
-    var cl = parseInt($("chairsLongSide").value); if (isNaN(cl)) cl = 3;
+    var cl = parseInt($("chairsLongSide").value); if (isNaN(cl)) cl = 4;
     cl = Math.max(1, Math.min(12, cl)); $("chairsLongSide").value = cl; tableConfig.chairsLongSide = cl;
 
-    var cs = parseInt($("chairsShortSide").value); if (isNaN(cs)) cs = 2;
+    var cs = parseInt($("chairsShortSide").value); if (isNaN(cs)) cs = 1;
     cs = Math.max(1, Math.min(8, cs)); $("chairsShortSide").value = cs; tableConfig.chairsShortSide = cs;
 
-    var w = parseInt($("tableWidth").value); if (isNaN(w)) w = 70;
-    w = Math.max(20, Math.min(400, w)); $("tableWidth").value = w; tableConfig.width = w;
+    /* --- centimetres --- */
+    var w = parseInt($("tableWidth").value); if (isNaN(w)) w = 150;
+    w = Math.max(20, Math.min(600, w)); $("tableWidth").value = w; tableConfig.widthCm = w;
 
-    var h = parseInt($("tableHeight").value); if (isNaN(h)) h = 120;
-    h = Math.max(20, Math.min(400, h)); $("tableHeight").value = h; tableConfig.height = h;
+    var h = parseInt($("tableHeight").value); if (isNaN(h)) h = 75;
+    h = Math.max(20, Math.min(600, h)); $("tableHeight").value = h; tableConfig.heightCm = h;
 
-    var sp = parseInt($("tableSpacing").value); if (isNaN(sp)) sp = 24;
-    sp = Math.max(0, Math.min(200, sp)); $("tableSpacing").value = sp; tableConfig.spacing = sp;
+    var sp = parseInt($("tableSpacing").value); if (isNaN(sp)) sp = 60;
+    sp = Math.max(0, Math.min(500, sp)); $("tableSpacing").value = sp; tableConfig.spacingCm = sp;
+
+    updateScaleHints();
   }
 
   function applyShapeUI() {
@@ -1699,12 +1762,12 @@ document.addEventListener("DOMContentLoaded", function(){
     $("tableHeightGroup").style.display   = shape === "rectangular" ? "" : "none";
 
     if (shape === "circular") {
-      $("tableWidthLabel").textContent = "Table Diameter (px)";
+      $("tableWidthLabel").textContent = "Table Diameter (cm)";
     } else if (shape === "square") {
-      $("tableWidthLabel").textContent = "Table Size (px)";
+      $("tableWidthLabel").textContent = "Table Size (cm)";
     } else {
-      $("tableWidthLabel").textContent = "Table Width (px)";
-      $("tableHeightLabel").textContent = "Table Length (px)";
+      $("tableWidthLabel").textContent = "Table Width (cm)";
+      $("tableHeightLabel").textContent = "Table Length (cm)";
     }
   }
 
@@ -1714,10 +1777,12 @@ document.addEventListener("DOMContentLoaded", function(){
     var sections = parseInt($("totalLevel1").value) || 0;
     var tables = 0;
     for (var i = 0; i < sections; i++) tables += getTableCount(i);
+
     $("tableSummaryHint").textContent =
-      shapeLabel(tableConfig.shape) + " · " + cpt + " chairs per table · " +
+      shapeLabel(tableConfig.shape) + " " + dimsText() +
+      " · " + cpt + " chairs per table · spacing " + tableConfig.spacingCm + " cm · " +
       tables + " tables across " + sections + " section" + (sections === 1 ? "" : "s") +
-      " · " + (tables * cpt) + " seats total.";
+      " · " + (tables * cpt) + " seats total · 1 cm = " + pxPerCm + " px.";
   }
 
   function onTableConfigChange() {
@@ -1739,7 +1804,6 @@ document.addEventListener("DOMContentLoaded", function(){
     $("rowTierGroup").style.display = tableMode ? "none" : "";
     $("sectionRowsLabel").textContent = tableMode ? "Tables in this section" : "Rows in this section";
     $("sectionRowsInput").max = tableMode ? 200 : 52;
-    $("tierColor").closest(".form-group"); // no-op, keeps structure
 
     applyShapeUI();
     updateTableSummary();
@@ -1752,10 +1816,16 @@ document.addEventListener("DOMContentLoaded", function(){
 
   // ===== WIRING =====
   // Canvas
-  $("canvasWidth").addEventListener("change", function() { canvasWidth = Math.max(400, Math.min(3000, parseInt(this.value)||1200)); this.value = canvasWidth; renderFullscreen(); });
-  $("canvasHeight").addEventListener("change", function() { canvasHeight = Math.max(400, Math.min(3000, parseInt(this.value)||800)); this.value = canvasHeight; renderFullscreen(); });
-  $("gridSize").addEventListener("change", function() { gridSize = Math.max(10, Math.min(200, parseInt(this.value)||50)); this.value = gridSize; renderFullscreen(); });
+  $("canvasWidth").addEventListener("change", function() { canvasWidth = Math.max(400, Math.min(3000, parseInt(this.value)||1200)); this.value = canvasWidth; updateScaleHints(); renderFullscreen(); });
+  $("canvasHeight").addEventListener("change", function() { canvasHeight = Math.max(400, Math.min(3000, parseInt(this.value)||800)); this.value = canvasHeight; updateScaleHints(); renderFullscreen(); });
+  $("gridSize").addEventListener("change", function() { gridSize = Math.max(10, Math.min(200, parseInt(this.value)||50)); this.value = gridSize; updateScaleHints(); renderFullscreen(); });
   $("snapToggle").addEventListener("change", function() { snapToGrid = this.checked; });
+
+  // Scale (px per cm)
+  $("pxPerCm").addEventListener("change", function() {
+    readScale();
+    onTableConfigChange();
+  });
 
   // Stage
   function readStageInputs() {
@@ -1956,6 +2026,7 @@ document.addEventListener("DOMContentLoaded", function(){
   rebuildLevelsList();
   rebuildLevelSelect();
   rebuildSectionTabs();
+  readScale();
   readTableConfig();
   applyShapeUI();
   refreshSectionInputs();
@@ -1965,6 +2036,7 @@ document.addEventListener("DOMContentLoaded", function(){
   renderSeatingPlan();
   updateTierSummary();
   updateTableSummary();
+  updateScaleHints();
   $("tableOptionsPanel").style.display = "none";
   applyTableModeUI();
 });
