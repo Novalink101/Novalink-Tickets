@@ -544,6 +544,56 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 }
 .fs-section-controls .fs-ctrl-actions button:hover { background: #00FFFF; color: #04161c; border-color: #00FFFF; }
 
+/* ========== ROTATE HANDLE ========== */
+.fs-rotate-handle {
+  position: absolute; width: 26px; height: 26px;
+  border-radius: 50%;
+  background: #00FFFF;
+  border: 3px solid #fff;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.4);
+  cursor: grab; z-index: 300;
+  display: none; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 900; color: #04161c;
+  user-select: none; touch-action: none;
+  transition: transform 0.1s;
+}
+.fs-rotate-handle.visible { display: flex; }
+.fs-rotate-handle:hover { transform: scale(1.15); }
+.fs-rotate-handle:active { cursor: grabbing; }
+.fs-rotate-line {
+  position: absolute; height: 2px; background: #00FFFF;
+  transform-origin: 0 50%; z-index: 250; pointer-events: none;
+  display: none; box-shadow: 0 0 6px rgba(0,255,255,0.7);
+}
+.fs-rotate-line.visible { display: block; }
+
+/* ========== INSERT SHAPES TOOLBAR ========== */
+.fs-tool-group {
+  display: inline-flex; gap: 4px; align-items: center;
+  padding: 3px 6px; border-radius: 8px;
+  background: rgba(0,255,255,0.08);
+  border: 1px solid rgba(0,255,255,0.3);
+}
+.fs-tool-group .fs-tool-label {
+  font-size: 9.5px; font-weight: 800; text-transform: uppercase;
+  letter-spacing: 0.08em; color: #00FFFF; margin-right: 4px;
+}
+.fs-tool-btn {
+  padding: 5px 9px; border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.08);
+  color: #fff; cursor: pointer; font-family: inherit;
+  font-weight: 700; font-size: 12px; line-height: 1;
+  min-width: 30px; transition: all 0.15s;
+}
+.fs-tool-btn:hover { background: #00FFFF; color: #04161c; border-color: #00FFFF; }
+.fs-tool-btn.active {
+  background: #00FFFF; color: #04161c; border-color: #00FFFF;
+  box-shadow: 0 0 12px rgba(0,255,255,0.6);
+}
+.fs-canvas.insert-mode,
+.fs-canvas.insert-mode .fs-section { cursor: crosshair !important; }
+
 .sp-fullscreen { position: fixed; inset: 0; background: #0a0f14; z-index: 9999; display: none; flex-direction: column; padding: 16px; }
 .sp-fullscreen.open { display: flex; }
 .sp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; color: #fff; gap: 10px; flex-wrap: wrap; }
@@ -1186,6 +1236,14 @@ h1,h2,h3{line-height:1.15;font-weight:700}
       <button type="button" class="fs-btn" id="fsToggleAxis">↕ Vertical</button>
       <button type="button" class="fs-btn active" id="fsToggleGrid">Grid</button>
       <button type="button" class="fs-btn" id="fsResetView">↺ Reset</button>
+      <div class="fs-tool-group" title="Pick a tool, then click the canvas to place it">
+        <span class="fs-tool-label">Insert</span>
+        <button type="button" class="fs-tool-btn" id="fsInsertRect"   title="Rectangle">▭</button>
+        <button type="button" class="fs-tool-btn" id="fsInsertSquare" title="Square">◻</button>
+        <button type="button" class="fs-tool-btn" id="fsInsertCircle" title="Circle">◯</button>
+        <button type="button" class="fs-tool-btn" id="fsInsertLine"   title="Line">╱</button>
+        <button type="button" class="fs-tool-btn" id="fsInsertMarker" title="Marker">🚪</button>
+      </div>
       <button type="button" class="fs-btn fs-btn-close" id="closeFullscreen">✕ Close</button>
     </div>
   </div>
@@ -1197,6 +1255,9 @@ h1,h2,h3{line-height:1.15;font-weight:700}
       <div class="fs-empty-hint" id="fsEmptyHint" style="display:none;">Add sections to see them placed here</div>
       <div class="fs-point-marker" id="fsPointA" data-point="A"><span class="pt-label">A</span></div>
       <div class="fs-point-marker" id="fsPointB" data-point="B"><span class="pt-label">B</span></div>
+
+      <div class="fs-rotate-line" id="fsRotateLine"></div>
+      <div class="fs-rotate-handle" id="fsRotateHandle" title="Drag to rotate section (Shift = snap to 15°)">↻</div>
 
       <!-- Floating Section Controls (Dragging & Coordinate Bar) -->
       <div class="fs-section-controls" id="fsSectionControls">
@@ -1294,8 +1355,8 @@ var pointB = { x: 1000, y: 480 };
 var arcAmount = 0;
 
 // ==== Seat Grouping / Spacing ====
-var seatGapEvery = 0;   // gap after every N seats (0 = disabled)
-var seatGapSize = 1;    // gap size as multiple of seat width
+var seatGapEvery = 0;
+var seatGapSize = 1;
 var seatGapRowSpecific = 'all';
 
 // ==== Section Dragging ====
@@ -1303,6 +1364,9 @@ var isDraggingSection = false;
 var selectedSectionIdx = null;
 var dragStartX = 0, dragStartY = 0;
 var dragSectionStartX = 0, dragSectionStartY = 0;
+
+// ==== Insert Tool (Full Venue Layout) ====
+var insertTool = null; // null | rect | square | circle | line | marker
 
 // ===== TIER SYSTEM =====
 var TIER_KEYS = ["black", "gold", "silver", "cyan", "tier5", "tier6"];
@@ -1524,7 +1588,6 @@ document.addEventListener("DOMContentLoaded", function(){
     FEATURES = getPlanFeatures(currentPlan.id);
     var f = FEATURES;
 
-    // Base price field: hide on Basic plan
     var basePrice = $("basePriceGroup");
     if (basePrice) basePrice.style.display = (currentPlan.id === "basic") ? "none" : "";
 
@@ -1859,7 +1922,6 @@ document.addEventListener("DOMContentLoaded", function(){
       seat.textContent = (s + 1);
       if (seatClass !== 'fs-seat') seat.dataset.seatNum = (s + 1);
       seatsWrap.appendChild(seat);
-      // Insert gap after every N seats (but not after the last seat)
       if (doGap && seatGapEvery > 0 && ((s + 1) % seatGapEvery === 0) && (s + 1) < seatCount) {
         var gap = document.createElement("div");
         gap.className = (seatClass === 'fs-seat') ? 'fs-seat-gap' : 'row-seat-gap';
@@ -2396,21 +2458,18 @@ document.addEventListener("DOMContentLoaded", function(){
     var bx = pointB.x, by = pointB.y;
     var n = sectionEls.length;
 
-    // Quadratic bezier control point
     var mx = (ax + bx) / 2, my = (ay + by) / 2;
     var dx = bx - ax, dy = by - ay;
     var len = Math.sqrt(dx*dx + dy*dy) || 1;
-    var nx = -dy / len, ny = dx / len;   // perpendicular normal
+    var nx = -dy / len, ny = dx / len;
     var cx = mx + nx * arcAmount;
     var cy = my + ny * arcAmount;
 
     sectionEls.forEach(function(item, i) {
       var t = n === 1 ? 0.5 : i / (n - 1);
       var mt = 1 - t;
-      // Quadratic bezier position
       var px = mt*mt*ax + 2*mt*t*cx + t*t*bx;
       var py = mt*mt*ay + 2*mt*t*cy + t*t*by;
-      // Tangent angle for alignment
       var tx = 2*mt*(cx-ax) + 2*t*(bx-cx);
       var ty = 2*mt*(cy-ay) + 2*t*(by-cy);
       var angle = Math.atan2(ty, tx) * 180 / Math.PI;
@@ -2504,13 +2563,166 @@ document.addEventListener("DOMContentLoaded", function(){
     bEl.addEventListener('touchstart', function(e){ startDrag('B', e); }, { passive: false });
   }
 
+  /* ============ ROTATE HANDLE ============ */
+  function updateRotateHandle() {
+    var handle = $("fsRotateHandle"), line = $("fsRotateLine"), canvas = $("fsCanvas");
+    if (!handle || !line || !canvas) return;
+    if (selectedSectionIdx === null) {
+      handle.classList.remove("visible"); line.classList.remove("visible"); return;
+    }
+    var el = canvas.querySelector('[data-section="' + selectedSectionIdx + '"]');
+    if (!el) {
+      handle.classList.remove("visible"); line.classList.remove("visible"); return;
+    }
+    var pos = getSectionPos(selectedSectionIdx);
+    var natW = el.offsetWidth || 140, natH = el.offsetHeight || 120;
+    var cx = pos.x + natW / 2, cy = pos.y + natH / 2;
+    var halfH = (natH * pos.scale) / 2, dist = 42, R = halfH + dist;
+    var rad = (pos.rotation || 0) * Math.PI / 180;
+
+    var hx = cx + R * Math.sin(rad);
+    var hy = cy - R * Math.cos(rad);
+    var tx = cx + halfH * Math.sin(rad);
+    var ty = cy - halfH * Math.cos(rad);
+
+    handle.style.left = (hx - 13) + "px";
+    handle.style.top  = (hy - 13) + "px";
+    handle.classList.add("visible");
+
+    var dx = hx - tx, dy = hy - ty;
+    var len = Math.sqrt(dx*dx + dy*dy);
+    var angle = Math.atan2(dy, dx) * 180 / Math.PI;
+    line.style.left = tx + "px";
+    line.style.top  = (ty - 1) + "px";
+    line.style.width = len + "px";
+    line.style.transform = "rotate(" + angle + "deg)";
+    line.classList.add("visible");
+  }
+
+  function setupRotateHandle() {
+    var handle = $("fsRotateHandle"), canvas = $("fsCanvas");
+    if (!handle || !canvas || handle._bound) return;
+    handle._bound = true;
+
+    function start(e) {
+      if (selectedSectionIdx === null) return;
+      e.preventDefault(); e.stopPropagation();
+      var el = canvas.querySelector('[data-section="' + selectedSectionIdx + '"]');
+      if (!el) return;
+      var pos = getSectionPos(selectedSectionIdx);
+      var natW = el.offsetWidth || 140, natH = el.offsetHeight || 120;
+      var cx = pos.x + natW / 2, cy = pos.y + natH / 2;
+
+      function move(ev) {
+        var rect = canvas.getBoundingClientRect();
+        var clientX = ev.touches ? ev.touches[0].clientX : ev.clientX;
+        var clientY = ev.touches ? ev.touches[0].clientY : ev.clientY;
+        var mx = clientX - rect.left, my = clientY - rect.top;
+        var angDeg = Math.atan2(my - cy, mx - cx) * 180 / Math.PI + 90;
+        if (ev.shiftKey) angDeg = Math.round(angDeg / 15) * 15;
+        angDeg = Math.round(angDeg);
+        while (angDeg > 180) angDeg -= 360;
+        while (angDeg < -180) angDeg += 360;
+
+        pos.rotation = angDeg;
+        el.style.transform = "rotate(" + angDeg + "deg) scale(" + pos.scale + ")";
+        $("fsCtrlRot").value = angDeg;
+        $("sectionRotationInput").value = angDeg;
+        updateRotateHandle();
+      }
+      function end() {
+        document.removeEventListener('mousemove', move);
+        document.removeEventListener('mouseup', end);
+        document.removeEventListener('touchmove', move);
+        document.removeEventListener('touchend', end);
+        var sectionEls = [], sCount = parseInt($("totalLevel1").value) || 0;
+        for (var i = 0; i < sCount; i++) {
+          var p = getSectionPos(i);
+          var lv = levels.find(function(x){ return x.id === p.levelId; });
+          if (!lv || !lv.visible) continue;
+          var sEl = canvas.querySelector('[data-section="' + i + '"]');
+          if (sEl) sectionEls.push({ idx: i, el: sEl });
+        }
+        checkSectionOverlaps(sectionEls, canvas);
+        refreshSectionInputs();
+      }
+      document.addEventListener('mousemove', move);
+      document.addEventListener('mouseup', end);
+      document.addEventListener('touchmove', move, { passive: false });
+      document.addEventListener('touchend', end);
+    }
+    handle.addEventListener('mousedown', start);
+    handle.addEventListener('touchstart', start, { passive: false });
+  }
+
+  /* ============ INSERT TOOLS ============ */
+  function updateInsertToolUI() {
+    var map = { fsInsertRect: 'rect', fsInsertSquare: 'square', fsInsertCircle: 'circle', fsInsertLine: 'line', fsInsertMarker: 'marker' };
+    Object.keys(map).forEach(function(id) {
+      var btn = $(id); if (btn) btn.classList.toggle('active', insertTool === map[id]);
+    });
+    var canvas = $('fsCanvas');
+    if (canvas) canvas.classList.toggle('insert-mode', !!insertTool);
+  }
+
+  function placeElementAt(tool, x, y) {
+    var levelId = levels[0] ? levels[0].id : 0;
+    for (var i = 0; i < levels.length; i++) { if (levels[i].visible) { levelId = levels[i].id; break; } }
+    var id = nextCanvasElementId++;
+    var el = null;
+    if (tool === 'rect')        el = { id: id, type: 'shape',  shapeKind: 'rectangle', label: '', x: x, y: y, z: 6, w: 140, h: 90, rotation: 0, color: '#00FFFF', levelId: levelId };
+    else if (tool === 'square') el = { id: id, type: 'shape',  shapeKind: 'square',    label: '', x: x, y: y, z: 6, w: 100, h: 100, rotation: 0, color: '#00FFFF', levelId: levelId };
+    else if (tool === 'circle') el = { id: id, type: 'shape',  shapeKind: 'circle',    label: '', x: x, y: y, z: 6, w: 100, h: 100, rotation: 0, color: '#00FFFF', levelId: levelId };
+    else if (tool === 'line')   el = { id: id, type: 'line',   label: '', x1: x, y1: y, x2: x + 140, y2: y, z: 6, thickness: 3, color: '#facc15', levelId: levelId };
+    else if (tool === 'marker') el = { id: id, type: 'marker', markerKind: 'exit', label: 'EXIT', x: x, y: y, z: 6, w: 56, h: 56, rotation: 0, levelId: levelId };
+    if (!el) return;
+    canvasElements.push(el);
+    expandedElementId = el.id;
+    rebuildAnnotationList();
+    renderFullscreen();
+    showToast("Element inserted — expand it in Canvas Annotations below", "success", 2600);
+  }
+
+  function setupInsertTools() {
+    var canvas = $('fsCanvas');
+    if (!canvas || canvas._insertBound) return;
+    canvas._insertBound = true;
+
+    var map = { fsInsertRect: 'rect', fsInsertSquare: 'square', fsInsertCircle: 'circle', fsInsertLine: 'line', fsInsertMarker: 'marker' };
+    Object.keys(map).forEach(function(id) {
+      var btn = $(id); if (!btn) return;
+      btn.addEventListener('click', function() {
+        insertTool = (insertTool === map[id]) ? null : map[id];
+        updateInsertToolUI();
+        if (insertTool) showToast("Click the canvas to place the element", "info", 2200);
+      });
+    });
+
+    function intercept(e) {
+      if (!insertTool) return;
+      e.stopPropagation(); e.preventDefault();
+      var rect = canvas.getBoundingClientRect();
+      var t = e.touches ? e.touches[0] : e;
+      var x = t.clientX - rect.left, y = t.clientY - rect.top;
+      if (snapToGrid) { x = snap(x); y = snap(y); }
+      x = Math.max(0, Math.min(canvasWidth, x));
+      y = Math.max(0, Math.min(canvasHeight, y));
+      var tool = insertTool;
+      insertTool = null;
+      updateInsertToolUI();
+      placeElementAt(tool, x, y);
+    }
+    canvas.addEventListener('mousedown',  intercept, true);
+    canvas.addEventListener('touchstart', intercept, { capture: true, passive: false });
+  }
+
   /* ============ SECTION DIRECT DRAG ============ */
   function setupSectionDrag() {
     var canvas = $("fsCanvas");
     if (!canvas) return;
 
     function startDragSection(e, idx, el) {
-      // If auto layout or two-point mode is on, turn it off to allow manual dragging
+      if (insertTool) return;
       if (autoLayoutEnabled) {
         autoLayoutEnabled = false;
         var btn = $("fsToggleAuto"); if (btn) btn.classList.remove("active");
@@ -2525,11 +2737,9 @@ document.addEventListener("DOMContentLoaded", function(){
       selectedSectionIdx = idx;
       isDraggingSection = true;
 
-      // Highlight selected section
       canvas.querySelectorAll('.fs-section').forEach(function(s){ s.classList.remove('selected'); });
       el.classList.add('selected');
 
-      // Show controls panel
       var panel = $("fsSectionControls");
       var pos = getSectionPos(idx);
       $("fsCtrlX").value = pos.x;
@@ -2537,6 +2747,7 @@ document.addEventListener("DOMContentLoaded", function(){
       $("fsCtrlRot").value = pos.rotation;
       $("fsCtrlScale").value = pos.scale;
       panel.classList.add("visible");
+      updateRotateHandle();
 
       var rect = canvas.getBoundingClientRect();
       var clientX = e.touches ? e.touches[0].clientX : e.clientX;
@@ -2566,13 +2777,13 @@ document.addEventListener("DOMContentLoaded", function(){
 
         $("fsCtrlX").value = newX;
         $("fsCtrlY").value = newY;
+        updateRotateHandle();
       }
 
       function end() {
         isDraggingSection = false;
         document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', end);
         document.removeEventListener('touchmove', move); document.removeEventListener('touchend', end);
-        // Final overlap check
         var sectionEls = [];
         var sCount = parseInt($("totalLevel1").value) || 0;
         for (var i = 0; i < sCount; i++) {
@@ -2583,6 +2794,7 @@ document.addEventListener("DOMContentLoaded", function(){
         }
         checkSectionOverlaps(sectionEls, canvas);
         refreshSectionInputs();
+        updateRotateHandle();
       }
 
       document.addEventListener('mousemove', move); document.addEventListener('mouseup', end);
@@ -2590,12 +2802,13 @@ document.addEventListener("DOMContentLoaded", function(){
     }
 
     canvas.addEventListener('mousedown', function(e) {
+      if (insertTool) return;
       var section = e.target.closest('.fs-section');
       if (!section) {
-        // Click on empty canvas: deselect
         canvas.querySelectorAll('.fs-section').forEach(function(s){ s.classList.remove('selected'); });
         $("fsSectionControls").classList.remove("visible");
         selectedSectionIdx = null;
+        updateRotateHandle();
         return;
       }
       var idx = parseInt(section.dataset.section);
@@ -2604,11 +2817,13 @@ document.addEventListener("DOMContentLoaded", function(){
     });
 
     canvas.addEventListener('touchstart', function(e) {
+      if (insertTool) return;
       var section = e.target.closest('.fs-section');
       if (!section) {
         canvas.querySelectorAll('.fs-section').forEach(function(s){ s.classList.remove('selected'); });
         $("fsSectionControls").classList.remove("visible");
         selectedSectionIdx = null;
+        updateRotateHandle();
         return;
       }
       var idx = parseInt(section.dataset.section);
@@ -2637,15 +2852,14 @@ document.addEventListener("DOMContentLoaded", function(){
         el.style.top = pos.y + "px";
         el.style.transform = "rotate(" + pos.rotation + "deg) scale(" + pos.scale + ")";
       }
+      updateRotateHandle();
 
-      // Also update the main form inputs
       $("sectionXInput").value = pos.x;
       $("sectionYInput").value = pos.y;
       $("sectionRotationInput").value = pos.rotation;
       $("sectionScaleInput").value = pos.scale;
       $("sectionScaleBadge").textContent = pos.scale.toFixed(2) + "×";
 
-      // Overlap check
       var sectionEls = [];
       var sCount = parseInt($("totalLevel1").value) || 0;
       for (var i = 0; i < sCount; i++) {
@@ -2660,7 +2874,6 @@ document.addEventListener("DOMContentLoaded", function(){
     [xIn, yIn, rotIn, scaleIn].forEach(function(inp) {
       inp.addEventListener('input', applyChanges);
       inp.addEventListener('change', function() {
-        // Re-clamp on change
         var pos = getSectionPos(selectedSectionIdx);
         xIn.value = pos.x; yIn.value = pos.y;
         rotIn.value = pos.rotation; scaleIn.value = pos.scale;
@@ -2672,6 +2885,7 @@ document.addEventListener("DOMContentLoaded", function(){
       canvas.querySelectorAll('.fs-section').forEach(function(s){ s.classList.remove('selected'); });
       $("fsSectionControls").classList.remove("visible");
       selectedSectionIdx = null;
+      updateRotateHandle();
     });
   }
 
@@ -2682,7 +2896,7 @@ document.addEventListener("DOMContentLoaded", function(){
     canvas.style.width = canvasWidth + "px";
     canvas.style.height = canvasHeight + "px";
     canvas.style.setProperty("--grid-size", gridSize + "px");
-    canvas.className = "fs-canvas" + (showGrid ? " show-grid" : "") + (twoPointMode ? " two-point-mode" : "");
+    canvas.className = "fs-canvas" + (showGrid ? " show-grid" : "") + (twoPointMode ? " two-point-mode" : "") + (insertTool ? " insert-mode" : "");
     var stageName = ($("stageName").value || "STAGE").trim().toUpperCase();
     var sm = $("fsStageMarker");
     sm.textContent = stageName;
@@ -2712,16 +2926,15 @@ document.addEventListener("DOMContentLoaded", function(){
     rebuildLevelPills();
     updatePointMarkers();
 
-    // Restore selection if a section was selected
     if (selectedSectionIdx !== null) {
       var selEl = canvas.querySelector('[data-section="' + selectedSectionIdx + '"]');
       if (selEl) {
         selEl.classList.add('selected');
-        var pos = getSectionPos(selectedSectionIdx);
-        $("fsCtrlX").value = pos.x;
-        $("fsCtrlY").value = pos.y;
-        $("fsCtrlRot").value = pos.rotation;
-        $("fsCtrlScale").value = pos.scale;
+        var pos2 = getSectionPos(selectedSectionIdx);
+        $("fsCtrlX").value = pos2.x;
+        $("fsCtrlY").value = pos2.y;
+        $("fsCtrlRot").value = pos2.rotation;
+        $("fsCtrlScale").value = pos2.scale;
         $("fsSectionControls").classList.add("visible");
       } else {
         selectedSectionIdx = null;
@@ -2735,6 +2948,7 @@ document.addEventListener("DOMContentLoaded", function(){
     if (arcField) arcField.style.display = twoPointMode ? "" : "none";
     var tpBtn = $("fsToggleTwoPoint");
     if (tpBtn) tpBtn.classList.toggle("active", twoPointMode);
+    updateRotateHandle();
     if(window.lucide) lucide.createIcons();
   }
 
@@ -3121,9 +3335,13 @@ document.addEventListener("DOMContentLoaded", function(){
 
   $("openFullscreen").addEventListener("click", function() {
     if (!FEATURES.venueLayout) { showToast("The venue layout editor is available on Premium and Enterprise plans.", "error", 4200); return; }
-    $("fullscreenOverlay").classList.add("open"); document.body.style.overflow = "hidden"; renderFullscreen(); setupSectionDrag(); setupControlsPanel();
+    $("fullscreenOverlay").classList.add("open"); document.body.style.overflow = "hidden"; renderFullscreen(); setupSectionDrag(); setupControlsPanel(); setupRotateHandle(); setupInsertTools(); updateInsertToolUI();
   });
-  $("closeFullscreen").addEventListener("click", function() { $("fullscreenOverlay").classList.remove("open"); document.body.style.overflow = ""; selectedSectionIdx = null; $("fsSectionControls").classList.remove("visible"); });
+  $("closeFullscreen").addEventListener("click", function() {
+    $("fullscreenOverlay").classList.remove("open"); document.body.style.overflow = "";
+    selectedSectionIdx = null; $("fsSectionControls").classList.remove("visible");
+    insertTool = null; updateInsertToolUI(); updateRotateHandle();
+  });
   $("fsToggleGrid").addEventListener("click", function() { showGrid = !showGrid; this.classList.toggle("active", showGrid); renderFullscreen(); });
   $("fsToggleAuto").addEventListener("click", function() {
     autoLayoutEnabled = !autoLayoutEnabled;
@@ -3133,6 +3351,7 @@ document.addEventListener("DOMContentLoaded", function(){
       var tpBtn = $("fsToggleTwoPoint"); if (tpBtn) tpBtn.classList.remove("active");
     }
     selectedSectionIdx = null; $("fsSectionControls").classList.remove("visible");
+    updateRotateHandle();
     renderFullscreen();
     showToast(autoLayoutEnabled ? "Auto Layout ON" : "Auto Layout OFF");
   });
@@ -3144,6 +3363,7 @@ document.addEventListener("DOMContentLoaded", function(){
       var btn = $("fsToggleAuto"); if (btn) btn.classList.remove("active");
     }
     selectedSectionIdx = null; $("fsSectionControls").classList.remove("visible");
+    updateRotateHandle();
     renderFullscreen();
     showToast(twoPointMode ? "Two-Point mode — drag A and B points on the canvas" : "Two-Point mode OFF", twoPointMode ? "success" : "info", 3500);
   });
@@ -3182,6 +3402,7 @@ document.addEventListener("DOMContentLoaded", function(){
     var btn = $("fsToggleAuto"); if (btn) btn.classList.add("active");
     var tpBtn = $("fsToggleTwoPoint"); if (tpBtn) tpBtn.classList.remove("active");
     var axisBtn = $("fsToggleAxis"); if (axisBtn) axisBtn.textContent = autoLayoutAxis === "vertical" ? "↕ Vertical" : "↔ Horizontal";
+    updateRotateHandle();
     renderSeatingPlan(); renderFullscreen(); refreshSectionInputs();
     showToast("Positions reset", "success");
   });
@@ -3207,6 +3428,7 @@ document.addEventListener("DOMContentLoaded", function(){
     var axisBtn = $("fsToggleAxis"); if (axisBtn) axisBtn.textContent = autoLayoutAxis === "vertical" ? "↕ Vertical" : "↔ Horizontal";
     rebuildLevelsList(); rebuildLevelSelect(); rebuildSectionTabs(); refreshSectionInputs(); rebuildRowOverrides(); rebuildTableRowsEditor();
     rebuildAnnotationList(); calculateCapacity(); updateTierCountOptions(); updateRevenueCalculator(); renderSeatingPlan(); updateTableSummary();
+    updateRotateHandle();
     if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
   });
 
@@ -3233,8 +3455,9 @@ document.addEventListener("DOMContentLoaded", function(){
 
   document.addEventListener("keydown", function(e) {
     if (e.key === "Escape") {
+      if (insertTool) { insertTool = null; updateInsertToolUI(); return; }
       if ($("seatingPlanOverlay").classList.contains("open")) { $("seatingPlanOverlay").classList.remove("open"); document.body.style.overflow = ""; }
-      else if ($("fullscreenOverlay").classList.contains("open")) { $("fullscreenOverlay").classList.remove("open"); document.body.style.overflow = ""; selectedSectionIdx = null; $("fsSectionControls").classList.remove("visible"); }
+      else if ($("fullscreenOverlay").classList.contains("open")) { $("fullscreenOverlay").classList.remove("open"); document.body.style.overflow = ""; selectedSectionIdx = null; $("fsSectionControls").classList.remove("visible"); updateRotateHandle(); }
     }
   });
 
@@ -3265,10 +3488,12 @@ document.addEventListener("DOMContentLoaded", function(){
   setupPointDrag();
   setupSectionDrag();
   setupControlsPanel();
+  setupRotateHandle();
+  setupInsertTools();
+  updateInsertToolUI();
   applyPlanFeatures();
 });
-n
 })();
 </script>
 </body>
-                                                                           </html>
+  </html>
