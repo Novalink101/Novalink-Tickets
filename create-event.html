@@ -277,7 +277,6 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .preview-label-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; }
 .preview-label-row .preview-label { margin-bottom: 0; text-align: left; }
 
-/* ============ TICKET FLIP ============ */
 .ticket-flip-container { perspective: 1600px; width: 100%; }
 .ticket-flip-inner { display: grid; transition: transform 0.65s cubic-bezier(0.4, 0.0, 0.2, 1); transform-style: preserve-3d; width: 100%; }
 .ticket-flip-inner.flipped { transform: rotateY(180deg); }
@@ -360,6 +359,32 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .layout-legend .lg-swatch.tier5 { background: var(--tier-tier5); }
 .layout-legend .lg-swatch.tier6 { background: var(--tier-tier6); }
 
+/* ========== CORNER SECTIONS ========== */
+.fs-corner-rows { display: flex; flex-direction: column; gap: 2px; align-items: flex-start; }
+.fs-corner-row { display: flex; gap: 2px; align-items: center; }
+.fs-corner-row.right { justify-content: flex-end; }
+.fs-corner-spacer { flex: 1 1 auto; }
+.fs-corner-badge {
+  display: inline-block; font-size: 7px; font-weight: 900;
+  background: #00FFFF; color: #04161c; padding: 1px 5px;
+  border-radius: 3px; margin-left: 4px; letter-spacing: 0.5px;
+}
+.fs-section.corner-left .fs-section-title { color: #7c3aed; }
+.fs-section.corner-right .fs-section-title { color: #db2777; }
+.fs-section.corner-left { border-color: #ddd6fe; }
+.fs-section.corner-right { border-color: #fbcfe8; }
+.block.corner-left { border-left: 4px solid #7c3aed; }
+.block.corner-right { border-right: 4px solid #db2777; }
+.corner-hint {
+  font-size: 10px; color: var(--text-muted); font-style: italic;
+  margin-bottom: 6px;
+}
+.corner-preview-block { display: flex; flex-direction: column; gap: 3px; align-items: flex-start; }
+.corner-preview-block.right { align-items: flex-end; }
+.corner-preview-row { display: flex; gap: 3px; }
+.corner-preview-row.right { justify-content: flex-end; }
+.corner-preview-row.vertical { align-items: center; }
+
 .fullscreen-overlay { position: fixed; inset: 0; background: #0a0f14; z-index: 9999; display: none; flex-direction: column; padding: 16px; }
 .fullscreen-overlay.open { display: flex; }
 .fs-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; color: #fff; gap: 10px; flex-wrap: wrap; }
@@ -379,7 +404,6 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .fs-overlap-warning .ow-icon { font-weight: 900; font-size: 14px; background: rgba(255,255,255,0.15); width: 20px; height: 20px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .fs-level-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; color: #fff; font-size: 11.5px; margin-bottom: 8px; padding: 6px 0; }
 
-/* ==== CANVAS OUTER — scrolls both ways ==== */
 .fs-canvas-outer {
   flex: 1 1 auto;
   min-height: 0;
@@ -451,9 +475,6 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .fs-point-marker#fsPointA{background:#00FFFF;}
 .fs-point-marker#fsPointB{background:#f472b6;}
 .fs-point-marker .pt-label{pointer-events:none;}
-.fs-point-guide{position:absolute;pointer-events:none;z-index:1;opacity:0;transition:opacity 0.2s;}
-.fs-point-guide.visible{opacity:0.65;}
-.fs-point-guide svg{position:absolute;overflow:visible;}
 
 .fs-section-controls { position: absolute; bottom: 20px; right: 20px; background: #0a0f14; border: 1px solid #00FFFF; border-radius: 10px; padding: 14px; color: #fff; z-index: 500; display: none; flex-direction: column; gap: 8px; box-shadow: 0 12px 40px rgba(0,0,0,0.6); min-width: 220px; }
 .fs-section-controls.visible { display: flex; }
@@ -893,6 +914,40 @@ h1,h2,h3{line-height:1.15;font-weight:700}
               <button type="button" class="btn-mini" id="clearAllOverrides">Clear All</button>
             </div>
             <div class="section-rows-row"><label for="sectionNameInput">Section Name</label><input type="text" id="sectionNameInput" placeholder="e.g., VIP Stand" maxlength="40" /></div>
+
+            <!-- ============ CORNER SECTION UI ============ -->
+            <div class="section-rows-row">
+              <label for="sectionKindSelect">Section Type</label>
+              <select id="sectionKindSelect">
+                <option value="standard" selected>Standard (rectangular)</option>
+                <option value="corner-left">Corner — Left L</option>
+                <option value="corner-right">Corner — Right L</option>
+              </select>
+            </div>
+            <div class="row-overrides-section" id="cornerConfigPanel" style="display:none;margin-bottom:10px;">
+              <div class="row-overrides-hint">
+                L-shaped corner section. The horizontal leg sits across the top; the vertical leg drops down from the
+                <strong>left</strong> (Left corner) or <strong>right</strong> (Right corner). It sits flush next to standard
+                sections in auto layout.
+              </div>
+              <div class="form-row-3" style="margin-bottom:8px;">
+                <div class="form-group" style="margin-bottom:0;">
+                  <label for="cornerHSeats" style="font-size:10px;">Top Seats (per row)</label>
+                  <input type="number" id="cornerHSeats" min="2" max="90" value="10" style="text-align:center;padding:8px;" />
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                  <label for="cornerVSeats" style="font-size:10px;">Vertical Leg Seats</label>
+                  <input type="number" id="cornerVSeats" min="1" max="90" value="4" style="text-align:center;padding:8px;" />
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                  <label for="cornerVRows" style="font-size:10px;">Vertical Leg Rows</label>
+                  <input type="number" id="cornerVRows" min="1" max="52" value="6" style="text-align:center;padding:8px;" />
+                </div>
+              </div>
+              <div class="section-rows-badge" id="cornerSeatBadge">Corner total: 0 seats</div>
+            </div>
+            <!-- ============ /CORNER SECTION UI ============ -->
+
             <div class="section-rows-row"><label for="sectionLevelSelect">Level</label><select id="sectionLevelSelect"></select></div>
             <div class="section-rows-row" id="sectionRowsRow">
               <label for="sectionRowsInput" id="sectionRowsLabel">Rows in this section</label>
@@ -1231,6 +1286,10 @@ var expandedElementId = null;
 var lastFoundSeat = null;
 var ticketFlipped = false;
 
+/* ===== Corner Sections ===== */
+var sectionKinds = {};
+var cornerConfigs = {};
+
 var twoPointMode = false;
 var pointA = { x: 200, y: 480 };
 var pointB = { x: 1000, y: 480 };
@@ -1364,6 +1423,20 @@ document.addEventListener("DOMContentLoaded", function(){
   function getRowCount(idx) { if (sectionRowCounts[idx] !== undefined) return sectionRowCounts[idx]; return parseInt($("totalLevel2").value) || 6; }
   function setRowCount(idx, v) { sectionRowCounts[idx] = Math.max(1, Math.min(52, v)); }
 
+  /* ============ CORNER HELPERS ============ */
+  function getSectionKind(idx) { return sectionKinds[idx] || "standard"; }
+  function setSectionKind(idx, kind) { if (kind === "standard") delete sectionKinds[idx]; else sectionKinds[idx] = kind; }
+  function isCornerSection(idx) { var k = getSectionKind(idx); return k === "corner-left" || k === "corner-right"; }
+  function getCornerConfig(idx) {
+    if (!cornerConfigs[idx]) cornerConfigs[idx] = { hSeats: 10, vSeats: 4, vRows: 6 };
+    return cornerConfigs[idx];
+  }
+  function cornerSeatCount(idx) {
+    var c = getCornerConfig(idx);
+    var hRows = getRowCount(idx);
+    return (c.hSeats * hRows) + (c.vSeats * c.vRows);
+  }
+
   function getDefaultTableCount() { return Math.max(1, Math.min(50, parseInt($("tableCount").value) || 4)); }
   function getSectionTableRows(idx) { var rows = sectionTableRows[idx]; if (!rows || !rows.length) return [{ count: getDefaultTableCount() }]; return rows; }
   function ensureSectionTableRows(idx) { if (!sectionTableRows[idx] || !sectionTableRows[idx].length) sectionTableRows[idx] = [{ count: getDefaultTableCount() }]; return sectionTableRows[idx]; }
@@ -1406,7 +1479,11 @@ document.addEventListener("DOMContentLoaded", function(){
       var cpt = chairsPerTable();
       for (var s = 0; s < sections; s++) total += getTableCount(s) * cpt;
     } else {
-      for (var s2 = 0; s2 < sections; s2++) { var rows = getRowCount(s2); for (var r = 0; r < rows; r++) total += getSeatsForRow(s2, r); }
+      for (var s2 = 0; s2 < sections; s2++) {
+        if (isCornerSection(s2)) { total += cornerSeatCount(s2); continue; }
+        var rows = getRowCount(s2);
+        for (var r = 0; r < rows; r++) total += getSeatsForRow(s2, r);
+      }
     }
     $("totalCapacity").value = total;
     return total;
@@ -1554,7 +1631,18 @@ document.addEventListener("DOMContentLoaded", function(){
       var cpt = chairsPerTable();
       for (var s = 0; s < sections; s++) { var tier = getSectionTierOverride(s) || fallbackTier; var tables = getTableCount(s); counts[tier] = (counts[tier] || 0) + tables * cpt; }
     } else {
-      for (var s2 = 0; s2 < sections; s2++) { var rows = getRowCount(s2); var map = buildRowTierMap(rows, s2); for (var r = 0; r < rows; r++) { var seats = getSeatsForRow(s2, r); counts[map[r]] = (counts[map[r]] || 0) + seats; } }
+      for (var s2 = 0; s2 < sections; s2++) {
+        if (isCornerSection(s2)) {
+          var cc = getCornerConfig(s2);
+          var hRowsC = getRowCount(s2);
+          var mapC = buildRowTierMap(hRowsC + cc.vRows, s2);
+          for (var rh = 0; rh < hRowsC; rh++) { counts[mapC[rh] || fallbackTier] = (counts[mapC[rh] || fallbackTier] || 0) + cc.hSeats; }
+          for (var rv = 0; rv < cc.vRows; rv++) { var tierV = mapC[hRowsC + rv] || fallbackTier; counts[tierV] = (counts[tierV] || 0) + cc.vSeats; }
+          continue;
+        }
+        var rows = getRowCount(s2); var map = buildRowTierMap(rows, s2);
+        for (var r = 0; r < rows; r++) { var seats = getSeatsForRow(s2, r); counts[map[r]] = (counts[map[r]] || 0) + seats; }
+      }
     }
     return counts;
   }
@@ -1682,7 +1770,9 @@ document.addEventListener("DOMContentLoaded", function(){
     if (currentEditingSection >= sections) currentEditingSection = 0;
     var container = $("sectionTabs"); container.innerHTML = "";
     for (var i = 0; i < sections; i++) {
-      var btn = document.createElement("button"); btn.type = "button"; btn.className = "section-tab" + (i === currentEditingSection ? " active" : ""); btn.textContent = getSectionName(i);
+      var kind = getSectionKind(i);
+      var suffix = kind === "corner-left" ? " ◤" : (kind === "corner-right" ? " ◥" : "");
+      var btn = document.createElement("button"); btn.type = "button"; btn.className = "section-tab" + (i === currentEditingSection ? " active" : ""); btn.textContent = getSectionName(i) + suffix;
       (function(idx) { btn.addEventListener("click", function() { currentEditingSection = idx; rebuildSectionTabs(); refreshSectionInputs(); rebuildRowOverrides(); rebuildTableRowsEditor(); }); })(i);
       container.appendChild(btn);
     }
@@ -1693,13 +1783,28 @@ document.addEventListener("DOMContentLoaded", function(){
     $("sectionNameInput").value = sectionNames[idx] || "";
     $("sectionNameInput").placeholder = "e.g., VIP Stand (currently " + getSectionName(idx) + ")";
     $("sectionLevelSelect").value = getSectionPos(idx).levelId;
+
+    /* Corner UI */
+    var kind = getSectionKind(idx);
+    $("sectionKindSelect").value = kind;
+    if (kind === "standard") {
+      $("cornerConfigPanel").style.display = "none";
+    } else {
+      $("cornerConfigPanel").style.display = "";
+      var cc = getCornerConfig(idx);
+      $("cornerHSeats").value = cc.hSeats;
+      $("cornerVSeats").value = cc.vSeats;
+      $("cornerVRows").value = cc.vRows;
+      $("cornerSeatBadge").textContent = "Corner total: " + cornerSeatCount(idx) + " seats";
+    }
+
     if (tableMode) {
       var totalTables = getTableCount(idx); var rowCount = getSectionTableRows(idx).length;
       $("sectionRowsLabel").textContent = "Tables in this section"; $("sectionRowsInput").style.display = "none";
       $("sectionRowsBadge").textContent = rowCount + (rowCount === 1 ? " row" : " rows") + " · " + totalTables + (totalTables === 1 ? " table" : " tables");
     } else {
       var rows = getRowCount(idx);
-      $("sectionRowsLabel").textContent = "Rows in this section"; $("sectionRowsInput").style.display = "";
+      $("sectionRowsLabel").textContent = (kind === "standard" ? "Rows in this section" : "Rows in horizontal leg"); $("sectionRowsInput").style.display = "";
       $("sectionRowsInput").value = rows; $("sectionRowsInput").max = 52;
       $("sectionRowsBadge").textContent = rows + (rows === 1 ? " row" : " rows");
     }
@@ -1793,6 +1898,67 @@ document.addEventListener("DOMContentLoaded", function(){
         seatsWrap.appendChild(gap);
       }
     }
+  }
+
+  /* ============ CORNER RENDERERS ============ */
+  function buildCornerRow(tier, seatCount, seatClass, alignRight) {
+    var rowEl = document.createElement("div");
+    rowEl.className = "fs-corner-row" + (alignRight ? " right" : "");
+    for (var i = 0; i < seatCount; i++) {
+      var s = document.createElement("div");
+      s.className = (seatClass || "fs-seat") + " " + tier;
+      s.textContent = (i + 1);
+      rowEl.appendChild(s);
+    }
+    return rowEl;
+  }
+
+  function buildCornerSeatingBlock(idx, tierForRow, seatClass) {
+    var cfg = getCornerConfig(idx);
+    var kind = getSectionKind(idx);
+    var alignRight = (kind === "corner-right");
+    var hRows = getRowCount(idx);
+    var wrap = document.createElement("div");
+    wrap.className = "fs-corner-rows";
+
+    // Horizontal leg (full width of L) — top rows
+    for (var r = 0; r < hRows; r++) {
+      var rowTier = tierForRow ? tierForRow(r, "h") : "cyan";
+      wrap.appendChild(buildCornerRow(rowTier, cfg.hSeats, seatClass, false));
+    }
+    // Vertical-only rows (bottom of L) — aligned left or right
+    var seatPx = (seatClass === "fs-seat") ? 12 : 22;
+    for (var v = 0; v < cfg.vRows; v++) {
+      var rowTierV = tierForRow ? tierForRow(hRows + v, "v") : "cyan";
+      var rEl = document.createElement("div");
+      rEl.className = "fs-corner-row" + (alignRight ? " right" : "");
+      if (!alignRight) {
+        // seats on the left
+        for (var a = 0; a < cfg.vSeats; a++) {
+          var sA = document.createElement("div");
+          sA.className = (seatClass || "fs-seat") + " " + rowTierV;
+          sA.textContent = (a + 1);
+          rEl.appendChild(sA);
+        }
+        var spacerA = document.createElement("div");
+        spacerA.className = "fs-corner-spacer";
+        spacerA.style.height = seatPx + "px";
+        rEl.appendChild(spacerA);
+      } else {
+        var spacerB = document.createElement("div");
+        spacerB.className = "fs-corner-spacer";
+        spacerB.style.height = seatPx + "px";
+        rEl.appendChild(spacerB);
+        for (var b = 0; b < cfg.vSeats; b++) {
+          var sB = document.createElement("div");
+          sB.className = (seatClass || "fs-seat") + " " + rowTierV;
+          sB.textContent = (b + 1);
+          rEl.appendChild(sB);
+        }
+      }
+      wrap.appendChild(rEl);
+    }
+    return wrap;
   }
 
   function tableUnitMetrics(scale) {
@@ -2102,24 +2268,49 @@ document.addEventListener("DOMContentLoaded", function(){
   function renderStandardLayout(container, sections) {
     var stageName = ($("stageName").value || "STAGE").trim().toUpperCase();
     for (var b = 0; b < sections; b++) {
-      var rowCount = getRowCount(b); var map = buildRowTierMap(rowCount, b); var pos = getSectionPos(b);
+      var pos = getSectionPos(b);
       var lvl = levels.find(function(x){return x.id === pos.levelId;});
-      var blockEl = document.createElement("div"); blockEl.className = "block"; blockEl.dataset.sectionIdx = b;
-      var bl = document.createElement("div"); bl.className = "block-label"; bl.textContent = getSectionName(b) + " · " + rowCount + " rows" + (lvl ? " · " + lvl.name : ""); blockEl.appendChild(bl);
+      var kind = getSectionKind(b);
+      var blockEl = document.createElement("div");
+      blockEl.className = "block";
+      if (kind === "corner-left") blockEl.classList.add("corner-left");
+      if (kind === "corner-right") blockEl.classList.add("corner-right");
+      blockEl.dataset.sectionIdx = b;
+
+      var bl = document.createElement("div"); bl.className = "block-label";
+      var kindTag = kind === "corner-left" ? " · LEFT CORNER" : (kind === "corner-right" ? " · RIGHT CORNER" : "");
+      bl.textContent = getSectionName(b) + kindTag + " · " + getRowCount(b) + " rows" + (lvl ? " · " + lvl.name : "");
+      blockEl.appendChild(bl);
+
       var stageLine = document.createElement("div"); stageLine.className = "stage-line"; stageLine.textContent = stageName; blockEl.appendChild(stageLine);
-      var rowsStack = document.createElement("div"); rowsStack.className = "rows-stack";
-      for (var r = 0; r < rowCount; r++) {
-        var tier = map[r] || "cyan"; var seatCount = Math.max(4, Math.min(90, getSeatsForRow(b, r)));
-        var rowEl = document.createElement("div"); rowEl.className = "horizontal-row"; rowEl.dataset.rowIdx = r;
-        var rl = document.createElement("div"); rl.className = "row-label"; rl.textContent = "Row " + rowLabel(r); rowEl.appendChild(rl);
-        var seatsWrap = document.createElement("div"); seatsWrap.className = "row-seats";
-        var inner = document.createElement("div"); inner.className = "row-seats-inner";
-        appendSeatsWithGaps(inner, seatCount, tier, b, r, 'row-seat');
-        seatsWrap.appendChild(inner); rowEl.appendChild(seatsWrap);
-        var tt = document.createElement("div"); tt.className = "row-tier-tag " + tier; tt.textContent = tierTagText(tier); rowEl.appendChild(tt);
-        rowsStack.appendChild(rowEl);
+
+      if (isCornerSection(b)) {
+        var cfg = getCornerConfig(b);
+        var hRows = getRowCount(b);
+        var mapC = buildRowTierMap(hRows + cfg.vRows, b);
+        var hint = document.createElement("div");
+        hint.className = "corner-hint";
+        hint.textContent = "Top " + cfg.hSeats + " seats × " + hRows + " rows · Leg " + cfg.vSeats + " seats × " + cfg.vRows + " rows";
+        blockEl.appendChild(hint);
+        var cornerWrap = buildCornerSeatingBlock(b, function(r) { return mapC[r] || "cyan"; }, "row-seat");
+        blockEl.appendChild(cornerWrap);
+      } else {
+        var rowCount = getRowCount(b); var map = buildRowTierMap(rowCount, b);
+        var rowsStack = document.createElement("div"); rowsStack.className = "rows-stack";
+        for (var r = 0; r < rowCount; r++) {
+          var tier = map[r] || "cyan"; var seatCount = Math.max(4, Math.min(90, getSeatsForRow(b, r)));
+          var rowEl = document.createElement("div"); rowEl.className = "horizontal-row"; rowEl.dataset.rowIdx = r;
+          var rl = document.createElement("div"); rl.className = "row-label"; rl.textContent = "Row " + rowLabel(r); rowEl.appendChild(rl);
+          var seatsWrap = document.createElement("div"); seatsWrap.className = "row-seats";
+          var inner = document.createElement("div"); inner.className = "row-seats-inner";
+          appendSeatsWithGaps(inner, seatCount, tier, b, r, 'row-seat');
+          seatsWrap.appendChild(inner); rowEl.appendChild(seatsWrap);
+          var tt = document.createElement("div"); tt.className = "row-tier-tag " + tier; tt.textContent = tierTagText(tier); rowEl.appendChild(tt);
+          rowsStack.appendChild(rowEl);
+        }
+        blockEl.appendChild(rowsStack);
       }
-      blockEl.appendChild(rowsStack); container.appendChild(blockEl);
+      container.appendChild(blockEl);
     }
     container.appendChild(buildLegend());
   }
@@ -2170,7 +2361,7 @@ document.addEventListener("DOMContentLoaded", function(){
     if ($("spSummary")) {
       var sections = l1; var info = sections + " section" + (sections === 1 ? "" : "s");
       if (tableMode) { var totalTables = 0, totalRows = 0; for (var i = 0; i < sections; i++) { totalTables += getTableCount(i); totalRows += getSectionTableRows(i).length; } info += " · " + totalRows + " rows · " + totalTables + " tables · " + chairsPerTable() + " chairs/table"; }
-      else { var totalSeats = 0; for (var j = 0; j < sections; j++) { var r = getRowCount(j); for (var k = 0; k < r; k++) totalSeats += getSeatsForRow(j, k); } info += " · " + totalSeats + " seats"; }
+      else { var totalSeats = 0; for (var j = 0; j < sections; j++) { if (isCornerSection(j)) { totalSeats += cornerSeatCount(j); continue; } var r = getRowCount(j); for (var k = 0; k < r; k++) totalSeats += getSeatsForRow(j, k); } info += " · " + totalSeats + " seats"; }
       $("spSummary").textContent = info;
     }
     if (tableMode) disableSeatFinder("Seat identifier works in Rows mode"); else enableSeatFinder();
@@ -2257,18 +2448,42 @@ document.addEventListener("DOMContentLoaded", function(){
   function buildFSSection(sectionIdx) {
     var pos = getSectionPos(sectionIdx); var lv = levels.find(function(x){return x.id === pos.levelId;});
     var stageName = ($("stageName").value || "STAGE").trim().toUpperCase();
-    var el = document.createElement("div"); el.className = "fs-section"; el.dataset.section = sectionIdx;
-    var title = document.createElement("div"); title.className = "fs-section-title"; title.textContent = getSectionName(sectionIdx); el.appendChild(title);
+    var kind = getSectionKind(sectionIdx);
+    var isCorner = (kind === "corner-left" || kind === "corner-right");
+
+    var el = document.createElement("div"); el.className = "fs-section";
+    if (kind === "corner-left") el.classList.add("corner-left");
+    if (kind === "corner-right") el.classList.add("corner-right");
+    el.dataset.section = sectionIdx;
+
+    var title = document.createElement("div"); title.className = "fs-section-title"; title.textContent = getSectionName(sectionIdx);
+    if (isCorner) {
+      var badge = document.createElement("span"); badge.className = "fs-corner-badge";
+      badge.textContent = (kind === "corner-left" ? "L-L" : "L-R");
+      title.appendChild(badge);
+    }
+    el.appendChild(title);
+
     var loc = document.createElement("div"); loc.className = "fs-section-location";
     var stage = document.createElement("div"); stage.className = "fs-section-stage"; stage.textContent = stageName;
+
     if (tableMode) {
       var rows = getSectionTableRows(sectionIdx); var totalTables = getTableCount(sectionIdx);
       var tier = getSectionTierOverride(sectionIdx) || (getActiveTiers()[getActiveTiers().length - 1] || "cyan");
-      loc.textContent = (lv ? lv.name.toUpperCase() : "—") + " · " + rows.length + (rows.length === 1 ? " ROW" : " ROWS") + " · " + totalTables + (totalTables === 1 ? " TABLE" : " TABLES") + " · " + chairsPerTable() + " CHAIRS/TABLE";
+      loc.textContent = (lv ? lv.name.toUpperCase() : "—") + " · " + rows.length + (rows.length === 1 ? " ROW" : " ROWS") + " · " + totalTables + (totalTables === 1 ? " TABLE" : " TABLES");
       if (lv) loc.style.color = lv.color;
       el.appendChild(loc); el.appendChild(stage);
-      var meta = document.createElement("div"); meta.className = "fs-section-location"; meta.textContent = shapeLabel(tableConfig.shape).toUpperCase() + " · " + dimsText() + " · GAP " + tableConfig.spacingCm + " CM · " + rowSummary(rows); el.appendChild(meta);
+      var meta = document.createElement("div"); meta.className = "fs-section-location"; meta.textContent = shapeLabel(tableConfig.shape).toUpperCase() + " · " + dimsText(); el.appendChild(meta);
       el.appendChild(buildTableRowsGroup(rows, tableConfig.shape, tableConfig, tier, 1));
+    } else if (isCorner) {
+      var cfg = getCornerConfig(sectionIdx);
+      var hRows = getRowCount(sectionIdx);
+      loc.textContent = (lv ? lv.name.toUpperCase() : "—") + " · CORNER " + (kind === "corner-left" ? "LEFT" : "RIGHT") + " · " + cfg.hSeats + "×" + hRows + " + " + cfg.vSeats + "×" + cfg.vRows;
+      if (lv) loc.style.color = lv.color;
+      el.appendChild(loc); el.appendChild(stage);
+      var mapC = buildRowTierMap(hRows + cfg.vRows, sectionIdx);
+      var cornerWrap = buildCornerSeatingBlock(sectionIdx, function(r) { return mapC[r] || "cyan"; }, "fs-seat");
+      el.appendChild(cornerWrap);
     } else {
       var rowCount = getRowCount(sectionIdx); var map = buildRowTierMap(rowCount, sectionIdx);
       loc.textContent = (lv ? lv.name.toUpperCase() : "—") + " · " + rowCount + " rows";
@@ -2958,6 +3173,8 @@ document.addEventListener("DOMContentLoaded", function(){
     delete sectionRowOverrides[idx];
     delete sectionTableRows[idx];
     delete sectionPositions[idx];
+    delete sectionKinds[idx];
+    delete cornerConfigs[idx];
 
     sectionNames = shiftKeyedMap(sectionNames, idx);
     sectionTierOverrides = shiftKeyedMap(sectionTierOverrides, idx);
@@ -2965,6 +3182,8 @@ document.addEventListener("DOMContentLoaded", function(){
     sectionRowOverrides = shiftKeyedMap(sectionRowOverrides, idx);
     sectionTableRows = shiftKeyedMap(sectionTableRows, idx);
     sectionPositions = shiftKeyedMap(sectionPositions, idx);
+    sectionKinds = shiftKeyedMap(sectionKinds, idx);
+    cornerConfigs = shiftKeyedMap(cornerConfigs, idx);
 
     var newTotal = total - 1;
     $("totalLevel1").value = newTotal;
@@ -3056,6 +3275,22 @@ document.addEventListener("DOMContentLoaded", function(){
     for (var s = 0; s < count; s++) {
       var pos = getSectionPos(s); var lv = levels.find(function(x){return x.id === pos.levelId;});
       var base = { name: getSectionName(s), level: lv ? lv.name : null, x: pos.x, y: pos.y, scale: pos.scale, rotation: pos.rotation, tierOverride: getSectionTierOverride(s) };
+
+      if (isCornerSection(s)) {
+        var cc = getCornerConfig(s);
+        base.mode = "corner";
+        base.corner = {
+          kind: getSectionKind(s),
+          hSeats: cc.hSeats,
+          vSeats: cc.vSeats,
+          vRows: cc.vRows,
+          hRows: getRowCount(s),
+          totalSeats: cornerSeatCount(s)
+        };
+        sections.push(base);
+        continue;
+      }
+
       if (tableMode) {
         var rows = getSectionTableRows(s); var tier = getSectionTierOverride(s) || (getActiveTiers()[getActiveTiers().length - 1] || "cyan");
         var cpt = chairsPerTable(); var flatTables = []; var tableNum = 0;
@@ -3117,10 +3352,19 @@ document.addEventListener("DOMContentLoaded", function(){
     var name = $("eventName").value || "Untitled Event"; var lines;
     if (tableMode) {
       lines = ["Section,Level,TableRow,TableIndex,Shape,Width(cm),Length(cm),Spacing(cm),Chairs,Tier,X,Y,Scale,Rotation"];
-      buildSectionsData().forEach(function(sec) { sec.tables.forEach(function(t) { lines.push(['"' + sec.name + '"', '"' + (sec.level||"") + '"', t.row, t.table, t.shape, t.widthCm, t.lengthCm, t.spacingCm, t.chairs, t.tier, sec.x, sec.y, sec.scale, sec.rotation].join(",")); }); });
+      buildSectionsData().forEach(function(sec) { if (!sec.tables) return; sec.tables.forEach(function(t) { lines.push(['"' + sec.name + '"', '"' + (sec.level||"") + '"', t.row, t.table, t.shape, t.widthCm, t.lengthCm, t.spacingCm, t.chairs, t.tier, sec.x, sec.y, sec.scale, sec.rotation].join(",")); }); });
     } else {
-      lines = ["Section,Level,Row,Seat,Tier,X,Y,Scale,Rotation"];
-      buildSectionsData().forEach(function(sec) { sec.rows.forEach(function(row) { row.seats.forEach(function(seat) { lines.push(['"' + sec.name + '"', '"' + (sec.level||"") + '"', row.row, seat.seat, seat.tier, sec.x, sec.y, sec.scale, sec.rotation].join(",")); }); }); });
+      lines = ["Section,Level,Type,Row,Seat,Tier,X,Y,Scale,Rotation"];
+      buildSectionsData().forEach(function(sec) {
+        if (sec.mode === "corner" && sec.corner) {
+          var cc = sec.corner;
+          for (var r = 0; r < cc.hRows; r++) { for (var s = 1; s <= cc.hSeats; s++) { lines.push(['"' + sec.name + '"', '"' + (sec.level||"") + '"', cc.kind, "H" + (r+1), s, "", sec.x, sec.y, sec.scale, sec.rotation].join(",")); } }
+          for (var rv = 0; rv < cc.vRows; rv++) { for (var sv = 1; sv <= cc.vSeats; sv++) { lines.push(['"' + sec.name + '"', '"' + (sec.level||"") + '"', cc.kind, "V" + (rv+1), sv, "", sec.x, sec.y, sec.scale, sec.rotation].join(",")); } }
+          return;
+        }
+        if (!sec.rows) return;
+        sec.rows.forEach(function(row) { row.seats.forEach(function(seat) { lines.push(['"' + sec.name + '"', '"' + (sec.level||"") + '"', "standard", row.row, seat.seat, seat.tier, sec.x, sec.y, sec.scale, sec.rotation].join(",")); }); });
+      });
     }
     downloadFile(lines.join("\n"), name.toLowerCase().replace(/[^a-z0-9]+/g,"-") + "-venue.csv", "text/csv");
     showToast("Venue exported as CSV", "success");
@@ -3400,6 +3644,29 @@ document.addEventListener("DOMContentLoaded", function(){
   $("sectionNameInput").addEventListener("input", function() { setSectionName(currentEditingSection, this.value); rebuildSectionTabs(); renderSeatingPlan(); updateTableValidation(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
   $("sectionLevelSelect").addEventListener("change", function() { setSectionPos(currentEditingSection, "levelId", parseInt(this.value)); renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
 
+  /* ============ CORNER SECTION EVENT WIRING ============ */
+  $("sectionKindSelect").addEventListener("change", function() {
+    setSectionKind(currentEditingSection, this.value);
+    refreshSectionInputs();
+    calculateCapacity(); updateTierCountOptions(); updateRevenueCalculator();
+    rebuildRowOverrides(); renderSeatingPlan(); rebuildSectionTabs();
+    if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+    showToast("Section type: " + this.value, "info", 1800);
+  });
+
+  ["cornerHSeats","cornerVSeats","cornerVRows"].forEach(function(id) {
+    $(id).addEventListener("input", function() {
+      var idx = currentEditingSection;
+      var c = getCornerConfig(idx);
+      c.hSeats = clampInt($("cornerHSeats").value, 2, 90, c.hSeats);
+      c.vSeats = clampInt($("cornerVSeats").value, 1, 90, c.vSeats);
+      c.vRows  = clampInt($("cornerVRows").value, 1, 52, c.vRows);
+      $("cornerSeatBadge").textContent = "Corner total: " + cornerSeatCount(idx) + " seats";
+      calculateCapacity(); updateTierCountOptions(); updateRevenueCalculator(); renderSeatingPlan();
+      if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+    });
+  });
+
   $("sectionRowsInput").addEventListener("input", function() {
     if (tableMode) return;
     var v = parseInt(this.value); if (isNaN(v)) return;
@@ -3506,6 +3773,7 @@ document.addEventListener("DOMContentLoaded", function(){
     if (!confirm("Clear all section overrides, canvas elements, and reset positions?")) return;
     sectionRowOverrides = {}; sectionRowCounts = {}; sectionNames = {};
     sectionTierOverrides = {}; sectionPositions = {}; sectionTableRows = {};
+    sectionKinds = {}; cornerConfigs = {};
     canvasElements = []; nextCanvasElementId = 1; expandedElementId = null; lastFoundSeat = null; selectedElementId = null;
     levels = [{ id: 0, name: "Ground Floor", color: "#00FFFF", visible: true }];
     nextLevelId = 1; currentEditingSection = 0;
@@ -3552,7 +3820,6 @@ document.addEventListener("DOMContentLoaded", function(){
         updateRotateHandle(); updateShapeRotateHandle();
       }
     }
-    // Delete selected section with Del / Backspace when fullscreen open and section selected
     if ((e.key === "Delete" || e.key === "Backspace") && $("fullscreenOverlay").classList.contains("open") && selectedSectionIdx !== null) {
       var tag = (e.target && e.target.tagName) ? e.target.tagName.toLowerCase() : "";
       if (tag !== "input" && tag !== "textarea" && tag !== "select") {
@@ -3599,4 +3866,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-                </html>
+  </html>
