@@ -277,13 +277,26 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .preview-label-row { display: flex; justify-content: space-between; align-items: center; gap: 8px; margin-bottom: 10px; }
 .preview-label-row .preview-label { margin-bottom: 0; text-align: left; }
 
+/* ============ TICKET FLIP ============ */
 .ticket-flip-container { perspective: 1600px; width: 100%; }
-.ticket-flip-inner { display: grid; transition: transform 0.65s cubic-bezier(0.4, 0.0, 0.2, 1); transform-style: preserve-3d; width: 100%; }
+.ticket-flip-inner {
+  display: grid;
+  transition: transform 0.65s cubic-bezier(0.4, 0.0, 0.2, 1);
+  transform-style: preserve-3d;
+  width: 100%;
+}
 .ticket-flip-inner.flipped { transform: rotateY(180deg); }
-.ticket-flip-face { grid-area: 1 / 1; backface-visibility: hidden; -webkit-backface-visibility: hidden; display: flex; min-width: 0; }
+.ticket-flip-face {
+  grid-area: 1 / 1;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  display: flex;
+  min-width: 0;
+}
 .ticket-flip-face .ticket-card { flex: 1; width: 100%; min-height: 340px; }
 .ticket-flip-back { transform: rotateY(180deg); }
 
+/* ============ TICKET CARD ============ */
 .ticket-card {
   border-radius: 18px; padding: 24px;
   box-shadow: 0 25px 50px -12px rgba(0,0,0,0.25);
@@ -321,6 +334,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .barcode { width: 100%; height: 30px; background: repeating-linear-gradient(to right, #000 0px, #000 2px, #fff 2px, #fff 4px, #000 4px, #000 6px, #fff 6px, #fff 10px, #000 10px, #000 12px, #fff 12px, #fff 16px); }
 .barcode-num { font-family: monospace; font-size: 10px; font-weight: 700; color: #000; letter-spacing: 2px; word-break: break-all; }
 
+/* ============ TICKET BACK ============ */
 .ticket-back-card { gap: 14px; }
 .ticket-back-title { font-size: 11px; font-weight: 900; letter-spacing: 1.5px; text-transform: uppercase; color: var(--ticket-muted); }
 .ticket-back-terms { list-style: none; padding: 0; display: flex; flex-direction: column; gap: 6px; margin: 0; }
@@ -440,6 +454,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .fs-element-marker .marker-icon{font-size:14px;line-height:1;margin-bottom:2px;}
 .fs-element-marker .marker-label{line-height:1;text-align:center;word-break:break-word;}
 
+/* ========== TWO-POINT DRAG ========== */
 .fs-point-marker{position:absolute;width:30px;height:30px;border-radius:50%;display:none;align-items:center;justify-content:center;font-weight:900;font-size:12px;color:#04161c;cursor:grab;z-index:200;border:3px solid #fff;box-shadow:0 4px 14px rgba(0,0,0,0.35);user-select:none;touch-action:none;transition:transform 0.12s;}
 .fs-point-marker:hover{transform:scale(1.15);}
 .fs-point-marker.visible{display:flex;}
@@ -447,8 +462,11 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .fs-point-marker#fsPointA{background:#00FFFF;}
 .fs-point-marker#fsPointB{background:#f472b6;}
 .fs-point-marker .pt-label{pointer-events:none;}
+.fs-point-guide{position:absolute;pointer-events:none;z-index:1;opacity:0;transition:opacity 0.2s;}
+.fs-point-guide.visible{opacity:0.65;}
+.fs-point-guide svg{position:absolute;overflow:visible;}
 
-/* ========== EXPANDED SECTION FLOATING CONTROLS ========== */
+/* ========== SECTION FLOATING CONTROLS ========== */
 .fs-section-controls {
   position: absolute;
   bottom: 20px;
@@ -463,9 +481,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
   flex-direction: column;
   gap: 8px;
   box-shadow: 0 12px 40px rgba(0,0,0,0.6);
-  width: 280px;
-  max-height: calc(100% - 40px);
-  overflow-y: auto;
+  min-width: 220px;
 }
 .fs-section-controls.visible { display: flex; }
 .fs-section-controls-title {
@@ -477,37 +493,23 @@ h1,h2,h3{line-height:1.15;font-weight:700}
   margin-bottom: 4px;
   border-bottom: 1px solid rgba(0,255,255,0.2);
   padding-bottom: 6px;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
 }
-.fs-section-controls-title .close-x {
-  cursor: pointer;
-  font-size: 14px;
-  color: rgba(255,255,255,0.5);
-  padding: 0 4px;
-  border-radius: 4px;
-}
-.fs-section-controls-title .close-x:hover { color: #fff; background: rgba(255,255,255,0.1); }
 .fs-section-controls .fs-ctrl-field {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  gap: 8px;
+  gap: 10px;
 }
 .fs-section-controls .fs-ctrl-field label {
-  font-size: 10px;
+  font-size: 10.5px;
   font-weight: 700;
   color: rgba(255,255,255,0.7);
   text-transform: uppercase;
   letter-spacing: 0.05em;
   flex-shrink: 0;
-  min-width: 60px;
 }
-.fs-section-controls .fs-ctrl-field input,
-.fs-section-controls .fs-ctrl-field select {
-  flex: 1;
-  min-width: 0;
+.fs-section-controls .fs-ctrl-field input {
+  width: 80px;
   padding: 5px 8px;
   background: rgba(255,255,255,0.1);
   border: 1px solid rgba(255,255,255,0.2);
@@ -516,103 +518,21 @@ h1,h2,h3{line-height:1.15;font-weight:700}
   font-family: inherit;
   font-weight: 700;
   font-size: 11.5px;
-  text-align: left;
+  text-align: right;
 }
-.fs-section-controls .fs-ctrl-field input[type="number"] { text-align: right; }
-.fs-section-controls .fs-ctrl-field input:focus,
-.fs-section-controls .fs-ctrl-field select:focus {
+.fs-section-controls .fs-ctrl-field input:focus {
   outline: none;
   border-color: #00FFFF;
   background: rgba(0,255,255,0.15);
 }
-.fs-section-controls .fs-ctrl-field select option { color: #0a0f14; background: #fff; }
-.fs-section-controls .fs-ctrl-pair {
+.fs-section-controls .fs-ctrl-actions {
   display: flex;
   gap: 6px;
+  margin-top: 6px;
+}
+.fs-section-controls .fs-ctrl-actions button {
   flex: 1;
-  min-width: 0;
-}
-.fs-section-controls .fs-ctrl-pair input {
-  flex: 1;
-  min-width: 0;
-  padding: 5px 8px;
-  background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(255,255,255,0.2);
-  border-radius: 6px;
-  color: #fff;
-  font-family: inherit;
-  font-weight: 700;
-  font-size: 11.5px;
-  text-align: center;
-}
-.fs-section-controls .fs-ctrl-pair input:focus { outline: none; border-color: #00FFFF; background: rgba(0,255,255,0.15); }
-
-.fs-ctrl-subsection {
-  background: rgba(255,255,255,0.04);
-  border: 1px dashed rgba(255,255,255,0.15);
-  border-radius: 8px;
-  padding: 8px;
-  margin-top: 4px;
-}
-.fs-ctrl-subtitle {
-  font-size: 9.5px;
-  font-weight: 900;
-  text-transform: uppercase;
-  letter-spacing: 0.06em;
-  color: #67e8f9;
-  margin-bottom: 6px;
-}
-.fs-ctrl-row-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
-  gap: 4px;
-  max-height: 160px;
-  overflow-y: auto;
-  padding: 2px;
-}
-.fs-ctrl-row-grid .fs-ctrl-row-item {
-  display: flex;
-  align-items: center;
-  gap: 4px;
-  background: rgba(255,255,255,0.06);
-  border-radius: 4px;
-  padding: 3px 5px;
-  font-size: 9.5px;
-  color: #fff;
-  border: 1px solid rgba(255,255,255,0.08);
-}
-.fs-ctrl-row-grid .fs-ctrl-row-item label {
-  font-weight: 800;
-  flex-shrink: 0;
-  color: rgba(255,255,255,0.75);
-  font-size: 9px;
-}
-.fs-ctrl-row-grid .fs-ctrl-row-item input {
-  width: 100%;
-  min-width: 0;
-  padding: 2px 4px;
-  background: rgba(255,255,255,0.1);
-  border: 1px solid rgba(255,255,255,0.2);
-  border-radius: 3px;
-  color: #fff;
-  font-family: inherit;
-  font-size: 10.5px;
-  font-weight: 700;
-  text-align: center;
-}
-.fs-ctrl-row-grid .fs-ctrl-row-item input:focus {
-  outline: none;
-  border-color: #00FFFF;
-  background: rgba(0,255,255,0.15);
-}
-.fs-ctrl-actions {
-  display: flex;
-  gap: 6px;
-  margin-top: 4px;
-}
-.fs-ctrl-actions button {
-  flex: 1;
-  padding: 7px;
+  padding: 6px;
   border-radius: 6px;
   border: 1px solid rgba(255,255,255,0.2);
   background: rgba(255,255,255,0.08);
@@ -622,7 +542,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
   font-size: 10.5px;
   cursor: pointer;
 }
-.fs-ctrl-actions button:hover { background: #00FFFF; color: #04161c; border-color: #00FFFF; }
+.fs-section-controls .fs-ctrl-actions button:hover { background: #00FFFF; color: #04161c; border-color: #00FFFF; }
 
 .sp-fullscreen { position: fixed; inset: 0; background: #0a0f14; z-index: 9999; display: none; flex-direction: column; padding: 16px; }
 .sp-fullscreen.open { display: flex; }
@@ -994,12 +914,6 @@ h1,h2,h3{line-height:1.15;font-weight:700}
           <div class="form-group" id="seatsPerRowGroup"><label for="totalLevel3">Default Seats per Row (4–90)</label><input type="number" id="totalLevel3" min="4" max="90" value="8" /></div>
         </div>
 
-        <div style="display:flex; gap:8px; margin-bottom:16px;">
-          <button type="button" class="btn-mini fs-btn" id="openFullscreen" style="flex:1; padding:10px; font-size:12px;">⛶ Open Full Venue Layout</button>
-          <button type="button" class="btn-mini" id="clearAllOverrides" style="flex:1; padding:10px; font-size:12px;">Clear All Overrides</button>
-        </div>
-        <p class="form-hint" style="margin-top:-8px; margin-bottom:16px; text-align:center;">Edit each section's name, level, tier, position, rotation, scale, and per-row seat counts in the Full Venue Layout's floating panel.</p>
-
         <div class="form-group">
           <label>Seat Grouping &amp; Spacing</label>
           <div class="row-overrides-section" style="margin-top:0;">
@@ -1018,8 +932,52 @@ h1,h2,h3{line-height:1.15;font-weight:700}
               <label for="seatGapRowSpecific">Apply To</label>
               <select id="seatGapRowSpecific">
                 <option value="all" selected>All rows in every section</option>
-                <option value="current">Only the currently selected section</option>
+                <option value="current">Only current section's rows</option>
               </select>
+            </div>
+          </div>
+        </div>
+
+        <div class="form-group" id="rowOverridesGroup">
+          <label>Per-Section Configuration</label>
+          <div class="row-overrides-section">
+            <div class="row-overrides-header">
+              <div class="section-tabs" id="sectionTabs"></div>
+              <button type="button" class="btn-mini fs-btn" id="openFullscreen">⛶ Full Screen</button>
+              <button type="button" class="btn-mini" id="clearAllOverrides">Clear All</button>
+            </div>
+            <div class="section-rows-row"><label for="sectionNameInput">Section Name</label><input type="text" id="sectionNameInput" placeholder="e.g., VIP Stand" maxlength="40" /></div>
+            <div class="section-rows-row"><label for="sectionLevelSelect">Level</label><select id="sectionLevelSelect"></select></div>
+            <div class="section-rows-row" id="sectionRowsRow">
+              <label for="sectionRowsInput" id="sectionRowsLabel">Rows in this section</label>
+              <span class="section-rows-badge" id="sectionRowsBadge">6 rows</span>
+              <input type="number" id="sectionRowsInput" min="1" max="52" value="6" />
+            </div>
+            <div class="table-rows-panel" id="tableRowsBlock" style="display:none;">
+              <div class="row-overrides-hint">Define each row of tables — e.g., Row A: 4 tables, Row B: 3 tables.</div>
+              <div class="table-rows-list" id="tableRowsList"></div>
+              <button type="button" class="btn-mini" id="addTableRowBtn">+ Add Table Row</button>
+            </div>
+            <div class="section-rows-row">
+              <label for="sectionTierOverride">Section Tier Override</label>
+              <select id="sectionTierOverride">
+                <option value="">— Use Row Distribution —</option>
+              </select>
+            </div>
+            <div class="form-row-3" style="margin: 6px 0 10px;">
+              <div class="form-group" style="margin-bottom:0;"><label for="sectionXInput" style="font-size:10px;">X Position (px)</label><input type="number" id="sectionXInput" min="0" max="3000" value="100" style="text-align:center;padding:8px;" /></div>
+              <div class="form-group" style="margin-bottom:0;"><label for="sectionYInput" style="font-size:10px;">Y Position (px)</label><input type="number" id="sectionYInput" min="0" max="3000" value="200" style="text-align:center;padding:8px;" /></div>
+              <div class="form-group" style="margin-bottom:0;"><label for="sectionRotationInput" style="font-size:10px;">Rotation (°)</label><input type="number" id="sectionRotationInput" min="-360" max="360" value="0" style="text-align:center;padding:8px;" /></div>
+            </div>
+            <p class="form-hint" style="margin:-4px 0 10px;">Sections auto-arrange. Editing X/Y switches to manual positioning.</p>
+            <div class="section-rows-row">
+              <label for="sectionScaleInput">Scale (0.5× – 2×)</label>
+              <span class="section-rows-badge" id="sectionScaleBadge">1.00×</span>
+              <input type="range" id="sectionScaleInput" min="0.5" max="2" step="0.05" value="1" />
+            </div>
+            <div id="rowOverridesBlock">
+              <div class="row-overrides-hint">Each section has its own position, scale, level and row configuration.</div>
+              <div class="row-overrides-grid" id="rowOverridesGrid"></div>
             </div>
           </div>
         </div>
@@ -1240,55 +1198,27 @@ h1,h2,h3{line-height:1.15;font-weight:700}
       <div class="fs-point-marker" id="fsPointA" data-point="A"><span class="pt-label">A</span></div>
       <div class="fs-point-marker" id="fsPointB" data-point="B"><span class="pt-label">B</span></div>
 
-      <!-- Expanded Section Properties Floating Panel -->
+      <!-- Floating Section Controls (Dragging & Coordinate Bar) -->
       <div class="fs-section-controls" id="fsSectionControls">
-        <div class="fs-section-controls-title">
-          <span>Section Properties</span>
-          <span class="close-x" id="fsCtrlClose">✕</span>
-        </div>
-
+        <div class="fs-section-controls-title">Section Properties</div>
         <div class="fs-ctrl-field">
-          <label>Editing</label>
-          <select id="fsCtrlSectionSel"></select>
+          <label>X Position</label>
+          <input type="number" id="fsCtrlX" min="0" max="3000" step="1" />
         </div>
         <div class="fs-ctrl-field">
-          <label>Name</label>
-          <input type="text" id="fsCtrlName" maxlength="40" placeholder="Section name" />
+          <label>Y Position</label>
+          <input type="number" id="fsCtrlY" min="0" max="3000" step="1" />
         </div>
         <div class="fs-ctrl-field">
-          <label>Level</label>
-          <select id="fsCtrlLevel"></select>
+          <label>Rotation (°)</label>
+          <input type="number" id="fsCtrlRot" min="-360" max="360" step="1" />
         </div>
         <div class="fs-ctrl-field">
-          <label>Tier</label>
-          <select id="fsCtrlTier"></select>
+          <label>Scale</label>
+          <input type="number" id="fsCtrlScale" min="0.5" max="2" step="0.05" />
         </div>
-        <div class="fs-ctrl-field">
-          <label>X / Y</label>
-          <div class="fs-ctrl-pair">
-            <input type="number" id="fsCtrlX" min="0" max="3000" step="1" />
-            <input type="number" id="fsCtrlY" min="0" max="3000" step="1" />
-          </div>
-        </div>
-        <div class="fs-ctrl-field">
-          <label>Rot / Scale</label>
-          <div class="fs-ctrl-pair">
-            <input type="number" id="fsCtrlRot" min="-360" max="360" step="1" />
-            <input type="number" id="fsCtrlScale" min="0.5" max="2" step="0.05" />
-          </div>
-        </div>
-        <div class="fs-ctrl-field" id="fsCtrlRowsField">
-          <label>Rows</label>
-          <input type="number" id="fsCtrlRows" min="1" max="52" step="1" />
-        </div>
-
-        <div class="fs-ctrl-subsection" id="fsCtrlRowOverrides">
-          <div class="fs-ctrl-subtitle">Per-Row Seats</div>
-          <div class="fs-ctrl-row-grid" id="fsCtrlRowGrid"></div>
-        </div>
-
         <div class="fs-ctrl-actions">
-          <button type="button" id="fsCtrlDeselect">Done</button>
+          <button type="button" id="fsCtrlDeselect">Deselect</button>
         </div>
       </div>
     </div>
@@ -1364,8 +1294,8 @@ var pointB = { x: 1000, y: 480 };
 var arcAmount = 0;
 
 // ==== Seat Grouping / Spacing ====
-var seatGapEvery = 0;
-var seatGapSize = 1;
+var seatGapEvery = 0;   // gap after every N seats (0 = disabled)
+var seatGapSize = 1;    // gap size as multiple of seat width
 var seatGapRowSpecific = 'all';
 
 // ==== Section Dragging ====
@@ -1594,6 +1524,7 @@ document.addEventListener("DOMContentLoaded", function(){
     FEATURES = getPlanFeatures(currentPlan.id);
     var f = FEATURES;
 
+    // Base price field: hide on Basic plan
     var basePrice = $("basePriceGroup");
     if (basePrice) basePrice.style.display = (currentPlan.id === "basic") ? "none" : "";
 
@@ -1681,8 +1612,7 @@ document.addEventListener("DOMContentLoaded", function(){
   }
 
   function rebuildSectionTierOverrideDropdown(){
-    var sel = $("sectionTierOverride");
-    if (!sel) return;
+    var sel = $("sectionTierOverride"); if (!sel) return;
     var active = getActiveTiers(); var prev = sel.value; sel.innerHTML = "";
     var opt0 = document.createElement("option"); opt0.value = ""; opt0.textContent = "— Use Row Distribution —"; sel.appendChild(opt0);
     active.forEach(function(t){ var opt = document.createElement("option"); opt.value = t; opt.textContent = TIER_NAMES[t] || TIER_DEFAULT_NAMES[t] || t; sel.appendChild(opt); });
@@ -1737,7 +1667,6 @@ document.addEventListener("DOMContentLoaded", function(){
       var distLabel = document.querySelector('label[for="tierRows' + tierIdToCap(t) + '"]'); if (distLabel) distLabel.textContent = TIER_NAMES[t];
     });
     updateTicketPreview(); renderSeatingPlan();
-    refreshFloatingPanel();
     if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
   }
 
@@ -1781,7 +1710,7 @@ document.addEventListener("DOMContentLoaded", function(){
       var item = document.createElement("div"); item.className = "level-item";
       var swatch = document.createElement("div"); swatch.className = "level-swatch"; swatch.style.background = lv.color; item.appendChild(swatch);
       var nameInput = document.createElement("input"); nameInput.type = "text"; nameInput.className = "level-name-input"; nameInput.value = lv.name;
-      nameInput.addEventListener("input", function() { lv.name = nameInput.value || "Untitled Level"; rebuildLevelSelect(); renderFullscreen(); refreshFloatingPanel(); });
+      nameInput.addEventListener("input", function() { lv.name = nameInput.value || "Untitled Level"; rebuildLevelSelect(); renderFullscreen(); });
       item.appendChild(nameInput);
       var visLabel = document.createElement("label"); visLabel.className = "level-visible-toggle";
       var chk = document.createElement("input"); chk.type = "checkbox"; chk.checked = lv.visible;
@@ -1796,7 +1725,7 @@ document.addEventListener("DOMContentLoaded", function(){
           Object.keys(sectionPositions).forEach(function(k) { if (sectionPositions[k].levelId === lv.id) sectionPositions[k].levelId = firstId; });
           canvasElements.forEach(function(el) { if (el.levelId === lv.id) el.levelId = firstId; });
           levels.splice(i, 1);
-          rebuildLevelsList(); rebuildLevelSelect(); renderSeatingPlan(); renderFullscreen(); refreshFloatingPanel();
+          rebuildLevelsList(); rebuildLevelSelect(); renderSeatingPlan(); renderFullscreen();
         });
         item.appendChild(trash);
       }
@@ -1813,29 +1742,18 @@ document.addEventListener("DOMContentLoaded", function(){
       levels.forEach(function(lv) { var opt = document.createElement("option"); opt.value = lv.id; opt.textContent = lv.name; s.appendChild(opt); });
       if (currentVal) s.value = currentVal;
     });
-    // Also refresh the floating panel's level dropdown
-    var fsLevel = $("fsCtrlLevel");
-    if (fsLevel) {
-      var curVal = fsLevel.value;
-      fsLevel.innerHTML = "";
-      levels.forEach(function(lv){ var opt = document.createElement("option"); opt.value = lv.id; opt.textContent = lv.name; fsLevel.appendChild(opt); });
-      if (curVal) fsLevel.value = curVal;
-    }
   }
 
   function addLevel() {
     var id = nextLevelId++; var color = levelColors[levels.length % levelColors.length];
     levels.push({ id: id, name: "Level " + levels.length, color: color, visible: true });
-    rebuildLevelsList(); rebuildLevelSelect(); renderFullscreen(); refreshFloatingPanel();
+    rebuildLevelsList(); rebuildLevelSelect(); renderFullscreen();
   }
 
-  // Kept null-safe since the tabs UI has been removed from the page
   function rebuildSectionTabs() {
-    var container = $("sectionTabs");
-    if (!container) return;
     var sections = parseInt($("totalLevel1").value) || 1;
     if (currentEditingSection >= sections) currentEditingSection = 0;
-    container.innerHTML = "";
+    var container = $("sectionTabs"); container.innerHTML = "";
     for (var i = 0; i < sections; i++) {
       var btn = document.createElement("button"); btn.type = "button"; btn.className = "section-tab" + (i === currentEditingSection ? " active" : ""); btn.textContent = getSectionName(i);
       (function(idx) { btn.addEventListener("click", function() { currentEditingSection = idx; rebuildSectionTabs(); refreshSectionInputs(); rebuildRowOverrides(); rebuildTableRowsEditor(); }); })(i);
@@ -1843,24 +1761,86 @@ document.addEventListener("DOMContentLoaded", function(){
     }
   }
 
-  // Now just triggers the floating panel sync since the old UI is gone
   function refreshSectionInputs() {
-    refreshFloatingPanel();
+    var idx = currentEditingSection;
+    $("sectionNameInput").value = sectionNames[idx] || "";
+    $("sectionNameInput").placeholder = "e.g., VIP Stand (currently " + getSectionName(idx) + ")";
+    $("sectionLevelSelect").value = getSectionPos(idx).levelId;
+    if (tableMode) {
+      var totalTables = getTableCount(idx); var rowCount = getSectionTableRows(idx).length;
+      $("sectionRowsLabel").textContent = "Tables in this section"; $("sectionRowsInput").style.display = "none";
+      $("sectionRowsBadge").textContent = rowCount + (rowCount === 1 ? " row" : " rows") + " · " + totalTables + (totalTables === 1 ? " table" : " tables");
+    } else {
+      var rows = getRowCount(idx);
+      $("sectionRowsLabel").textContent = "Rows in this section"; $("sectionRowsInput").style.display = "";
+      $("sectionRowsInput").value = rows; $("sectionRowsInput").max = 52;
+      $("sectionRowsBadge").textContent = rows + (rows === 1 ? " row" : " rows");
+    }
+    var override = sectionTierOverrides[idx] || ""; if (override && !isTierActive(override)) override = "";
+    $("sectionTierOverride").value = override;
+    var pos = getSectionPos(idx);
+    $("sectionXInput").value = pos.x; $("sectionYInput").value = pos.y;
+    $("sectionRotationInput").value = pos.rotation;
+    $("sectionScaleInput").value = pos.scale; $("sectionScaleBadge").textContent = pos.scale.toFixed(2) + "×";
   }
 
   function rebuildRowOverrides() {
-    // Old grid is gone; forward to floating panel renderer
-    rebuildFloatingPanelRows();
+    if (tableMode) { $("rowOverridesGrid").innerHTML = ""; return; }
+    var rowCount = getRowCount(currentEditingSection);
+    var baseSeats = parseInt($("totalLevel3").value) || 10;
+    var container = $("rowOverridesGrid"); container.innerHTML = "";
+    if (rowCount <= 0) return;
+    var sectionData = sectionRowOverrides[currentEditingSection] || {};
+    for (var r = 0; r < rowCount; r++) {
+      var item = document.createElement("div"); item.className = "row-override-item";
+      var lbl = document.createElement("div"); lbl.className = "row-override-label"; lbl.textContent = "Row " + rowLabel(r);
+      var inp = document.createElement("input"); inp.type = "number"; inp.min = 4; inp.max = 90; inp.value = sectionData[r] !== undefined ? sectionData[r] : baseSeats;
+      (function(sIdx, rIdx, input) {
+        input.addEventListener("input", function() {
+          var val = parseInt(input.value);
+          if (!sectionRowOverrides[sIdx]) sectionRowOverrides[sIdx] = {};
+          if (isNaN(val)) delete sectionRowOverrides[sIdx][rIdx]; else sectionRowOverrides[sIdx][rIdx] = Math.max(4, Math.min(90, val));
+          calculateCapacity(); updateRevenueCalculator(); updateTierCountOptions(); renderSeatingPlan();
+          if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+        });
+      })(currentEditingSection, r, inp);
+      item.appendChild(lbl); item.appendChild(inp); container.appendChild(item);
+    }
   }
 
   function rebuildTableRowsEditor() {
-    // Old editor is gone; forward to floating panel renderer
-    rebuildFloatingPanelRows();
+    var block = $("tableRowsBlock");
+    if (!tableMode) { block.style.display = "none"; return; }
+    block.style.display = "";
+    var rows = ensureSectionTableRows(currentEditingSection);
+    var list = $("tableRowsList"); list.innerHTML = "";
+    rows.forEach(function(row, i) {
+      var item = document.createElement("div"); item.className = "table-row-item";
+      var lbl = document.createElement("span"); lbl.className = "table-row-label"; lbl.textContent = "Row " + rowLabel(i); item.appendChild(lbl);
+      var inp = document.createElement("input"); inp.type = "number"; inp.min = 1; inp.max = 50; inp.value = row.count;
+      (function(rowIdx) {
+        inp.addEventListener("input", function() { var v = parseInt(inp.value); if (isNaN(v)) return; v = Math.max(1, Math.min(50, v)); rows[rowIdx].count = v; if (this.value !== String(v)) this.value = v; updateTableRowAggregates(); });
+        inp.addEventListener("change", function() { var v = Math.max(1, Math.min(50, parseInt(inp.value) || 1)); inp.value = v; rows[rowIdx].count = v; updateTableRowAggregates(); });
+      })(i);
+      item.appendChild(inp);
+      var hint = document.createElement("span"); hint.className = "tr-hint"; hint.textContent = (row.count === 1 ? "table" : "tables"); item.appendChild(hint);
+      var del = document.createElement("button"); del.type = "button"; del.className = "btn-trash";
+      del.innerHTML = '<i data-lucide="trash-2" style="width:14px;height:14px;"></i>'; del.disabled = rows.length <= 1;
+      (function(rowIdx) { del.addEventListener("click", function() { if (rows.length <= 1) return; rows.splice(rowIdx, 1); sectionTableRows[currentEditingSection] = rows; rebuildTableRowsEditor(); updateTableRowAggregates(); }); })(i);
+      item.appendChild(del); list.appendChild(item);
+    });
+    if (window.lucide) lucide.createIcons();
   }
 
   function updateTableRowAggregates() {
-    calculateCapacity(); updateRevenueCalculator(); updateTierCountOptions(); updateTableSummary(); renderSeatingPlan();
+    refreshSectionInputs(); calculateCapacity(); updateRevenueCalculator(); updateTierCountOptions(); updateTableSummary(); renderSeatingPlan();
     if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+  }
+  function addTableRow() {
+    var rows = ensureSectionTableRows(currentEditingSection);
+    var lastCount = rows.length ? rows[rows.length - 1].count : getDefaultTableCount();
+    rows.push({ count: lastCount }); sectionTableRows[currentEditingSection] = rows;
+    rebuildTableRowsEditor(); updateTableRowAggregates();
   }
 
   /* ============ SEAT GAP HELPERS ============ */
@@ -1879,6 +1859,7 @@ document.addEventListener("DOMContentLoaded", function(){
       seat.textContent = (s + 1);
       if (seatClass !== 'fs-seat') seat.dataset.seatNum = (s + 1);
       seatsWrap.appendChild(seat);
+      // Insert gap after every N seats (but not after the last seat)
       if (doGap && seatGapEvery > 0 && ((s + 1) % seatGapEvery === 0) && (s + 1) < seatCount) {
         var gap = document.createElement("div");
         gap.className = (seatClass === 'fs-seat') ? 'fs-seat-gap' : 'row-seat-gap';
@@ -2317,8 +2298,7 @@ document.addEventListener("DOMContentLoaded", function(){
   }
 
   function rebuildLevelPills() {
-    var bar = $("fsLevelBar"); if (!bar) return;
-    bar.innerHTML = "";
+    var bar = $("fsLevelBar"); bar.innerHTML = "";
     var label = document.createElement("span"); label.textContent = "Levels:"; label.style.opacity = "0.7"; label.style.fontWeight = "700"; bar.appendChild(label);
     levels.forEach(function(lv) {
       var btn = document.createElement("button"); btn.type = "button"; btn.className = "fs-level-pill " + (lv.visible ? "on" : "off");
@@ -2368,12 +2348,14 @@ document.addEventListener("DOMContentLoaded", function(){
     return el;
   }
 
+  /* ============ ROTATED BOUNDING BOX ============ */
   function rotatedBBox(w, h, angleDeg) {
     var rad = (angleDeg || 0) * Math.PI / 180;
     var cos = Math.abs(Math.cos(rad)), sin = Math.abs(Math.sin(rad));
     return { w: w * cos + h * sin, h: w * sin + h * cos };
   }
 
+  /* ============ IMPROVED AUTO LAYOUT ============ */
   function autoLayoutSections(sectionEls, canvas) {
     if (!sectionEls.length) return;
     var spacing = Math.max(20, sectionSpacingPx);
@@ -2407,24 +2389,28 @@ document.addEventListener("DOMContentLoaded", function(){
     }
   }
 
+  /* ============ TWO-POINT DRAG LAYOUT ============ */
   function twoPointLayout(sectionEls, canvas) {
     if (!sectionEls.length) return;
     var ax = pointA.x, ay = pointA.y;
     var bx = pointB.x, by = pointB.y;
     var n = sectionEls.length;
 
+    // Quadratic bezier control point
     var mx = (ax + bx) / 2, my = (ay + by) / 2;
     var dx = bx - ax, dy = by - ay;
     var len = Math.sqrt(dx*dx + dy*dy) || 1;
-    var nx = -dy / len, ny = dx / len;
+    var nx = -dy / len, ny = dx / len;   // perpendicular normal
     var cx = mx + nx * arcAmount;
     var cy = my + ny * arcAmount;
 
     sectionEls.forEach(function(item, i) {
       var t = n === 1 ? 0.5 : i / (n - 1);
       var mt = 1 - t;
+      // Quadratic bezier position
       var px = mt*mt*ax + 2*mt*t*cx + t*t*bx;
       var py = mt*mt*ay + 2*mt*t*cy + t*t*by;
+      // Tangent angle for alignment
       var tx = 2*mt*(cx-ax) + 2*t*(bx-cx);
       var ty = 2*mt*(cy-ay) + 2*t*(by-cy);
       var angle = Math.atan2(ty, tx) * 180 / Math.PI;
@@ -2440,6 +2426,7 @@ document.addEventListener("DOMContentLoaded", function(){
     });
   }
 
+  /* ============ IMPROVED OVERLAP CHECK ============ */
   function checkSectionOverlaps(sectionEls, canvas) {
     var warning = $("fsOverlapWarning"), text = $("fsOverlapText");
     if (!warning || !text) return;
@@ -2501,7 +2488,7 @@ document.addEventListener("DOMContentLoaded", function(){
           }
           twoPointLayout(sectionEls, canvas);
           checkSectionOverlaps(sectionEls, canvas);
-          refreshFloatingPanel();
+          refreshSectionInputs();
         }
       }
       function end() {
@@ -2523,31 +2510,41 @@ document.addEventListener("DOMContentLoaded", function(){
     if (!canvas) return;
 
     function startDragSection(e, idx, el) {
+      // If auto layout or two-point mode is on, turn it off to allow manual dragging
       if (autoLayoutEnabled) {
         autoLayoutEnabled = false;
         var btn = $("fsToggleAuto"); if (btn) btn.classList.remove("active");
+        showToast("Manual positioning enabled", "info", 2000);
       }
       if (twoPointMode) {
         twoPointMode = false;
         var tpBtn = $("fsToggleTwoPoint"); if (tpBtn) tpBtn.classList.remove("active");
+        showToast("Two-Point mode disabled", "info", 2000);
       }
 
       selectedSectionIdx = idx;
-      currentEditingSection = idx;
       isDraggingSection = true;
 
+      // Highlight selected section
       canvas.querySelectorAll('.fs-section').forEach(function(s){ s.classList.remove('selected'); });
       el.classList.add('selected');
 
-      showFloatingPanel(idx);
+      // Show controls panel
+      var panel = $("fsSectionControls");
+      var pos = getSectionPos(idx);
+      $("fsCtrlX").value = pos.x;
+      $("fsCtrlY").value = pos.y;
+      $("fsCtrlRot").value = pos.rotation;
+      $("fsCtrlScale").value = pos.scale;
+      panel.classList.add("visible");
 
       var rect = canvas.getBoundingClientRect();
       var clientX = e.touches ? e.touches[0].clientX : e.clientX;
       var clientY = e.touches ? e.touches[0].clientY : e.clientY;
       dragStartX = clientX;
       dragStartY = clientY;
-      dragSectionStartX = getSectionPos(idx).x;
-      dragSectionStartY = getSectionPos(idx).y;
+      dragSectionStartX = pos.x;
+      dragSectionStartY = pos.y;
 
       function move(ev) {
         if (!isDraggingSection) return;
@@ -2575,6 +2572,7 @@ document.addEventListener("DOMContentLoaded", function(){
         isDraggingSection = false;
         document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', end);
         document.removeEventListener('touchmove', move); document.removeEventListener('touchend', end);
+        // Final overlap check
         var sectionEls = [];
         var sCount = parseInt($("totalLevel1").value) || 0;
         for (var i = 0; i < sCount; i++) {
@@ -2584,6 +2582,7 @@ document.addEventListener("DOMContentLoaded", function(){
           if (sEl) sectionEls.push({ idx: i, el: sEl });
         }
         checkSectionOverlaps(sectionEls, canvas);
+        refreshSectionInputs();
       }
 
       document.addEventListener('mousemove', move); document.addEventListener('mouseup', end);
@@ -2593,6 +2592,7 @@ document.addEventListener("DOMContentLoaded", function(){
     canvas.addEventListener('mousedown', function(e) {
       var section = e.target.closest('.fs-section');
       if (!section) {
+        // Click on empty canvas: deselect
         canvas.querySelectorAll('.fs-section').forEach(function(s){ s.classList.remove('selected'); });
         $("fsSectionControls").classList.remove("visible");
         selectedSectionIdx = null;
@@ -2617,212 +2617,35 @@ document.addEventListener("DOMContentLoaded", function(){
     }, { passive: true });
   }
 
-  /* ============ FLOATING PANEL: SHOW / SYNC / EDIT ============ */
-  function showFloatingPanel(idx) {
-    var panel = $("fsSectionControls");
-    if (!panel) return;
-    panel.classList.add("visible");
-    // Populate section selector
-    var sel = $("fsCtrlSectionSel");
-    if (sel) {
-      var sCount = parseInt($("totalLevel1").value) || 0;
-      sel.innerHTML = "";
-      for (var i = 0; i < sCount; i++) {
-        var opt = document.createElement("option");
-        opt.value = i;
-        opt.textContent = getSectionName(i);
-        sel.appendChild(opt);
-      }
-      sel.value = String(idx);
-    }
-    refreshFloatingPanel();
-  }
-
-  function refreshFloatingPanel() {
-    var panel = $("fsSectionControls");
-    if (!panel || !panel.classList.contains("visible")) return;
-    var idx = selectedSectionIdx;
-    if (idx === null || idx === undefined) return;
-
-    var pos = getSectionPos(idx);
-
-    // Section selector (rebuild options in case names changed)
-    var sel = $("fsCtrlSectionSel");
-    if (sel) {
-      var sCount = parseInt($("totalLevel1").value) || 0;
-      if (sel.options.length !== sCount) {
-        var curVal = sel.value;
-        sel.innerHTML = "";
-        for (var i = 0; i < sCount; i++) {
-          var opt = document.createElement("option");
-          opt.value = i;
-          opt.textContent = getSectionName(i);
-          sel.appendChild(opt);
-        }
-        if (curVal && parseInt(curVal) < sCount) sel.value = curVal;
-      } else {
-        // Refresh option labels only
-        for (var j = 0; j < sCount; j++) {
-          sel.options[j].textContent = getSectionName(j);
-        }
-      }
-      sel.value = String(idx);
-    }
-
-    // Name
-    var nameInp = $("fsCtrlName");
-    if (nameInp && document.activeElement !== nameInp) nameInp.value = sectionNames[idx] || "";
-
-    // Level dropdown
-    var levelSel = $("fsCtrlLevel");
-    if (levelSel) {
-      if (levelSel.options.length !== levels.length) {
-        levelSel.innerHTML = "";
-        levels.forEach(function(lv){ var opt = document.createElement("option"); opt.value = lv.id; opt.textContent = lv.name; levelSel.appendChild(opt); });
-      } else {
-        for (var k = 0; k < levels.length; k++) levelSel.options[k].textContent = levels[k].name;
-      }
-      levelSel.value = String(pos.levelId);
-    }
-
-    // Tier override dropdown
-    var tierSel = $("fsCtrlTier");
-    if (tierSel) {
-      var active = getActiveTiers();
-      var expected = active.length + 1; // +1 for "Use Row Distribution"
-      if (tierSel.options.length !== expected) {
-        tierSel.innerHTML = "";
-        var opt0 = document.createElement("option"); opt0.value = ""; opt0.textContent = "— Use Row Distribution —"; tierSel.appendChild(opt0);
-        active.forEach(function(t){ var opt = document.createElement("option"); opt.value = t; opt.textContent = TIER_NAMES[t] || t; tierSel.appendChild(opt); });
-      } else {
-        for (var m = 0; m < active.length; m++) tierSel.options[m+1].textContent = TIER_NAMES[active[m]] || active[m];
-      }
-      var curTier = sectionTierOverrides[idx] || "";
-      if (curTier && !isTierActive(curTier)) curTier = "";
-      tierSel.value = curTier;
-    }
-
-    // X / Y
-    var xIn = $("fsCtrlX"); if (xIn && document.activeElement !== xIn) xIn.value = pos.x;
-    var yIn = $("fsCtrlY"); if (yIn && document.activeElement !== yIn) yIn.value = pos.y;
-
-    // Rot / Scale
-    var rotIn = $("fsCtrlRot"); if (rotIn && document.activeElement !== rotIn) rotIn.value = pos.rotation;
-    var scIn = $("fsCtrlScale"); if (scIn && document.activeElement !== scIn) scIn.value = pos.scale;
-
-    // Rows
-    var rowsIn = $("fsCtrlRows");
-    var rowsField = $("fsCtrlRowsField");
-    if (rowsField) rowsField.style.display = tableMode ? "none" : "";
-    if (rowsIn && document.activeElement !== rowsIn) rowsIn.value = getRowCount(idx);
-
-    // Rows grid
-    rebuildFloatingPanelRows();
-  }
-
-  function rebuildFloatingPanelRows() {
-    var grid = $("fsCtrlRowGrid");
-    var subsec = $("fsCtrlRowOverrides");
-    if (!grid || !subsec) return;
-    if (selectedSectionIdx === null || selectedSectionIdx === undefined) { subsec.style.display = "none"; return; }
-
-    if (tableMode) { subsec.style.display = "none"; return; }
-    subsec.style.display = "";
-
-    var idx = selectedSectionIdx;
-    var rowCount = getRowCount(idx);
-    var baseSeats = parseInt($("totalLevel3").value) || 10;
-    var sectionData = sectionRowOverrides[idx] || {};
-
-    grid.innerHTML = "";
-    for (var r = 0; r < rowCount; r++) {
-      var item = document.createElement("div"); item.className = "fs-ctrl-row-item";
-      var lbl = document.createElement("label"); lbl.textContent = rowLabel(r);
-      var inp = document.createElement("input");
-      inp.type = "number"; inp.min = 4; inp.max = 90;
-      inp.value = sectionData[r] !== undefined ? sectionData[r] : baseSeats;
-      (function(sIdx, rIdx, input){
-        input.addEventListener("input", function(){
-          var val = parseInt(input.value);
-          if (!sectionRowOverrides[sIdx]) sectionRowOverrides[sIdx] = {};
-          if (isNaN(val)) delete sectionRowOverrides[sIdx][rIdx];
-          else sectionRowOverrides[sIdx][rIdx] = Math.max(4, Math.min(90, val));
-          calculateCapacity(); updateRevenueCalculator(); updateTierCountOptions();
-          renderSeatingPlan();
-          if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
-        });
-      })(idx, r, inp);
-      item.appendChild(lbl); item.appendChild(inp);
-      grid.appendChild(item);
-    }
-  }
-
-  function setupFloatingPanel() {
-    var panel = $("fsSectionControls");
-    if (!panel) return;
+  /* ============ CONTROLS PANEL SYNC ============ */
+  function setupControlsPanel() {
+    var xIn = $("fsCtrlX"), yIn = $("fsCtrlY"), rotIn = $("fsCtrlRot"), scaleIn = $("fsCtrlScale");
+    var deselect = $("fsCtrlDeselect");
     var canvas = $("fsCanvas");
 
-    // Section selector
-    var secSel = $("fsCtrlSectionSel");
-    if (secSel) {
-      secSel.addEventListener("change", function() {
-        var idx = parseInt(this.value);
-        if (isNaN(idx)) return;
-        selectedSectionIdx = idx;
-        currentEditingSection = idx;
-        canvas.querySelectorAll('.fs-section').forEach(function(s){ s.classList.remove('selected'); });
-        var el = canvas.querySelector('[data-section="' + idx + '"]');
-        if (el) el.classList.add('selected');
-        refreshFloatingPanel();
-      });
-    }
-
-    // Name
-    var nameInp = $("fsCtrlName");
-    if (nameInp) {
-      nameInp.addEventListener("input", function() {
-        if (selectedSectionIdx === null) return;
-        setSectionName(selectedSectionIdx, this.value);
-        rebuildSectionTabs();
-        refreshFloatingPanel();
-        renderSeatingPlan();
-        if ($("fullscreenOverlay").classList.contains("open")) {
-          var el = canvas.querySelector('[data-section="' + selectedSectionIdx + '"]');
-          if (el) { var t = el.querySelector('.fs-section-title'); if (t) t.textContent = getSectionName(selectedSectionIdx); }
-        }
-      });
-    }
-
-    // Level
-    var levelSel = $("fsCtrlLevel");
-    if (levelSel) {
-      levelSel.addEventListener("change", function() {
-        if (selectedSectionIdx === null) return;
-        setSectionPos(selectedSectionIdx, "levelId", parseInt(this.value));
-        renderSeatingPlan(); renderFullscreen(); refreshFloatingPanel();
-      });
-    }
-
-    // Tier override
-    var tierSel = $("fsCtrlTier");
-    if (tierSel) {
-      tierSel.addEventListener("change", function() {
-        if (selectedSectionIdx === null) return;
-        setSectionTierOverride(selectedSectionIdx, this.value || null);
-        updateRevenueCalculator(); renderSeatingPlan(); renderFullscreen();
-      });
-    }
-
-    // X/Y inputs
-    function applyXY() {
+    function applyChanges() {
       if (selectedSectionIdx === null) return;
-      var x = clampInt($("fsCtrlX").value, 0, 3000, 0);
-      var y = clampInt($("fsCtrlY").value, 0, 3000, 0);
-      setSectionPos(selectedSectionIdx, "x", x);
-      setSectionPos(selectedSectionIdx, "y", y);
+      var pos = getSectionPos(selectedSectionIdx);
+      pos.x = clampInt(xIn.value, 0, 3000, pos.x);
+      pos.y = clampInt(yIn.value, 0, 3000, pos.y);
+      pos.rotation = clampInt(rotIn.value, -360, 360, pos.rotation);
+      pos.scale = clampFloat(scaleIn.value, 0.5, 2, pos.scale);
+
       var el = canvas.querySelector('[data-section="' + selectedSectionIdx + '"]');
-      if (el) { el.style.left = x + "px"; el.style.top = y + "px"; }
-      // Overlap recheck
+      if (el) {
+        el.style.left = pos.x + "px";
+        el.style.top = pos.y + "px";
+        el.style.transform = "rotate(" + pos.rotation + "deg) scale(" + pos.scale + ")";
+      }
+
+      // Also update the main form inputs
+      $("sectionXInput").value = pos.x;
+      $("sectionYInput").value = pos.y;
+      $("sectionRotationInput").value = pos.rotation;
+      $("sectionScaleInput").value = pos.scale;
+      $("sectionScaleBadge").textContent = pos.scale.toFixed(2) + "×";
+
+      // Overlap check
       var sectionEls = [];
       var sCount = parseInt($("totalLevel1").value) || 0;
       for (var i = 0; i < sCount; i++) {
@@ -2832,57 +2655,22 @@ document.addEventListener("DOMContentLoaded", function(){
         if (sEl) sectionEls.push({ idx: i, el: sEl });
       }
       checkSectionOverlaps(sectionEls, canvas);
-      // Disable auto layout on manual edit
-      if (autoLayoutEnabled) {
-        autoLayoutEnabled = false;
-        var btn = $("fsToggleAuto"); if (btn) btn.classList.remove("active");
-      }
     }
-    ["fsCtrlX","fsCtrlY"].forEach(function(id){ var el = $(id); if (el) { el.addEventListener("input", applyXY); el.addEventListener("change", function(){ if (selectedSectionIdx !== null) { var pos = getSectionPos(selectedSectionIdx); $("fsCtrlX").value = pos.x; $("fsCtrlY").value = pos.y; } }); } });
 
-    // Rotation & Scale
-    var rotIn = $("fsCtrlRot");
-    if (rotIn) rotIn.addEventListener("input", function() {
-      if (selectedSectionIdx === null) return;
-      var v = clampInt(this.value, -360, 360, 0);
-      setSectionPos(selectedSectionIdx, "rotation", v);
-      var el = canvas.querySelector('[data-section="' + selectedSectionIdx + '"]');
-      if (el) { var pos = getSectionPos(selectedSectionIdx); el.style.transform = "rotate(" + pos.rotation + "deg) scale(" + pos.scale + ")"; }
-    });
-    var scIn = $("fsCtrlScale");
-    if (scIn) scIn.addEventListener("input", function() {
-      if (selectedSectionIdx === null) return;
-      var v = clampFloat(this.value, 0.5, 2, 1);
-      setSectionPos(selectedSectionIdx, "scale", v);
-      var el = canvas.querySelector('[data-section="' + selectedSectionIdx + '"]');
-      if (el) { var pos = getSectionPos(selectedSectionIdx); el.style.transform = "rotate(" + pos.rotation + "deg) scale(" + pos.scale + ")"; }
+    [xIn, yIn, rotIn, scaleIn].forEach(function(inp) {
+      inp.addEventListener('input', applyChanges);
+      inp.addEventListener('change', function() {
+        // Re-clamp on change
+        var pos = getSectionPos(selectedSectionIdx);
+        xIn.value = pos.x; yIn.value = pos.y;
+        rotIn.value = pos.rotation; scaleIn.value = pos.scale;
+        applyChanges();
+      });
     });
 
-    // Rows
-    var rowsIn = $("fsCtrlRows");
-    if (rowsIn) rowsIn.addEventListener("input", function() {
-      if (selectedSectionIdx === null) return;
-      if (tableMode) return;
-      var v = parseInt(this.value);
-      if (isNaN(v)) return;
-      setRowCount(selectedSectionIdx, v);
-      rebuildFloatingPanelRows();
-      calculateCapacity(); updateTierCountOptions(); updateRevenueCalculator();
-      renderSeatingPlan(); renderFullscreen();
-    });
-
-    // Deselect
-    var deselect = $("fsCtrlDeselect");
-    if (deselect) deselect.addEventListener("click", function() {
+    deselect.addEventListener('click', function() {
       canvas.querySelectorAll('.fs-section').forEach(function(s){ s.classList.remove('selected'); });
-      panel.classList.remove("visible");
-      selectedSectionIdx = null;
-    });
-    // Close X
-    var closeX = $("fsCtrlClose");
-    if (closeX) closeX.addEventListener("click", function() {
-      canvas.querySelectorAll('.fs-section').forEach(function(s){ s.classList.remove('selected'); });
-      panel.classList.remove("visible");
+      $("fsSectionControls").classList.remove("visible");
       selectedSectionIdx = null;
     });
   }
@@ -2915,18 +2703,30 @@ document.addEventListener("DOMContentLoaded", function(){
 
     if (twoPointMode && sectionEls.length) {
       twoPointLayout(sectionEls, canvas);
+      refreshSectionInputs();
     } else if (autoLayoutEnabled && sectionEls.length) {
       autoLayoutSections(sectionEls, canvas);
+      refreshSectionInputs();
     }
     checkSectionOverlaps(sectionEls, canvas);
     rebuildLevelPills();
     updatePointMarkers();
 
-    // Restore selection
-    if (selectedSectionIdx !== null && selectedSectionIdx !== undefined) {
+    // Restore selection if a section was selected
+    if (selectedSectionIdx !== null) {
       var selEl = canvas.querySelector('[data-section="' + selectedSectionIdx + '"]');
-      if (selEl) { selEl.classList.add('selected'); refreshFloatingPanel(); }
-      else { selectedSectionIdx = null; $("fsSectionControls").classList.remove("visible"); }
+      if (selEl) {
+        selEl.classList.add('selected');
+        var pos = getSectionPos(selectedSectionIdx);
+        $("fsCtrlX").value = pos.x;
+        $("fsCtrlY").value = pos.y;
+        $("fsCtrlRot").value = pos.rotation;
+        $("fsCtrlScale").value = pos.scale;
+        $("fsSectionControls").classList.add("visible");
+      } else {
+        selectedSectionIdx = null;
+        $("fsSectionControls").classList.remove("visible");
+      }
     }
 
     var axisBtn = $("fsToggleAxis");
@@ -3087,10 +2887,11 @@ document.addEventListener("DOMContentLoaded", function(){
     $("tableOptionsPanel").style.display = tableMode ? "block" : "none";
     $("rowsPerSectionGroup").style.display = tableMode ? "none" : "";
     $("seatsPerRowGroup").style.display = tableMode ? "none" : "";
+    $("rowOverridesBlock").style.display = tableMode ? "none" : "";
+    $("rowTierGroup").style.display = tableMode ? "none" : "";
     autoLayoutAxis = tableMode ? "vertical" : "horizontal";
-    applyShapeUI(); updateTableSummary();
-    calculateCapacity(); updateTierCountOptions(); updateRevenueCalculator(); renderSeatingPlan();
-    refreshFloatingPanel();
+    applyShapeUI(); updateTableSummary(); refreshSectionInputs();
+    rebuildRowOverrides(); rebuildTableRowsEditor(); calculateCapacity(); updateTierCountOptions(); updateRevenueCalculator(); renderSeatingPlan();
     if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
   }
 
@@ -3136,7 +2937,7 @@ document.addEventListener("DOMContentLoaded", function(){
     if (v > planMax) { v = planMax; showToast("Your plan allows up to " + planMax + " tiers.", "error", 4000); }
     var capacity = calculateCapacity(); var allowExtra = capacity > LARGE_VENUE_THRESHOLD;
     if (v > 4 && !allowExtra) { v = 4; showToast("Venue capacity must exceed 5,000 to use more than 4 tiers.", "error", 4000); }
-    activeTierCount = v; this.value = String(v); updateTierVisibility(); refreshFloatingPanel();
+    activeTierCount = v; this.value = String(v); updateTierVisibility();
   });
 
   /* ===== FLIP TICKET ===== */
@@ -3249,6 +3050,7 @@ document.addEventListener("DOMContentLoaded", function(){
   });
 
   $("tableCount").addEventListener("change", function() { var v = Math.max(1, Math.min(50, parseInt(this.value) || 4)); this.value = v; updateTableSummary(); updateTierCountOptions(); updateRevenueCalculator(); });
+  $("addTableRowBtn").addEventListener("click", addTableRow);
 
   document.querySelectorAll(".annotation-tab").forEach(function(btn) {
     btn.addEventListener("click", function() {
@@ -3285,23 +3087,41 @@ document.addEventListener("DOMContentLoaded", function(){
 
   $("totalLevel1").addEventListener("input", function() {
     var v = parseInt(this.value) || 1; v = Math.max(1, Math.min(26, v));
-    rebuildSectionTabs();
+    rebuildSectionTabs(); refreshSectionInputs(); rebuildRowOverrides(); rebuildTableRowsEditor();
     calculateCapacity(); updateTierCountOptions(); updateRevenueCalculator(); renderSeatingPlan(); updateTableSummary();
-    // Clear selection if the selected section no longer exists
-    if (selectedSectionIdx !== null && selectedSectionIdx >= v) {
-      selectedSectionIdx = null;
-      $("fsSectionControls").classList.remove("visible");
-    }
     if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
-    refreshFloatingPanel();
   });
 
-  $("totalLevel2").addEventListener("change", function() { var v = Math.max(1, Math.min(52, parseInt(this.value)||6)); this.value = v; calculateCapacity(); updateTierCountOptions(); updateRevenueCalculator(); updateTierSummary(); renderSeatingPlan(); refreshFloatingPanel(); });
-  $("totalLevel3").addEventListener("change", function() { var v = Math.max(4, Math.min(90, parseInt(this.value)||10)); this.value = v; calculateCapacity(); updateTierCountOptions(); updateRevenueCalculator(); renderSeatingPlan(); refreshFloatingPanel(); });
+  $("totalLevel2").addEventListener("change", function() { var v = Math.max(1, Math.min(52, parseInt(this.value)||6)); this.value = v; refreshSectionInputs(); rebuildRowOverrides(); calculateCapacity(); updateTierCountOptions(); updateRevenueCalculator(); updateTierSummary(); renderSeatingPlan(); });
+  $("totalLevel3").addEventListener("change", function() { var v = Math.max(4, Math.min(90, parseInt(this.value)||10)); this.value = v; rebuildRowOverrides(); calculateCapacity(); updateTierCountOptions(); updateRevenueCalculator(); renderSeatingPlan(); });
+
+  $("sectionNameInput").addEventListener("input", function() { setSectionName(currentEditingSection, this.value); rebuildSectionTabs(); renderSeatingPlan(); updateTableValidation(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
+  $("sectionLevelSelect").addEventListener("change", function() { setSectionPos(currentEditingSection, "levelId", parseInt(this.value)); renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
+
+  $("sectionRowsInput").addEventListener("input", function() {
+    if (tableMode) return;
+    var v = parseInt(this.value); if (isNaN(v)) return;
+    setRowCount(currentEditingSection, v);
+    var rc = getRowCount(currentEditingSection);
+    $("sectionRowsBadge").textContent = rc + (rc === 1 ? " row" : " rows");
+    rebuildRowOverrides(); calculateCapacity(); updateTierCountOptions(); updateRevenueCalculator(); renderSeatingPlan();
+    if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+  });
+
+  $("sectionTierOverride").addEventListener("change", function() { setSectionTierOverride(currentEditingSection, this.value || null); updateRevenueCalculator(); renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
+
+  function disableAutoLayoutForManualEdit() {
+    if (autoLayoutEnabled) { autoLayoutEnabled = false; var btn = $("fsToggleAuto"); if (btn) btn.classList.remove("active"); showToast("Manual positioning enabled", "info", 2200); }
+  }
+
+  $("sectionXInput").addEventListener("input", function() { setSectionPos(currentEditingSection, "x", snap(parseInt(this.value)||0)); disableAutoLayoutForManualEdit(); renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
+  $("sectionYInput").addEventListener("input", function() { setSectionPos(currentEditingSection, "y", snap(parseInt(this.value)||0)); disableAutoLayoutForManualEdit(); renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
+  $("sectionRotationInput").addEventListener("input", function() { setSectionPos(currentEditingSection, "rotation", parseInt(this.value)||0); renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
+  $("sectionScaleInput").addEventListener("input", function() { var v = parseFloat(this.value) || 1; setSectionPos(currentEditingSection, "scale", v); $("sectionScaleBadge").textContent = v.toFixed(2) + "×"; renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
 
   $("openFullscreen").addEventListener("click", function() {
     if (!FEATURES.venueLayout) { showToast("The venue layout editor is available on Premium and Enterprise plans.", "error", 4200); return; }
-    $("fullscreenOverlay").classList.add("open"); document.body.style.overflow = "hidden"; renderFullscreen();
+    $("fullscreenOverlay").classList.add("open"); document.body.style.overflow = "hidden"; renderFullscreen(); setupSectionDrag(); setupControlsPanel();
   });
   $("closeFullscreen").addEventListener("click", function() { $("fullscreenOverlay").classList.remove("open"); document.body.style.overflow = ""; selectedSectionIdx = null; $("fsSectionControls").classList.remove("visible"); });
   $("fsToggleGrid").addEventListener("click", function() { showGrid = !showGrid; this.classList.toggle("active", showGrid); renderFullscreen(); });
@@ -3341,7 +3161,7 @@ document.addEventListener("DOMContentLoaded", function(){
       }
       twoPointLayout(sectionEls, canvas);
       checkSectionOverlaps(sectionEls, canvas);
-      refreshFloatingPanel();
+      refreshSectionInputs();
     }
   });
   $("fsToggleAxis").addEventListener("click", function() {
@@ -3362,7 +3182,7 @@ document.addEventListener("DOMContentLoaded", function(){
     var btn = $("fsToggleAuto"); if (btn) btn.classList.add("active");
     var tpBtn = $("fsToggleTwoPoint"); if (tpBtn) tpBtn.classList.remove("active");
     var axisBtn = $("fsToggleAxis"); if (axisBtn) axisBtn.textContent = autoLayoutAxis === "vertical" ? "↕ Vertical" : "↔ Horizontal";
-    renderSeatingPlan(); renderFullscreen();
+    renderSeatingPlan(); renderFullscreen(); refreshSectionInputs();
     showToast("Positions reset", "success");
   });
 
@@ -3385,7 +3205,7 @@ document.addEventListener("DOMContentLoaded", function(){
     var btn = $("fsToggleAuto"); if (btn) btn.classList.add("active");
     var tpBtn = $("fsToggleTwoPoint"); if (tpBtn) tpBtn.classList.remove("active");
     var axisBtn = $("fsToggleAxis"); if (axisBtn) axisBtn.textContent = autoLayoutAxis === "vertical" ? "↕ Vertical" : "↔ Horizontal";
-    rebuildLevelsList(); rebuildLevelSelect(); rebuildSectionTabs();
+    rebuildLevelsList(); rebuildLevelSelect(); rebuildSectionTabs(); refreshSectionInputs(); rebuildRowOverrides(); rebuildTableRowsEditor();
     rebuildAnnotationList(); calculateCapacity(); updateTierCountOptions(); updateRevenueCalculator(); renderSeatingPlan(); updateTableSummary();
     if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
   });
@@ -3428,6 +3248,7 @@ document.addEventListener("DOMContentLoaded", function(){
 
   rebuildLevelsList(); rebuildLevelSelect(); rebuildSectionTabs();
   readScale(); readTableConfig(); applyShapeUI();
+  refreshSectionInputs(); rebuildRowOverrides(); rebuildTableRowsEditor();
   rebuildAnnotationList();
   calculateCapacity(); updateTicketPreview(); renderSeatingPlan();
   updateTierSummary(); updateTableSummary(); updateScaleHints(); updateLineFormDerived();
@@ -3443,11 +3264,11 @@ document.addEventListener("DOMContentLoaded", function(){
 
   setupPointDrag();
   setupSectionDrag();
-  setupFloatingPanel();
+  setupControlsPanel();
   applyPlanFeatures();
 });
 n
 })();
 </script>
 </body>
-                                                                                              </html>
+                                                                           </html>
