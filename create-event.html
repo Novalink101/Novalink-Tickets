@@ -6,7 +6,6 @@
 <meta name="theme-color" content="#0a0f14" />
 <title>Create an Event - Novalink Studio</title>
 <script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
-<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <style>
 :root{
   --cyan-50:#ecfeff;--cyan-100:#cffafe;--cyan-400:#22d3ee;--cyan-500:#06b6d4;--cyan-600:#0891b2;--cyan-700:#0e7490;
@@ -40,8 +39,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .form-group input:focus, .form-group select:focus, .form-group textarea:focus{outline:none;border-color:var(--cyan-500);box-shadow:0 0 0 3px rgba(6,182,212,0.15);background:#fff}
 .form-hint{font-size:11.5px;color:var(--text-muted);margin-top:6px;line-height:1.5;font-style:italic;}
 .form-row{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.form-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
-@media (max-width:600px){.form-row,.form-row-3{grid-template-columns:1fr}}
+@media (max-width:600px){.form-row{grid-template-columns:1fr}}
 .section-divider{margin:24px 0;border-top:1px dashed var(--border);position:relative;text-align:center}
 .section-divider span{background:var(--surface);padding:0 12px;font-size:11px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.05em;position:relative;top:-10px}
 .toggle-row{display:flex;align-items:center;justify-content:space-between;padding:14px 16px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:10px;margin-bottom:12px}
@@ -59,8 +57,6 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .btn-ghost:hover{background:var(--surface-2);border-color:var(--cyan-500);color:var(--cyan-700)}
 .btn i{width:18px;height:18px}
 .form-actions{margin-top:28px;display:flex;flex-direction:column;gap:12px}
-.export-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
-.export-actions .btn{padding:10px 14px;font-size:13px}
 .seat-builder{display:flex;gap:10px;align-items:center;}
 .seat-builder .seat-part{flex:1;text-align:center;font-weight:800;text-transform:uppercase;letter-spacing:2px;font-size:16px;padding:12px 8px;}
 .seat-builder .seat-part.seat-num{letter-spacing:0.5px;}
@@ -79,41 +75,21 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .tier-dist-summary{font-size:11.5px;color:var(--text-muted);margin-top:8px;font-style:italic;}
 .tier-dist-summary.error{color:#b91c1c;font-weight:700;}
 
-.dev-settings-toggle {
-  margin-bottom: 20px; padding: 14px 16px;
-  background: linear-gradient(135deg, #0a0f14, #1a2129);
-  border: 1px solid #0a0f14; border-radius: 12px;
-  display: flex; align-items: center; justify-content: space-between; gap: 12px;
-}
-.dev-settings-toggle .info { display: flex; flex-direction: column; color: #fff; }
-.dev-settings-toggle .info .title { font-size: 13px; font-weight: 800; letter-spacing: 0.5px; text-transform: uppercase; color: #22d3ee; display: flex; align-items: center; gap: 6px; }
-.dev-settings-toggle .info .title i { width: 15px; height: 15px; }
-.dev-settings-toggle .info .desc { font-size: 11px; color: rgba(255,255,255,0.55); font-style: italic; margin-top: 2px; }
-.dev-only { display: none; }
-body.dev-on .dev-only { display: block; }
-body.dev-on .dev-only.form-row-3,
-body.dev-on .dev-only.form-row { display: grid; }
-body.dev-on .dev-only.toggle-row { display: flex; }
-body.dev-on .dev-only.section-rows-row { display: flex; }
-
-.levels-panel { margin-top: 12px; padding: 12px; background: var(--bg-2); border: 1px solid var(--border-2); border-radius: 10px; }
-.levels-list { display: flex; flex-direction: column; gap: 6px; margin-bottom: 10px; max-height: 200px; overflow-y: auto; }
-.level-item { display: flex; align-items: center; gap: 8px; padding: 8px 10px; background: var(--surface); border: 1px solid var(--border-2); border-radius: 8px; }
-.level-item .level-swatch { width: 14px; height: 14px; border-radius: 4px; flex-shrink: 0; border: 1px solid rgba(0,0,0,0.1); }
-.level-item .level-name-input { flex: 1; padding: 5px 8px; font-size: 12.5px; font-weight: 700; background: transparent; border: 1px solid transparent; border-radius: 6px; font-family: inherit; color: var(--text); }
-.level-item .level-name-input:hover { border-color: var(--border-2); background: var(--bg-2); }
-.level-item .level-name-input:focus { outline: none; border-color: var(--cyan-500); background: #fff; }
-.level-visible-toggle { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; color: var(--text-muted); cursor: pointer; user-select: none; }
-.level-item .btn-trash { padding: 4px 6px; border-radius: 6px; border: 1px solid var(--border-2); background: transparent; color: var(--text-muted); cursor: pointer; font-family: inherit; display: inline-flex; align-items: center; justify-content: center; }
-.level-item .btn-trash:hover { border-color: #dc2626; color: #dc2626; }
-
 .row-overrides-section{margin-top:12px;padding:12px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:10px;}
 .row-overrides-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px;gap:10px;flex-wrap:wrap;}
 .section-tabs{display:flex;gap:6px;flex-wrap:wrap;flex:1;}
-.section-tab{padding:6px 12px;border-radius:8px;border:1px solid var(--border-2);background:var(--surface);font-size:11.5px;font-weight:700;cursor:pointer;font-family:inherit;transition:all 0.15s;color:var(--text-2);}
+.section-tab{
+  padding:6px 12px;border-radius:8px;border:1px solid var(--border-2);
+  background:var(--surface);font-size:11.5px;font-weight:700;cursor:pointer;
+  font-family:inherit;transition:all 0.15s;color:var(--text-2);
+}
 .section-tab:hover{border-color:var(--cyan-500);color:var(--cyan-700);}
 .section-tab.active{background:#0a0f14;color:#fff;border-color:#0a0f14;}
-.btn-mini{padding:6px 10px;border-radius:8px;border:1px solid var(--border-2);background:transparent;font-size:11px;font-weight:700;cursor:pointer;font-family:inherit;color:var(--text-muted);}
+.btn-mini{
+  padding:6px 10px;border-radius:8px;border:1px solid var(--border-2);
+  background:transparent;font-size:11px;font-weight:700;cursor:pointer;
+  font-family:inherit;color:var(--text-muted);
+}
 .btn-mini:hover{border-color:var(--cyan-500);color:var(--cyan-700);}
 .btn-mini.fs-btn{background:#0a0f14;color:#22d3ee;border-color:#0a0f14;}
 .btn-mini.fs-btn:hover{background:#1a2129;border-color:#1a2129;color:#22d3ee;}
@@ -123,20 +99,74 @@ body.dev-on .dev-only.section-rows-row { display: flex; }
 .row-override-item input{width:56px;padding:5px 6px;text-align:center;font-size:13px;}
 .row-overrides-hint{font-size:11px;color:var(--text-muted);margin-bottom:8px;font-style:italic;}
 
-.section-rows-row, .section-location-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; padding: 8px 10px; background: var(--surface); border: 1px solid var(--border-2); border-radius: 8px; }
-.section-rows-row label, .section-location-row label { font-size: 11px; font-weight: 800; color: var(--text-2); text-transform: uppercase; letter-spacing: 0.5px; flex: 1; }
-.section-rows-row input, .section-rows-row select { width: 100px; padding: 6px 8px; text-align: center; font-size: 13px; font-weight: 700; background: var(--bg-2); border: 1px solid var(--border-2); border-radius: 8px; font-family: inherit; color: var(--text); }
-.section-rows-row input[type="text"] { width: 200px; text-align: left; font-weight: 600; }
-.section-rows-row input[type="range"] { padding: 0; border: none; background: transparent; width: 200px; }
-.section-rows-badge { font-size: 11px; font-weight: 700; color: var(--cyan-700); background: var(--cyan-50); padding: 3px 8px; border-radius: 6px; white-space: nowrap; }
-
-.venue-pick-row { display: flex; gap: 8px; align-items: stretch; }
-.venue-pick-row input { flex: 1; }
-.venue-pick-btn { flex-shrink: 0; display: inline-flex; align-items: center; gap: 6px; padding: 12px 16px; border-radius: 10px; border: 1px solid var(--border-2); background: #0a0f14; color: #22d3ee; font-family: inherit; font-weight: 800; font-size: 12.5px; cursor: pointer; transition: all 0.15s; white-space: nowrap; }
-.venue-pick-btn:hover { background: #1a2129; border-color: #1a2129; color: #22d3ee; }
-.venue-pick-btn i { width: 16px; height: 16px; }
-.venue-coords-hint { margin-top: 6px; font-size: 11.5px; color: var(--cyan-700); font-weight: 700; display: none; }
-.venue-coords-hint.show { display: block; }
+.section-rows-row, .section-location-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 10px;
+  padding: 8px 10px;
+  background: var(--surface);
+  border: 1px solid var(--border-2);
+  border-radius: 8px;
+}
+.section-rows-row label, .section-location-row label {
+  font-size: 11px;
+  font-weight: 800;
+  color: var(--text-2);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  flex: 1;
+}
+.section-rows-row input {
+  width: 80px;
+  padding: 6px 8px;
+  text-align: center;
+  font-size: 13px;
+  font-weight: 700;
+}
+.section-rows-badge {
+  font-size: 11px;
+  font-weight: 700;
+  color: var(--cyan-700);
+  background: var(--cyan-50);
+  padding: 3px 8px;
+  border-radius: 6px;
+}
+.location-btn-group {
+  display: flex;
+  gap: 4px;
+  background: var(--bg-2);
+  padding: 3px;
+  border-radius: 8px;
+  border: 1px solid var(--border-2);
+}
+.location-btn {
+  padding: 5px 12px;
+  border-radius: 6px;
+  border: none;
+  background: transparent;
+  font-size: 11.5px;
+  font-weight: 700;
+  cursor: pointer;
+  font-family: inherit;
+  color: var(--text-muted);
+  transition: all 0.15s;
+}
+.location-btn:hover { color: var(--cyan-700); }
+.location-btn.active {
+  background: #0a0f14;
+  color: #fff;
+}
+.section-location-row select {
+  width: 220px;
+  padding: 6px 10px;
+  font-size: 12px;
+  font-weight: 700;
+  background: var(--bg-2);
+  border: 1px solid var(--border-2);
+  border-radius: 8px;
+  font-family: inherit;
+}
 
 .preview-column { position: sticky; top: 40px; display: flex; flex-direction: column; gap: 24px; }
 .preview-label { text-align: center; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
@@ -199,6 +229,23 @@ body.dev-on .dev-only.section-rows-row { display: flex; }
 .row-tier-tag.silver { color: #4a5568; }
 .row-tier-tag.cyan { color: var(--cyan-700); }
 
+.tables-wrapper { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 20px; padding: 10px 0; }
+.table-item { display: flex; flex-direction: column; align-items: center; }
+.table-shape-container { position: relative; width: 120px; height: 120px; margin: 0 auto; }
+.table-shape { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); background: var(--bg-2); border: 2px solid var(--border-2); display: flex; align-items: center; justify-content: center; font-size: 10px; font-weight: 800; color: var(--cyan-700); box-shadow: 0 2px 6px rgba(0,0,0,0.08); z-index: 2; }
+.table-shape.circular { width: 50px; height: 50px; border-radius: 50%; }
+.table-shape.rectangular { width: 80px; height: 40px; border-radius: 6px; }
+.table-shape.square { width: 50px; height: 50px; border-radius: 6px; }
+.chair-around { position: absolute; width: 14px; height: 14px; z-index: 1; }
+.chair-around.circular { border-radius: 50%; }
+.chair-around.rectangular { border-radius: 3px; }
+.chair-around.square { border-radius: 3px; }
+.chair-around.cyan { background: #22d3ee; }
+.chair-around.silver { background: #cbd5e1; }
+.chair-around.gold { background: #ecc94b; }
+.chair-around.black { background: #1a202c; }
+.table-number-label { text-align: center; font-size: 10px; font-weight: 700; color: var(--text-muted); margin-top: 6px; }
+.cap-warning { font-size: 10px; color: #b91c1c; text-align: center; margin-top: 4px; font-style: italic; }
 .layout-legend { display: flex; justify-content: center; gap: 12px; margin-top: 16px; font-size: 10px; color: var(--text-muted); flex-wrap: wrap; }
 .layout-legend .lg-item { display: flex; align-items: center; gap: 4px; }
 .layout-legend .lg-swatch { width: 10px; height: 10px; border-radius: 2px; }
@@ -207,279 +254,60 @@ body.dev-on .dev-only.section-rows-row { display: flex; }
 .layout-legend .lg-swatch.silver { background: #cbd5e1; }
 .layout-legend .lg-swatch.cyan { background: #22d3ee; }
 
-/* Full screen layout overlay */
-.fullscreen-overlay { position: fixed; inset: 0; background: #0a0f14; z-index: 9999; display: none; flex-direction: column; padding: 16px; }
+.fullscreen-overlay { position: fixed; inset: 0; background: #0a0f14; z-index: 9999; display: none; flex-direction: column; padding: 20px; }
 .fullscreen-overlay.open { display: flex; }
-.fs-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; color: #fff; gap: 10px; flex-wrap: wrap; }
-.fs-header h2 { color: #fff; font-size: 1.1rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+.fs-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; color: #fff; gap: 12px; flex-wrap: wrap; }
+.fs-header h2 { color: #fff; font-size: 1.2rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
 .fs-header h2 span { color: #22d3ee; }
-.fs-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
-.fs-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 6px 12px; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: 700; font-size: 11.5px; }
+.fs-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+.fs-btn { background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; padding: 8px 16px; border-radius: 8px; cursor: pointer; font-family: inherit; font-weight: 700; font-size: 12px; }
 .fs-btn:hover { background: #22d3ee; color: #04161c; border-color: #22d3ee; }
 .fs-btn-close:hover { background: #dc2626; color: #fff; border-color: #dc2626; }
-.fs-btn.active { background: #22d3ee; color: #04161c; border-color: #22d3ee; }
-
-.fs-level-bar { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; color: #fff; font-size: 11.5px; margin-bottom: 8px; padding: 6px 0; }
-.fs-level-pill { display: inline-flex; align-items: center; gap: 6px; padding: 5px 10px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.05); cursor: pointer; color: #fff; font-family: inherit; font-size: 11.5px; font-weight: 700; transition: all 0.15s; }
-.fs-level-pill:hover { border-color: #22d3ee; }
-.fs-level-pill.on { background: rgba(34,211,238,0.15); border-color: #22d3ee; }
-.fs-level-pill.off { opacity: 0.4; }
-.fs-level-pill .pill-swatch { width: 10px; height: 10px; border-radius: 3px; border: 1px solid rgba(255,255,255,0.2); }
-
-.fs-canvas-outer { flex: 1; overflow: auto; background: #f6f8fb; border-radius: 12px; padding: 20px; position: relative; display: flex; align-items: flex-start; justify-content: center; }
-.fs-canvas { position: relative; background: #ffffff; border: 2px solid #d3dbe5; border-radius: 8px; box-shadow: 0 8px 24px rgba(0,0,0,0.08); flex-shrink: 0; }
-.fs-canvas.show-grid { background-image: linear-gradient(to right, rgba(34,211,238,0.12) 1px, transparent 1px), linear-gradient(to bottom, rgba(34,211,238,0.12) 1px, transparent 1px); background-size: var(--grid-size, 50px) var(--grid-size, 50px); }
-.fs-stage-marker { position: absolute; background: linear-gradient(135deg, #1e2f4d, #2a4365); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; letter-spacing: 4px; text-transform: uppercase; border-radius: 6px; box-shadow: 0 6px 20px rgba(30,47,77,0.4); z-index: 5; white-space: nowrap; padding: 4px 10px; pointer-events: none; }
-.fs-section { position: absolute; background: #fff; border: 2px solid #e4e9f0; border-radius: 10px; padding: 8px; box-shadow: 0 4px 14px rgba(10,15,20,0.08); transform-origin: center center; z-index: 10; }
-.fs-section-title { font-size: 10px; font-weight: 900; color: #0e7490; letter-spacing: 0.5px; margin-bottom: 4px; text-align: center; white-space: nowrap; }
-.fs-section-location { text-align: center; font-size: 8px; font-weight: 800; color: #6b7787; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
-.fs-section-stage { text-align: center; font-size: 7px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: #fff; background: linear-gradient(135deg, #1e2f4d, #2a4365); padding: 3px; border-radius: 4px; margin-bottom: 6px; }
-.fs-rows-area { position: relative; }
-.fs-row { display: grid; grid-template-columns: 34px 1fr 38px; align-items: center; gap: 3px; margin-bottom: 2px; padding: 2px; border-radius: 4px; }
-.fs-row-label { font-size: 8px; font-weight: 800; color: #6b7787; text-align: right; text-transform: uppercase; }
+.fs-hint { text-align: center; color: rgba(255,255,255,0.5); font-size: 11px; font-style: italic; margin-bottom: 12px; padding: 6px; }
+.fs-canvas { flex: 1; position: relative; background: radial-gradient(circle at 50% 0%, rgba(34,211,238,0.08), transparent 60%), #f6f8fb; border-radius: 12px; overflow: auto; padding: 40px; display: flex; flex-direction: column; align-items: center; gap: 24px; }
+.fs-stage { display: inline-block; padding: 14px 50px; background: linear-gradient(135deg, #1e2f4d, #2a4365); color: #fff; font-weight: 800; letter-spacing: 5px; font-size: 14px; border-radius: 8px; text-transform: uppercase; box-shadow: 0 8px 24px rgba(30,47,77,0.35); flex-shrink: 0; }
+.fs-sections-stack { display: flex; flex-direction: column; gap: 30px; width: 100%; align-items: center; }
+.fs-row-band { display: flex; gap: 40px; justify-content: center; align-items: flex-start; flex-wrap: wrap; width: 100%; min-height: 40px; position: relative; }
+.fs-row-band[data-band="top"]::before,
+.fs-row-band[data-band="middle"]::before,
+.fs-row-band[data-band="low"]::before {
+  content: attr(data-band-label);
+  position: absolute;
+  top: 50%;
+  left: -10px;
+  transform: translate(-100%, -50%) rotate(-90deg);
+  transform-origin: right center;
+  font-size: 9px;
+  font-weight: 800;
+  color: rgba(30,47,77,0.4);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+.fs-section-frame { transition: transform 0.2s ease; transform-origin: center center; flex-shrink: 0; position: relative; }
+.fs-section-inner { background: #fff; border: 2px solid #e4e9f0; border-radius: 12px; padding: 14px; min-width: 300px; box-shadow: 0 6px 18px rgba(10,15,20,0.06); position: relative; }
+.fs-section-title { font-size: 12px; font-weight: 900; color: #0e7490; letter-spacing: 0.5px; margin-bottom: 6px; text-align: center; }
+.fs-section-location { text-align: center; font-size: 9px; font-weight: 800; color: #6b7787; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 8px; }
+.fs-section-stage { text-align: center; font-size: 9px; font-weight: 800; letter-spacing: 3px; text-transform: uppercase; color: #fff; background: linear-gradient(135deg, #1e2f4d, #2a4365); padding: 6px; border-radius: 5px; margin-bottom: 10px; }
+.fs-rows-area { position: relative; min-height: 60px; }
+.fs-row { display: grid; grid-template-columns: 46px 1fr 52px; align-items: center; gap: 5px; margin-bottom: 3px; padding: 3px; border-radius: 5px; }
+.fs-row-label { font-size: 9px; font-weight: 800; color: #6b7787; text-align: right; text-transform: uppercase; }
 .fs-row-seats { display: flex; gap: 2px; justify-content: center; }
-.fs-seat { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; font-family: ui-monospace, monospace; font-size: 6px; font-weight: 800; }
+.fs-seat { width: 16px; height: 16px; border-radius: 2px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; font-family: ui-monospace, monospace; font-size: 7px; font-weight: 800; }
 .fs-seat.black { background: #1a202c; color: #fff; }
 .fs-seat.gold { background: #ecc94b; color: #744210; }
 .fs-seat.silver { background: #cbd5e1; color: #4a5568; }
 .fs-seat.cyan { background: #22d3ee; color: #04161c; }
-.fs-tier-tag { font-size: 7px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
+.fs-tier-tag { font-size: 8px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
 .fs-tier-tag.black { color: #1a202c; }
 .fs-tier-tag.gold { color: #92700c; }
 .fs-tier-tag.silver { color: #4a5568; }
 .fs-tier-tag.cyan { color: #0e7490; }
-.fs-empty-hint { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #6b7787; font-size: 12px; text-align: center; max-width: 300px; }
 
-/* ===== MAP PICKER OVERLAY ===== */
-#mapOverlay { z-index: 10000; }
-.map-layout {
-  flex: 1;
-  display: grid;
-  grid-template-columns: 380px 1fr;
-  gap: 12px;
-  overflow: hidden;
-  min-height: 300px;
-}
-@media (max-width: 800px) {
-  .map-layout { grid-template-columns: 1fr; grid-template-rows: auto 1fr; }
-}
-.map-sidebar {
-  background: rgba(255,255,255,0.05);
-  border-radius: 12px;
-  border: 1px solid rgba(255,255,255,0.1);
-  padding: 14px;
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-  overflow-y: auto;
-  max-height: 100%;
-  color: #fff;
-}
-.map-sidebar-title {
-  font-size: 11px;
-  text-transform: uppercase;
-  letter-spacing: 1px;
-  color: #22d3ee;
-  font-weight: 800;
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.map-sidebar-title i { width: 14px; height: 14px; }
-.map-sidebar-row {
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-.map-sidebar-row label {
-  font-size: 10.5px;
-  font-weight: 700;
-  color: rgba(255,255,255,0.6);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-.map-sidebar-row select, .map-sidebar-row input {
-  width: 100%;
-  padding: 9px 12px;
-  border-radius: 8px;
-  border: 1px solid rgba(255,255,255,0.2);
-  background: rgba(255,255,255,0.08);
-  color: #fff;
-  font-family: inherit;
-  font-size: 13px;
-  outline: none;
-}
-.map-sidebar-row select option { background: #0a0f14; color: #fff; }
-.map-sidebar-row select:focus, .map-sidebar-row input:focus { border-color: #22d3ee; }
-.map-sidebar-row input::placeholder { color: rgba(255,255,255,0.4); }
-
-.map-recommend-btn {
-  padding: 11px 16px;
-  border-radius: 10px;
-  background: linear-gradient(135deg, #22d3ee, #06b6d4);
-  color: #04161c;
-  font-family: inherit;
-  font-weight: 800;
-  font-size: 13px;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  transition: all 0.15s;
-}
-.map-recommend-btn:hover:not(:disabled) { transform: translateY(-1px); box-shadow: 0 6px 18px rgba(34,211,238,0.35); }
-.map-recommend-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-.map-recommend-btn i { width: 15px; height: 15px; }
-
-.map-results {
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  overflow-y: auto;
-  flex: 1;
-  padding-right: 4px;
-}
-.map-results::-webkit-scrollbar { width: 6px; }
-.map-results::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.2); border-radius: 3px; }
-
-.map-result-item {
-  padding: 10px 12px;
-  border-radius: 10px;
-  background: rgba(255,255,255,0.06);
-  border: 1px solid rgba(255,255,255,0.1);
-  cursor: pointer;
-  transition: all 0.15s;
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-}
-.map-result-item:hover { background: rgba(34,211,238,0.12); border-color: #22d3ee; }
-.map-result-item.selected { background: rgba(34,211,238,0.18); border-color: #22d3ee; }
-.map-result-name { font-size: 13px; font-weight: 800; color: #fff; }
-.map-result-addr { font-size: 11px; color: rgba(255,255,255,0.6); }
-.map-result-meta { display: flex; gap: 8px; font-size: 10.5px; color: rgba(255,255,255,0.7); margin-top: 2px; flex-wrap: wrap; }
-.map-result-meta .rating { color: #fbbf24; font-weight: 700; }
-.map-result-meta .price { color: #34d399; font-weight: 700; }
-.map-result-meta .type { color: #22d3ee; font-weight: 700; }
-
-.map-results-empty {
-  text-align: center;
-  padding: 20px 10px;
-  color: rgba(255,255,255,0.5);
-  font-size: 12px;
-  font-style: italic;
-}
-
-.map-api-hint {
-  background: rgba(251,191,36,0.15);
-  border: 1px solid rgba(251,191,36,0.4);
-  color: #fde68a;
-  padding: 10px 12px;
-  border-radius: 8px;
-  font-size: 11.5px;
-  line-height: 1.5;
-}
-.map-api-hint a { color: #fbbf24; text-decoration: underline; font-weight: 700; }
-
-#venueMap { width: 100%; height: 100%; background: #e5e7eb; border-radius: 12px; min-height: 300px; }
-.map-hint { position: absolute; top: 12px; left: 12px; z-index: 999; background: rgba(255,255,255,0.96); padding: 8px 14px; border-radius: 8px; font-size: 12px; font-weight: 700; color: #0a0f14; box-shadow: 0 4px 12px rgba(0,0,0,0.18); pointer-events: none; }
-
-.map-info-bar { margin-top: 10px; padding: 10px 14px; border-radius: 8px; background: rgba(255,255,255,0.08); color: #fff; font-size: 12.5px; min-height: 42px; display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
-.map-info-bar .map-info-name { font-weight: 800; color: #22d3ee; }
-.map-info-bar .map-info-addr { color: rgba(255,255,255,0.75); }
-
-.map-bottom-actions { display: flex; gap: 8px; flex-wrap: wrap; margin-top: 10px; }
-
-.toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(120%); background: #0a0f14; color: #fff; padding: 12px 18px; border-radius: 12px; font-size: 13.5px; z-index: 200; transition: transform .4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease; max-width: calc(100vw - 40px); display: flex; align-items: center; gap: 10px; pointer-events: none; opacity: 0; }
-.toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
-.toast.success { background: #065f46; }
-.toast.error { background: #991b1b; }
-
-/* New styles for enhancements */
-.curved-layout-panel {
-  margin-top: 12px;
-  padding: 12px;
-  background: var(--bg-2);
-  border: 1px solid var(--border-2);
-  border-radius: 10px;
-}
-.aisle-config-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
-  padding: 6px 10px;
-  background: var(--surface);
-  border: 1px solid var(--border-2);
-  border-radius: 8px;
-}
-.aisle-config-row label {
-  font-size: 11px;
-  font-weight: 800;
-  color: var(--text-2);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  flex: 1;
-}
-.aisle-config-row input {
-  width: 70px;
-  padding: 5px 8px;
-  text-align: center;
-  font-size: 13px;
-  font-weight: 700;
-  background: var(--bg-2);
-  border: 1px solid var(--border-2);
-  border-radius: 6px;
-  font-family: inherit;
-  color: var(--text);
-}
-.curved-config-row {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 8px;
-  padding: 6px 10px;
-  background: var(--surface);
-  border: 1px solid var(--border-2);
-  border-radius: 8px;
-}
-.curved-config-row label {
-  font-size: 11px;
-  font-weight: 800;
-  color: var(--text-2);
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-  flex: 1;
-}
-.curved-config-row input {
-  width: 80px;
-  padding: 5px 8px;
-  text-align: center;
-  font-size: 13px;
-  font-weight: 700;
-  background: var(--bg-2);
-  border: 1px solid var(--border-2);
-  border-radius: 6px;
-  font-family: inherit;
-  color: var(--text);
-}
-.fs-canvas-curved {
-  background: #ffffff;
-}
-.seat-mask-input {
-  width: 100%;
-  padding: 8px 10px;
-  font-size: 11px;
-  font-family: ui-monospace, monospace;
-  background: var(--bg-2);
-  border: 1px solid var(--border-2);
-  border-radius: 6px;
-  color: var(--text);
-  resize: vertical;
-  min-height: 50px;
-}
+.fs-controls { margin-top: 12px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; align-items: center; }
+.fs-rotation-control, .fs-spacing-control { background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.18); color: #fff; padding: 8px 12px; border-radius: 8px; font-size: 12px; display: flex; align-items: center; gap: 8px; font-weight: 700; }
+.fs-rotation-control input, .fs-spacing-control input { width: 70px; padding: 5px 6px; text-align: center; background: rgba(255,255,255,0.12); border: 1px solid rgba(255,255,255,0.25); color: #fff; border-radius: 6px; font-family: ui-monospace, monospace; font-weight: 800; font-size: 12px; }
+.fs-rotation-control input:focus, .fs-spacing-control input:focus { outline: none; border-color: #22d3ee; }
 </style>
 </head>
 <body>
@@ -498,21 +326,10 @@ body.dev-on .dev-only.section-rows-row { display: flex; }
     <div class="form-card">
       <div class="form-header">
         <h1>Event Studio</h1>
-        <p>Design your venue layout and generate a live security pass.</p>
+        <p>Design your seating layout and generate a live security pass.</p>
       </div>
 
       <form id="createEventForm">
-        <div class="dev-settings-toggle">
-          <div class="info">
-            <div class="title"><i data-lucide="code-2"></i> Developer Settings</div>
-            <div class="desc">Reveal advanced controls: canvas size, stage position, grid, levels, curved layout, aisles & seat masking.</div>
-          </div>
-          <label class="toggle-switch">
-            <input type="checkbox" id="devModeToggle" />
-            <span class="toggle-slider"></span>
-          </label>
-        </div>
-
         <div class="section-divider"><span>Organiser Details</span></div>
         <div class="form-group"><label for="hostName">Host Name</label><input type="text" id="hostName" placeholder="e.g., John Doe" required /></div>
         <div class="form-group"><label for="hostEmail">Host Email</label><input type="email" id="hostEmail" placeholder="e.g., john@example.com" required /></div>
@@ -525,92 +342,45 @@ body.dev-on .dev-only.section-rows-row { display: flex; }
           <div class="form-group"><label for="startTime">Start Time</label><input type="time" id="startTime" required /></div>
         </div>
 
-        <div class="section-divider"><span>Event Details</span></div>
+        <div class="section-divider"><span>Venue Specifics</span></div>
         <div class="form-group"><label for="eventName">Event Name</label><input type="text" id="eventName" placeholder="e.g., Neon Nights Live" required /></div>
+        <div class="form-group"><label for="venueAddress">Venue Name & Address</label><input type="text" id="venueAddress" placeholder="e.g., Grand Amphitheatre, 123 Main Rd" required /></div>
 
-        <div class="form-row">
-          <div class="form-group">
-            <label for="eventType">Event Type</label>
-            <select id="eventType">
-              <option value="general">General Event</option>
-              <option value="theater">Theater / Play</option>
-              <option value="concert">Concert / Music</option>
-              <option value="conference">Conference / Corporate</option>
-              <option value="wedding">Wedding / Gala</option>
-              <option value="festival">Festival / Outdoor</option>
-              <option value="sports">Sports / Arena</option>
-              <option value="banquet">Banquet / Dinner</option>
-            </select>
-          </div>
-          <div class="form-group">
-            <label for="priceRange">Price Range</label>
-            <select id="priceRange">
-              <option value="any">Any</option>
-              <option value="budget">Budget (Inexpensive)</option>
-              <option value="mid">Mid-range (Moderate)</option>
-              <option value="premium">Premium (Expensive)</option>
-              <option value="luxury">Luxury (Very Expensive)</option>
-            </select>
-          </div>
-        </div>
-
+        <div class="section-divider"><span>Layout Configuration</span></div>
         <div class="form-group">
-          <label for="venueAddress">Venue Name & Address</label>
-          <div class="venue-pick-row">
-            <input type="text" id="venueAddress" placeholder="e.g., Grand Amphitheatre, 123 Main Rd" required />
-            <button type="button" class="venue-pick-btn" id="openMapBtn">
-              <i data-lucide="map-pin"></i> Pick Venue
-            </button>
-          </div>
-          <div class="venue-coords-hint" id="venueCoordsHint">
-            📍 <span id="venueCoordsText">—</span>
-          </div>
-          <p class="form-hint">Recommend venues based on your event type & price range, or pick any location manually.</p>
+          <label for="venueType">Venue Type</label>
+          <select id="venueType" required>
+            <option value="event" selected>Event (Standard Layout)</option>
+            <option value="hall">Hall (Tables &amp; Chairs)</option>
+          </select>
         </div>
-
-        <div class="dev-only">
-          <div class="section-divider"><span>Venue Canvas & Stage</span></div>
-          <div class="form-row">
-            <div class="form-group"><label for="canvasWidth">Canvas Width (px)</label><input type="number" id="canvasWidth" min="400" max="3000" value="1200" /></div>
-            <div class="form-group"><label for="canvasHeight">Canvas Height (px)</label><input type="number" id="canvasHeight" min="400" max="3000" value="800" /></div>
-          </div>
-          <div class="form-row-3">
-            <div class="form-group"><label for="stageX">Stage X (px)</label><input type="number" id="stageX" min="0" value="500" /></div>
-            <div class="form-group"><label for="stageY">Stage Y (px)</label><input type="number" id="stageY" min="0" value="60" /></div>
-            <div class="form-group"><label for="stageW">Stage Width (px)</label><input type="number" id="stageW" min="40" value="200" /></div>
-          </div>
-          <div class="form-row">
-            <div class="form-group"><label for="stageH">Stage Height (px)</label><input type="number" id="stageH" min="20" value="60" /></div>
-            <div class="form-group"><label for="gridSize">Grid Size (px)</label><input type="number" id="gridSize" min="10" max="200" value="50" /></div>
-          </div>
-          <div class="toggle-row">
-            <span class="toggle-label">Snap to Grid</span>
-            <label class="toggle-switch"><input type="checkbox" id="snapToggle" checked /><span class="toggle-slider"></span></label>
-          </div>
-        </div>
-
         <div class="form-group">
           <label for="stageName">Stage / Performance Area Name</label>
-          <input type="text" id="stageName" placeholder="e.g., STAGE · MAIN STAGE" value="STAGE" />
+          <input type="text" id="stageName" placeholder="e.g., STAGE · STAGE A · PERFORMANCE AREA" value="STAGE" />
+          <p class="form-hint">This name appears above the seating grid in the preview.</p>
         </div>
 
-        <div class="dev-only">
-          <div class="section-divider"><span>Levels / Floors</span></div>
-          <div class="levels-panel">
-            <div class="row-overrides-hint">Group sections into levels. Toggle visibility to isolate a level in Full Screen.</div>
-            <div class="levels-list" id="levelsList"></div>
-            <button type="button" class="btn-mini" id="addLevelBtn">+ Add Level</button>
-          </div>
+        <div id="hallToggleGroup" class="toggle-row" style="display:none;">
+          <span class="toggle-label">Use Tables & Chairs layout</span>
+          <label class="toggle-switch"><input type="checkbox" id="hallLayoutToggle" /><span class="toggle-slider"></span></label>
         </div>
 
-        <div class="section-divider"><span>Sections</span></div>
+        <div class="form-group" id="tableShapeGroup" style="display:none;">
+          <label for="tableShape">Table Type</label>
+          <select id="tableShape">
+            <option value="circular">Circular Table (Max 10 chairs around)</option>
+            <option value="rectangular">Rectangular Table (Max 1 chair on short sides)</option>
+            <option value="square">Square Table (Max 2 chairs each side)</option>
+          </select>
+          <p class="form-hint" id="tableShapeHint">Up to 10 chairs placed evenly around the table.</p>
+        </div>
+
         <div class="form-row">
-          <div class="form-group"><label id="label-level1" for="totalLevel1">Number of Sections</label><input type="number" id="totalLevel1" min="1" max="26" value="3" /></div>
-          <div class="form-group"><label for="totalLevel2">Default Rows per Section</label><input type="number" id="totalLevel2" min="1" max="52" value="6" /></div>
-          <div class="form-group"><label for="totalLevel3">Default Seats per Row (4–90)</label><input type="number" id="totalLevel3" min="4" max="90" value="8" /></div>
+          <div class="form-group"><label id="label-level1" for="totalLevel1">Sections / Blocks</label><input type="number" id="totalLevel1" min="1" max="26" value="3" /></div>
+          <div class="form-group" id="group-level2"><label id="label-level2" for="totalLevel2">Default Rows per Section</label><input type="number" id="totalLevel2" min="1" max="52" value="6" /></div>
+          <div class="form-group"><label id="label-level3" for="totalLevel3">Default Seats per Row (min 4, max 90)</label><input type="number" id="totalLevel3" min="4" max="90" value="8" /></div>
         </div>
 
-        <!-- ===== ENHANCED PER-SECTION CONFIGURATION ===== -->
         <div class="form-group" id="rowOverridesGroup">
           <label>Per-Section Configuration</label>
           <div class="row-overrides-section">
@@ -621,116 +391,50 @@ body.dev-on .dev-only.section-rows-row { display: flex; }
             </div>
 
             <div class="section-rows-row">
-              <label for="sectionNameInput">Section Name</label>
-              <input type="text" id="sectionNameInput" placeholder="e.g., VIP Stand" maxlength="40" />
-            </div>
-
-            <div class="section-rows-row dev-only">
-              <label for="sectionLevelSelect">Level</label>
-              <select id="sectionLevelSelect"></select>
-            </div>
-
-            <div class="section-rows-row">
               <label for="sectionRowsInput">Rows in this section</label>
               <span class="section-rows-badge" id="sectionRowsBadge">6 rows</span>
               <input type="number" id="sectionRowsInput" min="1" max="52" value="6" />
             </div>
 
-            <div class="section-rows-row">
-              <label for="sectionTierOverride">Section Tier Override</label>
-              <select id="sectionTierOverride">
-                <option value="">— Use Row Distribution —</option>
-                <option value="black">Elite (Black)</option>
-                <option value="gold">Gold (VIP)</option>
-                <option value="silver">Silver</option>
-                <option value="cyan">Cyan (Standard)</option>
+            <div class="section-location-row">
+              <label>Vertical Position</label>
+              <div class="location-btn-group" id="verticalBtnGroup">
+                <button type="button" class="location-btn" data-vertical="top">Top</button>
+                <button type="button" class="location-btn active" data-vertical="middle">Middle</button>
+                <button type="button" class="location-btn" data-vertical="low">Low</button>
+              </div>
+            </div>
+
+            <div class="section-location-row">
+              <label for="sectionCompass">Compass Direction</label>
+              <select id="sectionCompass">
+                <option value="N">N — North</option>
+                <option value="NNE">NNE — North-North-East</option>
+                <option value="NE">NE — North-East</option>
+                <option value="ENE">ENE — East-North-East</option>
+                <option value="E">E — East</option>
+                <option value="ESE">ESE — East-South-East</option>
+                <option value="SE">SE — South-East</option>
+                <option value="SSE">SSE — South-South-East</option>
+                <option value="S">S — South</option>
+                <option value="SSW">SSW — South-South-West</option>
+                <option value="SW">SW — South-West</option>
+                <option value="WSW">WSW — West-South-West</option>
+                <option value="W">W — West</option>
+                <option value="WNW">WNW — West-North-West</option>
+                <option value="NW">NW — North-West</option>
+                <option value="NNW">NNW — North-North-West</option>
               </select>
             </div>
 
-            <!-- ===== CURVED LAYOUT MODE ===== -->
-            <div class="dev-only">
-              <div class="section-divider" style="margin:12px 0 8px;"><span>Curved Layout Mode</span></div>
-              <div class="curved-layout-panel">
-                <div class="toggle-row" style="margin-bottom:8px;">
-                  <span class="toggle-label">Enable Curved Layout</span>
-                  <label class="toggle-switch"><input type="checkbox" id="curvedModeToggle" /><span class="toggle-slider"></span></label>
-                </div>
-                <div id="curvedConfigPanel" style="display:none;">
-                  <div class="curved-config-row">
-                    <label for="curveCenterX">Center X (px)</label>
-                    <input type="number" id="curveCenterX" value="600" />
-                  </div>
-                  <div class="curved-config-row">
-                    <label for="curveCenterY">Center Y (px)</label>
-                    <input type="number" id="curveCenterY" value="400" />
-                  </div>
-                  <div class="curved-config-row">
-                    <label for="curveRadiusStart">Start Radius (px)</label>
-                    <input type="number" id="curveRadiusStart" value="150" />
-                  </div>
-                  <div class="curved-config-row">
-                    <label for="curveRadiusStep">Radius Step per Row (px)</label>
-                    <input type="number" id="curveRadiusStep" value="22" />
-                  </div>
-                  <div class="curved-config-row">
-                    <label for="curveArcAngle">Total Arc Angle (°)</label>
-                    <input type="number" id="curveArcAngle" value="90" />
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            <!-- ===== AISLE INJECTION ===== -->
-            <div class="dev-only">
-              <div class="section-divider" style="margin:12px 0 8px;"><span>Aisle Injection</span></div>
-              <div class="aisle-config-row">
-                <label for="aisleEveryN">Insert aisle every N seats</label>
-                <input type="number" id="aisleEveryN" min="0" value="0" />
-              </div>
-              <div class="aisle-config-row">
-                <label for="aisleWidth">Aisle Width (seat units)</label>
-                <input type="number" id="aisleWidth" min="1" max="5" value="1" />
-              </div>
-            </div>
-
-            <!-- ===== SEAT MASKING ===== -->
-            <div class="dev-only">
-              <div class="section-divider" style="margin:12px 0 8px;"><span>Seat Masking (Exclusions)</span></div>
-              <div class="row-overrides-hint">One seat per line. Format: <code>RowLabel-SeatNumber</code> (e.g., <code>A-5</code>, <code>C-12</code>).</div>
-              <textarea class="seat-mask-input" id="seatMaskInput" rows="4" placeholder="A-5&#10;B-8&#10;C-1"></textarea>
-            </div>
-
-            <div class="dev-only">
-              <div class="form-row-3" style="margin: 6px 0 10px;">
-                <div class="form-group" style="margin-bottom:0;">
-                  <label for="sectionXInput" style="font-size:10px;">X Position (px)</label>
-                  <input type="number" id="sectionXInput" min="0" max="3000" value="100" style="text-align:center;padding:8px;" />
-                </div>
-                <div class="form-group" style="margin-bottom:0;">
-                  <label for="sectionYInput" style="font-size:10px;">Y Position (px)</label>
-                  <input type="number" id="sectionYInput" min="0" max="3000" value="200" style="text-align:center;padding:8px;" />
-                </div>
-                <div class="form-group" style="margin-bottom:0;">
-                  <label for="sectionRotationInput" style="font-size:10px;">Rotation (°)</label>
-                  <input type="number" id="sectionRotationInput" min="-360" max="360" value="0" style="text-align:center;padding:8px;" />
-                </div>
-              </div>
-
-              <div class="section-rows-row">
-                <label for="sectionScaleInput">Scale (0.5× – 2×)</label>
-                <span class="section-rows-badge" id="sectionScaleBadge">1.00×</span>
-                <input type="range" id="sectionScaleInput" min="0.5" max="2" step="0.05" value="1" />
-              </div>
-            </div>
-
-            <div class="row-overrides-hint">Each section has its own name, rows, tier override and configuration.</div>
+            <div class="row-overrides-hint">Each section has its own row count, seat counts, and venue location. Switch tabs to configure each section independently.</div>
             <div class="row-overrides-grid" id="rowOverridesGrid"></div>
           </div>
         </div>
 
         <div class="form-group" id="rowTierGroup">
-          <label>Row Tier Distribution (front-to-back per section)</label>
-          <p class="form-hint" style="margin-top:0;margin-bottom:8px;">Assign tiers to rows. Ignored if section has a tier override.</p>
+          <label>Row Tier Distribution (applies front-to-back per section)</label>
+          <p class="form-hint" style="margin-top:0;margin-bottom:8px;">Assign tiers to rows (front to back). Any leftover rows default to Cyan.</p>
           <div class="tier-dist-grid">
             <div class="tier-dist-item"><div class="swatch elite"></div><label for="tierRowsElite">Elite (Black)</label><input type="number" id="tierRowsElite" min="0" value="2" /></div>
             <div class="tier-dist-item"><div class="swatch gold"></div><label for="tierRowsGold">Gold (VIP)</label><input type="number" id="tierRowsGold" min="0" value="2" /></div>
@@ -745,7 +449,7 @@ body.dev-on .dev-only.section-rows-row { display: flex; }
           <input type="text" id="totalCapacity" readonly value="1" style="background:var(--surface-2);font-weight:bold;color:var(--cyan-700);" />
         </div>
 
-        <div class="section-divider"><span>Ticket Preview</span></div>
+        <div class="section-divider"><span>Ticket Design & Allocation</span></div>
         <div class="form-group">
           <label for="tierColor">Card Colour Tier</label>
           <select id="tierColor" required>
@@ -765,13 +469,13 @@ body.dev-on .dev-only.section-rows-row { display: flex; }
             <span class="seat-sep">—</span>
             <input type="number" id="seatNum" class="seat-part seat-num" placeholder="1" min="1" />
           </div>
+          <div class="seat-builder" id="seatBuilderTables" style="display:none;">
+            <input type="number" id="tableNum" class="seat-part seat-num" placeholder="Table" min="1" />
+            <span class="seat-sep">—</span>
+            <input type="number" id="chairNum" class="seat-part seat-num" placeholder="Chair" min="1" />
+          </div>
           <div class="seat-preview-display empty" id="seatPreviewDisplay">Enter block, row and seat to preview</div>
           <p class="form-hint" id="seatHint">Format: <strong>Block</strong> + <strong>Row</strong> + space + <strong>Seat</strong>. E.g., <code>AA 1</code>.</p>
-        </div>
-
-        <div class="export-actions">
-          <button type="button" class="btn btn-ghost" id="exportJsonBtn"><i data-lucide="download"></i> Export JSON</button>
-          <button type="button" class="btn btn-ghost" id="exportCsvBtn"><i data-lucide="table"></i> Export CSV</button>
         </div>
 
         <div class="form-actions">
@@ -817,96 +521,20 @@ body.dev-on .dev-only.section-rows-row { display: flex; }
 
 <div class="fullscreen-overlay" id="fullscreenOverlay">
   <div class="fs-header">
-    <h2>Full Venue Layout · <span id="fsStageName">STAGE</span></h2>
+    <h2>Full Layout View · <span id="fsStageName">STAGE</span></h2>
     <div class="fs-actions">
-      <button type="button" class="fs-btn active dev-only" id="fsToggleGrid">Grid</button>
-      <button type="button" class="fs-btn" id="fsResetView">↺ Reset</button>
+      <button type="button" class="fs-btn" id="resetSectionPositions">↺ Reset View</button>
       <button type="button" class="fs-btn fs-btn-close" id="closeFullscreen">✕ Close</button>
     </div>
   </div>
-  <div class="fs-level-bar dev-only" id="fsLevelBar"></div>
-  <div class="fs-canvas-outer">
-    <canvas id="fsCanvasCanvas" class="fs-canvas" width="1200" height="800"></canvas>
-    <div class="fs-empty-hint" id="fsEmptyHint" style="display:none;">Add sections to see them placed here</div>
+  <div class="fs-hint">💡 Sections auto-arrange by their Top/Middle/Low position and compass direction. Adjust spacing and rotation below.</div>
+  <div class="fs-canvas" id="fsCanvas">
+    <div class="fs-stage" id="fsStageLabel">STAGE</div>
+    <div class="fs-sections-stack" id="fsSectionsStack"></div>
   </div>
+  <div class="fs-controls" id="fsControls"></div>
 </div>
 
-<!-- ============ MAP PICKER + RECOMMENDER ============ -->
-<div class="fullscreen-overlay" id="mapOverlay">
-  <div class="fs-header">
-    <h2><i data-lucide="map-pin" style="width:16px;height:16px;vertical-align:middle;color:#22d3ee;"></i> Find a Venue</h2>
-    <div class="fs-actions">
-      <button type="button" class="fs-btn fs-btn-close" id="closeMapBtn">✕ Close</button>
-    </div>
-  </div>
-
-  <div class="map-layout">
-    <div class="map-sidebar">
-      <div class="map-sidebar-title"><i data-lucide="sparkles"></i> Recommend Venues</div>
-      <div class="map-api-hint" id="mapApiHint">
-        ⚠️ Add your Google Places API key to enable venue recommendations.
-        <button type="button" class="btn-mini" id="setApiKeyBtn" style="margin-top:6px;background:#fbbf24;color:#0a0f14;border-color:#fbbf24;font-weight:800;">Set API Key</button>
-      </div>
-      <div class="map-sidebar-row">
-        <label for="mapEventType">Event Type</label>
-        <select id="mapEventType">
-          <option value="general">General Event</option>
-          <option value="theater">Theater / Play</option>
-          <option value="concert">Concert / Music</option>
-          <option value="conference">Conference / Corporate</option>
-          <option value="wedding">Wedding / Gala</option>
-          <option value="festival">Festival / Outdoor</option>
-          <option value="sports">Sports / Arena</option>
-          <option value="banquet">Banquet / Dinner</option>
-        </select>
-      </div>
-      <div class="map-sidebar-row">
-        <label for="mapPriceRange">Price Range</label>
-        <select id="mapPriceRange">
-          <option value="any">Any</option>
-          <option value="budget">Budget</option>
-          <option value="mid">Mid-range</option>
-          <option value="premium">Premium</option>
-          <option value="luxury">Luxury</option>
-        </select>
-      </div>
-      <div class="map-sidebar-row">
-        <label for="mapRadiusInput">Search Radius (km)</label>
-        <input type="number" id="mapRadiusInput" min="1" max="50" value="10" />
-      </div>
-      <button type="button" class="map-recommend-btn" id="recommendBtn">
-        <i data-lucide="search"></i> Recommend Venues
-      </button>
-      <button type="button" class="map-recommend-btn" id="useMapCenterBtn" style="background:rgba(255,255,255,0.1);color:#fff;font-weight:700;">
-        📍 Use Map Center
-      </button>
-      <div class="map-results" id="mapResults">
-        <div class="map-results-empty">Tap the map, search, or hit "Recommend Venues" to see options here.</div>
-      </div>
-    </div>
-    <div style="position:relative; border-radius:12px; overflow:hidden; min-height:300px;">
-      <div class="map-hint">📌 Tap anywhere or drag the marker to select a venue</div>
-      <div id="venueMap"></div>
-    </div>
-  </div>
-
-  <div class="map-bottom-actions">
-    <input type="text" id="mapSearchInput" placeholder="Search a venue, city or address…" style="flex:1;min-width:200px;padding:11px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.2);background:rgba(255,255,255,0.08);color:#fff;font-family:inherit;font-size:13.5px;outline:none;" />
-    <button type="button" class="fs-btn" id="mapSearchBtn">🔍 Search</button>
-    <button type="button" class="fs-btn" id="mapUseLocationBtn">📍 My Location</button>
-    <button type="button" class="fs-btn" id="mapConfirmBtn" style="background:#22d3ee;color:#04161c;border-color:#22d3ee;">✓ Use This Venue</button>
-  </div>
-
-  <div class="map-info-bar" id="mapInfoBar">
-    <span style="opacity:0.6;">No location selected yet. Tap the map, search, or use recommendations.</span>
-  </div>
-</div>
-
-<div class="toast" id="toast"></div>
-
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.14.1/firebase-firestore-compat.js"></script>
 <script src="routing-engine.js"></script>
 <script>
 (function(){
@@ -914,155 +542,201 @@ body.dev-on .dev-only.section-rows-row { display: flex; }
 
 function $(id){ return document.getElementById(id); }
 
-var FIREBASE = {
-  apiKey: "AIzaSyBdb-NEf2kwzF-rzIyPnEYV9YoSZ9OdyoI",
-  authDomain: "novalink-5e3c3.firebaseapp.com",
-  projectId: "novalink-5e3c3",
-  storageBucket: "novalink-5e3c3.firebasestorage.app",
-  messagingSenderId: "483408592364",
-  appId: "1:483408592364:web:c150c0d7e3c908fd1354c9"
-};
-
-var db = null;
-try {
-  if (!firebase.apps.length) firebase.initializeApp(FIREBASE);
-  db = firebase.firestore();
-} catch(e){ console.error("Firebase init failed", e); }
-
-// ===== STATE =====
-var devMode = false;
-var canvasWidth = 1200;
-var canvasHeight = 800;
-var gridSize = 50;
-var snapToGrid = true;
-var showGrid = true;
-var stage = { x: 500, y: 60, width: 200, height: 60, name: "STAGE" };
-var venueCoords = null;
-var levels = [{ id: 0, name: "Ground Floor", color: "#22d3ee", visible: true }];
-var nextLevelId = 1;
 var sectionRowOverrides = {};
 var sectionRowCounts = {};
-var sectionNames = {};
-var sectionTierOverrides = {};
-var sectionPositions = {};
+var sectionRotations = {};
+var sectionLocations = {}; // { sectionIdx: { vertical: "top"|"middle"|"low", compass: "N"|... } }
+var sectionSpacingMeters = 2;
 var currentEditingSection = 0;
-var levelColors = ["#22d3ee", "#facc15", "#a78bfa", "#fb7185", "#34d399", "#60a5fa", "#f97316", "#e879f9"];
 
-// New: Curved layout & aisle state
-var curvedMode = false;
-var curvedConfig = { centerX: 600, centerY: 400, radiusStart: 150, radiusStep: 22, arcAngle: 90 };
-var aisleEveryN = 0;
-var aisleWidth = 1;
-var seatExclusions = {}; // { sectionIndex: ["A-5", "B-8"] }
+var PX_PER_METER = 20;
 
-// Map + Places state
-var map = null;
-var mapMarker = null;
-var mapMarkersList = [];
-var pendingPick = null;
-var placesKey = null;
-
-// Canvas rendering
-var fsCanvas = null;
-var fsCtx = null;
-
-// ===== EVENT TYPE → GOOGLE PLACES includedTypes MAPPING =====
-var EVENT_TYPE_TO_PLACES = {
-  "general":    ["event_venue", "convention_center", "banquet_hall"],
-  "theater":    ["performing_arts_theater", "movie_theater"],
-  "concert":    ["concert_hall", "live_music_venue", "night_club"],
-  "conference": ["convention_center", "business_center", "hotel"],
-  "wedding":    ["banquet_hall", "wedding_venue", "hotel", "restaurant"],
-  "festival":   ["park", "amusement_park", "event_venue"],
-  "sports":     ["stadium", "sports_complex", "arena", "sports_activity_location"],
-  "banquet":    ["banquet_hall", "restaurant", "event_venue"]
+// Compass angle from stage's perspective (0° = West, 90° = North, 180° = East, 270° = South)
+var compassAngle = {
+  "W": 0, "WNW": 22.5, "NW": 45, "NNW": 67.5,
+  "N": 90, "NNE": 112.5, "NE": 135, "ENE": 157.5,
+  "E": 180, "ESE": 202.5, "SE": 225, "SSE": 247.5,
+  "S": 270, "SSW": 292.5, "SW": 315, "WSW": 337.5
 };
-
-var PRICE_TO_LEVELS = {
-  "any":     [],
-  "budget":  ["PRICE_LEVEL_INEXPENSIVE", "PRICE_LEVEL_FREE"],
-  "mid":     ["PRICE_LEVEL_MODERATE"],
-  "premium": ["PRICE_LEVEL_EXPENSIVE"],
-  "luxury":  ["PRICE_LEVEL_VERY_EXPENSIVE"]
-};
-
-function showToast(msg, type, ms) {
-  type = type || "info"; ms = ms || 3000;
-  var t = $("toast");
-  var i = type === "error" ? "alert-circle" : (type === "success" ? "check-circle" : "info");
-  t.className = "toast " + type;
-  t.innerHTML = '<i data-lucide="' + i + '"></i><span>' + msg + '</span>';
-  if (window.lucide) lucide.createIcons();
-  requestAnimationFrame(function(){ t.classList.add("show"); });
-  clearTimeout(showToast._t);
-  showToast._t = setTimeout(function(){ t.classList.remove("show"); }, ms);
-}
 
 document.addEventListener("DOMContentLoaded", function(){
   if(window.lucide) lucide.createIcons();
+  var liveRef = "NL-" + Math.random().toString(36).substring(2, 8).toUpperCase();
+  $("prevRef").textContent = "Ref: " + liveRef;
 
-  // ===== HELPERS =====
+  function isTablesMode() { return $("venueType").value === "hall" && $("hallLayoutToggle").checked; }
+  function buildCurrentSeatCode() {
+    if (isTablesMode()) return NovalinkRoutingEngine.buildTableChairCode($("tableNum").value, $("chairNum").value);
+    return NovalinkRoutingEngine.buildSeatCode($("seatBlock").value, $("seatRow").value, $("seatNum").value);
+  }
+  function refreshSeatPreview() {
+    var code = buildCurrentSeatCode();
+    var display = $("seatPreviewDisplay");
+    if (code) { display.textContent = code; display.classList.remove("empty"); }
+    else { display.textContent = isTablesMode() ? "Enter table and chair numbers" : "Enter block, row and seat to preview"; display.classList.add("empty"); }
+    updateTicketPreview();
+  }
   function rowLabel(index) { var n = index, label = ""; do { label = String.fromCharCode(65 + (n % 26)) + label; n = Math.floor(n / 26) - 1; } while (n >= 0); return label; }
   function blockLabel(index) { return String.fromCharCode(65 + index); }
   function tierTagText(t) { return t === "black" ? "Elite" : t === "gold" ? "Gold" : t === "silver" ? "Silver" : "Cyan"; }
-  function snap(v) { return snapToGrid ? Math.round(v / gridSize) * gridSize : v; }
-  function getSectionName(idx) { return sectionNames[idx] || ("Section " + blockLabel(idx)); }
-  function setSectionName(idx, name) { if (name && name.trim()) sectionNames[idx] = name.trim(); else delete sectionNames[idx]; }
-  function getSectionTierOverride(idx) { return sectionTierOverrides[idx] || null; }
-  function setSectionTierOverride(idx, tier) { if (tier) sectionTierOverrides[idx] = tier; else delete sectionTierOverrides[idx]; }
-  function getRowCount(idx) { if (sectionRowCounts[idx] !== undefined) return sectionRowCounts[idx]; return parseInt($("totalLevel2").value) || 6; }
-  function setRowCount(idx, v) { sectionRowCounts[idx] = Math.max(1, Math.min(52, v)); }
-  function getSeatsForRow(sIdx, rIdx) { var d = sectionRowOverrides[sIdx]; if (d && d[rIdx] !== undefined) return d[rIdx]; return parseInt($("totalLevel3").value) || 10; }
-  function getSectionPos(idx) {
-    if (sectionPositions[idx]) return sectionPositions[idx];
-    var count = parseInt($("totalLevel1").value) || 1;
-    var gap = canvasWidth / (count + 1);
-    var pos = { x: Math.round(gap * (idx + 1) - 120), y: 300, scale: 1, rotation: 0, levelId: levels[0].id };
-    sectionPositions[idx] = pos;
-    return pos;
-  }
-  function setSectionPos(idx, key, val) { if (!sectionPositions[idx]) getSectionPos(idx); sectionPositions[idx][key] = val; }
 
-  function buildRowTierMap(totalRows, sectionIdx) {
-    var override = (sectionIdx !== undefined) ? getSectionTierOverride(sectionIdx) : null;
-    if (override) { var m = []; for (var i = 0; i < totalRows; i++) m.push(override); return m; }
+  function buildRowTierMap(totalRows) {
     var e = parseInt($("tierRowsElite").value)||0, g = parseInt($("tierRowsGold").value)||0, s = parseInt($("tierRowsSilver").value)||0, c = parseInt($("tierRowsCyan").value)||0;
-    var map_ = [];
-    for (var i = 0; i < e && map_.length < totalRows; i++) map_.push("black");
-    for (var i = 0; i < g && map_.length < totalRows; i++) map_.push("gold");
-    for (var i = 0; i < s && map_.length < totalRows; i++) map_.push("silver");
-    for (var i = 0; i < c && map_.length < totalRows; i++) map_.push("cyan");
-    while (map_.length < totalRows) map_.push("cyan");
-    return map_;
+    var map = [];
+    for (var i = 0; i < e && map.length < totalRows; i++) map.push("black");
+    for (var i = 0; i < g && map.length < totalRows; i++) map.push("gold");
+    for (var i = 0; i < s && map.length < totalRows; i++) map.push("silver");
+    for (var i = 0; i < c && map.length < totalRows; i++) map.push("cyan");
+    while (map.length < totalRows) map.push("cyan");
+    return map;
   }
+  function updateTierDistributionSummary() {
+    var defaultRows = parseInt($("totalLevel2").value) || 0;
+    var sum = (parseInt($("tierRowsElite").value)||0) + (parseInt($("tierRowsGold").value)||0) + (parseInt($("tierRowsSilver").value)||0) + (parseInt($("tierRowsCyan").value)||0);
+    var s = $("tierDistSummary");
+    s.className = "tier-dist-summary";
+    if (sum === defaultRows) s.textContent = "✓ Perfect — " + sum + " rows assigned (default per section).";
+    else if (sum < defaultRows) s.textContent = "Tier sum: " + sum + ". Rows beyond this in each section default to Cyan.";
+    else s.textContent = "Tier sum: " + sum + " rows (applied per section, extras ignored).";
+  }
+
+  function getRowCount(sectionIdx) {
+    if (sectionRowCounts[sectionIdx] !== undefined) return sectionRowCounts[sectionIdx];
+    return parseInt($("totalLevel2").value) || 6;
+  }
+  function setRowCount(sectionIdx, v) {
+    v = Math.max(1, Math.min(52, v));
+    sectionRowCounts[sectionIdx] = v;
+  }
+  function getSectionLocation(sectionIdx) {
+    if (sectionLocations[sectionIdx]) return sectionLocations[sectionIdx];
+    return { vertical: "middle", compass: "N" };
+  }
+  function setSectionLocation(sectionIdx, vertical, compass) {
+    if (!sectionLocations[sectionIdx]) sectionLocations[sectionIdx] = { vertical: "middle", compass: "N" };
+    if (vertical) sectionLocations[sectionIdx].vertical = vertical;
+    if (compass) sectionLocations[sectionIdx].compass = compass;
+  }
+  function getRotation(sectionIdx) {
+    return sectionRotations[sectionIdx] !== undefined ? sectionRotations[sectionIdx] : 0;
+  }
+
+  function rebuildSectionTabs() {
+    var sections = parseInt($("totalLevel1").value) || 1;
+    if (currentEditingSection >= sections) currentEditingSection = 0;
+    var container = $("sectionTabs");
+    container.innerHTML = "";
+    for (var i = 0; i < sections; i++) {
+      var btn = document.createElement("button");
+      btn.type = "button";
+      btn.className = "section-tab" + (i === currentEditingSection ? " active" : "");
+      btn.textContent = "Section " + blockLabel(i);
+      (function(idx) {
+        btn.addEventListener("click", function() {
+          currentEditingSection = idx;
+          rebuildSectionTabs();
+          refreshSectionRowsInput();
+          refreshSectionLocationInputs();
+          rebuildRowOverrides();
+        });
+      })(i);
+      container.appendChild(btn);
+    }
+  }
+
+  function refreshSectionRowsInput() {
+    var v = getRowCount(currentEditingSection);
+    $("sectionRowsInput").value = v;
+    $("sectionRowsBadge").textContent = v + " rows";
+  }
+  function refreshSectionLocationInputs() {
+    var loc = getSectionLocation(currentEditingSection);
+    // Vertical button group
+    document.querySelectorAll("#verticalBtnGroup .location-btn").forEach(function(b) {
+      b.classList.toggle("active", b.dataset.vertical === loc.vertical);
+    });
+    // Compass select
+    $("sectionCompass").value = loc.compass;
+  }
+
+  function rebuildRowOverrides() {
+    var rowCount = getRowCount(currentEditingSection);
+    var baseSeats = parseInt($("totalLevel3").value) || 10;
+    var container = $("rowOverridesGrid");
+    container.innerHTML = "";
+    if (rowCount <= 0) return;
+    var sectionData = sectionRowOverrides[currentEditingSection] || {};
+    for (var r = 0; r < rowCount; r++) {
+      var item = document.createElement("div");
+      item.className = "row-override-item";
+      var lbl = document.createElement("div");
+      lbl.className = "row-override-label";
+      lbl.textContent = "Row " + rowLabel(r);
+      var inp = document.createElement("input");
+      inp.type = "number";
+      inp.min = 4;
+      inp.max = 90;
+      inp.value = sectionData[r] !== undefined ? sectionData[r] : baseSeats;
+      (function(sIdx, rIdx, input) {
+        input.addEventListener("input", function() {
+          var val = parseInt(input.value);
+          if (!sectionRowOverrides[sIdx]) sectionRowOverrides[sIdx] = {};
+          if (isNaN(val)) delete sectionRowOverrides[sIdx][rIdx];
+          else sectionRowOverrides[sIdx][rIdx] = Math.max(4, Math.min(90, val));
+          calculateCapacity();
+          renderSeatingPlan();
+          if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+        });
+      })(currentEditingSection, r, inp);
+      item.appendChild(lbl);
+      item.appendChild(inp);
+      container.appendChild(item);
+    }
+  }
+
+  function getSeatsForRow(sectionIdx, rowIdx) {
+    var sectionData = sectionRowOverrides[sectionIdx];
+    if (sectionData && sectionData[rowIdx] !== undefined) return sectionData[rowIdx];
+    return parseInt($("totalLevel3").value) || 10;
+  }
+
+  function updateSeatingUI() {
+    var tablesMode = isTablesMode();
+    if ($("venueType").value === "hall") { $("hallToggleGroup").style.display = "flex"; }
+    else { $("hallToggleGroup").style.display = "none"; $("hallLayoutToggle").checked = false; }
+    if (tablesMode) { $("tableShapeGroup").style.display = "block"; updateTableShapeHint(); }
+    else { $("tableShapeGroup").style.display = "none"; }
+    if (tablesMode) { $("rowTierGroup").style.display = "none"; $("rowOverridesGroup").style.display = "none"; }
+    else { $("rowTierGroup").style.display = "block"; $("rowOverridesGroup").style.display = "block"; updateTierDistributionSummary(); }
+
+    if (tablesMode) {
+      $("seatBuilderStandard").style.display = "none"; $("seatBuilderTables").style.display = "flex";
+      $("seatLabel").textContent = "Table & Chair (Preview)";
+      $("seatHint").innerHTML = 'Format: <strong>T</strong>[table] + <strong>C</strong>[chair]. E.g., <code>T1 C4</code>.';
+    } else {
+      $("seatBuilderStandard").style.display = "flex"; $("seatBuilderTables").style.display = "none";
+      $("seatLabel").textContent = "Seat Identifier (Preview)";
+      $("seatHint").innerHTML = 'Format: <strong>Block</strong> + <strong>Row</strong> + space + <strong>Seat</strong>. E.g., <code>AA 1</code>.';
+    }
+    calculateCapacity();
+    refreshSeatPreview();
+  }
+  function updateTableShapeHint() { var meta = NovalinkRoutingEngine.resolveTableShape($("tableShape").value); $("tableShapeHint").textContent = meta.description; }
 
   function calculateCapacity() {
+    if (isTablesMode()) {
+      var tables = parseInt($("totalLevel1").value) || 0;
+      var chairs = parseInt($("totalLevel3").value) || 0;
+      $("totalCapacity").value = tables * chairs;
+      return;
+    }
     var sections = parseInt($("totalLevel1").value) || 0;
     var total = 0;
     for (var s = 0; s < sections; s++) {
       var rows = getRowCount(s);
-      for (var r = 0; r < rows; r++) {
-        var seatCount = getSeatsForRow(s, r);
-        // Subtract excluded seats
-        var exclusions = seatExclusions[s] || [];
-        var rowLabelStr = rowLabel(r);
-        var excludedInRow = exclusions.filter(function(ex) { return ex.startsWith(rowLabelStr + "-"); }).length;
-        total += Math.max(0, seatCount - excludedInRow);
-      }
+      for (var r = 0; r < rows; r++) total += getSeatsForRow(s, r);
     }
     $("totalCapacity").value = total;
-  }
-
-  function updateTicketPreview() {
-    $("prevEventName").textContent = $("eventName").value || "EVENT NAME";
-    $("prevDateVenue").textContent = ($("startDate").value || "DATE") + " · " + ($("venueAddress").value || "VENUE");
-    $("prevGuestName").textContent = $("guestName").value || "GUEST NAME";
-    var seatCode = NovalinkRoutingEngine.buildSeatCode($("seatBlock").value, $("seatRow").value, $("seatNum").value);
-    if (seatCode) $("prevSeat").textContent = seatCode;
-    else $("prevSeat").textContent = "Seat not assigned";
-    $("prevVenueLocation").textContent = $("venueAddress").value || "VENUE";
-    $("prevTierBadge").textContent = $("tierColor").value.toUpperCase();
-    $("dynamicTicket").className = "ticket-card " + $("tierColor").value;
   }
 
   function buildLegend() {
@@ -1074,922 +748,419 @@ document.addEventListener("DOMContentLoaded", function(){
     return legend;
   }
 
-  // ===== DEV MODE =====
-  function setDevMode(on) {
-    devMode = on;
-    document.body.classList.toggle("dev-on", on);
-    $("devModeToggle").checked = on;
-    if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
-    try { localStorage.setItem("novalink_dev_mode", on ? "1" : "0"); } catch(e){}
-  }
-  $("devModeToggle").addEventListener("change", function() { setDevMode(this.checked); });
-  try { if (localStorage.getItem("novalink_dev_mode") === "1") setDevMode(true); } catch(e){}
-
-  // ===== API KEY MANAGEMENT =====
-  try {
-    placesKey = localStorage.getItem("novalink_places_key");
-  } catch(e){}
-  function refreshApiHint() {
-    if (placesKey) {
-      $("mapApiHint").style.display = "none";
-    } else {
-      $("mapApiHint").style.display = "block";
-    }
-  }
-  $("setApiKeyBtn").addEventListener("click", function() {
-    var current = placesKey || "";
-    var key = prompt("Enter your Google Places API Key (with Places API (New) enabled):", current);
-    if (key === null) return;
-    key = key.trim();
-    if (!key) return;
-    placesKey = key;
-    try { localStorage.setItem("novalink_places_key", key); } catch(e){}
-    refreshApiHint();
-    showToast("API key saved locally", "success");
-  });
-
-  // ===== LEVELS =====
-  function rebuildLevelsList() {
-    var list = $("levelsList"); list.innerHTML = "";
-    levels.forEach(function(lv, i) {
-      var item = document.createElement("div"); item.className = "level-item";
-      var swatch = document.createElement("div"); swatch.className = "level-swatch"; swatch.style.background = lv.color; item.appendChild(swatch);
-      var nameInput = document.createElement("input"); nameInput.type = "text"; nameInput.className = "level-name-input"; nameInput.value = lv.name;
-      nameInput.addEventListener("input", function() { lv.name = nameInput.value || "Untitled Level"; rebuildLevelSelect(); renderFullscreen(); });
-      item.appendChild(nameInput);
-      var visLabel = document.createElement("label"); visLabel.className = "level-visible-toggle";
-      var chk = document.createElement("input"); chk.type = "checkbox"; chk.checked = lv.visible;
-      chk.addEventListener("change", function() { lv.visible = chk.checked; renderFullscreen(); rebuildLevelPills(); });
-      visLabel.appendChild(chk); visLabel.appendChild(document.createTextNode("Visible")); item.appendChild(visLabel);
-      if (levels.length > 1) {
-        var trash = document.createElement("button"); trash.type = "button"; trash.className = "btn-trash";
-        trash.innerHTML = '<i data-lucide="trash-2" style="width:14px;height:14px;"></i>';
-        trash.addEventListener("click", function() {
-          if (!confirm("Delete this level?")) return;
-          var firstId = levels.find(function(x){ return x.id !== lv.id; }).id;
-          Object.keys(sectionPositions).forEach(function(k){ if (sectionPositions[k].levelId === lv.id) sectionPositions[k].levelId = firstId; });
-          levels.splice(i, 1); rebuildLevelsList(); rebuildLevelSelect(); renderSeatingPlan(); renderFullscreen();
-        });
-        item.appendChild(trash);
-      }
-      list.appendChild(item);
-    });
-    if(window.lucide) lucide.createIcons();
-  }
-
-  function rebuildLevelSelect() {
-    var sel = $("sectionLevelSelect"); sel.innerHTML = "";
-    levels.forEach(function(lv) { var opt = document.createElement("option"); opt.value = lv.id; opt.textContent = lv.name; sel.appendChild(opt); });
-    if (currentEditingSection !== undefined) sel.value = getSectionPos(currentEditingSection).levelId;
-  }
-
-  function addLevel() {
-    var id = nextLevelId++;
-    var color = levelColors[levels.length % levelColors.length];
-    levels.push({ id: id, name: "Level " + levels.length, color: color, visible: true });
-    rebuildLevelsList(); rebuildLevelSelect(); renderFullscreen();
-  }
-
-  // ===== SECTION TABS =====
-  function rebuildSectionTabs() {
-    var sections = parseInt($("totalLevel1").value) || 1;
-    if (currentEditingSection >= sections) currentEditingSection = 0;
-    var container = $("sectionTabs"); container.innerHTML = "";
-    for (var i = 0; i < sections; i++) {
-      var btn = document.createElement("button");
-      btn.type = "button"; btn.className = "section-tab" + (i === currentEditingSection ? " active" : "");
-      btn.textContent = getSectionName(i);
-      (function(idx) {
-        btn.addEventListener("click", function() { currentEditingSection = idx; rebuildSectionTabs(); refreshSectionInputs(); rebuildRowOverrides(); });
-      })(i);
-      container.appendChild(btn);
-    }
-  }
-
-  function refreshSectionInputs() {
-    var idx = currentEditingSection;
-    $("sectionNameInput").value = sectionNames[idx] || "";
-    $("sectionNameInput").placeholder = "e.g., VIP Stand (currently " + getSectionName(idx) + ")";
-    $("sectionLevelSelect").value = getSectionPos(idx).levelId;
-    var rows = getRowCount(idx);
-    $("sectionRowsInput").value = rows;
-    $("sectionRowsBadge").textContent = rows + " rows";
-    $("sectionTierOverride").value = sectionTierOverrides[idx] || "";
-    var pos = getSectionPos(idx);
-    $("sectionXInput").value = pos.x;
-    $("sectionYInput").value = pos.y;
-    $("sectionRotationInput").value = pos.rotation;
-    $("sectionScaleInput").value = pos.scale;
-    $("sectionScaleBadge").textContent = pos.scale.toFixed(2) + "×";
-
-    // Curved mode
-    $("curvedModeToggle").checked = curvedMode;
-    $("curvedConfigPanel").style.display = curvedMode ? "block" : "none";
-    $("curveCenterX").value = curvedConfig.centerX;
-    $("curveCenterY").value = curvedConfig.centerY;
-    $("curveRadiusStart").value = curvedConfig.radiusStart;
-    $("curveRadiusStep").value = curvedConfig.radiusStep;
-    $("curveArcAngle").value = curvedConfig.arcAngle;
-
-    // Aisles
-    $("aisleEveryN").value = aisleEveryN;
-    $("aisleWidth").value = aisleWidth;
-
-    // Seat masking
-    var exclusions = seatExclusions[idx] || [];
-    $("seatMaskInput").value = exclusions.join("\n");
-  }
-
-  function rebuildRowOverrides() {
-    var rowCount = getRowCount(currentEditingSection);
-    var baseSeats = parseInt($("totalLevel3").value) || 10;
-    var container = $("rowOverridesGrid"); container.innerHTML = "";
-    if (rowCount <= 0) return;
-    var sectionData = sectionRowOverrides[currentEditingSection] || {};
-    for (var r = 0; r < rowCount; r++) {
-      var item = document.createElement("div"); item.className = "row-override-item";
-      var lbl = document.createElement("div"); lbl.className = "row-override-label"; lbl.textContent = "Row " + rowLabel(r);
-      var inp = document.createElement("input"); inp.type = "number"; inp.min = 4; inp.max = 90;
-      inp.value = sectionData[r] !== undefined ? sectionData[r] : baseSeats;
-      (function(sIdx, rIdx, input) {
-        input.addEventListener("input", function() {
-          var val = parseInt(input.value);
-          if (!sectionRowOverrides[sIdx]) sectionRowOverrides[sIdx] = {};
-          if (isNaN(val)) delete sectionRowOverrides[sIdx][rIdx];
-          else sectionRowOverrides[sIdx][rIdx] = Math.max(4, Math.min(90, val));
-          calculateCapacity(); renderSeatingPlan();
-          if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
-        });
-      })(currentEditingSection, r, inp);
-      item.appendChild(lbl); item.appendChild(inp); container.appendChild(item);
-    }
-  }
-
-  // ===== PREVIEW =====
   function renderStandardLayout(container, sections) {
     var stageName = ($("stageName").value || "STAGE").trim().toUpperCase();
     for (var b = 0; b < sections; b++) {
       var rowCount = getRowCount(b);
-      var map_ = buildRowTierMap(rowCount, b);
-      var pos = getSectionPos(b);
-      var lvl = levels.find(function(x){return x.id === pos.levelId;});
-      var blockEl = document.createElement("div"); blockEl.className = "block";
-      var bl = document.createElement("div"); bl.className = "block-label";
-      bl.textContent = getSectionName(b) + " · " + rowCount + " rows" + (devMode && lvl ? " · " + lvl.name : "");
+      var map = buildRowTierMap(rowCount);
+      var blockEl = document.createElement("div");
+      blockEl.className = "block";
+      var bl = document.createElement("div");
+      bl.className = "block-label";
+      bl.textContent = "Section " + blockLabel(b) + " · " + rowCount + " rows";
       blockEl.appendChild(bl);
-      var stageLine = document.createElement("div"); stageLine.className = "stage-line"; stageLine.textContent = stageName; blockEl.appendChild(stageLine);
-      var rowsStack = document.createElement("div"); rowsStack.className = "rows-stack";
+      var stageLine = document.createElement("div");
+      stageLine.className = "stage-line";
+      stageLine.textContent = stageName;
+      blockEl.appendChild(stageLine);
+      var rowsStack = document.createElement("div");
+      rowsStack.className = "rows-stack";
       for (var r = 0; r < rowCount; r++) {
-        var tier = map_[r] || "cyan";
-        var seatCount = Math.max(4, Math.min(90, getSeatsForRow(b, r)));
-        var rowEl = document.createElement("div"); rowEl.className = "horizontal-row";
-        var rl = document.createElement("div"); rl.className = "row-label"; rl.textContent = "Row " + rowLabel(r); rowEl.appendChild(rl);
-        var seatsWrap = document.createElement("div"); seatsWrap.className = "row-seats";
-        var inner = document.createElement("div"); inner.className = "row-seats-inner";
-        var exclusions = seatExclusions[b] || [];
-        var rowLbl = rowLabel(r);
+        var tier = map[r] || "cyan";
+        var seatCount = getSeatsForRow(b, r);
+        seatCount = Math.max(4, Math.min(90, seatCount));
+        var rowEl = document.createElement("div");
+        rowEl.className = "horizontal-row";
+        var rl = document.createElement("div");
+        rl.className = "row-label";
+        rl.textContent = "Row " + rowLabel(r);
+        rowEl.appendChild(rl);
+        var seatsWrap = document.createElement("div");
+        seatsWrap.className = "row-seats";
+        var seatsInner = document.createElement("div");
+        seatsInner.className = "row-seats-inner";
         for (var s = 0; s < seatCount; s++) {
-          var seatKey = rowLbl + "-" + (s + 1);
-          if (exclusions.indexOf(seatKey) !== -1) {
-            var gap = document.createElement("div"); gap.className = "row-seat"; gap.style.background = "transparent"; gap.style.border = "1px dashed var(--border-2)"; gap.textContent = ""; inner.appendChild(gap);
-            continue;
-          }
-          var seat = document.createElement("div"); seat.className = "row-seat " + tier; seat.textContent = (s + 1); inner.appendChild(seat);
-          // Aisle injection
-          if (aisleEveryN > 0 && (s + 1) % aisleEveryN === 0 && s < seatCount - 1) {
-            for (var aw = 0; aw < aisleWidth; aw++) {
-              var aisleGap = document.createElement("div"); aisleGap.className = "row-seat"; aisleGap.style.background = "transparent"; aisleGap.style.border = "none"; aisleGap.style.width = "8px"; aisleGap.style.minWidth = "8px"; inner.appendChild(aisleGap);
-            }
-          }
+          var seat = document.createElement("div");
+          seat.className = "row-seat " + tier;
+          seat.textContent = (s + 1);
+          seat.title = "Section " + blockLabel(b) + " · Row " + rowLabel(r) + " · Seat " + (s + 1);
+          seatsInner.appendChild(seat);
         }
-        seatsWrap.appendChild(inner); rowEl.appendChild(seatsWrap);
-        var tt = document.createElement("div"); tt.className = "row-tier-tag " + tier; tt.textContent = tierTagText(tier); rowEl.appendChild(tt);
+        seatsWrap.appendChild(seatsInner);
+        rowEl.appendChild(seatsWrap);
+        var tt = document.createElement("div");
+        tt.className = "row-tier-tag " + tier;
+        tt.textContent = tierTagText(tier);
+        rowEl.appendChild(tt);
         rowsStack.appendChild(rowEl);
       }
-      blockEl.appendChild(rowsStack); container.appendChild(blockEl);
+      blockEl.appendChild(rowsStack);
+      container.appendChild(blockEl);
     }
     container.appendChild(buildLegend());
   }
 
-  function renderSeatingPlan() {
-    var container = $("seatingPlanPreview"); container.innerHTML = "";
-    var l1 = parseInt($("totalLevel1").value) || 0;
-    if (l1 === 0) { container.innerHTML = '<div class="seating-plan-title">Add sections to begin</div>'; return; }
-    renderStandardLayout(container, Math.min(l1, 8));
-  }
-
-  // ===== FULL SCREEN (CANVAS RENDERING) =====
-  function rebuildLevelPills() {
-    var bar = $("fsLevelBar"); bar.innerHTML = "";
-    var label = document.createElement("span"); label.textContent = "Levels:"; label.style.opacity = "0.7"; label.style.fontWeight = "700"; bar.appendChild(label);
-    levels.forEach(function(lv) {
-      var btn = document.createElement("button"); btn.type = "button"; btn.className = "fs-level-pill " + (lv.visible ? "on" : "off");
-      var sw = document.createElement("span"); sw.className = "pill-swatch"; sw.style.background = lv.color; btn.appendChild(sw);
-      btn.appendChild(document.createTextNode(lv.name));
-      btn.addEventListener("click", function() { lv.visible = !lv.visible; rebuildLevelsList(); rebuildLevelPills(); renderFullscreen(); });
-      bar.appendChild(btn);
-    });
-  }
-
-  function renderFullscreenCanvas() {
-    if (!fsCanvas || !fsCtx) return;
-    var canvas = fsCanvas;
-    var ctx = fsCtx;
-    canvas.width = canvasWidth;
-    canvas.height = canvasHeight;
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    // Draw grid if dev mode and showGrid
-    if (devMode && showGrid) {
-      ctx.strokeStyle = "rgba(34,211,238,0.12)";
-      ctx.lineWidth = 1;
-      for (var x = 0; x <= canvas.width; x += gridSize) {
-        ctx.beginPath(); ctx.moveTo(x, 0); ctx.lineTo(x, canvas.height); ctx.stroke();
-      }
-      for (var y = 0; y <= canvas.height; y += gridSize) {
-        ctx.beginPath(); ctx.moveTo(0, y); ctx.lineTo(canvas.width, y); ctx.stroke();
-      }
-    }
-
-    // Draw stage
-    var stageName = ($("stageName").value || "STAGE").trim().toUpperCase();
-    ctx.fillStyle = "#1e2f4d";
-    ctx.fillRect(stage.x, stage.y, stage.width, stage.height);
-    ctx.fillStyle = "#ffffff";
-    ctx.font = "bold 14px Inter, sans-serif";
-    ctx.textAlign = "center";
-    ctx.textBaseline = "middle";
-    ctx.fillText(stageName, stage.x + stage.width / 2, stage.y + stage.height / 2);
-
-    var sections = parseInt($("totalLevel1").value) || 0;
-    var anyVisible = false;
-
-    for (var i = 0; i < sections; i++) {
-      var pos = getSectionPos(i);
-      var lv = levels.find(function(x){return x.id === pos.levelId;});
-      if (devMode && lv && !lv.visible) continue;
-      anyVisible = true;
-
-      var rowCount = getRowCount(i);
-      var map_ = buildRowTierMap(rowCount, i);
-      var exclusions = seatExclusions[i] || [];
-
-      ctx.save();
-      ctx.translate(pos.x, pos.y);
-      ctx.rotate((pos.rotation || 0) * Math.PI / 180);
-      ctx.scale(pos.scale || 1, pos.scale || 1);
-
-      // Section background
-      var maxSeats = 0;
-      for (var r = 0; r < rowCount; r++) { maxSeats = Math.max(maxSeats, getSeatsForRow(i, r)); }
-      var sectionW = maxSeats * 16 + 40;
-      var sectionH = rowCount * 18 + 50;
-      ctx.fillStyle = "#ffffff";
-      ctx.strokeStyle = "#e4e9f0";
-      ctx.lineWidth = 2;
-      ctx.beginPath();
-      ctx.roundRect(0, 0, sectionW, sectionH, 10);
-      ctx.fill();
-      ctx.stroke();
-
-      // Section title
-      ctx.fillStyle = "#0e7490";
-      ctx.font = "bold 11px Inter, sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "top";
-      ctx.fillText(getSectionName(i), sectionW / 2, 6);
-
-      // Level name
-      if (lv) {
-        ctx.fillStyle = lv.color;
-        ctx.font = "bold 8px Inter, sans-serif";
-        ctx.fillText(lv.name.toUpperCase() + " · " + rowCount + " ROWS", sectionW / 2, 20);
-      }
-
-      // Stage line
-      ctx.fillStyle = "#1e2f4d";
-      ctx.fillRect(10, 32, sectionW - 20, 12);
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 7px Inter, sans-serif";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(stageName, sectionW / 2, 38);
-
-      // Draw rows
-      var tierColors = {
-        black: { bg: "#1a202c", fg: "#ffffff" },
-        gold: { bg: "#ecc94b", fg: "#744210" },
-        silver: { bg: "#cbd5e1", fg: "#4a5568" },
-        cyan: { bg: "#22d3ee", fg: "#04161c" }
-      };
-
-      for (var r = 0; r < rowCount; r++) {
-        var tier = map_[r] || "cyan";
-        var seatCount = Math.max(4, Math.min(90, getSeatsForRow(i, r)));
-        var rowLbl = rowLabel(r);
-        var yPos = 52 + r * 18;
-
-        // Row label
-        ctx.fillStyle = "#6b7787";
-        ctx.font = "bold 7px Inter, sans-serif";
-        ctx.textAlign = "right";
-        ctx.textBaseline = "middle";
-        ctx.fillText(rowLbl, 30, yPos + 6);
-
-        // Draw seats
-        for (var s = 0; s < seatCount; s++) {
-          var seatKey = rowLbl + "-" + (s + 1);
-          if (exclusions.indexOf(seatKey) !== -1) continue;
-
-          // Aisle gap
-          if (aisleEveryN > 0 && s > 0 && s % aisleEveryN === 0) {
-            // Skip this seat position for aisle
-          }
-
-          var xPos = 38 + s * 16;
-          var c = tierColors[tier] || tierColors.cyan;
-          ctx.fillStyle = c.bg;
-          ctx.beginPath();
-          ctx.roundRect(xPos, yPos, 12, 12, 2);
-          ctx.fill();
-
-          ctx.fillStyle = c.fg;
-          ctx.font = "bold 6px Inter, sans-serif";
-          ctx.textAlign = "center";
-          ctx.textBaseline = "middle";
-          ctx.fillText(s + 1, xPos + 6, yPos + 6);
+  function renderTablesLayout(container, l1, l3) {
+    var tier = $("tierColor").value;
+    var wrapper = document.createElement("div"); wrapper.className = "tables-wrapper";
+    var shape = $("tableShape").value;
+    var renderTables = Math.min(l1, 12);
+    var dist = NovalinkRoutingEngine.distributeChairs(shape, l3);
+    for (var t = 0; t < renderTables; t++) {
+      var item = document.createElement("div"); item.className = "table-item";
+      var cEl = document.createElement("div"); cEl.className = "table-shape-container";
+      var tbl = document.createElement("div"); tbl.className = "table-shape " + shape; tbl.textContent = "T" + (t + 1); cEl.appendChild(tbl);
+      if (shape === "circular") {
+        var n = dist.count, radius = 42;
+        for (var c = 0; c < n; c++) {
+          var angle = (2 * Math.PI * c) / n - (Math.PI / 2);
+          placeChair(cEl, shape, 60 + radius * Math.cos(angle), 60 + radius * Math.sin(angle), tier);
         }
-
-        // Tier tag
-        ctx.fillStyle = tier === "black" ? "#1a202c" : (tier === "gold" ? "#92700c" : (tier === "silver" ? "#4a5568" : "#0e7490"));
-        ctx.font = "bold 6px Inter, sans-serif";
-        ctx.textAlign = "left";
-        ctx.textBaseline = "middle";
-        ctx.fillText(tierTagText(tier).toUpperCase(), 38 + seatCount * 16 + 6, yPos + 6);
+      } else if (shape === "rectangular") {
+        for (var i = 0; i < dist.top; i++) placeChair(cEl, shape, 20 + (80 / (dist.top + 1)) * (i + 1), 15, tier);
+        for (var i = 0; i < dist.bottom; i++) placeChair(cEl, shape, 20 + (80 / (dist.bottom + 1)) * (i + 1), 105, tier);
+        if (dist.left > 0) placeChair(cEl, shape, 12, 60, tier);
+        if (dist.right > 0) placeChair(cEl, shape, 108, 60, tier);
+      } else if (shape === "square") {
+        for (var i = 0; i < dist.top; i++) placeChair(cEl, shape, dist.top === 1 ? 60 : (45 + i * 30), 18, tier);
+        for (var i = 0; i < dist.bottom; i++) placeChair(cEl, shape, dist.bottom === 1 ? 60 : (45 + i * 30), 102, tier);
+        for (var i = 0; i < dist.left; i++) placeChair(cEl, shape, 18, dist.left === 1 ? 60 : (45 + i * 30), tier);
+        for (var i = 0; i < dist.right; i++) placeChair(cEl, shape, 102, dist.right === 1 ? 60 : (45 + i * 30), tier);
       }
+      item.appendChild(cEl);
+      var label = document.createElement("div"); label.className = "table-number-label";
+      label.textContent = "Table " + (t + 1) + " · " + dist.total + " chairs"; item.appendChild(label);
+      if (dist.capped) {
+        var warn = document.createElement("div"); warn.className = "cap-warning";
+        warn.textContent = "Capped at max for this shape (" + (shape === "circular" ? 10 : 8) + ")"; item.appendChild(warn);
+      }
+      wrapper.appendChild(item);
+    }
+    container.appendChild(wrapper);
+  }
+  function placeChair(parent, shape, cx, cy, tier) {
+    var chair = document.createElement("div"); chair.className = "chair-around " + shape + " " + tier;
+    chair.style.left = (cx - 7) + "px"; chair.style.top = (cy - 7) + "px"; parent.appendChild(chair);
+  }
 
-      ctx.restore();
+  function renderSeatingPlan() {
+    var container = $("seatingPlanPreview");
+    container.innerHTML = "";
+    var l1 = parseInt($("totalLevel1").value) || 0;
+    var l3 = parseInt($("totalLevel3").value) || 0;
+    if (l1 === 0 || l3 === 0) {
+      container.innerHTML = '<div class="seating-plan-title">Enter seating details to generate layout</div>';
+      return;
+    }
+    if (isTablesMode()) { renderTablesLayout(container, l1, l3); return; }
+    renderStandardLayout(container, Math.min(l1, 6));
+  }
+
+  // ============ FULL SCREEN VIEW ============
+  function buildSectionFrame(sectionIdx) {
+    var rowCount = getRowCount(sectionIdx);
+    var map = buildRowTierMap(rowCount);
+    var stageName = ($("stageName").value || "STAGE").trim().toUpperCase();
+    var loc = getSectionLocation(sectionIdx);
+
+    var frame = document.createElement("div");
+    frame.className = "fs-section-frame";
+    frame.dataset.section = sectionIdx;
+
+    var rotation = getRotation(sectionIdx);
+    frame.style.transform = rotation ? "rotate(" + rotation + "deg)" : "none";
+
+    var inner = document.createElement("div");
+    inner.className = "fs-section-inner";
+
+    var title = document.createElement("div");
+    title.className = "fs-section-title";
+    title.textContent = "Section " + blockLabel(sectionIdx) + " · " + rowCount + " rows";
+    inner.appendChild(title);
+
+    var locLbl = document.createElement("div");
+    locLbl.className = "fs-section-location";
+    locLbl.textContent = loc.vertical.toUpperCase() + " · " + loc.compass;
+    inner.appendChild(locLbl);
+
+    var stageLbl = document.createElement("div");
+    stageLbl.className = "fs-section-stage";
+    stageLbl.textContent = stageName;
+    inner.appendChild(stageLbl);
+
+    var rowsArea = document.createElement("div");
+    rowsArea.className = "fs-rows-area";
+
+    for (var r = 0; r < rowCount; r++) {
+      var tier = map[r] || "cyan";
+      var seatCount = getSeatsForRow(sectionIdx, r);
+      seatCount = Math.max(4, Math.min(90, seatCount));
+
+      var rowEl = document.createElement("div");
+      rowEl.className = "fs-row";
+
+      var rl = document.createElement("div");
+      rl.className = "fs-row-label";
+      rl.textContent = "Row " + rowLabel(r);
+      rowEl.appendChild(rl);
+
+      var seatsWrap = document.createElement("div");
+      seatsWrap.className = "fs-row-seats";
+      for (var s = 0; s < seatCount; s++) {
+        var seat = document.createElement("div");
+        seat.className = "fs-seat " + tier;
+        seat.textContent = (s + 1);
+        seatsWrap.appendChild(seat);
+      }
+      rowEl.appendChild(seatsWrap);
+
+      var tt = document.createElement("div");
+      tt.className = "fs-tier-tag " + tier;
+      tt.textContent = tierTagText(tier);
+      rowEl.appendChild(tt);
+
+      rowsArea.appendChild(rowEl);
     }
 
-    $("fsEmptyHint").style.display = anyVisible ? "none" : "block";
-    if (devMode) rebuildLevelPills(); else $("fsLevelBar").innerHTML = "";
+    inner.appendChild(rowsArea);
+    frame.appendChild(inner);
+    return frame;
   }
 
   function renderFullscreen() {
-    if (!fsCanvas || !fsCtx) {
-      fsCanvas = $("fsCanvasCanvas");
-      if (fsCanvas) fsCtx = fsCanvas.getContext("2d");
+    var sections = parseInt($("totalLevel1").value) || 0;
+    var stageName = ($("stageName").value || "STAGE").trim().toUpperCase();
+
+    $("fsStageName").textContent = stageName;
+    $("fsStageLabel").textContent = stageName;
+
+    // Group sections by vertical position
+    var groups = { top: [], middle: [], low: [] };
+    for (var i = 0; i < sections; i++) {
+      var loc = getSectionLocation(i);
+      var bucket = groups[loc.vertical] || groups.middle;
+      bucket.push(i);
     }
-    if (fsCanvas && fsCtx) {
-      renderFullscreenCanvas();
-    }
-    // Also update DOM-based preview
-    if(window.lucide) lucide.createIcons();
-  }
-
-  // ===== MAP PICKER =====
-  function initMap() {
-    if (map) return;
-    map = L.map("venueMap", { zoomControl: true }).setView([-30.5595, 22.9375], 5);
-    L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", { maxZoom: 19, attribution: '© OpenStreetMap contributors' }).addTo(map);
-    map.on("click", function(e) { placeMarker(e.latlng.lat, e.latlng.lng, true); });
-    setTimeout(function(){ if (map) map.invalidateSize(); }, 200);
-  }
-
-  function placeMarker(lat, lng, doReverse) {
-    if (mapMarker) map.removeLayer(mapMarker);
-    mapMarker = L.marker([lat, lng], { draggable: true }).addTo(map);
-    mapMarker.on("dragend", function() { var p = mapMarker.getLatLng(); reverseGeocode(p.lat, p.lng); });
-    pendingPick = { lat: lat, lng: lng, name: "", address: "", city: "", displayName: "" };
-    if (doReverse) reverseGeocode(lat, lng);
-    else updateMapInfo("📍 Lat " + lat.toFixed(5) + ", Lng " + lng.toFixed(5));
-  }
-
-  function updateMapInfo(html) { $("mapInfoBar").innerHTML = html; }
-
-  function reverseGeocode(lat, lng) {
-    updateMapInfo('<span style="opacity:0.6;">🔍 Looking up address…</span>');
-    var url = "https://nominatim.openstreetmap.org/reverse?format=jsonv2&lat=" + lat + "&lon=" + lng + "&zoom=18&addressdetails=1";
-    fetch(url, { headers: { "Accept": "application/json" } })
-      .then(function(r){ return r.json(); })
-      .then(function(data){
-        if (!data || !data.address) { updateMapInfo("📍 Lat " + lat.toFixed(5) + ", Lng " + lng.toFixed(5)); return; }
-        var a = data.address;
-        var venueName = data.name || a.amenity || a.building || a.leisure || a.tourism || a.shop || "";
-        var street = [a.house_number, a.road].filter(Boolean).join(" ");
-        var city = a.city || a.town || a.village || a.suburb || a.municipality || a.county || "";
-        var region = a.state || "";
-        var country = a.country || "";
-        var addressParts = [street, city, region, country].filter(Boolean);
-        pendingPick = { lat: lat, lng: lng, name: venueName, address: addressParts.join(", "), city: city, displayName: data.display_name || "" };
-        var html = "";
-        if (venueName) html += '<span class="map-info-name">' + venueName + '</span> ';
-        html += '<span class="map-info-addr">' + (addressParts.join(", ") || data.display_name || "") + '</span>';
-        updateMapInfo(html);
-      })
-      .catch(function(err){
-        console.error("Reverse geocode failed", err);
-        updateMapInfo("📍 Lat " + lat.toFixed(5) + ", Lng " + lng.toFixed(5));
+    // Sort each group by compass angle
+    ["top", "middle", "low"].forEach(function(v) {
+      groups[v].sort(function(a, b) {
+        var ca = compassAngle[getSectionLocation(a).compass];
+        var cb = compassAngle[getSectionLocation(b).compass];
+        if (ca === undefined) ca = 0;
+        if (cb === undefined) cb = 0;
+        return ca - cb;
       });
-  }
+    });
 
-  function forwardGeocode(query) {
-    if (!query) return;
-    updateMapInfo('<span style="opacity:0.6;">🔍 Searching…</span>');
-    var url = "https://nominatim.openstreetmap.org/search?format=jsonv2&q=" + encodeURIComponent(query) + "&limit=1&addressdetails=1";
-    fetch(url, { headers: { "Accept": "application/json" } })
-      .then(function(r){ return r.json(); })
-      .then(function(results){
-        if (!results || !results.length) { updateMapInfo("No results found for: " + query); return; }
-        var res = results[0];
-        var lat = parseFloat(res.lat), lng = parseFloat(res.lon);
-        map.setView([lat, lng], 16);
-        placeMarker(lat, lng, false);
-        var a = res.address || {};
-        var venueName = res.name || a.amenity || a.building || a.leisure || a.tourism || a.shop || "";
-        var street = [a.house_number, a.road].filter(Boolean).join(" ");
-        var city = a.city || a.town || a.village || a.suburb || a.municipality || a.county || "";
-        var addressParts = [street, city, a.state, a.country].filter(Boolean);
-        pendingPick = { lat: lat, lng: lng, name: venueName, address: addressParts.join(", "), city: city, displayName: res.display_name || "" };
-        var html = "";
-        if (venueName) html += '<span class="map-info-name">' + venueName + '</span> ';
-        html += '<span class="map-info-addr">' + (addressParts.join(", ") || res.display_name || "") + '</span>';
-        updateMapInfo(html);
-      })
-      .catch(function(err){ console.error(err); updateMapInfo("Search failed. Please try again."); });
-  }
+    var stack = $("fsSectionsStack");
+    stack.innerHTML = "";
 
-  async function recommendVenues() {
-    if (!placesKey) {
-      showToast("Set your Google Places API key first", "error", 4000);
-      $("mapApiHint").style.display = "block";
-      return;
-    }
-    if (!map) { showToast("Map not ready yet", "error"); return; }
+    var gapPx = sectionSpacingMeters * PX_PER_METER;
 
-    var center = map.getCenter();
-    var eventType = $("mapEventType").value;
-    var priceRange = $("mapPriceRange").value;
-    var radiusKm = Math.max(1, Math.min(50, parseInt($("mapRadiusInput").value) || 10));
-    var radiusMeters = radiusKm * 1000;
-
-    var includedTypes = EVENT_TYPE_TO_PLACES[eventType] || EVENT_TYPE_TO_PLACES.general;
-    var wantedPriceLevels = PRICE_TO_LEVELS[priceRange] || [];
-
-    var resultsBox = $("mapResults");
-    resultsBox.innerHTML = '<div class="map-results-empty">🔍 Searching nearby venues…</div>';
-    $("recommendBtn").disabled = true;
-
-    mapMarkersList.forEach(function(m){ map.removeLayer(m); });
-    mapMarkersList = [];
-
-    try {
-      var body = {
-        includedTypes: includedTypes,
-        maxResultCount: 20,
-        locationRestriction: {
-          circle: {
-            center: { latitude: center.lat, longitude: center.lng },
-            radius: radiusMeters
-          }
-        },
-        rankPreference: "POPULARITY"
-      };
-
-      var res = await fetch("https://places.googleapis.com/v1/places:searchNearby", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          "X-Goog-Api-Key": placesKey,
-          "X-Goog-FieldMask": [
-            "places.id",
-            "places.displayName",
-            "places.formattedAddress",
-            "places.shortFormattedAddress",
-            "places.location",
-            "places.rating",
-            "places.userRatingCount",
-            "places.priceLevel",
-            "places.primaryType",
-            "places.types",
-            "places.businessStatus"
-          ].join(",")
-        },
-        body: JSON.stringify(body)
-      });
-
-      if (!res.ok) {
-        var errText = await res.text();
-        console.error("Places API error:", res.status, errText);
-        resultsBox.innerHTML = '<div class="map-results-empty">❌ ' + escapeHtml(errText.slice(0, 200)) + '</div>';
-        showToast("Places API error " + res.status, "error", 5000);
-        $("recommendBtn").disabled = false;
-        return;
+    ["top", "middle", "low"].forEach(function(bandName) {
+      var band = document.createElement("div");
+      band.className = "fs-row-band";
+      band.dataset.band = bandName;
+      band.dataset.bandLabel = bandName.toUpperCase();
+      band.style.gap = gapPx + "px";
+      if (groups[bandName].length === 0) {
+        // Empty band still takes up some space
+        band.style.minHeight = "20px";
+        band.style.opacity = "0.4";
       }
+      groups[bandName].forEach(function(idx) {
+        band.appendChild(buildSectionFrame(idx));
+      });
+      stack.appendChild(band);
+    });
 
-      var data = await res.json();
-      var places = (data.places || []);
+    // Controls
+    var controls = $("fsControls");
+    controls.innerHTML = "";
 
-      if (wantedPriceLevels.length > 0) {
-        places = places.filter(function(p) {
-          if (!p.priceLevel) return true;
-          return wantedPriceLevels.indexOf(p.priceLevel) !== -1;
+    var spacingCtl = document.createElement("div");
+    spacingCtl.className = "fs-spacing-control";
+    spacingCtl.innerHTML = "📏 Section Spacing:";
+    var spacingInput = document.createElement("input");
+    spacingInput.type = "number";
+    spacingInput.min = 0;
+    spacingInput.max = 50;
+    spacingInput.step = 0.5;
+    spacingInput.value = sectionSpacingMeters;
+    spacingInput.addEventListener("input", function() {
+      var v = parseFloat(spacingInput.value);
+      if (isNaN(v) || v < 0) v = 0;
+      sectionSpacingMeters = v;
+      document.querySelectorAll(".fs-row-band").forEach(function(b) {
+        b.style.gap = (v * PX_PER_METER) + "px";
+      });
+    });
+    spacingCtl.appendChild(spacingInput);
+    spacingCtl.appendChild(document.createTextNode(" m"));
+    controls.appendChild(spacingCtl);
+
+    for (var b2 = 0; b2 < sections; b2++) {
+      (function(idx) {
+        var c = document.createElement("div");
+        c.className = "fs-rotation-control";
+        c.innerHTML = "Section " + blockLabel(idx) + " ↻";
+        var inp = document.createElement("input");
+        inp.type = "number";
+        inp.min = -360;
+        inp.max = 360;
+        inp.step = 5;
+        inp.value = getRotation(idx);
+        inp.addEventListener("input", function() {
+          var v = parseInt(inp.value);
+          if (isNaN(v)) v = 0;
+          sectionRotations[idx] = v;
+          var frame = document.querySelector('.fs-section-frame[data-section="' + idx + '"]');
+          if (frame) frame.style.transform = v ? "rotate(" + v + "deg)" : "none";
         });
-      }
-
-      places.sort(function(a, b) {
-        var ra = a.rating || 0, rb = b.rating || 0;
-        return rb - ra;
-      });
-
-      if (places.length === 0) {
-        resultsBox.innerHTML = '<div class="map-results-empty">No venues found matching your filters. Try expanding the radius or changing the event type.</div>';
-        $("recommendBtn").disabled = false;
-        return;
-      }
-
-      renderPlaceResults(places);
-      $("recommendBtn").disabled = false;
-    } catch(err) {
-      console.error("Places search failed:", err);
-      resultsBox.innerHTML = '<div class="map-results-empty">❌ Search failed: ' + escapeHtml(err.message) + '</div>';
-      showToast("Search failed: " + err.message, "error", 5000);
-      $("recommendBtn").disabled = false;
+        c.appendChild(inp);
+        c.appendChild(document.createTextNode("°"));
+        controls.appendChild(c);
+      })(b2);
     }
   }
 
-  function escapeHtml(s) { return String(s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
-
-  function priceLevelToSymbol(level) {
-    switch (level) {
-      case "PRICE_LEVEL_FREE": return "Free";
-      case "PRICE_LEVEL_INEXPENSIVE": return "$";
-      case "PRICE_LEVEL_MODERATE": return "$$";
-      case "PRICE_LEVEL_EXPENSIVE": return "$$$";
-      case "PRICE_LEVEL_VERY_EXPENSIVE": return "$$$$";
-      default: return "";
-    }
-  }
-
-  function renderPlaceResults(places) {
-    var box = $("mapResults");
-    box.innerHTML = "";
-
-    var bounds = L.latLngBounds();
-    var hasLoc = false;
-
-    places.forEach(function(p, idx) {
-      if (!p.location) return;
-      var lat = p.location.latitude, lng = p.location.longitude;
-      if (typeof lat !== "number" || typeof lng !== "number") return;
-      hasLoc = true;
-      bounds.extend([lat, lng]);
-
-      var m = L.marker([lat, lng]).addTo(map);
-      var popupHtml = '<b>' + escapeHtml(p.displayName ? p.displayName.text : "Venue") + '</b>';
-      if (p.formattedAddress) popupHtml += '<br>' + escapeHtml(p.formattedAddress);
-      m.bindPopup(popupHtml);
-      m._place = p;
-      mapMarkersList.push(m);
-
-      var item = document.createElement("div");
-      item.className = "map-result-item";
-      var name = p.displayName ? p.displayName.text : "Venue";
-      var addr = p.shortFormattedAddress || p.formattedAddress || "";
-      var rating = p.rating ? ('★ ' + p.rating.toFixed(1) + (p.userRatingCount ? ' (' + p.userRatingCount + ')' : '')) : "";
-      var price = p.priceLevel ? priceLevelToSymbol(p.priceLevel) : "";
-      var ptype = p.primaryType ? p.primaryType.replace(/_/g, " ") : "";
-
-      item.innerHTML =
-        '<div class="map-result-name">' + escapeHtml(name) + '</div>' +
-        (addr ? '<div class="map-result-addr">' + escapeHtml(addr) + '</div>' : '') +
-        '<div class="map-result-meta">' +
-          (rating ? '<span class="rating">' + escapeHtml(rating) + '</span>' : '') +
-          (price ? '<span class="price">' + escapeHtml(price) + '</span>' : '') +
-          (ptype ? '<span class="type">' + escapeHtml(ptype) + '</span>' : '') +
-        '</div>';
-
-      item.addEventListener("click", function() {
-        box.querySelectorAll(".map-result-item").forEach(function(x){ x.classList.remove("selected"); });
-        item.classList.add("selected");
-
-        map.setView([lat, lng], 17);
-        m.openPopup();
-
-        pendingPick = {
-          lat: lat,
-          lng: lng,
-          name: name,
-          address: p.formattedAddress || addr,
-          city: extractCityFromAddress(p.formattedAddress || addr),
-          displayName: p.formattedAddress || addr
-        };
-        var html = '<span class="map-info-name">' + escapeHtml(name) + '</span> ';
-        if (p.formattedAddress) html += '<span class="map-info-addr">' + escapeHtml(p.formattedAddress) + '</span>';
-        updateMapInfo(html);
-      });
-
-      box.appendChild(item);
-    });
-
-    if (hasLoc) {
-      try { map.fitBounds(bounds, { padding: [40, 40], maxZoom: 15 }); } catch(e){}
-    }
-  }
-
-  function extractCityFromAddress(addr) {
-    if (!addr) return "";
-    var parts = addr.split(",").map(function(s){ return s.trim(); });
-    if (parts.length >= 3) return parts[1] || parts[0];
-    return parts[0] || "";
-  }
-
-  function openMapPicker() {
-    $("mapOverlay").classList.add("open");
-    document.body.style.overflow = "hidden";
-    refreshApiHint();
-    $("mapEventType").value = $("eventType").value || "general";
-    $("mapPriceRange").value = $("priceRange").value || "any";
-
-    setTimeout(function() {
-      initMap();
-      if (map) map.invalidateSize();
-      if (venueCoords && venueCoords.lat && venueCoords.lng) {
-        placeMarker(venueCoords.lat, venueCoords.lng, false);
-        var html = "";
-        if (venueCoords.name) html += '<span class="map-info-name">' + venueCoords.name + '</span> ';
-        if (venueCoords.address) html += '<span class="map-info-addr">' + venueCoords.address + '</span>';
-        updateMapInfo(html || ("📍 Lat " + venueCoords.lat.toFixed(5) + ", Lng " + venueCoords.lng.toFixed(5)));
-      }
-    }, 220);
-  }
-  function closeMapPicker() { $("mapOverlay").classList.remove("open"); document.body.style.overflow = ""; }
-
-  function confirmMapPick() {
-    if (!pendingPick || pendingPick.lat === undefined) { showToast("Tap on the map or pick a recommendation first", "error"); return; }
-    venueCoords = {
-      lat: pendingPick.lat, lng: pendingPick.lng,
-      name: pendingPick.name || "",
-      address: pendingPick.address || "",
-      city: pendingPick.city || "",
-      displayName: pendingPick.displayName || ""
-    };
-    var composed = [];
-    if (venueCoords.name) composed.push(venueCoords.name);
-    if (venueCoords.address && composed.join(", ").indexOf(venueCoords.address) === -1) composed.push(venueCoords.address);
-    var finalAddress = composed.join(", ") || venueCoords.displayName || ("Lat " + venueCoords.lat.toFixed(5) + ", Lng " + venueCoords.lng.toFixed(5));
-    $("venueAddress").value = finalAddress;
-    if (venueCoords.city && !$("city").value) $("city").value = venueCoords.city;
-    $("venueCoordsText").textContent = venueCoords.lat.toFixed(5) + ", " + venueCoords.lng.toFixed(5) + (venueCoords.name ? " · " + venueCoords.name : "");
-    $("venueCoordsHint").classList.add("show");
-    updateTicketPreview();
-    closeMapPicker();
-    showToast("Venue location set", "success");
-  }
-
-  // ===== EXPORT + SAVE =====
-  function buildSectionsData() {
-    var sections = [];
-    var count = parseInt($("totalLevel1").value) || 0;
-    for (var s = 0; s < count; s++) {
-      var rowCount = getRowCount(s);
-      var map_ = buildRowTierMap(rowCount, s);
-      var pos = getSectionPos(s);
-      var lv = levels.find(function(x){return x.id === pos.levelId;});
-      var rows = [];
-      var exclusions = seatExclusions[s] || [];
-      for (var r = 0; r < rowCount; r++) {
-        var seats = [];
-        var seatCount = getSeatsForRow(s, r);
-        var rowLbl = rowLabel(r);
-        for (var i = 0; i < seatCount; i++) {
-          var seatKey = rowLbl + "-" + (i + 1);
-          if (exclusions.indexOf(seatKey) !== -1) continue;
-          seats.push({ seat: i + 1, tier: map_[r] });
-        }
-        rows.push({ row: rowLbl, seats: seats });
-      }
-      sections.push({ name: getSectionName(s), level: (devMode && lv) ? lv.name : null, x: pos.x, y: pos.y, scale: pos.scale, rotation: pos.rotation, tierOverride: getSectionTierOverride(s), rowCount: rowCount, rows: rows });
-    }
-    return sections;
-  }
-
-  function buildVenuePayload() {
-    return {
-      canvasWidth: canvasWidth, canvasHeight: canvasHeight,
-      gridSize: gridSize, snapToGrid: snapToGrid,
-      stage: { x: stage.x, y: stage.y, width: stage.width, height: stage.height, name: stage.name },
-      levels: levels.map(function(l){ return { id: l.id, name: l.name, color: l.color, visible: l.visible }; }),
-      sections: buildSectionsData(),
-      venueCoords: venueCoords,
-      eventType: $("eventType").value,
-      priceRange: $("priceRange").value,
-      curvedMode: curvedMode,
-      curvedConfig: curvedConfig,
-      aisleEveryN: aisleEveryN,
-      aisleWidth: aisleWidth,
-      seatExclusions: seatExclusions
-    };
-  }
-
-  function downloadFile(content, filename, mime) {
-    var blob = new Blob([content], { type: mime });
-    var url = URL.createObjectURL(blob);
-    var a = document.createElement("a");
-    a.href = url; a.download = filename;
-    document.body.appendChild(a); a.click();
-    setTimeout(function(){ document.body.removeChild(a); URL.revokeObjectURL(url); }, 100);
-  }
-  function exportJson() {
-    var name = $("eventName").value || "Untitled Event";
-    var payload = Object.assign({
-      eventName: name, hostName: $("hostName").value, hostEmail: $("hostEmail").value,
-      city: $("city").value, cost: $("cost").value,
-      startDate: $("startDate").value, startTime: $("startTime").value,
-      venueAddress: $("venueAddress").value,
-      totalAttendees: parseInt($("totalCapacity").value) || 0,
-      exportedAt: new Date().toISOString()
-    }, buildVenuePayload());
-    downloadFile(JSON.stringify(payload, null, 2), name.toLowerCase().replace(/[^a-z0-9]+/g,"-") + "-venue.json", "application/json");
-    showToast("Venue exported as JSON", "success");
-  }
-  function exportCsv() {
-    var name = $("eventName").value || "Untitled Event";
-    var lines = ["Section,Level,Row,Seat,Tier,X,Y,Scale,Rotation"];
-    buildSectionsData().forEach(function(sec) {
-      sec.rows.forEach(function(row) {
-        row.seats.forEach(function(seat) {
-          lines.push(['"' + sec.name + '"', '"' + (sec.level||"") + '"', row.row, seat.seat, seat.tier, sec.x, sec.y, sec.scale, sec.rotation].join(","));
-        });
-      });
-    });
-    downloadFile(lines.join("\n"), name.toLowerCase().replace(/[^a-z0-9]+/g,"-") + "-venue.csv", "text/csv");
-    showToast("Venue exported as CSV", "success");
-  }
-
-  async function saveEvent() {
-    if (!db) { showToast("Firebase not connected", "error", 5000); return false; }
-    var payload = Object.assign({
-      eventName: $("eventName").value, hostName: $("hostName").value, hostEmail: $("hostEmail").value,
-      city: $("city").value, cost: $("cost").value,
-      startDate: $("startDate").value, startTime: $("startTime").value,
-      venueAddress: $("venueAddress").value,
-      tierColor: $("tierColor").value,
-      totalAttendees: parseInt($("totalCapacity").value) || 0,
-      devModeUsed: devMode,
-      createdAt: firebase.firestore.FieldValue.serverTimestamp()
-    }, buildVenuePayload());
-    try {
-      var ref = await db.collection("events").add(payload);
-      console.log("Saved:", ref.id);
-      showToast("Event saved successfully!", "success");
-      return true;
-    } catch(err) { console.error(err); showToast("Save failed: " + err.message, "error", 5000); return false; }
-  }
-
-  // ===== WIRING =====
-  $("canvasWidth").addEventListener("change", function() { canvasWidth = Math.max(400, Math.min(3000, parseInt(this.value)||1200)); this.value = canvasWidth; renderFullscreen(); });
-  $("canvasHeight").addEventListener("change", function() { canvasHeight = Math.max(400, Math.min(3000, parseInt(this.value)||800)); this.value = canvasHeight; renderFullscreen(); });
-  $("gridSize").addEventListener("change", function() { gridSize = Math.max(10, Math.min(200, parseInt(this.value)||50)); this.value = gridSize; renderFullscreen(); });
-  $("snapToggle").addEventListener("change", function() { snapToGrid = this.checked; });
-
-  function readStageInputs() {
-    stage.x = parseInt($("stageX").value) || 0;
-    stage.y = parseInt($("stageY").value) || 0;
-    stage.width = Math.max(40, parseInt($("stageW").value) || 200);
-    stage.height = Math.max(20, parseInt($("stageH").value) || 60);
-    stage.name = $("stageName").value || "STAGE";
-    renderFullscreen();
-  }
-  ["stageX","stageY","stageW","stageH","stageName"].forEach(function(id){ $(id).addEventListener("input", readStageInputs); });
-
-  $("addLevelBtn").addEventListener("click", addLevel);
-
-  $("totalLevel1").addEventListener("input", function() {
-    var v = Math.max(1, Math.min(26, parseInt(this.value) || 1));
-    rebuildSectionTabs(); refreshSectionInputs(); rebuildRowOverrides(); calculateCapacity(); renderSeatingPlan();
-    if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
-  });
-  $("totalLevel2").addEventListener("change", function() { var v = Math.max(1, Math.min(52, parseInt(this.value)||6)); this.value = v; refreshSectionInputs(); rebuildRowOverrides(); calculateCapacity(); renderSeatingPlan(); });
-  $("totalLevel3").addEventListener("change", function() { var v = Math.max(4, Math.min(90, parseInt(this.value)||10)); this.value = v; rebuildRowOverrides(); calculateCapacity(); renderSeatingPlan(); });
-
-  $("sectionNameInput").addEventListener("input", function() { setSectionName(currentEditingSection, this.value); rebuildSectionTabs(); renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
-  $("sectionLevelSelect").addEventListener("change", function() { setSectionPos(currentEditingSection, "levelId", parseInt(this.value)); renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
-  $("sectionRowsInput").addEventListener("input", function() { var v = parseInt(this.value); if (isNaN(v)) return; setRowCount(currentEditingSection, v); $("sectionRowsBadge").textContent = v + " rows"; rebuildRowOverrides(); calculateCapacity(); renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
-  $("sectionTierOverride").addEventListener("change", function() { setSectionTierOverride(currentEditingSection, this.value || null); renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
-  $("sectionXInput").addEventListener("input", function() { setSectionPos(currentEditingSection, "x", snap(parseInt(this.value)||0)); renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
-  $("sectionYInput").addEventListener("input", function() { setSectionPos(currentEditingSection, "y", snap(parseInt(this.value)||0)); renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
-  $("sectionRotationInput").addEventListener("input", function() { setSectionPos(currentEditingSection, "rotation", parseInt(this.value)||0); renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
-  $("sectionScaleInput").addEventListener("input", function() { var v = parseFloat(this.value) || 1; setSectionPos(currentEditingSection, "scale", v); $("sectionScaleBadge").textContent = v.toFixed(2) + "×"; renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
-
-  // Curved mode wiring
-  $("curvedModeToggle").addEventListener("change", function() {
-    curvedMode = this.checked;
-    $("curvedConfigPanel").style.display = curvedMode ? "block" : "none";
-    renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
-  });
-  ["curveCenterX","curveCenterY","curveRadiusStart","curveRadiusStep","curveArcAngle"].forEach(function(id) {
-    $(id).addEventListener("input", function() {
-      curvedConfig.centerX = parseInt($("curveCenterX").value) || 600;
-      curvedConfig.centerY = parseInt($("curveCenterY").value) || 400;
-      curvedConfig.radiusStart = parseInt($("curveRadiusStart").value) || 150;
-      curvedConfig.radiusStep = parseInt($("curveRadiusStep").value) || 22;
-      curvedConfig.arcAngle = parseInt($("curveArcAngle").value) || 90;
-      renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
-    });
-  });
-
-  // Aisle wiring
-  $("aisleEveryN").addEventListener("input", function() { aisleEveryN = Math.max(0, parseInt(this.value) || 0); renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
-  $("aisleWidth").addEventListener("input", function() { aisleWidth = Math.max(1, Math.min(5, parseInt(this.value) || 1)); renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
-
-  // Seat masking wiring
-  $("seatMaskInput").addEventListener("input", function() {
-    var lines = this.value.split("\n").map(function(s){ return s.trim(); }).filter(function(s){ return s.length > 0; });
-    seatExclusions[currentEditingSection] = lines;
-    calculateCapacity(); renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
-  });
-
-  $("openFullscreen").addEventListener("click", function() {
+  function openFullscreen() {
     $("fullscreenOverlay").classList.add("open");
     document.body.style.overflow = "hidden";
-    fsCanvas = $("fsCanvasCanvas");
-    if (fsCanvas) fsCtx = fsCanvas.getContext("2d");
     renderFullscreen();
-  });
-  $("closeFullscreen").addEventListener("click", function() { $("fullscreenOverlay").classList.remove("open"); document.body.style.overflow = ""; });
-  $("fsToggleGrid").addEventListener("click", function() { showGrid = !showGrid; this.classList.toggle("active", showGrid); renderFullscreen(); });
-  $("fsResetView").addEventListener("click", function() { if (!confirm("Reset all section positions, scales and rotations?")) return; sectionPositions = {}; renderSeatingPlan(); renderFullscreen(); refreshSectionInputs(); });
+  }
+  function closeFullscreen() {
+    $("fullscreenOverlay").classList.remove("open");
+    document.body.style.overflow = "";
+  }
+  function resetFullscreen() {
+    if (!confirm("Reset all rotations and spacing to default?")) return;
+    sectionRotations = {};
+    sectionSpacingMeters = 2;
+    renderFullscreen();
+  }
 
-  $("clearAllOverrides").addEventListener("click", function() {
-    if (!confirm("Clear all section overrides and reset positions?")) return;
-    sectionRowOverrides = {}; sectionRowCounts = {}; sectionNames = {};
-    sectionTierOverrides = {}; sectionPositions = {}; seatExclusions = {};
-    levels = [{ id: 0, name: "Ground Floor", color: "#22d3ee", visible: true }];
-    nextLevelId = 1; currentEditingSection = 0;
-    rebuildLevelsList(); rebuildLevelSelect();
-    rebuildSectionTabs(); refreshSectionInputs(); rebuildRowOverrides();
+  function updateTicketPreview() {
+    $("prevEventName").textContent = $("eventName").value || "EVENT NAME";
+    $("prevDateVenue").textContent = ($("startDate").value || "DATE") + " · " + ($("venueAddress").value || "VENUE");
+    $("prevGuestName").textContent = $("guestName").value || "GUEST NAME";
+    var seatCode = buildCurrentSeatCode();
+    if (seatCode) $("prevSeat").textContent = seatCode;
+    else $("prevSeat").textContent = isTablesMode() ? "Table not assigned" : "Seat not assigned";
+    $("prevVenueLocation").textContent = $("venueAddress").value || "VENUE";
+    $("prevTierBadge").textContent = $("tierColor").value.toUpperCase();
+    $("dynamicTicket").className = "ticket-card " + $("tierColor").value;
+  }
+
+  // ============ LISTENERS ============
+  var formInputs = document.querySelectorAll("#createEventForm input, #createEventForm select");
+  formInputs.forEach(function(input) {
+    input.addEventListener("input", function() { updateTicketPreview(); calculateCapacity(); renderSeatingPlan(); updateTierDistributionSummary(); });
+    input.addEventListener("change", function() { updateTicketPreview(); calculateCapacity(); renderSeatingPlan(); updateTierDistributionSummary(); });
+  });
+  ["seatBlock","seatRow","seatNum","tableNum","chairNum"].forEach(function(id) {
+    var el = $(id);
+    el.addEventListener("input", function() {
+      if (id === "seatBlock" || id === "seatRow") el.value = el.value.toUpperCase().replace(/[^A-Z]/g, "").slice(0,1);
+      refreshSeatPreview();
+    });
+  });
+
+  $("venueType").addEventListener("change", function() { updateSeatingUI(); renderSeatingPlan(); });
+  $("hallLayoutToggle").addEventListener("change", function() { updateSeatingUI(); renderSeatingPlan(); });
+  $("tableShape").addEventListener("change", function() { updateTableShapeHint(); renderSeatingPlan(); });
+  $("stageName").addEventListener("input", function() {
+    renderSeatingPlan();
+    if ($("fullscreenOverlay").classList.contains("open")) {
+      var stageName = ($("stageName").value || "STAGE").trim().toUpperCase();
+      $("fsStageName").textContent = stageName;
+      $("fsStageLabel").textContent = stageName;
+      document.querySelectorAll(".fs-section-stage").forEach(function(el) { el.textContent = stageName; });
+    }
+  });
+
+  $("totalLevel1").addEventListener("input", function() { rebuildSectionTabs(); refreshSectionRowsInput(); refreshSectionLocationInputs(); rebuildRowOverrides(); calculateCapacity(); renderSeatingPlan(); });
+
+  $("totalLevel2").addEventListener("change", function() {
+    var v = parseInt(this.value) || 6;
+    v = Math.max(1, Math.min(52, v));
+    this.value = v;
+    refreshSectionRowsInput();
+    rebuildRowOverrides();
     calculateCapacity(); renderSeatingPlan();
   });
 
-  // Map wiring
-  $("openMapBtn").addEventListener("click", openMapPicker);
-  $("closeMapBtn").addEventListener("click", closeMapPicker);
-  $("mapConfirmBtn").addEventListener("click", confirmMapPick);
-  $("mapSearchBtn").addEventListener("click", function() { forwardGeocode($("mapSearchInput").value); });
-  $("mapSearchInput").addEventListener("keydown", function(e) { if (e.key === "Enter") { e.preventDefault(); forwardGeocode(this.value); } });
-  $("recommendBtn").addEventListener("click", recommendVenues);
-  $("useMapCenterBtn").addEventListener("click", function() {
-    if (!map) return;
-    showToast("Searching around map center", "info", 1500);
-    recommendVenues();
-  });
-  $("mapUseLocationBtn").addEventListener("click", function() {
-    if (!navigator.geolocation) { showToast("Geolocation not supported", "error"); return; }
-    showToast("Getting your location…", "info", 2000);
-    navigator.geolocation.getCurrentPosition(
-      function(pos) { map.setView([pos.coords.latitude, pos.coords.longitude], 16); placeMarker(pos.coords.latitude, pos.coords.longitude, true); },
-      function() { showToast("Could not get your location", "error"); },
-      { enableHighAccuracy: true, timeout: 8000 }
-    );
+  $("totalLevel3").addEventListener("change", function() {
+    var v = parseInt(this.value) || 10;
+    v = Math.max(4, Math.min(90, v));
+    this.value = v;
+    rebuildRowOverrides();
+    calculateCapacity(); renderSeatingPlan();
   });
 
-  $("exportJsonBtn").addEventListener("click", exportJson);
-  $("exportCsvBtn").addEventListener("click", exportCsv);
+  $("sectionRowsInput").addEventListener("input", function() {
+    var v = parseInt(this.value);
+    if (isNaN(v)) return;
+    v = Math.max(1, Math.min(52, v));
+    setRowCount(currentEditingSection, v);
+    $("sectionRowsBadge").textContent = v + " rows";
+    rebuildRowOverrides();
+    calculateCapacity(); renderSeatingPlan();
+    if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+  });
 
-  ["eventName","startDate","venueAddress","guestName","seatBlock","seatRow","seatNum"].forEach(function(id) { $(id).addEventListener("input", updateTicketPreview); });
-  ["tierColor","eventType","priceRange"].forEach(function(id) { $(id).addEventListener("change", updateTicketPreview); });
-  ["seatBlock","seatRow"].forEach(function(id) { $(id).addEventListener("input", function() { this.value = this.value.toUpperCase().replace(/[^A-Z]/g,"").slice(0,1); }); });
+  // Vertical button group
+  document.querySelectorAll("#verticalBtnGroup .location-btn").forEach(function(btn) {
+    btn.addEventListener("click", function() {
+      setSectionLocation(currentEditingSection, btn.dataset.vertical, null);
+      refreshSectionLocationInputs();
+      if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+    });
+  });
 
-  function updateTierSummary() {
-    var defaultRows = parseInt($("totalLevel2").value) || 0;
-    var sum = (parseInt($("tierRowsElite").value)||0) + (parseInt($("tierRowsGold").value)||0) + (parseInt($("tierRowsSilver").value)||0) + (parseInt($("tierRowsCyan").value)||0);
-    var s = $("tierDistSummary"); s.className = "tier-dist-summary";
-    if (sum === defaultRows) s.textContent = "✓ Perfect — " + sum + " rows assigned.";
-    else if (sum < defaultRows) s.textContent = "Assigned " + sum + ". Rows beyond default to Cyan.";
-    else s.textContent = "Sum " + sum + " (extras ignored per section).";
-  }
-  ["tierRowsElite","tierRowsGold","tierRowsSilver","tierRowsCyan"].forEach(function(id) { $(id).addEventListener("input", function() { updateTierSummary(); renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); }); });
+  // Compass select
+  $("sectionCompass").addEventListener("change", function() {
+    setSectionLocation(currentEditingSection, null, this.value);
+    if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+  });
 
-  $("createEventForm").addEventListener("submit", async function(e) { e.preventDefault(); var btn = $("submitBtn"); var orig = btn.innerHTML; btn.disabled = true; btn.innerHTML = 'Saving...'; await saveEvent(); btn.disabled = false; btn.innerHTML = orig; if(window.lucide) lucide.createIcons(); });
+  $("clearAllOverrides").addEventListener("click", function() {
+    if (!confirm("Clear all per-section overrides?")) return;
+    sectionRowOverrides = {};
+    sectionRowCounts = {};
+    sectionLocations = {};
+    currentEditingSection = 0;
+    rebuildSectionTabs();
+    refreshSectionRowsInput();
+    refreshSectionLocationInputs();
+    rebuildRowOverrides();
+    calculateCapacity();
+    renderSeatingPlan();
+  });
+
+  $("openFullscreen").addEventListener("click", openFullscreen);
+  $("closeFullscreen").addEventListener("click", closeFullscreen);
+  $("resetSectionPositions").addEventListener("click", resetFullscreen);
 
   document.addEventListener("keydown", function(e) {
-    if (e.key === "Escape") {
-      if ($("mapOverlay").classList.contains("open")) closeMapPicker();
-      else if ($("fullscreenOverlay").classList.contains("open")) { $("fullscreenOverlay").classList.remove("open"); document.body.style.overflow = ""; }
-    }
+    if (e.key === "Escape" && $("fullscreenOverlay").classList.contains("open")) closeFullscreen();
   });
 
-  // ===== INIT =====
-  rebuildLevelsList(); rebuildLevelSelect(); rebuildSectionTabs(); refreshSectionInputs();
-  rebuildRowOverrides(); calculateCapacity(); updateTicketPreview(); renderSeatingPlan(); updateTierSummary();
+  updateSeatingUI();
+  rebuildSectionTabs();
+  refreshSectionRowsInput();
+  refreshSectionLocationInputs();
+  rebuildRowOverrides();
+  updateTicketPreview();
+  renderSeatingPlan();
 
-  // Initialize canvas
-  fsCanvas = $("fsCanvasCanvas");
-  if (fsCanvas) fsCtx = fsCanvas.getContext("2d");
+  $("createEventForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    alert("Event Saved! Your ticket design is locked in.\nSeat Code: " + (buildCurrentSeatCode() || "(none)"));
+  });
 });
 
 })();
 </script>
 </body>
-            </html>
+      </html>
