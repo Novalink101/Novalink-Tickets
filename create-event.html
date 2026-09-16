@@ -271,7 +271,6 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 
 .annotation-list{margin-top:10px;display:flex;flex-direction:column;gap:6px;max-height:520px;overflow-y:auto;}
 
-/* Compact row + expanded editor */
 .annotation-item{
   display:flex;flex-direction:column;gap:0;padding:0;
   background:var(--surface);border:1px solid var(--border-2);border-radius:10px;
@@ -306,7 +305,6 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .anno-icon-btn.danger:hover{border-color:#dc2626;color:#dc2626;}
 .anno-icon-btn.active{background:#0a0f14;color:#00FFFF;border-color:#0a0f14;}
 
-/* Expanded editor */
 .annotation-editor{
   padding:10px 12px 12px;
   background:var(--bg-2);
@@ -375,6 +373,15 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 }
 .preview-column > div { min-width: 0; max-width: 100%; }
 .preview-label { text-align: center; font-size: 11px; font-weight: 800; color: var(--text-muted); text-transform: uppercase; letter-spacing: 1px; margin-bottom: 10px; }
+/* Label row with button */
+.preview-label-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
+}
+.preview-label-row .preview-label { margin-bottom: 0; text-align: left; }
 
 .ticket-card {
   border-radius: 18px; padding: 24px;
@@ -528,6 +535,34 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .fs-tier-tag.cyan { color: #009999; }
 .fs-empty-hint { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #6b7787; font-size: 12px; text-align: center; max-width: 300px; }
 
+/* ===== SEATING PLAN FULL VIEW OVERLAY ===== */
+.sp-fullscreen { position: fixed; inset: 0; background: #0a0f14; z-index: 9999; display: none; flex-direction: column; padding: 16px; }
+.sp-fullscreen.open { display: flex; }
+.sp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; color: #fff; gap: 10px; flex-wrap: wrap; }
+.sp-header h2 { color: #fff; font-size: 1.1rem; font-weight: 800; letter-spacing: 1px; text-transform: uppercase; }
+.sp-header h2 span { color: #00FFFF; }
+.sp-actions { display: flex; gap: 6px; flex-wrap: wrap; align-items: center; }
+.sp-body {
+  flex: 1;
+  overflow: auto;
+  background: #f6f8fb;
+  border-radius: 12px;
+  padding: 24px;
+  position: relative;
+}
+.sp-inner {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 24px;
+  min-width: max-content;
+  max-width: none;
+  margin: 0 auto;
+  display: inline-block;
+  box-shadow: 0 10px 30px rgba(10,15,20,0.08);
+}
+.sp-inner .block { margin-bottom: 16px; }
+.sp-inner .block:last-of-type { margin-bottom: 0; }
+
 /* Toast */
 .toast { position: fixed; bottom: 90px; left: 50%; transform: translateX(-50%) translateY(120%); background: #0a0f14; color: #fff; padding: 12px 18px; border-radius: 12px; font-size: 13.5px; z-index: 200; transition: transform .4s cubic-bezier(0.175, 0.885, 0.32, 1.275), opacity 0.3s ease; max-width: calc(100vw - 40px); display: flex; align-items: center; gap: 10px; pointer-events: none; opacity: 0; word-break: break-word; }
 .toast.show { transform: translateX(-50%) translateY(0); opacity: 1; }
@@ -669,7 +704,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
             <button type="button" class="btn btn-ghost" id="addLineBtn" style="padding:10px 16px;font-size:13px;">+ Add Line</button>
           </div>
 
-          <!-- Markers tab (Exit / Entrance / Bathroom) -->
+          <!-- Markers tab -->
           <div class="annotation-body" id="annoExitBody" style="display:none;">
             <div class="form-row">
               <div class="form-group">
@@ -951,7 +986,10 @@ h1,h2,h3{line-height:1.15;font-weight:700}
       </div>
 
       <div>
-        <div class="preview-label">Seating Plan Preview</div>
+        <div class="preview-label-row">
+          <span class="preview-label">Seating Plan Preview</span>
+          <button type="button" class="btn-mini fs-btn" id="viewSeatingPlanFull" title="View seating plan in full screen">⛶ Full View</button>
+        </div>
         <div class="seating-plan-preview" id="seatingPlanPreview">
           <div class="seating-plan-title">Enter seating details to generate layout</div>
         </div>
@@ -984,6 +1022,22 @@ h1,h2,h3{line-height:1.15;font-weight:700}
     <div class="fs-canvas" id="fsCanvas">
       <div class="fs-stage-marker" id="fsStageMarker">STAGE</div>
       <div class="fs-empty-hint" id="fsEmptyHint" style="display:none;">Add sections to see them placed here</div>
+    </div>
+  </div>
+</div>
+
+<!-- ==== SEATING PLAN FULL SCREEN OVERLAY ==== -->
+<div class="sp-fullscreen" id="seatingPlanOverlay">
+  <div class="sp-header">
+    <h2>Seating Plan · <span id="spModeLabel">ROWS</span></h2>
+    <div class="sp-actions">
+      <span class="sp-info" id="spSummary" style="color:rgba(255,255,255,0.7);font-size:11.5px;font-weight:700;"></span>
+      <button type="button" class="fs-btn fs-btn-close" id="closeSeatingPlanFull">✕ Close</button>
+    </div>
+  </div>
+  <div class="sp-body" id="spBody">
+    <div class="sp-inner" id="seatingPlanFullInner">
+      <div class="seating-plan-title">Add sections to begin</div>
     </div>
   </div>
 </div>
@@ -1022,7 +1076,7 @@ var snapToGrid = true;
 var showGrid = true;
 
 var autoLayoutEnabled = true;
-var autoLayoutAxis = 'horizontal';   // 'horizontal' (rows) or 'vertical' (tables)
+var autoLayoutAxis = 'horizontal';
 var sectionSpacingPx = 40;
 
 var pxPerCm = 1;
@@ -1044,12 +1098,10 @@ var currentEditingSection = 0;
 var tableMode = false;
 var sectionTableRows = {};
 
-/* === Canvas annotation elements === */
 var canvasElements = [];
 var nextCanvasElementId = 1;
-var expandedElementId = null;     // which element is open in the editor
+var expandedElementId = null;
 
-/* === Marker type palette === */
 var MARKER_TYPES = {
   exit:     { color: '#10b981', icon: '↗',  defaultLabel: 'EXIT' },
   entrance: { color: '#3b82f6', icon: '→',  defaultLabel: 'ENTRANCE' },
@@ -1307,7 +1359,6 @@ document.addEventListener("DOMContentLoaded", function(){
         sel.value = pos.levelId;
       }
     }
-    /* Annotation level selects */
     ["shapeLevelSelect","lineLevelSelect","exitLevelSelect"].forEach(function(id) {
       var s = $(id);
       if (!s) return;
@@ -1750,7 +1801,7 @@ document.addEventListener("DOMContentLoaded", function(){
   }
 
   /* ============================================================
-     CANVAS ANNOTATIONS (Shapes, Lines, Markers) — with full editing
+     CANVAS ANNOTATIONS
      ============================================================ */
 
   function elementTypeLabel(item) {
@@ -1759,7 +1810,6 @@ document.addEventListener("DOMContentLoaded", function(){
     }
     if (item.type === "line") return "Line";
     if (item.type === "marker") {
-      var mt = MARKER_TYPES[item.markerKind] || MARKER_TYPES.exit;
       return item.markerKind.charAt(0).toUpperCase() + item.markerKind.slice(1);
     }
     return "Element";
@@ -1803,7 +1853,6 @@ document.addEventListener("DOMContentLoaded", function(){
       var wrap = document.createElement("div");
       wrap.className = "annotation-item" + (expandedElementId === item.id ? " expanded" : "");
 
-      /* === Header row (always visible) === */
       var header = document.createElement("div");
       header.className = "anno-header-row";
 
@@ -1850,7 +1899,6 @@ document.addEventListener("DOMContentLoaded", function(){
       });
       header.appendChild(del);
 
-      /* Toggle expansion when clicking header (but not the buttons) */
       header.addEventListener("click", function(e) {
         if (e.target.closest("button")) return;
         expandedElementId = (expandedElementId === item.id) ? null : item.id;
@@ -1859,7 +1907,6 @@ document.addEventListener("DOMContentLoaded", function(){
 
       wrap.appendChild(header);
 
-      /* === Expanded editor (only if open) === */
       if (expandedElementId === item.id) {
         var editor = buildElementEditor(item);
         wrap.appendChild(editor);
@@ -1872,7 +1919,6 @@ document.addEventListener("DOMContentLoaded", function(){
     if (window.lucide) lucide.createIcons();
   }
 
-  /* Build helper: field row inside the editor */
   function buildField(labelText, inputEl) {
     var f = document.createElement("div");
     f.className = "ed-field";
@@ -1940,17 +1986,14 @@ document.addEventListener("DOMContentLoaded", function(){
     return sel;
   }
 
-  /* Build the full editor for one element */
   function buildElementEditor(item) {
     var editor = document.createElement("div");
     editor.className = "annotation-editor";
 
-    /* ---- Common: name ---- */
     var rowName = document.createElement("div");
     rowName.className = "ed-row";
     var nameInp = buildTextInput(item.label || "", 24, function(v) {
       item.label = v;
-      /* Update header name live */
       var parent = editor.parentNode;
       var nameEl = parent.querySelector(".anno-name");
       if (nameEl) nameEl.textContent = elementDisplayName(item);
@@ -1959,15 +2002,10 @@ document.addEventListener("DOMContentLoaded", function(){
     rowName.appendChild(buildField("Label", nameInp));
     editor.appendChild(rowName);
 
-    if (item.type === "shape") {
-      buildShapeEditor(item, editor);
-    } else if (item.type === "line") {
-      buildLineEditor(item, editor);
-    } else if (item.type === "marker") {
-      buildMarkerEditor(item, editor);
-    }
+    if (item.type === "shape") buildShapeEditor(item, editor);
+    else if (item.type === "line") buildLineEditor(item, editor);
+    else if (item.type === "marker") buildMarkerEditor(item, editor);
 
-    /* ---- Common: level ---- */
     var rowLevel = document.createElement("div");
     rowLevel.className = "ed-row";
     var levelOpts = levels.map(function(lv) { return { value: lv.id, label: lv.name }; });
@@ -1982,7 +2020,6 @@ document.addEventListener("DOMContentLoaded", function(){
   }
 
   function buildShapeEditor(item, editor) {
-    /* Row: kind */
     var rowKind = document.createElement("div");
     rowKind.className = "ed-row";
     var kindSel = buildSelect([
@@ -1993,8 +2030,7 @@ document.addEventListener("DOMContentLoaded", function(){
       item.shapeKind = v;
       if (v === "square" || v === "circle") {
         item.h = item.w;
-        /* Refresh editor so the H input reflects the synced value */
-        refreshExpandedEditor(item);
+        rebuildAnnotationList();
       }
       renderFullscreen();
     });
@@ -2007,7 +2043,6 @@ document.addEventListener("DOMContentLoaded", function(){
     rowKind.appendChild(buildField("Colour", colorInp));
     editor.appendChild(rowKind);
 
-    /* Row: X, Y, Z */
     var rowXYZ = document.createElement("div");
     rowXYZ.className = "ed-row";
     rowXYZ.appendChild(buildField("X (px)", buildNumberInput(item.x, 0, 3000, 1, function(v) { item.x = v; renderFullscreen(); })));
@@ -2015,7 +2050,6 @@ document.addEventListener("DOMContentLoaded", function(){
     rowXYZ.appendChild(buildField("Z-index", buildNumberInput(item.z, 1, 99, 1, function(v) { item.z = v; renderFullscreen(); })));
     editor.appendChild(rowXYZ);
 
-    /* Row: Width, Height, Rotation */
     var rowWH = document.createElement("div");
     rowWH.className = "ed-row";
     rowWH.appendChild(buildField("Width (px)", buildNumberInput(item.w, 10, 2000, 1, function(v) {
@@ -2033,15 +2067,13 @@ document.addEventListener("DOMContentLoaded", function(){
   }
 
   function buildLineEditor(item, editor) {
-    /* Row: X1, Y1, Z */
     var row1 = document.createElement("div");
     row1.className = "ed-row";
-    row1.appendChild(buildField("From X (px)", buildNumberInput(item.x1, 0, 3000, 1, function(v) { item.x1 = v; renderFullscreen(); syncLineDerived(item); })));
-    row1.appendChild(buildField("From Y (px)", buildNumberInput(item.y1, 0, 3000, 1, function(v) { item.y1 = v; renderFullscreen(); syncLineDerived(item); })));
+    row1.appendChild(buildField("From X (px)", buildNumberInput(item.x1, 0, 3000, 1, function(v) { item.x1 = v; renderFullscreen(); })));
+    row1.appendChild(buildField("From Y (px)", buildNumberInput(item.y1, 0, 3000, 1, function(v) { item.y1 = v; renderFullscreen(); })));
     row1.appendChild(buildField("Z-index", buildNumberInput(item.z, 1, 99, 1, function(v) { item.z = v; renderFullscreen(); })));
     editor.appendChild(row1);
 
-    /* Row: X2, Y2, Length */
     var dx = item.x2 - item.x1;
     var dy = item.y2 - item.y1;
     var currentLength = Math.round(Math.sqrt(dx*dx + dy*dy));
@@ -2049,10 +2081,9 @@ document.addEventListener("DOMContentLoaded", function(){
 
     var row2 = document.createElement("div");
     row2.className = "ed-row";
-    row2.appendChild(buildField("To X (px)", buildNumberInput(item.x2, 0, 3000, 1, function(v) { item.x2 = v; renderFullscreen(); syncLineDerived(item); })));
-    row2.appendChild(buildField("To Y (px)", buildNumberInput(item.y2, 0, 3000, 1, function(v) { item.y2 = v; renderFullscreen(); syncLineDerived(item); })));
+    row2.appendChild(buildField("To X (px)", buildNumberInput(item.x2, 0, 3000, 1, function(v) { item.x2 = v; renderFullscreen(); })));
+    row2.appendChild(buildField("To Y (px)", buildNumberInput(item.y2, 0, 3000, 1, function(v) { item.y2 = v; renderFullscreen(); })));
 
-    /* Length field — auto-updates when X2/Y2 change; editing it recomputes X2/Y2 */
     var lengthInp = document.createElement("input");
     lengthInp.type = "number";
     lengthInp.min = 1; lengthInp.max = 5000;
@@ -2064,7 +2095,7 @@ document.addEventListener("DOMContentLoaded", function(){
       if (isNaN(angRad)) angRad = 0;
       item.x2 = Math.round(item.x1 + Math.cos(angRad) * v);
       item.y2 = Math.round(item.y1 + Math.sin(angRad) * v);
-      refreshExpandedEditor(item);
+      rebuildAnnotationList();
       renderFullscreen();
     });
     var lengthField = document.createElement("div");
@@ -2076,7 +2107,6 @@ document.addEventListener("DOMContentLoaded", function(){
     row2.appendChild(lengthField);
     editor.appendChild(row2);
 
-    /* Row: Thickness, Angle, Colour */
     var row3 = document.createElement("div");
     row3.className = "ed-row";
     row3.appendChild(buildField("Thickness (px)", buildNumberInput(item.thickness, 1, 40, 1, function(v) { item.thickness = v; renderFullscreen(); })));
@@ -2088,7 +2118,6 @@ document.addEventListener("DOMContentLoaded", function(){
     angleInp.addEventListener("change", function() {
       var v = clampFloat(this.value, -360, 360, currentAngle);
       this.value = Math.round(v);
-      /* Recompute X2/Y2 from current length */
       var dx2 = item.x2 - item.x1;
       var dy2 = item.y2 - item.y1;
       var len = Math.sqrt(dx2*dx2 + dy2*dy2);
@@ -2096,7 +2125,7 @@ document.addEventListener("DOMContentLoaded", function(){
       var rad = v * Math.PI / 180;
       item.x2 = Math.round(item.x1 + Math.cos(rad) * len);
       item.y2 = Math.round(item.y1 + Math.sin(rad) * len);
-      refreshExpandedEditor(item);
+      rebuildAnnotationList();
       renderFullscreen();
     });
     var angleField = document.createElement("div");
@@ -2112,7 +2141,6 @@ document.addEventListener("DOMContentLoaded", function(){
   }
 
   function buildMarkerEditor(item, editor) {
-    /* Row: kind */
     var rowKind = document.createElement("div");
     rowKind.className = "ed-row";
     var kindSel = buildSelect([
@@ -2121,7 +2149,6 @@ document.addEventListener("DOMContentLoaded", function(){
       { value: "bathroom", label: "Bathroom" }
     ], item.markerKind, function(v) {
       item.markerKind = v;
-      /* Update badge in the header */
       var parent = editor.parentNode;
       var badge = parent.querySelector(".anno-badge");
       if (badge) {
@@ -2135,7 +2162,6 @@ document.addEventListener("DOMContentLoaded", function(){
     rowKind.appendChild(buildField("Marker Type", kindSel));
     editor.appendChild(rowKind);
 
-    /* Row: X, Y, Z */
     var rowXYZ = document.createElement("div");
     rowXYZ.className = "ed-row";
     rowXYZ.appendChild(buildField("X (px)", buildNumberInput(item.x, 0, 3000, 1, function(v) { item.x = v; renderFullscreen(); })));
@@ -2143,30 +2169,12 @@ document.addEventListener("DOMContentLoaded", function(){
     rowXYZ.appendChild(buildField("Z-index", buildNumberInput(item.z, 1, 99, 1, function(v) { item.z = v; renderFullscreen(); })));
     editor.appendChild(rowXYZ);
 
-    /* Row: Width, Height, Rotation */
     var rowWH = document.createElement("div");
     rowWH.className = "ed-row";
     rowWH.appendChild(buildField("Width (px)", buildNumberInput(item.w, 20, 300, 1, function(v) { item.w = v; renderFullscreen(); })));
     rowWH.appendChild(buildField("Height (px)", buildNumberInput(item.h, 20, 300, 1, function(v) { item.h = v; renderFullscreen(); })));
     rowWH.appendChild(buildField("Rotation (°)", buildNumberInput(item.rotation, -360, 360, 1, function(v) { item.rotation = v; renderFullscreen(); })));
     editor.appendChild(rowWH);
-  }
-
-  /* Re-render just the expanded editor to refresh derived fields */
-  function refreshExpandedEditor(item) {
-    /* We need to keep the same list item — rebuild just the editor child */
-    var list = $("annotationList");
-    var items = list.querySelectorAll(".annotation-item");
-    /* Find the matching wrap by checking editor's ancestor */
-    /* Simpler: just rebuild the whole list */
-    rebuildAnnotationList();
-  }
-
-  /* Sync derived fields (length/angle) after X2/Y2 change */
-  function syncLineDerived(item) {
-    /* Rebuild list so the length/angle fields refresh */
-    /* But avoid losing focus during typing — only rebuild on 'change' events */
-    /* For simplicity, we just leave derived fields stale until next rebuild */
   }
 
   function updateAnnotationCounts() {
@@ -2196,15 +2204,8 @@ document.addEventListener("DOMContentLoaded", function(){
     if (kind === "square" || kind === "circle") h = w;
 
     canvasElements.push({
-      id: nextCanvasElementId++,
-      type: "shape",
-      shapeKind: kind,
-      label: label,
-      x: x, y: y, z: z,
-      w: w, h: h,
-      rotation: rotation,
-      color: color,
-      levelId: levelId
+      id: nextCanvasElementId++, type: "shape", shapeKind: kind, label: label,
+      x: x, y: y, z: z, w: w, h: h, rotation: rotation, color: color, levelId: levelId
     });
 
     rebuildAnnotationList();
@@ -2224,14 +2225,9 @@ document.addEventListener("DOMContentLoaded", function(){
     var levelId = parseInt($("lineLevelSelect").value) || levels[0].id;
 
     canvasElements.push({
-      id: nextCanvasElementId++,
-      type: "line",
-      label: label,
-      x1: x1, y1: y1, x2: x2, y2: y2,
-      z: z,
-      thickness: thickness,
-      color: color,
-      levelId: levelId
+      id: nextCanvasElementId++, type: "line", label: label,
+      x1: x1, y1: y1, x2: x2, y2: y2, z: z,
+      thickness: thickness, color: color, levelId: levelId
     });
 
     rebuildAnnotationList();
@@ -2251,14 +2247,8 @@ document.addEventListener("DOMContentLoaded", function(){
     var levelId = parseInt($("exitLevelSelect").value) || levels[0].id;
 
     canvasElements.push({
-      id: nextCanvasElementId++,
-      type: "marker",
-      markerKind: kind,
-      label: label,
-      x: x, y: y, z: z,
-      w: w, h: h,
-      rotation: rotation,
-      levelId: levelId
+      id: nextCanvasElementId++, type: "marker", markerKind: kind, label: label,
+      x: x, y: y, z: z, w: w, h: h, rotation: rotation, levelId: levelId
     });
 
     rebuildAnnotationList();
@@ -2266,7 +2256,6 @@ document.addEventListener("DOMContentLoaded", function(){
     showToast("Marker added", "success");
   }
 
-  /* Build a canvas element DOM node for fullscreen */
   function buildCanvasElement(item) {
     if (item.type === "shape") return buildShapeNode(item);
     if (item.type === "line") return buildLineNode(item);
@@ -2370,7 +2359,6 @@ document.addEventListener("DOMContentLoaded", function(){
 
   function renderCanvasAnnotations(canvas) {
     canvas.querySelectorAll(".fs-element").forEach(function(el) { el.remove(); });
-    /* Sort by z so lower z appears behind */
     var sorted = canvasElements.slice().sort(function(a, b) { return (a.z || 6) - (b.z || 6); });
     sorted.forEach(function(item) {
       var lv = levels.find(function(x) { return x.id === item.levelId; });
@@ -2380,10 +2368,11 @@ document.addEventListener("DOMContentLoaded", function(){
     });
   }
 
-  /* ============================================================ */
+  /* ============================================================
+     LEFT PANEL PREVIEW — parameterized for preview + full view
+     ============================================================ */
 
-  // ===== LEFT PANEL PREVIEW =====
-  function renderStandardLayout(container, sections) {
+  function renderStandardLayout(container, sections, tableScale) {
     var stageName = ($("stageName").value || "STAGE").trim().toUpperCase();
     for (var b = 0; b < sections; b++) {
       var rowCount = getRowCount(b);
@@ -2451,7 +2440,8 @@ document.addEventListener("DOMContentLoaded", function(){
     return rows.map(function(r, i) { return rowLabel(i) + ":" + r.count; }).join(", ");
   }
 
-  function renderTableLayout(container, sections) {
+  function renderTableLayout(container, sections, tableScale) {
+    tableScale = (tableScale === undefined) ? 0.5 : tableScale;
     var cfg = tableConfig;
     for (var b = 0; b < sections; b++) {
       var rows = getSectionTableRows(b);
@@ -2473,20 +2463,76 @@ document.addEventListener("DOMContentLoaded", function(){
       meta.textContent = shapeLabel(cfg.shape) + " " + dimsText() + " · " + chairsPerTable() + " chairs/table · spacing " + cfg.spacingCm + " cm · Rows: " + rowSummary(rows);
       blockEl.appendChild(meta);
 
-      blockEl.appendChild(buildTableRowsGroup(rows, cfg.shape, cfg, tier, 0.5));
+      blockEl.appendChild(buildTableRowsGroup(rows, cfg.shape, cfg, tier, tableScale));
       container.appendChild(blockEl);
     }
     container.appendChild(buildLegend());
   }
 
+  /* --- Preview (compact, left panel) --- */
   function renderSeatingPlan() {
     var container = $("seatingPlanPreview");
     container.innerHTML = "";
     var l1 = parseInt($("totalLevel1").value) || 0;
-    if (l1 === 0) { container.innerHTML = '<div class="seating-plan-title">Add sections to begin</div>'; return; }
-    if (tableMode) renderTableLayout(container, Math.min(l1, 8));
-    else renderStandardLayout(container, Math.min(l1, 8));
+    if (l1 === 0) {
+      container.innerHTML = '<div class="seating-plan-title">Add sections to begin</div>';
+    } else if (tableMode) {
+      renderTableLayout(container, Math.min(l1, 8), 0.5);
+    } else {
+      renderStandardLayout(container, Math.min(l1, 8));
+    }
+
+    /* Keep full view in sync if open */
+    if ($("seatingPlanOverlay").classList.contains("open")) {
+      renderSeatingPlanFull();
+    }
   }
+
+  /* --- Full view (overlay, all sections at 1:1) --- */
+  function renderSeatingPlanFull() {
+    var container = $("seatingPlanFullInner");
+    if (!container) return;
+    container.innerHTML = "";
+
+    var l1 = parseInt($("totalLevel1").value) || 0;
+    if (l1 === 0) {
+      container.innerHTML = '<div class="seating-plan-title">Add sections to begin</div>';
+      if ($("spSummary")) $("spSummary").textContent = "";
+      return;
+    }
+
+    if (tableMode) renderTableLayout(container, l1, 1);
+    else renderStandardLayout(container, l1, 1);
+
+    /* Mode label + summary */
+    $("spModeLabel").textContent = tableMode ? "TABLES" : "ROWS";
+    if ($("spSummary")) {
+      var sections = l1;
+      var info = sections + " section" + (sections === 1 ? "" : "s");
+      if (tableMode) {
+        var totalTables = 0, totalRows = 0;
+        for (var i = 0; i < sections; i++) {
+          totalTables += getTableCount(i);
+          totalRows += getSectionTableRows(i).length;
+        }
+        info += " · " + totalRows + " row" + (totalRows === 1 ? "" : "s") +
+                " · " + totalTables + " table" + (totalTables === 1 ? "" : "s") +
+                " · " + chairsPerTable() + " chairs/table";
+      } else {
+        var totalSeats = 0;
+        for (var j = 0; j < sections; j++) {
+          var rows = getRowCount(j);
+          for (var r = 0; r < rows; r++) totalSeats += getSeatsForRow(j, r);
+        }
+        info += " · " + totalSeats + " seat" + (totalSeats === 1 ? "" : "s");
+      }
+      $("spSummary").textContent = info;
+    }
+
+    if (window.lucide) lucide.createIcons();
+  }
+
+  /* ============================================================ */
 
   // ===== FULL SCREEN =====
   function rebuildLevelPills() {
@@ -3038,7 +3084,6 @@ document.addEventListener("DOMContentLoaded", function(){
 
   $("addTableRowBtn").addEventListener("click", addTableRow);
 
-  /* Annotation tab switching */
   document.querySelectorAll(".annotation-tab").forEach(function(btn) {
     btn.addEventListener("click", function() {
       document.querySelectorAll(".annotation-tab").forEach(function(b){ b.classList.remove("active"); });
@@ -3050,12 +3095,10 @@ document.addEventListener("DOMContentLoaded", function(){
     });
   });
 
-  /* Add handlers */
   $("addShapeBtn").addEventListener("click", addShapeElement);
   $("addLineBtn").addEventListener("click", addLineElement);
   $("addExitBtn").addEventListener("click", addMarkerElement);
 
-  /* Sync width/height for square/circle in the add form */
   $("shapeKind").addEventListener("change", function() {
     var k = this.value;
     if (k === "square" || k === "circle") {
@@ -3069,7 +3112,6 @@ document.addEventListener("DOMContentLoaded", function(){
       $("shapeH").value = this.value;
     }
   });
-  /* Auto-update line length/angle display in add form */
   function updateLineFormDerived() {
     var x1 = clampInt($("lineX1").value, 0, 3000, 0);
     var y1 = clampInt($("lineY1").value, 0, 3000, 0);
@@ -3083,7 +3125,6 @@ document.addEventListener("DOMContentLoaded", function(){
   ["lineX1","lineY1","lineX2","lineY2"].forEach(function(id) {
     $(id).addEventListener("input", updateLineFormDerived);
   });
-  /* Marker kind -> update default label in add form */
   $("markerKind").addEventListener("change", function() {
     var mt = MARKER_TYPES[this.value] || MARKER_TYPES.exit;
     $("exitLabelInput").value = mt.defaultLabel;
@@ -3170,6 +3211,7 @@ document.addEventListener("DOMContentLoaded", function(){
     if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
   });
 
+  /* ===== FULL SCREEN VENUE LAYOUT ===== */
   $("openFullscreen").addEventListener("click", function() {
     $("fullscreenOverlay").classList.add("open");
     document.body.style.overflow = "hidden";
@@ -3224,6 +3266,17 @@ document.addEventListener("DOMContentLoaded", function(){
     renderFullscreen();
     refreshSectionInputs();
     showToast("Positions reset — Auto Layout re-enabled", "success");
+  });
+
+  /* ===== SEATING PLAN FULL VIEW ===== */
+  $("viewSeatingPlanFull").addEventListener("click", function() {
+    $("seatingPlanOverlay").classList.add("open");
+    document.body.style.overflow = "hidden";
+    renderSeatingPlanFull();
+  });
+  $("closeSeatingPlanFull").addEventListener("click", function() {
+    $("seatingPlanOverlay").classList.remove("open");
+    document.body.style.overflow = "";
   });
 
   $("clearAllOverrides").addEventListener("click", function() {
@@ -3283,9 +3336,14 @@ document.addEventListener("DOMContentLoaded", function(){
   });
 
   document.addEventListener("keydown", function(e) {
-    if (e.key === "Escape" && $("fullscreenOverlay").classList.contains("open")) {
-      $("fullscreenOverlay").classList.remove("open");
-      document.body.style.overflow = "";
+    if (e.key === "Escape") {
+      if ($("seatingPlanOverlay").classList.contains("open")) {
+        $("seatingPlanOverlay").classList.remove("open");
+        document.body.style.overflow = "";
+      } else if ($("fullscreenOverlay").classList.contains("open")) {
+        $("fullscreenOverlay").classList.remove("open");
+        document.body.style.overflow = "";
+      }
     }
   });
 
