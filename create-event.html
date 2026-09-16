@@ -418,7 +418,9 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .fs-canvas.show-grid { background-image: linear-gradient(to right, rgba(0,255,255,0.12) 1px, transparent 1px), linear-gradient(to bottom, rgba(0,255,255,0.12) 1px, transparent 1px); background-size: var(--grid-size, 50px) var(--grid-size, 50px); }
 .fs-canvas.two-point-mode { cursor: crosshair; }
 .fs-stage-marker { position: absolute; background: linear-gradient(135deg, #1e2f4d, #2a4365); color: #fff; display: flex; align-items: center; justify-content: center; font-size: 12px; font-weight: 800; letter-spacing: 4px; text-transform: uppercase; border-radius: 6px; box-shadow: 0 6px 20px rgba(30,47,77,0.4); z-index: 5; white-space: nowrap; padding: 4px 10px; pointer-events: none; }
-.fs-section { position: absolute; background: #fff; border: 2px solid #e4e9f0; border-radius: 10px; padding: 8px; box-shadow: 0 4px 14px rgba(10,15,20,0.08); transform-origin: center center; z-index: 10; }
+.fs-section { position: absolute; background: #fff; border: 2px solid #e4e9f0; border-radius: 10px; padding: 8px; box-shadow: 0 4px 14px rgba(10,15,20,0.08); transform-origin: center center; z-index: 10; cursor: grab; }
+.fs-section:active { cursor: grabbing; }
+.fs-section.selected { border-color: #00FFFF !important; box-shadow: 0 0 0 3px rgba(0,255,255,0.35) !important; z-index: 100 !important; }
 .fs-section-title { font-size: 10px; font-weight: 900; color: #009999; letter-spacing: 0.5px; margin-bottom: 4px; text-align: center; white-space: nowrap; }
 .fs-section-location { text-align: center; font-size: 8px; font-weight: 800; color: #6b7787; letter-spacing: 1px; text-transform: uppercase; margin-bottom: 4px; }
 .fs-section-stage { text-align: center; font-size: 7px; font-weight: 800; letter-spacing: 2px; text-transform: uppercase; color: #fff; background: linear-gradient(135deg, #1e2f4d, #2a4365); padding: 3px; border-radius: 4px; margin-bottom: 6px; }
@@ -463,6 +465,84 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .fs-point-guide{position:absolute;pointer-events:none;z-index:1;opacity:0;transition:opacity 0.2s;}
 .fs-point-guide.visible{opacity:0.65;}
 .fs-point-guide svg{position:absolute;overflow:visible;}
+
+/* ========== SECTION FLOATING CONTROLS ========== */
+.fs-section-controls {
+  position: absolute;
+  bottom: 20px;
+  right: 20px;
+  background: #0a0f14;
+  border: 1px solid #00FFFF;
+  border-radius: 10px;
+  padding: 14px;
+  color: #fff;
+  z-index: 500;
+  display: none;
+  flex-direction: column;
+  gap: 8px;
+  box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+  min-width: 220px;
+}
+.fs-section-controls.visible { display: flex; }
+.fs-section-controls-title {
+  font-size: 10px;
+  font-weight: 900;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  color: #00FFFF;
+  margin-bottom: 4px;
+  border-bottom: 1px solid rgba(0,255,255,0.2);
+  padding-bottom: 6px;
+}
+.fs-section-controls .fs-ctrl-field {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 10px;
+}
+.fs-section-controls .fs-ctrl-field label {
+  font-size: 10.5px;
+  font-weight: 700;
+  color: rgba(255,255,255,0.7);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  flex-shrink: 0;
+}
+.fs-section-controls .fs-ctrl-field input {
+  width: 80px;
+  padding: 5px 8px;
+  background: rgba(255,255,255,0.1);
+  border: 1px solid rgba(255,255,255,0.2);
+  border-radius: 6px;
+  color: #fff;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 11.5px;
+  text-align: right;
+}
+.fs-section-controls .fs-ctrl-field input:focus {
+  outline: none;
+  border-color: #00FFFF;
+  background: rgba(0,255,255,0.15);
+}
+.fs-section-controls .fs-ctrl-actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 6px;
+}
+.fs-section-controls .fs-ctrl-actions button {
+  flex: 1;
+  padding: 6px;
+  border-radius: 6px;
+  border: 1px solid rgba(255,255,255,0.2);
+  background: rgba(255,255,255,0.08);
+  color: #fff;
+  font-family: inherit;
+  font-weight: 700;
+  font-size: 10.5px;
+  cursor: pointer;
+}
+.fs-section-controls .fs-ctrl-actions button:hover { background: #00FFFF; color: #04161c; border-color: #00FFFF; }
 
 .sp-fullscreen { position: fixed; inset: 0; background: #0a0f14; z-index: 9999; display: none; flex-direction: column; padding: 16px; }
 .sp-fullscreen.open { display: flex; }
@@ -1117,6 +1197,30 @@ h1,h2,h3{line-height:1.15;font-weight:700}
       <div class="fs-empty-hint" id="fsEmptyHint" style="display:none;">Add sections to see them placed here</div>
       <div class="fs-point-marker" id="fsPointA" data-point="A"><span class="pt-label">A</span></div>
       <div class="fs-point-marker" id="fsPointB" data-point="B"><span class="pt-label">B</span></div>
+
+      <!-- Floating Section Controls (Dragging & Coordinate Bar) -->
+      <div class="fs-section-controls" id="fsSectionControls">
+        <div class="fs-section-controls-title">Section Properties</div>
+        <div class="fs-ctrl-field">
+          <label>X Position</label>
+          <input type="number" id="fsCtrlX" min="0" max="3000" step="1" />
+        </div>
+        <div class="fs-ctrl-field">
+          <label>Y Position</label>
+          <input type="number" id="fsCtrlY" min="0" max="3000" step="1" />
+        </div>
+        <div class="fs-ctrl-field">
+          <label>Rotation (°)</label>
+          <input type="number" id="fsCtrlRot" min="-360" max="360" step="1" />
+        </div>
+        <div class="fs-ctrl-field">
+          <label>Scale</label>
+          <input type="number" id="fsCtrlScale" min="0.5" max="2" step="0.05" />
+        </div>
+        <div class="fs-ctrl-actions">
+          <button type="button" id="fsCtrlDeselect">Deselect</button>
+        </div>
+      </div>
     </div>
   </div>
 </div>
@@ -1193,6 +1297,12 @@ var arcAmount = 0;
 var seatGapEvery = 0;   // gap after every N seats (0 = disabled)
 var seatGapSize = 1;    // gap size as multiple of seat width
 var seatGapRowSpecific = 'all';
+
+// ==== Section Dragging ====
+var isDraggingSection = false;
+var selectedSectionIdx = null;
+var dragStartX = 0, dragStartY = 0;
+var dragSectionStartX = 0, dragSectionStartY = 0;
 
 // ===== TIER SYSTEM =====
 var TIER_KEYS = ["black", "gold", "silver", "cyan", "tier5", "tier6"];
@@ -2368,7 +2478,6 @@ document.addEventListener("DOMContentLoaded", function(){
         if (which === 'A') pointA = { x: x, y: y }; else pointB = { x: x, y: y };
         updatePointMarkers();
         if (twoPointMode) {
-          // Redistribute immediately while dragging
           var sectionEls = [];
           var sCount = parseInt($("totalLevel1").value) || 0;
           for (var i = 0; i < sCount; i++) {
@@ -2393,6 +2502,177 @@ document.addEventListener("DOMContentLoaded", function(){
     bEl.addEventListener('mousedown', function(e){ startDrag('B', e); });
     aEl.addEventListener('touchstart', function(e){ startDrag('A', e); }, { passive: false });
     bEl.addEventListener('touchstart', function(e){ startDrag('B', e); }, { passive: false });
+  }
+
+  /* ============ SECTION DIRECT DRAG ============ */
+  function setupSectionDrag() {
+    var canvas = $("fsCanvas");
+    if (!canvas) return;
+
+    function startDragSection(e, idx, el) {
+      // If auto layout or two-point mode is on, turn it off to allow manual dragging
+      if (autoLayoutEnabled) {
+        autoLayoutEnabled = false;
+        var btn = $("fsToggleAuto"); if (btn) btn.classList.remove("active");
+        showToast("Manual positioning enabled", "info", 2000);
+      }
+      if (twoPointMode) {
+        twoPointMode = false;
+        var tpBtn = $("fsToggleTwoPoint"); if (tpBtn) tpBtn.classList.remove("active");
+        showToast("Two-Point mode disabled", "info", 2000);
+      }
+
+      selectedSectionIdx = idx;
+      isDraggingSection = true;
+
+      // Highlight selected section
+      canvas.querySelectorAll('.fs-section').forEach(function(s){ s.classList.remove('selected'); });
+      el.classList.add('selected');
+
+      // Show controls panel
+      var panel = $("fsSectionControls");
+      var pos = getSectionPos(idx);
+      $("fsCtrlX").value = pos.x;
+      $("fsCtrlY").value = pos.y;
+      $("fsCtrlRot").value = pos.rotation;
+      $("fsCtrlScale").value = pos.scale;
+      panel.classList.add("visible");
+
+      var rect = canvas.getBoundingClientRect();
+      var clientX = e.touches ? e.touches[0].clientX : e.clientX;
+      var clientY = e.touches ? e.touches[0].clientY : e.clientY;
+      dragStartX = clientX;
+      dragStartY = clientY;
+      dragSectionStartX = pos.x;
+      dragSectionStartY = pos.y;
+
+      function move(ev) {
+        if (!isDraggingSection) return;
+        var clientX = ev.touches ? ev.touches[0].clientX : ev.clientX;
+        var clientY = ev.touches ? ev.touches[0].clientY : ev.clientY;
+        var dx = clientX - dragStartX;
+        var dy = clientY - dragStartY;
+
+        var newX = dragSectionStartX + dx;
+        var newY = dragSectionStartY + dy;
+
+        if (snapToGrid) { newX = snap(newX); newY = snap(newY); }
+
+        setSectionPos(idx, "x", newX);
+        setSectionPos(idx, "y", newY);
+
+        el.style.left = newX + "px";
+        el.style.top = newY + "px";
+
+        $("fsCtrlX").value = newX;
+        $("fsCtrlY").value = newY;
+      }
+
+      function end() {
+        isDraggingSection = false;
+        document.removeEventListener('mousemove', move); document.removeEventListener('mouseup', end);
+        document.removeEventListener('touchmove', move); document.removeEventListener('touchend', end);
+        // Final overlap check
+        var sectionEls = [];
+        var sCount = parseInt($("totalLevel1").value) || 0;
+        for (var i = 0; i < sCount; i++) {
+          var p = getSectionPos(i); var lv = levels.find(function(x){return x.id === p.levelId;});
+          if (!lv || !lv.visible) continue;
+          var sEl = canvas.querySelector('[data-section="' + i + '"]');
+          if (sEl) sectionEls.push({ idx: i, el: sEl });
+        }
+        checkSectionOverlaps(sectionEls, canvas);
+        refreshSectionInputs();
+      }
+
+      document.addEventListener('mousemove', move); document.addEventListener('mouseup', end);
+      document.addEventListener('touchmove', move, { passive: false }); document.addEventListener('touchend', end);
+    }
+
+    canvas.addEventListener('mousedown', function(e) {
+      var section = e.target.closest('.fs-section');
+      if (!section) {
+        // Click on empty canvas: deselect
+        canvas.querySelectorAll('.fs-section').forEach(function(s){ s.classList.remove('selected'); });
+        $("fsSectionControls").classList.remove("visible");
+        selectedSectionIdx = null;
+        return;
+      }
+      var idx = parseInt(section.dataset.section);
+      if (isNaN(idx)) return;
+      startDragSection(e, idx, section);
+    });
+
+    canvas.addEventListener('touchstart', function(e) {
+      var section = e.target.closest('.fs-section');
+      if (!section) {
+        canvas.querySelectorAll('.fs-section').forEach(function(s){ s.classList.remove('selected'); });
+        $("fsSectionControls").classList.remove("visible");
+        selectedSectionIdx = null;
+        return;
+      }
+      var idx = parseInt(section.dataset.section);
+      if (isNaN(idx)) return;
+      startDragSection(e, idx, section);
+    }, { passive: true });
+  }
+
+  /* ============ CONTROLS PANEL SYNC ============ */
+  function setupControlsPanel() {
+    var xIn = $("fsCtrlX"), yIn = $("fsCtrlY"), rotIn = $("fsCtrlRot"), scaleIn = $("fsCtrlScale");
+    var deselect = $("fsCtrlDeselect");
+    var canvas = $("fsCanvas");
+
+    function applyChanges() {
+      if (selectedSectionIdx === null) return;
+      var pos = getSectionPos(selectedSectionIdx);
+      pos.x = clampInt(xIn.value, 0, 3000, pos.x);
+      pos.y = clampInt(yIn.value, 0, 3000, pos.y);
+      pos.rotation = clampInt(rotIn.value, -360, 360, pos.rotation);
+      pos.scale = clampFloat(scaleIn.value, 0.5, 2, pos.scale);
+
+      var el = canvas.querySelector('[data-section="' + selectedSectionIdx + '"]');
+      if (el) {
+        el.style.left = pos.x + "px";
+        el.style.top = pos.y + "px";
+        el.style.transform = "rotate(" + pos.rotation + "deg) scale(" + pos.scale + ")";
+      }
+
+      // Also update the main form inputs
+      $("sectionXInput").value = pos.x;
+      $("sectionYInput").value = pos.y;
+      $("sectionRotationInput").value = pos.rotation;
+      $("sectionScaleInput").value = pos.scale;
+      $("sectionScaleBadge").textContent = pos.scale.toFixed(2) + "×";
+
+      // Overlap check
+      var sectionEls = [];
+      var sCount = parseInt($("totalLevel1").value) || 0;
+      for (var i = 0; i < sCount; i++) {
+        var p = getSectionPos(i); var lv = levels.find(function(x){return x.id === p.levelId;});
+        if (!lv || !lv.visible) continue;
+        var sEl = canvas.querySelector('[data-section="' + i + '"]');
+        if (sEl) sectionEls.push({ idx: i, el: sEl });
+      }
+      checkSectionOverlaps(sectionEls, canvas);
+    }
+
+    [xIn, yIn, rotIn, scaleIn].forEach(function(inp) {
+      inp.addEventListener('input', applyChanges);
+      inp.addEventListener('change', function() {
+        // Re-clamp on change
+        var pos = getSectionPos(selectedSectionIdx);
+        xIn.value = pos.x; yIn.value = pos.y;
+        rotIn.value = pos.rotation; scaleIn.value = pos.scale;
+        applyChanges();
+      });
+    });
+
+    deselect.addEventListener('click', function() {
+      canvas.querySelectorAll('.fs-section').forEach(function(s){ s.classList.remove('selected'); });
+      $("fsSectionControls").classList.remove("visible");
+      selectedSectionIdx = null;
+    });
   }
 
   function renderFullscreen() {
@@ -2431,6 +2711,24 @@ document.addEventListener("DOMContentLoaded", function(){
     checkSectionOverlaps(sectionEls, canvas);
     rebuildLevelPills();
     updatePointMarkers();
+
+    // Restore selection if a section was selected
+    if (selectedSectionIdx !== null) {
+      var selEl = canvas.querySelector('[data-section="' + selectedSectionIdx + '"]');
+      if (selEl) {
+        selEl.classList.add('selected');
+        var pos = getSectionPos(selectedSectionIdx);
+        $("fsCtrlX").value = pos.x;
+        $("fsCtrlY").value = pos.y;
+        $("fsCtrlRot").value = pos.rotation;
+        $("fsCtrlScale").value = pos.scale;
+        $("fsSectionControls").classList.add("visible");
+      } else {
+        selectedSectionIdx = null;
+        $("fsSectionControls").classList.remove("visible");
+      }
+    }
+
     var axisBtn = $("fsToggleAxis");
     if (axisBtn) axisBtn.textContent = autoLayoutAxis === "vertical" ? "↕ Vertical" : "↔ Horizontal";
     var arcField = $("fsArcField");
@@ -2823,9 +3121,9 @@ document.addEventListener("DOMContentLoaded", function(){
 
   $("openFullscreen").addEventListener("click", function() {
     if (!FEATURES.venueLayout) { showToast("The venue layout editor is available on Premium and Enterprise plans.", "error", 4200); return; }
-    $("fullscreenOverlay").classList.add("open"); document.body.style.overflow = "hidden"; renderFullscreen();
+    $("fullscreenOverlay").classList.add("open"); document.body.style.overflow = "hidden"; renderFullscreen(); setupSectionDrag(); setupControlsPanel();
   });
-  $("closeFullscreen").addEventListener("click", function() { $("fullscreenOverlay").classList.remove("open"); document.body.style.overflow = ""; });
+  $("closeFullscreen").addEventListener("click", function() { $("fullscreenOverlay").classList.remove("open"); document.body.style.overflow = ""; selectedSectionIdx = null; $("fsSectionControls").classList.remove("visible"); });
   $("fsToggleGrid").addEventListener("click", function() { showGrid = !showGrid; this.classList.toggle("active", showGrid); renderFullscreen(); });
   $("fsToggleAuto").addEventListener("click", function() {
     autoLayoutEnabled = !autoLayoutEnabled;
@@ -2834,6 +3132,7 @@ document.addEventListener("DOMContentLoaded", function(){
       twoPointMode = false;
       var tpBtn = $("fsToggleTwoPoint"); if (tpBtn) tpBtn.classList.remove("active");
     }
+    selectedSectionIdx = null; $("fsSectionControls").classList.remove("visible");
     renderFullscreen();
     showToast(autoLayoutEnabled ? "Auto Layout ON" : "Auto Layout OFF");
   });
@@ -2844,6 +3143,7 @@ document.addEventListener("DOMContentLoaded", function(){
       autoLayoutEnabled = false;
       var btn = $("fsToggleAuto"); if (btn) btn.classList.remove("active");
     }
+    selectedSectionIdx = null; $("fsSectionControls").classList.remove("visible");
     renderFullscreen();
     showToast(twoPointMode ? "Two-Point mode — drag A and B points on the canvas" : "Two-Point mode OFF", twoPointMode ? "success" : "info", 3500);
   });
@@ -2878,6 +3178,7 @@ document.addEventListener("DOMContentLoaded", function(){
     twoPointMode = false;
     pointA = { x: 200, y: 480 }; pointB = { x: canvasWidth - 200, y: 480 }; arcAmount = 0;
     $("fsArcAmount").value = 0;
+    selectedSectionIdx = null; $("fsSectionControls").classList.remove("visible");
     var btn = $("fsToggleAuto"); if (btn) btn.classList.add("active");
     var tpBtn = $("fsToggleTwoPoint"); if (tpBtn) tpBtn.classList.remove("active");
     var axisBtn = $("fsToggleAxis"); if (axisBtn) axisBtn.textContent = autoLayoutAxis === "vertical" ? "↕ Vertical" : "↔ Horizontal";
@@ -2900,6 +3201,7 @@ document.addEventListener("DOMContentLoaded", function(){
     nextLevelId = 1; currentEditingSection = 0;
     autoLayoutEnabled = true; autoLayoutAxis = tableMode ? "vertical" : "horizontal";
     twoPointMode = false;
+    selectedSectionIdx = null; $("fsSectionControls").classList.remove("visible");
     var btn = $("fsToggleAuto"); if (btn) btn.classList.add("active");
     var tpBtn = $("fsToggleTwoPoint"); if (tpBtn) tpBtn.classList.remove("active");
     var axisBtn = $("fsToggleAxis"); if (axisBtn) axisBtn.textContent = autoLayoutAxis === "vertical" ? "↕ Vertical" : "↔ Horizontal";
@@ -2932,7 +3234,7 @@ document.addEventListener("DOMContentLoaded", function(){
   document.addEventListener("keydown", function(e) {
     if (e.key === "Escape") {
       if ($("seatingPlanOverlay").classList.contains("open")) { $("seatingPlanOverlay").classList.remove("open"); document.body.style.overflow = ""; }
-      else if ($("fullscreenOverlay").classList.contains("open")) { $("fullscreenOverlay").classList.remove("open"); document.body.style.overflow = ""; }
+      else if ($("fullscreenOverlay").classList.contains("open")) { $("fullscreenOverlay").classList.remove("open"); document.body.style.overflow = ""; selectedSectionIdx = null; $("fsSectionControls").classList.remove("visible"); }
     }
   });
 
@@ -2961,10 +3263,12 @@ document.addEventListener("DOMContentLoaded", function(){
   updateRevenueCalculator();
 
   setupPointDrag();
+  setupSectionDrag();
+  setupControlsPanel();
   applyPlanFeatures();
 });
 n
 })();
 </script>
 </body>
-  </html>
+                                                                                                                                                                                                                                </html>
