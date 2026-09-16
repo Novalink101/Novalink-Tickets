@@ -15,6 +15,23 @@
   --radius:14px;--max-width:1180px;
   --font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --navy:#1e2f4d;--cyan-logo:#00FFFF;
+  /* Editable tier colours (updated live via JS) */
+  --tier-black:#1a202c;
+  --tier-black-light:#e4e6ea;
+  --tier-black-text:#ffffff;
+  --tier-black-text-light:#101216;
+  --tier-gold:#ecc94b;
+  --tier-gold-light:#fbf3d3;
+  --tier-gold-text:#0a0f14;
+  --tier-gold-text-light:#846e28;
+  --tier-silver:#cbd5e1;
+  --tier-silver-light:#f0f3f7;
+  --tier-silver-text:#0a0f14;
+  --tier-silver-text-light:#6f757b;
+  --tier-cyan:#00FFFF;
+  --tier-cyan-light:#d9ffff;
+  --tier-cyan-text:#04161c;
+  --tier-cyan-text-light:#008c8c;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-height:1.6;min-height:100vh;display:flex;flex-direction:column}
@@ -37,6 +54,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .form-group label{display:block;font-size:12px;font-weight:700;color:var(--text-2);margin-bottom:8px;text-transform:uppercase;letter-spacing:0.05em}
 .form-group input, .form-group select, .form-group textarea{width:100%;padding:12px 16px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:10px;color:var(--text);font-size:14.5px;font-family:inherit;transition:border-color 0.2s, box-shadow 0.2s;min-width:0}
 .form-group input:focus, .form-group select:focus, .form-group textarea:focus{outline:none;border-color:var(--cyan-500);box-shadow:0 0 0 3px rgba(0,255,255,0.15);background:#fff}
+.form-group select{appearance:none;-webkit-appearance:none;-moz-appearance:none;padding-right:36px;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7787' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:12px;cursor:pointer;}
 .form-hint{font-size:11.5px;color:var(--text-muted);margin-top:6px;line-height:1.5;font-style:italic;word-break:break-word}
 .form-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px}
 .form-row-3{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr) minmax(0,1fr);gap:12px}
@@ -66,13 +84,28 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .seat-builder .seat-sep{color:var(--text-muted);font-weight:800;font-size:16px;flex-shrink:0;}
 .seat-preview-display{margin-top:10px;padding:10px 14px;background:var(--surface-2);border:1px dashed var(--cyan-500);border-radius:8px;font-family:ui-monospace,monospace;font-weight:800;font-size:16px;color:var(--cyan-700);text-align:center;letter-spacing:1px;min-height:42px;display:flex;align-items:center;justify-content:center;word-break:break-all;}
 .seat-preview-display.empty{color:var(--text-muted);font-weight:600;font-family:var(--font);font-size:12px;letter-spacing:0;border-color:var(--border-2);border-style:solid;word-break:normal;}
+
+/* Currency input with R prefix */
+.currency-input{display:flex;align-items:stretch;width:100%;}
+.currency-input .currency-prefix{display:inline-flex;align-items:center;justify-content:center;padding:0 14px;background:var(--bg-2);border:1px solid var(--border-2);border-right:none;border-radius:10px 0 0 10px;font-weight:800;color:var(--cyan-700);font-size:14.5px;flex-shrink:0;transition:border-color 0.2s, box-shadow 0.2s, background 0.2s;}
+.currency-input input{border-top-left-radius:0 !important;border-bottom-left-radius:0 !important;}
+.currency-input:focus-within .currency-prefix{border-color:var(--cyan-500);background:#fff;box-shadow:0 0 0 3px rgba(0,255,255,0.15);}
+
+/* Tier colour editor */
+.tier-color-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin-top:8px;}
+.tier-color-item{display:flex;align-items:center;gap:8px;padding:8px 10px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:10px;min-width:0;}
+.tier-color-item .tier-color-swatch{width:18px;height:18px;border-radius:5px;flex-shrink:0;border:1px solid rgba(0,0,0,0.12);transition:background 0.2s;}
+.tier-color-item label{flex:1;min-width:0;font-size:12px;font-weight:700;color:var(--text-2);text-transform:none;letter-spacing:0;margin:0;word-break:break-word;}
+.tier-color-item input[type="color"]{width:46px;height:32px;padding:2px 4px;border-radius:8px;border:1px solid var(--border-2);background:#fff;cursor:pointer;flex-shrink:0;}
+.tier-color-actions{margin-top:10px;display:flex;justify-content:flex-end;}
+
 .tier-dist-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-top:8px;}
 .tier-dist-item{display:flex;align-items:center;gap:10px;padding:10px 12px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:10px;min-width:0;}
 .tier-dist-item .swatch{width:14px;height:14px;border-radius:4px;flex-shrink:0;}
-.tier-dist-item .swatch.elite{background:#1a202c}
-.tier-dist-item .swatch.gold{background:#ecc94b}
-.tier-dist-item .swatch.silver{background:#cbd5e1}
-.tier-dist-item .swatch.cyan{background:#00FFFF}
+.tier-dist-item .swatch.elite{background:var(--tier-black)}
+.tier-dist-item .swatch.gold{background:var(--tier-gold)}
+.tier-dist-item .swatch.silver{background:var(--tier-silver)}
+.tier-dist-item .swatch.cyan{background:var(--tier-cyan)}
 .tier-dist-item label{flex:1;min-width:0;font-size:12px;font-weight:600;margin:0;text-transform:none;letter-spacing:0;color:var(--text);}
 .tier-dist-item input{width:60px;padding:6px 8px;text-align:center;font-size:13px;}
 .tier-dist-summary{font-size:11.5px;color:var(--text-muted);margin-top:8px;font-style:italic;word-break:break-word}
@@ -134,16 +167,16 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .tbl-shape.circular{border-radius:50%;}
 .tbl-shape.square{border-radius:5px;}
 .tbl-shape.rectangular{border-radius:5px;}
-.tbl-shape.black{background:#1a202c;color:#ffffff;border-color:#1a202c;}
-.tbl-shape.gold{background:#ecc94b;color:#744210;border-color:#d4a72c;}
-.tbl-shape.silver{background:#cbd5e1;color:#4a5568;border-color:#a0aec0;}
-.tbl-shape.cyan{background:#e6ffff;color:#009999;border-color:#00FFFF;}
+.tbl-shape.black{background:var(--tier-black);color:var(--tier-black-text);border-color:var(--tier-black);}
+.tbl-shape.gold{background:var(--tier-gold);color:var(--tier-gold-text);border-color:var(--tier-gold);}
+.tbl-shape.silver{background:var(--tier-silver);color:var(--tier-silver-text);border-color:var(--tier-silver);}
+.tbl-shape.cyan{background:var(--tier-cyan-light);color:var(--tier-cyan-text-light);border-color:var(--tier-cyan);}
 .tbl-chair{position:absolute;}
 .tbl-chair.round{border-radius:50%;}
-.tbl-chair.black{background:#1a202c;}
-.tbl-chair.gold{background:#ecc94b;}
-.tbl-chair.silver{background:#cbd5e1;}
-.tbl-chair.cyan{background:#00FFFF;}
+.tbl-chair.black{background:var(--tier-black);}
+.tbl-chair.gold{background:var(--tier-gold);}
+.tbl-chair.silver{background:var(--tier-silver);}
+.tbl-chair.cyan{background:var(--tier-cyan);}
 .table-meta-line{font-size:11px;font-weight:700;color:var(--text-muted);text-align:center;margin-bottom:6px;letter-spacing:0.5px;word-break:break-word;}
 
 .table-standard-legend{font-size:11px;color:var(--text-muted);margin-top:8px;line-height:1.6;padding:8px 10px;background:#fff;border:1px solid var(--border-2);border-radius:8px;word-break:break-word;}
@@ -260,10 +293,10 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .row-seats-inner { display: flex; gap: 3px; justify-content: center; width: max-content; min-width: 100%; margin: 0 auto; }
 .row-seat { min-width: 22px; height: 22px; padding: 0 4px; border-radius: 3px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; font-family: ui-monospace, monospace; font-size: 9px; font-weight: 800; letter-spacing: 0; transition: transform 0.12s; cursor: default; user-select: none; }
 .row-seat:hover { transform: scale(1.15); z-index: 5; box-shadow: 0 2px 6px rgba(0,0,0,0.2); }
-.row-seat.black { background: #1a202c; color: #ffffff; }
-.row-seat.gold { background: #ecc94b; color: #744210; }
-.row-seat.silver { background: #cbd5e1; color: #4a5568; }
-.row-seat.cyan { background: #00FFFF; color: #04161c; }
+.row-seat.black { background: var(--tier-black); color: var(--tier-black-text); }
+.row-seat.gold { background: var(--tier-gold); color: var(--tier-gold-text); }
+.row-seat.silver { background: var(--tier-silver); color: var(--tier-silver-text); }
+.row-seat.cyan { background: var(--tier-cyan); color: var(--tier-cyan-text); }
 .row-seat.seat-found {
   outline: 3px solid #00FFFF;
   outline-offset: 1px;
@@ -277,17 +310,17 @@ h1,h2,h3{line-height:1.15;font-weight:700}
   50%      { box-shadow: 0 0 0 5px rgba(0,255,255,0.75), 0 0 24px rgba(0,255,255,1); }
 }
 .row-tier-tag { font-size: 9px; font-weight: 800; text-align: left; letter-spacing: 0.5px; text-transform: uppercase; }
-.row-tier-tag.black { color: #1a202c; }
-.row-tier-tag.gold { color: #92700c; }
-.row-tier-tag.silver { color: #4a5568; }
-.row-tier-tag.cyan { color: var(--cyan-700); }
+.row-tier-tag.black { color: var(--tier-black-text-light); }
+.row-tier-tag.gold { color: var(--tier-gold-text-light); }
+.row-tier-tag.silver { color: var(--tier-silver-text-light); }
+.row-tier-tag.cyan { color: var(--tier-cyan-text-light); }
 .layout-legend { display: flex; justify-content: center; gap: 12px; margin-top: 16px; font-size: 10px; color: var(--text-muted); flex-wrap: wrap; }
 .layout-legend .lg-item { display: flex; align-items: center; gap: 4px; }
 .layout-legend .lg-swatch { width: 10px; height: 10px; border-radius: 2px; }
-.layout-legend .lg-swatch.black { background: #1a202c; }
-.layout-legend .lg-swatch.gold { background: #ecc94b; }
-.layout-legend .lg-swatch.silver { background: #cbd5e1; }
-.layout-legend .lg-swatch.cyan { background: #00FFFF; }
+.layout-legend .lg-swatch.black { background: var(--tier-black); }
+.layout-legend .lg-swatch.gold { background: var(--tier-gold); }
+.layout-legend .lg-swatch.silver { background: var(--tier-silver); }
+.layout-legend .lg-swatch.cyan { background: var(--tier-cyan); }
 
 .fullscreen-overlay { position: fixed; inset: 0; background: #0a0f14; z-index: 9999; display: none; flex-direction: column; padding: 16px; }
 .fullscreen-overlay.open { display: flex; }
@@ -325,15 +358,15 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .fs-row-label { font-size: 8px; font-weight: 800; color: #6b7787; text-align: right; text-transform: uppercase; }
 .fs-row-seats { display: flex; gap: 2px; justify-content: center; }
 .fs-seat { width: 12px; height: 12px; border-radius: 2px; flex-shrink: 0; display: inline-flex; align-items: center; justify-content: center; font-family: ui-monospace, monospace; font-size: 6px; font-weight: 800; }
-.fs-seat.black { background: #1a202c; color: #fff; }
-.fs-seat.gold { background: #ecc94b; color: #744210; }
-.fs-seat.silver { background: #cbd5e1; color: #4a5568; }
-.fs-seat.cyan { background: #00FFFF; color: #04161c; }
+.fs-seat.black { background: var(--tier-black); color: var(--tier-black-text); }
+.fs-seat.gold { background: var(--tier-gold); color: var(--tier-gold-text); }
+.fs-seat.silver { background: var(--tier-silver); color: var(--tier-silver-text); }
+.fs-seat.cyan { background: var(--tier-cyan); color: var(--tier-cyan-text); }
 .fs-tier-tag { font-size: 7px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; }
-.fs-tier-tag.black { color: #1a202c; }
-.fs-tier-tag.gold { color: #92700c; }
-.fs-tier-tag.silver { color: #4a5568; }
-.fs-tier-tag.cyan { color: #009999; }
+.fs-tier-tag.black { color: var(--tier-black-text-light); }
+.fs-tier-tag.gold { color: var(--tier-gold-text-light); }
+.fs-tier-tag.silver { color: var(--tier-silver-text-light); }
+.fs-tier-tag.cyan { color: var(--tier-cyan-text-light); }
 .fs-empty-hint { position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #6b7787; font-size: 12px; text-align: center; max-width: 300px; }
 .fs-element{position:absolute;pointer-events:none;}
 .fs-element-shape{display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;padding:4px;text-align:center;overflow:hidden;transform-origin:center center;}
@@ -405,8 +438,80 @@ h1,h2,h3{line-height:1.15;font-weight:700}
         <div class="form-group"><label for="hostName">Host Name</label><input type="text" id="hostName" placeholder="e.g., John Doe" required /></div>
         <div class="form-group"><label for="hostEmail">Host Email</label><input type="email" id="hostEmail" placeholder="e.g., john@example.com" required /></div>
         <div class="form-row">
-          <div class="form-group"><label for="city">City</label><input type="text" id="city" placeholder="e.g., Johannesburg" required /></div>
-          <div class="form-group"><label for="cost">Cost / Price</label><input type="text" id="cost" placeholder="e.g., R150 or Free" required /></div>
+          <div class="form-group">
+            <label for="city">City</label>
+            <select id="city" required>
+              <option value="">Select a city / area…</option>
+              <option>Johannesburg</option>
+              <option>Sandton</option>
+              <option>Randburg</option>
+              <option>Roodepoort</option>
+              <option>Soweto</option>
+              <option>Midrand</option>
+              <option>Fourways</option>
+              <option>Bryanston</option>
+              <option>Rosebank</option>
+              <option>Bedfordview</option>
+              <option>Edenvale</option>
+              <option>Kempton Park</option>
+              <option>Benoni</option>
+              <option>Boksburg</option>
+              <option>Brakpan</option>
+              <option>Springs</option>
+              <option>Germiston</option>
+              <option>Alberton</option>
+              <option>Vereeniging</option>
+              <option>Vanderbijlpark</option>
+              <option>Meyerton</option>
+              <option>Heidelberg</option>
+              <option>Nigel</option>
+              <option>Bronkhorstspruit</option>
+              <option>Cullinan</option>
+              <option>Centurion</option>
+              <option>Pretoria</option>
+              <option>Tshwane</option>
+              <option>Akasia</option>
+              <option>Mamelodi</option>
+              <option>Atteridgeville</option>
+              <option>Soshanguve</option>
+              <option>Krugersdorp</option>
+              <option>Mogale City</option>
+              <option>Randfontein</option>
+              <option>Carletonville</option>
+              <option>Westonaria</option>
+              <option>Lenasia</option>
+              <option>Ennerdale</option>
+              <option>Orange Farm</option>
+              <option>Tembisa</option>
+              <option>Ivory Park</option>
+              <option>Diepsloot</option>
+              <option>Alexandra</option>
+              <option>Daveyton</option>
+              <option>Duduza</option>
+              <option>Tsakane</option>
+              <option>Sebokeng</option>
+              <option>Sharpeville</option>
+              <option>Boipatong</option>
+              <option>Evaton</option>
+              <option>Bophelong</option>
+              <option>Katlehong</option>
+              <option>Thokoza</option>
+              <option>Vosloorus</option>
+              <option>Zonkizizwe</option>
+              <option>Palm Ridge</option>
+              <option>Eden Park</option>
+              <option>Other (Gauteng)</option>
+              <option>Outside Gauteng</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="cost">Ticket Price (R)</label>
+            <div class="currency-input">
+              <span class="currency-prefix">R</span>
+              <input type="number" id="cost" min="0" step="0.01" placeholder="25.50" required />
+            </div>
+            <p class="form-hint">Numbers only — e.g. 25.50. Values under R30 are supported. Enter 0 for free events.</p>
+          </div>
         </div>
         <div class="form-row">
           <div class="form-group"><label for="startDate">Start Date</label><input type="date" id="startDate" required /></div>
@@ -630,6 +735,37 @@ h1,h2,h3{line-height:1.15;font-weight:700}
           <div class="tier-dist-summary" id="tierDistSummary">Total rows: 6</div>
         </div>
 
+        <div class="section-divider"><span>Tier Colours</span></div>
+        <div class="form-group" id="tierColorsGroup">
+          <label>Tier Colours</label>
+          <p class="form-hint" style="margin-top:0;margin-bottom:8px;">Edit the four tier colours. These apply to seats, tables and the seating plan legend.</p>
+          <div class="tier-color-grid">
+            <div class="tier-color-item">
+              <span class="tier-color-swatch" id="tierSwatchBlack"></span>
+              <label for="tierColorBlack">Elite (Black)</label>
+              <input type="color" id="tierColorBlack" value="#1a202c" />
+            </div>
+            <div class="tier-color-item">
+              <span class="tier-color-swatch" id="tierSwatchGold"></span>
+              <label for="tierColorGold">Gold (VIP)</label>
+              <input type="color" id="tierColorGold" value="#ecc94b" />
+            </div>
+            <div class="tier-color-item">
+              <span class="tier-color-swatch" id="tierSwatchSilver"></span>
+              <label for="tierColorSilver">Silver</label>
+              <input type="color" id="tierColorSilver" value="#cbd5e1" />
+            </div>
+            <div class="tier-color-item">
+              <span class="tier-color-swatch" id="tierSwatchCyan"></span>
+              <label for="tierColorCyan">Cyan (Standard)</label>
+              <input type="color" id="tierColorCyan" value="#00FFFF" />
+            </div>
+          </div>
+          <div class="tier-color-actions">
+            <button type="button" class="btn-mini" id="resetTierColorsBtn">↺ Reset to defaults</button>
+          </div>
+        </div>
+
         <div class="form-group">
           <label>Total Attendees (Auto-calculated)</label>
           <input type="text" id="totalCapacity" readonly value="1" style="background:var(--surface-2);font-weight:bold;color:var(--cyan-700);" />
@@ -789,6 +925,10 @@ var nextCanvasElementId = 1;
 var expandedElementId = null;
 var lastFoundSeat = null;
 
+// ===== TIER COLOURS (editable) =====
+var TIER_DEFAULTS = { black: "#1a202c", gold: "#ecc94b", silver: "#cbd5e1", cyan: "#00FFFF" };
+var TIER_COLORS   = Object.assign({}, TIER_DEFAULTS);
+
 var MARKER_TYPES = {
   exit:     { color: '#10b981', icon: '↗',  defaultLabel: 'EXIT' },
   entrance: { color: '#3b82f6', icon: '→',  defaultLabel: 'ENTRANCE' },
@@ -807,6 +947,55 @@ var TABLE_STD = {
 };
 
 var levelColors = ["#00FFFF", "#facc15", "#a78bfa", "#fb7185", "#34d399", "#60a5fa", "#f97316", "#e879f9"];
+
+/* ============ COLOUR HELPERS ============ */
+function hexToRgbObj(hex){
+  var c = String(hex || "").replace("#","");
+  if (c.length === 3) c = c[0]+c[0]+c[1]+c[1]+c[2]+c[2];
+  if (c.length !== 6) return null;
+  return { r: parseInt(c.substring(0,2),16), g: parseInt(c.substring(2,4),16), b: parseInt(c.substring(4,6),16) };
+}
+function rgbObjToHex(c){
+  return "#" + [c.r,c.g,c.b].map(function(x){ return Math.max(0, Math.min(255, Math.round(x))).toString(16).padStart(2,"0"); }).join("");
+}
+function mixWithWhite(hex, ratio){
+  var c = hexToRgbObj(hex); if (!c) return hex;
+  return rgbObjToHex({ r: c.r + (255 - c.r) * ratio, g: c.g + (255 - c.g) * ratio, b: c.b + (255 - c.b) * ratio });
+}
+function mixWithBlack(hex, ratio){
+  var c = hexToRgbObj(hex); if (!c) return hex;
+  return rgbObjToHex({ r: c.r * (1 - ratio), g: c.g * (1 - ratio), b: c.b * (1 - ratio) });
+}
+function relativeLuminance(hex){
+  var c = hexToRgbObj(hex); if (!c) return 0;
+  var arr = [c.r, c.g, c.b].map(function(v){ v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); });
+  return 0.2126 * arr[0] + 0.7152 * arr[1] + 0.0722 * arr[2];
+}
+function contrastTextOn(hex){ return relativeLuminance(hex) > 0.5 ? "#0a0f14" : "#ffffff"; }
+
+function applyTierColors(){
+  var root = document.documentElement;
+  ["black","gold","silver","cyan"].forEach(function(name){
+    var hex = TIER_COLORS[name] || TIER_DEFAULTS[name];
+    root.style.setProperty("--tier-" + name, hex);
+    root.style.setProperty("--tier-" + name + "-light", mixWithWhite(hex, 0.85));
+    root.style.setProperty("--tier-" + name + "-text", contrastTextOn(hex));
+    root.style.setProperty("--tier-" + name + "-text-light", mixWithBlack(hex, 0.45));
+    var sw = $("tierSwatch" + name.charAt(0).toUpperCase() + name.slice(1));
+    if (sw) sw.style.background = hex;
+  });
+}
+
+/* ============ CURRENCY HELPERS ============ */
+function readCost(){
+  var v = parseFloat($("cost") ? $("cost").value : "");
+  if (isNaN(v) || v < 0) v = 0;
+  return Math.round(v * 100) / 100;
+}
+function formatCurrency(v){
+  if (!v || v <= 0) return "Free";
+  return "R" + v.toFixed(2);
+}
 
 function showToast(msg, type, ms) {
   type = type || "info"; ms = ms || 3000;
@@ -2120,6 +2309,12 @@ document.addEventListener("DOMContentLoaded", function(){
       sectionSpacingPx: sectionSpacingPx,
       stage: { x: stage.x, y: stage.y, width: stage.width, height: stage.height, name: stage.name },
       levels: levels.map(function(l){ return { id: l.id, name: l.name, color: l.color, visible: l.visible }; }),
+      tierColours: {
+        black: TIER_COLORS.black,
+        gold: TIER_COLORS.gold,
+        silver: TIER_COLORS.silver,
+        cyan: TIER_COLORS.cyan
+      },
       seatingMode: tableMode ? "tables" : "rows",
       tableConfig: tableMode ? {
         shape: tableConfig.shape,
@@ -2148,9 +2343,12 @@ document.addEventListener("DOMContentLoaded", function(){
   }
   function exportJson() {
     var name = $("eventName").value || "Untitled Event";
+    var costVal = readCost();
     var payload = Object.assign({
       eventName: name, hostName: $("hostName").value, hostEmail: $("hostEmail").value,
-      city: $("city").value, cost: $("cost").value,
+      city: $("city").value,
+      cost: costVal,
+      costFormatted: formatCurrency(costVal),
       startDate: $("startDate").value, startTime: $("startTime").value,
       venueAddress: $("venueAddress").value,
       exportedAt: new Date().toISOString()
@@ -2189,12 +2387,14 @@ document.addEventListener("DOMContentLoaded", function(){
     return "local-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8);
   }
   function saveEvent() {
+    var costVal = readCost();
     var payload = Object.assign({
       eventName: $("eventName").value,
       hostName: $("hostName").value,
       hostEmail: $("hostEmail").value,
       city: $("city").value,
-      cost: $("cost").value,
+      cost: costVal,
+      costFormatted: formatCurrency(costVal),
       startDate: $("startDate").value,
       startTime: $("startTime").value,
       venueAddress: $("venueAddress").value,
@@ -2488,6 +2688,47 @@ document.addEventListener("DOMContentLoaded", function(){
   ["tierColor"].forEach(function(id) { $(id).addEventListener("change", updateTicketPreview); });
   ["seatBlock","seatRow"].forEach(function(id) { $(id).addEventListener("input", function() { this.value = this.value.toUpperCase().replace(/[^A-Z]/g,"").slice(0,1); }); });
 
+  // ===== Tier colour pickers =====
+  ["black","gold","silver","cyan"].forEach(function(name){
+    var id = "tierColor" + name.charAt(0).toUpperCase() + name.slice(1);
+    var el = $(id);
+    if (!el) return;
+    el.addEventListener("input", function(){
+      TIER_COLORS[name] = this.value;
+      applyTierColors();
+      renderSeatingPlan();
+      if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+    });
+  });
+  var resetBtn = $("resetTierColorsBtn");
+  if (resetBtn) {
+    resetBtn.addEventListener("click", function(){
+      ["black","gold","silver","cyan"].forEach(function(name){
+        TIER_COLORS[name] = TIER_DEFAULTS[name];
+        var id = "tierColor" + name.charAt(0).toUpperCase() + name.slice(1);
+        if ($(id)) $(id).value = TIER_DEFAULTS[name];
+      });
+      applyTierColors();
+      renderSeatingPlan();
+      if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+      showToast("Tier colours reset", "success");
+    });
+  }
+
+  // ===== Cost input =====
+  var costInput = $("cost");
+  if (costInput) {
+    costInput.addEventListener("blur", function(){
+      var v = parseFloat(this.value);
+      if (isNaN(v) || v < 0) { this.value = ""; return; }
+      this.value = v.toFixed(2);
+    });
+    costInput.addEventListener("input", function(){
+      // Prevent minus sign / scientific notation in some browsers
+      if (this.value && parseFloat(this.value) < 0) this.value = "";
+    });
+  }
+
   function updateTierSummary() {
     var defaultRows = parseInt($("totalLevel2").value) || 0;
     var sum = (parseInt($("tierRowsElite").value)||0) + (parseInt($("tierRowsGold").value)||0) + (parseInt($("tierRowsSilver").value)||0) + (parseInt($("tierRowsCyan").value)||0);
@@ -2503,6 +2744,12 @@ document.addEventListener("DOMContentLoaded", function(){
 
   $("createEventForm").addEventListener("submit", function(e) {
     e.preventDefault();
+    // Normalize cost before validation
+    if (costInput) {
+      var cv = parseFloat(costInput.value);
+      if (isNaN(cv) || cv < 0) { showToast("Please enter a valid ticket price (0 or more).", "error"); costInput.focus(); return; }
+      costInput.value = cv.toFixed(2);
+    }
     var btn = $("submitBtn"); var orig = btn.innerHTML;
     btn.disabled = true; btn.innerHTML = 'Saving...';
     saveEvent();
@@ -2523,6 +2770,7 @@ document.addEventListener("DOMContentLoaded", function(){
   });
 
   /* ===== INIT ===== */
+  applyTierColors();
   rebuildLevelsList(); rebuildLevelSelect(); rebuildSectionTabs();
   readScale(); readTableConfig(); applyShapeUI();
   refreshSectionInputs(); rebuildRowOverrides(); rebuildTableRowsEditor();
@@ -2537,4 +2785,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-                                                                                                                                                          </html>
+  </html>
