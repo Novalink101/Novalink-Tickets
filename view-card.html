@@ -122,6 +122,12 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
 .status-banner.scanned{background:var(--warn-soft);border:1px solid #fde68a;color:#92400e}
 .status-banner.revoked{background:var(--danger-soft);border:1px solid #fecaca;color:#991b1b}
 
+/* DEBUG BOX */
+.debug-box{background:#fffbeb;border:1px dashed #fbbf24;color:#78350f;border-radius:10px;padding:12px 14px;font-family:ui-monospace,monospace;font-size:11.5px;line-height:1.6;margin-top:20px;word-break:break-all}
+.debug-box strong{display:block;margin-bottom:6px;font-family:var(--font);font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em}
+.debug-box .row{margin-bottom:3px}
+.debug-box .row b{color:#0f172a;}
+
 /* ACTIONS */
 .ticket-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}
 @media (max-width:480px){.ticket-actions{grid-template-columns:1fr}}
@@ -135,7 +141,7 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
 .footer-bottom{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;color:#6b7787;font-size:12px}
 
 @media print{
-  .site-header,.site-footer,.ticket-actions,.toast,.status-banner{display:none!important}
+  .site-header,.site-footer,.ticket-actions,.toast,.status-banner,.debug-box{display:none!important}
   body{background:#fff}
   .page-wrap{padding:0}
   .ticket-card{box-shadow:none;border:1px solid #ddd}
@@ -168,7 +174,15 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
       <div class="icon"><i data-lucide="alert-circle"></i></div>
       <h2 id="errorTitle">Ticket not found</h2>
       <p id="errorMsg">This ticket doesn't exist or the link is broken.</p>
-      <a href="index.html" class="btn btn-accent"><i data-lucide="arrow-left"></i> Back to home</a>
+
+      <div class="debug-box" id="debugBox" style="display:none;text-align:left">
+        <strong>Debug info (screenshot this and send it)</strong>
+        <div id="debugContent"></div>
+      </div>
+
+      <div style="margin-top:22px">
+        <a href="index.html" class="btn btn-accent"><i data-lucide="arrow-left"></i> Back to home</a>
+      </div>
     </div>
 
     <div id="ticketWrap" class="ticket-wrap" style="display:none">
@@ -331,14 +345,7 @@ function getQueryParam(name){
    Supports byte mode, level L, versions 1-10 (enough for our data)
 ============================================================ */
 var QR = (function(){
-  // Reed-Solomon + QR encoding (compact)
-  function QRCode(){}
-
-  var EC_LEVEL_L = 1;
-
   var RS_BLOCK_TABLE = [
-    // version, total codewords, ec codewords per block, num blocks
-    // (version 1-10, level L only — enough for ~80 chars)
     [1, 26, 7, 1],
     [2, 44, 10, 1],
     [3, 70, 15, 1],
@@ -429,9 +436,7 @@ var QR = (function(){
 
   function encodeData(str, version){
     var bits = [];
-    // Mode 0100 (byte)
     bits.push(0,1,0,0);
-    // Length (8 bits for versions 1-9)
     var bytes = [];
     for (var i = 0; i < str.length; i++){
       var code = str.charCodeAt(i);
@@ -446,11 +451,8 @@ var QR = (function(){
       for (var k = 7; k >= 0; k--) bits.push((byte >> k) & 1);
     }
     var capacity = getDataCapacityBits(version);
-    // Terminator
     for (var t = 0; t < 4 && bits.length < capacity; t++) bits.push(0);
-    // Pad to byte
     while (bits.length % 8 !== 0) bits.push(0);
-    // Pad bytes 0xEC 0x11
     var padBytes = [0xEC, 0x11];
     var pi = 0;
     while (bits.length < capacity){
@@ -533,7 +535,7 @@ var QR = (function(){
   }
 
   function applyFormatBits(m){
-    var data = 0b01000; // EC level L, mask 0
+    var data = 0b01000;
     var poly = 0x537;
     var rem = data << 10;
     for (var i = 14; i >= 10; i--){
@@ -541,24 +543,19 @@ var QR = (function(){
     }
     var fmt = ((data << 10) | rem) ^ 0x5412;
     var size = m.size;
-    // top-left
     for (var j = 0; j < 6; j++) m.matrix[8][j] = (fmt >> (14 - j)) & 1;
     m.matrix[8][7] = (fmt >> 8) & 1;
     m.matrix[8][8] = (fmt >> 7) & 1;
     m.matrix[7][8] = (fmt >> 6) & 1;
     for (var k = 0; k < 6; k++) m.matrix[5 - k][8] = (fmt >> k) & 1;
-    // top-right + bottom-left copies
     for (var a = 0; a < 8; a++) m.matrix[8][size - 1 - a] = (fmt >> (14 - a)) & 1;
     for (var b = 0; b < 7; b++) m.matrix[size - 1 - b][8] = (fmt >> b) & 1;
   }
 
   function render(dataStr, canvas){
-    // Pick smallest version that fits
     var version = 1;
     for (var v = 1; v <= 10; v++){
       var cap = getDataCapacityBits(v);
-      var needed = (4 + 8 + dataStr.length * 8 + 4);
-      // conservative estimate: allow up to dataStr.length bytes
       var estBytes = new TextEncoder ? new TextEncoder().encode(dataStr).length : dataStr.length;
       var neededBits = 4 + 8 + estBytes * 8 + 4;
       if (neededBits <= cap){ version = v; break; }
@@ -573,7 +570,6 @@ var QR = (function(){
     var totalCW = rs[1];
     var dataCW = totalCW - ecCW;
 
-    // Ensure length
     if (dataBytes.length > dataCW) dataBytes = dataBytes.slice(0, dataCW);
     while (dataBytes.length < dataCW) dataBytes.push(0xEC);
 
@@ -590,7 +586,6 @@ var QR = (function(){
     applyMask(m.matrix, m.size);
     applyFormatBits(m);
 
-    // Draw
     var size = m.size;
     var ctx = canvas.getContext("2d");
     var quiet = 4;
@@ -623,7 +618,6 @@ function buildBarcodeString(ticket, event){
   var tk = ticket.ticketId || ticket.id || "ticket";
   var tier = ticket.tier || "standard";
   var seat = ticket.seat || "";
-  // Simple hash for anti-forgery
   var raw = ev + "|" + tk + "|" + tier + "|" + seat;
   var hash = 0;
   for (var i = 0; i < raw.length; i++){
@@ -653,32 +647,26 @@ function renderTicket(ticket, event){
   var pal = tierPalette(tier);
   var tierName = (event && event.tierNames && event.tierNames[tier]) || pal.label;
 
-  // Header
   $("ticketEventName").textContent = (event && event.eventName) || ticket.eventName || "Event";
   var dateStr = event ? formatDate(event.startDate, event.startTime) : (ticket.startDate || "Date TBA");
   var venueStr = (event && event.venueAddress) || ticket.venueAddress || "Venue";
   $("ticketEventMeta").textContent = dateStr;
 
-  // Tier pill
   var pill = $("ticketTierPill");
   pill.style.background = pal.bg;
   pill.style.color = pal.text;
   pill.textContent = tierName.toUpperCase();
 
-  // Guest pill
   $("ticketGuestPill").textContent = ticket.guestName || "Guest";
 
-  // Details
   $("detailTicketId").textContent = ticket.ticketId || ticket.id || "—";
   $("detailSeat").textContent = ticket.seat || "—";
   $("detailDate").textContent = dateStr;
   $("detailVenue").textContent = venueStr;
 
-  // Barcode string
   var barcodeStr = buildBarcodeString(ticket, event);
   $("barcodeNum").textContent = barcodeStr.replace(/\|/g, " · ");
 
-  // QR
   try {
     QR.render(barcodeStr, $("qrCanvas"));
   } catch(e){
@@ -693,7 +681,6 @@ function renderTicket(ticket, event){
     ctx.fillText("QR unavailable", 130, 130);
   }
 
-  // Status
   var status = ticket.status || "valid";
   var statusEl = $("ticketStatus");
   statusEl.className = "ticket-status " + status;
@@ -722,7 +709,6 @@ function renderTicket(ticket, event){
     $("revokedBanner").style.display = "flex";
   }
 
-  // Event back-link
   if (event && event.id) {
     $("eventLinkBtn").href = "view-event.html?id=" + encodeURIComponent(event.id);
   } else {
@@ -735,52 +721,96 @@ function renderTicket(ticket, event){
 }
 
 /* ================= LOAD ================= */
-function showError(title, msg){
+function showDebug(info){
+  var box = $("debugBox");
+  var content = $("debugContent");
+  if (!box || !content) return;
+  var html = "";
+  Object.keys(info).forEach(function(k){
+    html += '<div class="row"><b>' + esc(k) + ':</b> ' + esc(String(info[k])) + '</div>';
+  });
+  content.innerHTML = html;
+  box.style.display = "block";
+}
+
+function showError(title, msg, debugInfo){
   $("loadingState").style.display = "none";
   $("ticketWrap").style.display = "none";
   $("errorState").style.display = "block";
   $("errorTitle").textContent = title;
   $("errorMsg").textContent = msg;
+  if (debugInfo) showDebug(debugInfo);
   refreshIcons();
 }
 
 function loadTicket(){
   var eventParam = getQueryParam("event");
   var ticketParam = getQueryParam("ticket");
+  var idParam = getQueryParam("id");
 
-  // Support two URL shapes:
-  //   view-card.html?event=xyz&ticket=abc
-  //   view-card.html?id=abc  (search across collectionGroup — needs index)
+  var urlDebug = {
+    "Full URL": window.location.href,
+    "event param": eventParam || "(none)",
+    "ticket param": ticketParam || "(none)",
+    "id param": idParam || "(none)"
+  };
+
   if (eventParam && ticketParam) {
     eventId = eventParam;
     ticketId = ticketParam;
-    loadByPath();
+    loadByPath(urlDebug);
     return;
   }
 
   if (ticketParam) {
-    // Just a ticket id — try collectionGroup lookup (may need index; fallback: error message)
     db.collectionGroup("tickets").where("ticketId", "==", ticketParam).limit(1).get()
       .then(function(snap){
-        if (snap.empty) { showError("Ticket not found", "We couldn't find that ticket."); return; }
+        if (snap.empty) {
+          urlDebug["collectionGroup lookup"] = "no match for ticketId " + ticketParam;
+          showError("Ticket not found", "We couldn't find that ticket.", urlDebug);
+          return;
+        }
         var doc = snap.docs[0];
         eventId = doc.ref.parent.parent.id;
         ticketId = doc.id;
-        loadByPath();
+        loadByPath(urlDebug);
       })
       .catch(function(err){
         console.error(err);
-        showError("Lookup failed", "Please use the full ticket link from your purchase confirmation.");
+        urlDebug["collectionGroup error"] = err.message || err.code || "unknown";
+        showError("Lookup failed", "Please use the full ticket link from your purchase confirmation.", urlDebug);
       });
     return;
   }
 
-  showError("Missing ticket link", "The URL is missing the ticket identifier.");
+  if (idParam) {
+    // id may be a ticket doc id — try loading via collectionGroup by doc id
+    db.collectionGroup("tickets").where("ticketId", "==", idParam).limit(1).get()
+      .then(function(snap){
+        if (snap.empty) {
+          urlDebug["lookup by id"] = "no match for " + idParam;
+          showError("Ticket not found", "We couldn't find that ticket.", urlDebug);
+          return;
+        }
+        var doc = snap.docs[0];
+        eventId = doc.ref.parent.parent.id;
+        ticketId = doc.id;
+        loadByPath(urlDebug);
+      })
+      .catch(function(err){
+        console.error(err);
+        urlDebug["lookup by id error"] = err.message || err.code || "unknown";
+        showError("Lookup failed", "Please use the full ticket link.", urlDebug);
+      });
+    return;
+  }
+
+  showError("Missing ticket link", "The URL is missing the ticket identifier.", urlDebug);
 }
 
-function loadByPath(){
+function loadByPath(urlDebug){
   if (!eventId || !ticketId) { showError("Invalid link", "Missing ticket reference."); return; }
-  // Load event + ticket in parallel
+
   var eventRef = db.collection(EVENTS_COLLECTION).doc(eventId);
   var ticketRef = eventRef.collection("tickets").doc(ticketId);
 
@@ -788,7 +818,22 @@ function loadByPath(){
     .then(function(results){
       var evSnap = results[0];
       var tkSnap = results[1];
-      if (!tkSnap.exists) { showError("Ticket not found", "This ticket no longer exists."); return; }
+
+      // Print debug to console AND include in on-screen debug
+      var debugInfo = {
+        "Full URL": window.location.href,
+        "eventId used": eventId,
+        "ticketId used": ticketId,
+        "Firestore path": ticketRef.path,
+        "Event exists?": evSnap.exists ? "YES" : "NO",
+        "Ticket exists?": tkSnap.exists ? "YES" : "NO"
+      };
+      console.log("DEBUG →", debugInfo);
+
+      if (!tkSnap.exists) {
+        showError("Ticket not found", "This ticket no longer exists.", debugInfo);
+        return;
+      }
       var event = evSnap.exists ? evSnap.data() : null;
       if (event) event.id = evSnap.id;
       var ticket = tkSnap.data() || {};
@@ -797,7 +842,15 @@ function loadByPath(){
     })
     .catch(function(err){
       console.error(err);
-      showError("Could not load ticket", err.message || "Please try again.");
+      var debugInfo = {
+        "Full URL": window.location.href,
+        "eventId used": eventId,
+        "ticketId used": ticketId,
+        "Firestore path": ticketRef.path,
+        "Error code": err.code || "(none)",
+        "Error message": err.message || "(none)"
+      };
+      showError("Could not load ticket", err.message || "Please try again.", debugInfo);
     });
 }
 
@@ -808,7 +861,6 @@ document.addEventListener("DOMContentLoaded", function(){
 
   $("printBtn").addEventListener("click", function(){ window.print(); });
 
-  // Wait for auth to settle (harmless if not signed in — reads are public)
   auth.onAuthStateChanged(function(){ loadTicket(); });
 });
 })();
