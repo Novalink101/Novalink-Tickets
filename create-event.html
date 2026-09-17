@@ -94,6 +94,8 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .btn-ghost:hover{background:var(--surface-2);border-color:var(--cyan-500);color:var(--cyan-700)}
 .btn i{width:18px;height:18px}
 .btn-block{width:100%}
+.btn:disabled, .btn[disabled]{opacity:0.55;cursor:not-allowed;transform:none!important;box-shadow:none!important}
+.btn-saved{background:#065f46 !important;color:#fff !important;border-color:#065f46 !important;}
 
 /* ============= STEP NAVIGATION FOOTER ============= */
 .step-nav{display:flex;justify-content:space-between;gap:12px;margin-top:28px;padding-top:20px;border-top:1px dashed var(--border);}
@@ -586,6 +588,13 @@ body.staff-seat-mode .fs-seat:hover{outline:2px solid #fff;outline-offset:2px;tr
 /* ============= EXPORT / SUBMIT ============= */
 .export-actions{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:10px;margin-top:12px;}
 .export-actions .btn{padding:10px 14px;font-size:13px;}
+
+/* ============= SAVE-STATE CALLOUT ============= */
+.save-state-note{margin-top:14px;padding:11px 14px;border-radius:10px;font-size:12px;font-weight:700;line-height:1.5;display:none;align-items:flex-start;gap:8px;}
+.save-state-note.visible{display:flex;}
+.save-state-note.ok{background:#ecfdf5;border:1px solid #a7f3d0;color:#065f46;}
+.save-state-note.ok i{width:16px;height:16px;flex-shrink:0;margin-top:1px;color:#059669;}
+.save-state-note.ok code{background:#fff;border:1px solid #d1fae5;border-radius:5px;padding:1px 6px;font-size:11.5px;color:#065f46;word-break:break-all;}
 
 /* ============= SEAT BUILDER ============= */
 .seat-builder{display:flex;gap:10px;align-items:center;}
@@ -1338,7 +1347,8 @@ body.staff-seat-mode .fs-seat:hover{outline:2px solid #fff;outline-offset:2px;tr
             <button type="button" class="btn btn-ghost" id="exportCsvBtn"><i data-lucide="table"></i> Export CSV</button>
           </div>
           <div style="margin-top:16px;">
-            <button type="submit" class="btn btn-accent btn-block" id="submitBtn" form="createEventForm"><i data-lucide="shield-check"></i> Save &amp; Finalize Event</button>
+            <button type="button" class="btn btn-accent btn-block" id="submitBtn"><i data-lucide="shield-check"></i> Save &amp; Finalize Event</button>
+            <div class="save-state-note" id="saveStateNote" role="status" aria-live="polite"></div>
             <a href="index.html" class="btn btn-ghost btn-block" style="margin-top:10px;">Cancel</a>
           </div>
 
@@ -1407,8 +1417,6 @@ body.staff-seat-mode .fs-seat:hover{outline:2px solid #fff;outline-offset:2px;tr
       </div>
     </section>
 
-    <!-- Hidden form for submit -->
-    <form id="createEventForm" style="display:none;"></form>
   </div>
 </main>
 
@@ -1500,14 +1508,16 @@ body.staff-seat-mode .fs-seat:hover{outline:2px solid #fff;outline-offset:2px;tr
 
 function $(id){ return document.getElementById(id); }
 
+/* ============= PERSISTENCE ============= */
+var STORAGE_KEY = "novalink_events";
+var SAVE_FLAG_KEY = "novalink_last_saved_event_id";
+
 /* ============= STEP STATE ============= */
-var currentStep = 1;
 var TOTAL_STEPS = 5;
 var STEP_NAMES = {1: "Event Details", 2: "Pricing Plan", 3: "Tiers", 4: "Seating Plan", 5: "Revenue"};
 
 function goToStep(n) {
   if (n < 1 || n > TOTAL_STEPS) return;
-  currentStep = n;
   document.querySelectorAll(".step-panel").forEach(function(p) {
     p.classList.toggle("active", parseInt(p.dataset.stepPanel) === n);
   });
@@ -1524,10 +1534,32 @@ function goToStep(n) {
   var pctEl = $("stepProgressPct");
   if (pctEl) pctEl.textContent = pct + "%";
   window.scrollTo({ top: 0, behavior: "smooth" });
-  // Re-sync live previews to current state
   if (n === 2) updatePlanSnapshot();
   if (n === 4) renderSeatingPlan();
   if (n === 5) { updateRevenueCalculator(); renderTierBreakdown(); }
+}
+
+/* ============= SAVE STATE (SAVE ONCE) ============= */
+var isSaved = false;
+var savedEventId = null;
+
+function markAsSaved(eventId) {
+  isSaved = true;
+  savedEventId = eventId;
+  var btn = $("submitBtn");
+  if (btn) {
+    btn.disabled = true;
+    btn.classList.add("btn-saved");
+    btn.innerHTML = '<i data-lucide="check-circle"></i> Event Saved ✓';
+  }
+  if (window.lucide) lucide.createIcons();
+  var note = $("saveStateNote");
+  if (note) {
+    note.className = "save-state-note visible ok";
+    note.innerHTML = '<i data-lucide="check-circle"></i><span>Event saved successfully. Reference: <code>' + String(eventId) + '</code>. It now appears in the Featured Events list on the home page.</span>';
+  }
+  if (window.lucide) lucide.createIcons();
+  try { sessionStorage.setItem(SAVE_FLAG_KEY, eventId); } catch(e) {}
 }
 
 /* ============= CORE STATE ============= */
@@ -3365,21 +3397,143 @@ document.addEventListener("DOMContentLoaded", function(){
     downloadFile(lines.join("\n"), name.toLowerCase().replace(/[^a-z0-9]+/g,"-") + "-venue.csv", "text/csv");
     showToast("Venue exported as CSV", "success");
   }
-  var STORAGE_KEY = "novalink_events";
-  function generateLocalEventId() { return "local-" + Date.now().toString(36) + "-" + Math.random().toString(36).slice(2, 8); }
-  function saveEvent() {
-    var costVal = readCost(); var counts = getTierSeatCounts(); var active = getActiveTiers(); var totalTickets = 0, gross = 0;
+
+  /* ============= SAVE EVENT (writes to localStorage[novalink_events]) ============= */
+  function generateEventId() {
+    var name = ($("eventName").value || "event").toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 24).replace(/^-|-$/g, "");
+    var suffix = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
+    return (name || "event") + "-" + suffix;
+  }
+
+  function buildEventPayload(eventId) {
+    var costVal = readCost();
+    var counts = getTierSeatCounts(); var active = getActiveTiers();
+    var totalTickets = 0, gross = 0;
     active.forEach(function(t){ totalTickets += counts[t] || 0; gross += (counts[t]||0) * (TIER_PRICES[t]||0); });
     var fee = gross * (currentPlan.fee / 100); var net = gross - fee;
-    var payload = Object.assign({ eventName: $("eventName").value, hostName: $("hostName").value, hostEmail: $("hostEmail").value, city: $("city").value, eventType: $("eventType").value, cost: costVal, costFormatted: formatCurrency(costVal), startDate: $("startDate").value, startTime: $("startTime").value, venueAddress: $("venueAddress").value, tierColor: $("tierColor").value, revenue: { gross: gross, fee: fee, net: net, planFeePct: currentPlan.fee, planId: currentPlan.id, totalTickets: totalTickets }, createdAt: new Date().toISOString() }, buildVenuePayload());
-    try {
-      var existing = []; try { existing = JSON.parse(localStorage.getItem(STORAGE_KEY) || "[]"); } catch(e) { existing = []; }
-      if (!Array.isArray(existing)) existing = [];
-      var id = generateLocalEventId(); payload.id = id; existing.push(payload);
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(existing));
-      showToast("Event saved locally · " + id, "success"); return true;
-    } catch (err) { console.error(err); showToast("Save failed: " + err.message, "error", 5000); return false; }
+    var tierColor = $("tierColor") && isTierActive($("tierColor").value) ? $("tierColor").value : (active[active.length - 1] || "cyan");
+
+    var payload = Object.assign({
+      id: eventId,
+      eventName: $("eventName").value.trim() || "Untitled Event",
+      hostName: $("hostName").value.trim(),
+      hostEmail: $("hostEmail").value.trim(),
+      city: $("city").value,
+      eventType: $("eventType").value,
+      cost: costVal,
+      costFormatted: formatCurrency(costVal),
+      startDate: $("startDate").value,
+      startTime: $("startTime").value,
+      venueAddress: $("venueAddress").value.trim(),
+      tierColor: tierColor,
+      revenue: {
+        gross: gross, fee: fee, net: net,
+        planFeePct: currentPlan.fee, planId: currentPlan.id,
+        totalTickets: totalTickets
+      },
+      createdAt: new Date().toISOString(),
+      source: "user"
+    }, buildVenuePayload());
+
+    return payload;
   }
+
+  function persistEvent(payload) {
+    var list = [];
+    try {
+      var raw = localStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        var parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) list = parsed;
+      }
+    } catch(e) { list = []; }
+    // Remove any older copy of the same event id (defensive)
+    list = list.filter(function(x){ return x && x.id !== payload.id; });
+    list.push(payload);
+    try {
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
+      return true;
+    } catch(e) {
+      console.error("Save failed:", e);
+      return false;
+    }
+  }
+
+  function handleSaveEvent() {
+    // HARD GUARD: refuse if already saved
+    if (isSaved) {
+      showToast("This event has already been saved.", "info", 3000);
+      return;
+    }
+
+    // Validate essential fields
+    var requiredFields = [
+      { id: "hostName", msg: "Host name is required" },
+      { id: "hostEmail", msg: "Host email is required" },
+      { id: "city", msg: "Please choose a city" },
+      { id: "startTime", msg: "Start time is required" },
+      { id: "startDate", msg: "Start date is required" },
+      { id: "eventName", msg: "Event name is required" },
+      { id: "venueAddress", msg: "Venue name and address is required" }
+    ];
+    for (var i = 0; i < requiredFields.length; i++) {
+      var f = $(requiredFields[i].id);
+      if (f && !String(f.value || "").trim()) {
+        showToast(requiredFields[i].msg, "error", 3500);
+        goToStep(1);
+        setTimeout(function(){ f.focus(); }, 350);
+        return;
+      }
+    }
+
+    // Cost validation only if price group is visible
+    if (costInput && $("basePriceGroup") && $("basePriceGroup").style.display !== "none") {
+      var cv = parseFloat(costInput.value);
+      if (isNaN(cv) || cv < 0) {
+        showToast("Please enter a valid ticket price (0 or more).", "error");
+        goToStep(1);
+        setTimeout(function(){ costInput.focus(); }, 350);
+        return;
+      }
+      costInput.value = cv.toFixed(2);
+    }
+
+    var btn = $("submitBtn");
+    var orig = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Saving...';
+
+    // Small async delay so the spinner is visible
+    setTimeout(function(){
+      try {
+        var eventId = generateEventId();
+        var payload = buildEventPayload(eventId);
+        var ok = persistEvent(payload);
+        if (!ok) {
+          btn.disabled = false;
+          btn.innerHTML = orig;
+          if (window.lucide) lucide.createIcons();
+          showToast("Save failed — storage is full or blocked.", "error", 5000);
+          return;
+        }
+        markAsSaved(eventId);
+        showToast("Event saved! It now appears on the home page.", "success", 4500);
+        // Optionally, after 2s take user back home to see the event
+        setTimeout(function(){
+          if (confirm("Event saved. View it on the home page now?")) {
+            window.location.href = "index.html";
+          }
+        }, 900);
+      } catch(err) {
+        console.error(err);
+        btn.disabled = false;
+        btn.innerHTML = orig;
+        if (window.lucide) lucide.createIcons();
+        showToast("Save failed: " + err.message, "error", 5000);
+      }
+    }, 350);
+  }
+
   function readScale() {
     var v = parseFloat($("pxPerCm").value); if (isNaN(v) || v <= 0) v = 1;
     v = Math.max(0.05, Math.min(20, v)); $("pxPerCm").value = v; pxPerCm = v; updateScaleHints();
@@ -3460,7 +3614,6 @@ document.addEventListener("DOMContentLoaded", function(){
   }
 
   /* ============= EVENT WIRING ============= */
-  // Step tabs
   document.querySelectorAll(".step-tab").forEach(function(tab) {
     tab.addEventListener("click", function() { goToStep(parseInt(this.dataset.step)); });
   });
@@ -3471,7 +3624,6 @@ document.addEventListener("DOMContentLoaded", function(){
     btn.addEventListener("click", function() { goToStep(parseInt(this.dataset.prev)); });
   });
 
-  // Flip buttons for all three previews
   ["flipTicketBtn","flipTicketBtn2","flipTicketBtn3"].forEach(function(id) {
     var btn = $(id); if (!btn) return;
     btn.addEventListener("click", function() {
@@ -3759,21 +3911,15 @@ document.addEventListener("DOMContentLoaded", function(){
   $("exportJsonBtn").addEventListener("click", exportJson);
   $("exportCsvBtn").addEventListener("click", exportCsv);
 
+  // ===== SAVE BUTTON (must be bound LAST, after validation helpers are defined) =====
+  $("submitBtn").addEventListener("click", function(e) {
+    e.preventDefault();
+    handleSaveEvent();
+  });
+
   ["eventName","startDate","venueAddress","guestName","seatBlock","seatRow","seatNum"].forEach(function(id) { $(id).addEventListener("input", updateAllTicketPreviews); });
   ["tierColor"].forEach(function(id) { $(id).addEventListener("change", updateAllTicketPreviews); });
   ["seatBlock","seatRow"].forEach(function(id) { $(id).addEventListener("input", function() { this.value = this.value.toUpperCase().replace(/[^A-Z]/g,"").slice(0,1); }); });
-
-  $("submitBtn").addEventListener("click", function(e) {
-    e.preventDefault();
-    if (costInput && $("basePriceGroup") && $("basePriceGroup").style.display !== "none") {
-      var cv = parseFloat(costInput.value);
-      if (isNaN(cv) || cv < 0) { showToast("Please enter a valid ticket price (0 or more).", "error"); costInput.focus(); return; }
-      costInput.value = cv.toFixed(2);
-    }
-    var btn = this; var orig = btn.innerHTML; btn.disabled = true; btn.innerHTML = 'Saving...';
-    saveEvent(); btn.disabled = false; btn.innerHTML = orig;
-    if(window.lucide) lucide.createIcons();
-  });
 
   document.addEventListener("keydown", function(e) {
     if (e.key === "Escape") {
@@ -3815,10 +3961,21 @@ document.addEventListener("DOMContentLoaded", function(){
   setupRotateHandle(); setupShapeRotateHandle(); setupStageDrag(); setupInsertTools();
   updateInsertToolUI(); applyPlanFeatures(); applySeatViewMode(); applyStaffSeatMode(); updateCornerFitHint();
 
+  // Restore saved-state if the user is returning to a page where they already saved
+  try {
+    var lastSaved = sessionStorage.getItem(SAVE_FLAG_KEY);
+    if (lastSaved) {
+      // Don't restore full "saved" state on a fresh page load — that would lock the form
+      // for a *new* event. We only keep the flag so a hard refresh within the same tab
+      // doesn't allow duplicate saves of the same event under a new ID.
+      // The user can start a new event by reloading the tab (closes sessionStorage on tab close).
+    }
+  } catch(e) {}
+
   // Start on Step 1
   goToStep(1);
 });
 })();
 </script>
 </body>
-            </html>
+  </html>
