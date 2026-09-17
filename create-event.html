@@ -413,6 +413,24 @@ h1,h2,h3{line-height:1.15;font-weight:700}
   text-transform: uppercase;
 }
 
+/* ========== FIT-TO-STANDARD ========== */
+#fitToStandardBtn {
+  background: linear-gradient(135deg, #00FFFF, #00CCCC);
+  color: #04161c;
+  border: none;
+  font-weight: 800;
+  letter-spacing: 0.03em;
+}
+#fitToStandardBtn:hover { background: #00FFFF; color: #04161c; }
+#fitToStandardBtn:disabled { opacity: 0.45; cursor: not-allowed; }
+#fitToStandardHint.ok { color: #009999; font-style: normal; font-weight: 700; }
+#fitToStandardHint.warn { color: #b91c1c; font-weight: 700; font-style: normal; }
+body.corner-fit-preview .fs-section.corner-left,
+body.corner-fit-preview .fs-section.corner-right {
+  outline: 2px dashed #00FFFF;
+  outline-offset: 3px;
+}
+
 /* ========== SEAT-ONLY VIEW ========== */
 body.seat-view-mode .block {
   background: transparent !important;
@@ -469,7 +487,6 @@ body.seat-view-mode .corner-curve-seat.fs-seat {
   border-radius: 3px;
   box-shadow: 0 1px 2px rgba(0,0,0,0.35);
 }
-
 body.seat-view-mode .corner-curve-wrap { background: transparent !important; }
 
 .fullscreen-overlay { position: fixed; inset: 0; background: #0a0f14; z-index: 9999; display: none; flex-direction: column; padding: 16px; }
@@ -918,12 +935,12 @@ body.seat-view-mode .corner-curve-wrap { background: transparent !important; }
 
         <div class="section-divider"><span>Levels / Floors</span></div>
         <div class="levels-panel">
-          <div class="row-overrides-hint">Group sections into levels. Toggle visibility to isolate a level in the Full Screen view.</div>
+          <div class="row-overrides-hint">Group blocks into levels. Toggle visibility to isolate a level in the Full Screen view.</div>
           <div class="levels-list" id="levelsList"></div>
           <button type="button" class="btn-mini" id="addLevelBtn">+ Add Level</button>
         </div>
 
-        <div class="section-divider"><span>Sections</span></div>
+        <div class="section-divider"><span>Blocks</span></div>
         <div class="toggle-row">
           <span class="toggle-label">Chairs &amp; Tables Mode</span>
           <label class="toggle-switch"><input type="checkbox" id="tableModeToggle" /><span class="toggle-slider"></span></label>
@@ -963,8 +980,8 @@ body.seat-view-mode .corner-curve-wrap { background: transparent !important; }
         </div>
 
         <div class="form-row">
-          <div class="form-group"><label for="totalLevel1">Number of Sections</label><input type="number" id="totalLevel1" min="1" max="26" value="3" /></div>
-          <div class="form-group" id="rowsPerSectionGroup"><label for="totalLevel2">Default Rows per Section</label><input type="number" id="totalLevel2" min="1" max="52" value="6" /></div>
+          <div class="form-group"><label for="totalLevel1">Number of Blocks</label><input type="number" id="totalLevel1" min="1" max="26" value="3" /></div>
+          <div class="form-group" id="rowsPerSectionGroup"><label for="totalLevel2">Default Rows per Block</label><input type="number" id="totalLevel2" min="1" max="52" value="6" /></div>
           <div class="form-group" id="seatsPerRowGroup"><label for="totalLevel3">Default Seats per Row (4–90)</label><input type="number" id="totalLevel3" min="4" max="90" value="8" /></div>
         </div>
 
@@ -985,15 +1002,15 @@ body.seat-view-mode .corner-curve-wrap { background: transparent !important; }
             <div class="section-rows-row">
               <label for="seatGapRowSpecific">Apply To</label>
               <select id="seatGapRowSpecific">
-                <option value="all" selected>All rows in every section</option>
-                <option value="current">Only current section's rows</option>
+                <option value="all" selected>All rows in every block</option>
+                <option value="current">Only current block's rows</option>
               </select>
             </div>
           </div>
         </div>
 
         <div class="form-group" id="rowOverridesGroup">
-          <label>Per-Section Configuration</label>
+          <label>Per-Block Configuration</label>
           <div class="row-overrides-section">
             <div class="row-overrides-header">
               <div class="section-tabs" id="sectionTabs"></div>
@@ -1001,11 +1018,11 @@ body.seat-view-mode .corner-curve-wrap { background: transparent !important; }
               <button type="button" class="btn-mini fs-btn" id="openFullscreen">⛶ Full Screen</button>
               <button type="button" class="btn-mini" id="clearAllOverrides">Clear All</button>
             </div>
-            <div class="section-rows-row"><label for="sectionNameInput">Section Name</label><input type="text" id="sectionNameInput" placeholder="e.g., VIP Stand" maxlength="40" /></div>
+            <div class="section-rows-row"><label for="sectionNameInput">Block Name</label><input type="text" id="sectionNameInput" placeholder="e.g., VIP Stand" maxlength="40" /></div>
 
-            <!-- ============ CORNER SECTION UI ============ -->
+            <!-- ============ CORNER BLOCK UI ============ -->
             <div class="section-rows-row">
-              <label for="sectionKindSelect">Section Type</label>
+              <label for="sectionKindSelect">Block Type</label>
               <select id="sectionKindSelect">
                 <option value="standard" selected>Standard (rectangular)</option>
                 <option value="corner-left">Corner — Left L</option>
@@ -1014,9 +1031,9 @@ body.seat-view-mode .corner-curve-wrap { background: transparent !important; }
             </div>
             <div class="row-overrides-section" id="cornerConfigPanel" style="display:none;margin-bottom:10px;">
               <div class="row-overrides-hint">
-                L-shaped corner section. The horizontal leg sits across the top; the vertical leg drops down from the
+                L-shaped corner block. The horizontal leg sits across the top; the vertical leg drops down from the
                 <strong>left</strong> (Left corner) or <strong>right</strong> (Right corner). It sits flush next to standard
-                sections in auto layout.
+                blocks in auto layout.
               </div>
               <div class="form-row-3" style="margin-bottom:8px;">
                 <div class="form-group" style="margin-bottom:0;">
@@ -1048,12 +1065,56 @@ body.seat-view-mode .corner-curve-wrap { background: transparent !important; }
                 </div>
               </div>
               <div class="section-rows-badge" id="cornerSeatBadge">Corner total: 0 seats</div>
+
+              <!-- ============ FIT-TO-STANDARD CONTROLS ============ -->
+              <div class="form-row" style="margin-top:8px;">
+                <div class="form-group" style="margin-bottom:0;">
+                  <label for="cornerArcSeatSpacing" style="font-size:10px;">Arc Seat Spacing (px)</label>
+                  <input type="number" id="cornerArcSeatSpacing" min="1" max="120" step="1" value="22" style="text-align:center;padding:8px;" />
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                  <label for="cornerArcRowSpacing" style="font-size:10px;">Arc Row Spacing (px)</label>
+                  <input type="number" id="cornerArcRowSpacing" min="1" max="120" step="1" value="22" style="text-align:center;padding:8px;" />
+                </div>
+              </div>
+              <div class="form-row-3" style="margin-bottom:8px;">
+                <div class="form-group" style="margin-bottom:0;">
+                  <label for="cornerAutoSeatW" style="font-size:10px;">Match Seat Width From</label>
+                  <select id="cornerAutoSeatW">
+                    <option value="auto" selected>Auto — sample live DOM</option>
+                    <option value="22">22 px (default row-seat)</option>
+                    <option value="26">26 px</option>
+                    <option value="30">30 px</option>
+                  </select>
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                  <label for="cornerDockSide" style="font-size:10px;">Dock Flush With</label>
+                  <select id="cornerDockSide">
+                    <option value="left" selected>Left edge</option>
+                    <option value="right">Right edge</option>
+                    <option value="none">Do not dock</option>
+                  </select>
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                  <label for="cornerDockGap" style="font-size:10px;">Dock Gap (px)</label>
+                  <input type="number" id="cornerDockGap" min="0" max="80" step="1" value="8" style="text-align:center;padding:8px;" />
+                </div>
+              </div>
+              <button type="button" class="btn-mini fs-btn" id="fitToStandardBtn"
+                      style="width:100%; padding:8px 12px; font-size:12px; margin-top:4px;"
+                      title="Match seats, rows, tiers and flush-dock this corner to its linked block">
+                ⚡ Fit to Standard Block
+              </button>
+              <div class="row-overrides-hint" id="fitToStandardHint" style="margin-top:6px;">
+                Match the corner's arc seats, row count, spacing and X/Y to the linked standard block so rows align row-by-row.
+              </div>
+              <!-- ============ /FIT-TO-STANDARD CONTROLS ============ -->
             </div>
-            <!-- ============ /CORNER SECTION UI ============ -->
+            <!-- ============ /CORNER BLOCK UI ============ -->
 
             <div class="section-rows-row"><label for="sectionLevelSelect">Level</label><select id="sectionLevelSelect"></select></div>
             <div class="section-rows-row" id="sectionRowsRow">
-              <label for="sectionRowsInput" id="sectionRowsLabel">Rows in this section</label>
+              <label for="sectionRowsInput" id="sectionRowsLabel">Rows in this block</label>
               <span class="section-rows-badge" id="sectionRowsBadge">6 rows</span>
               <input type="number" id="sectionRowsInput" min="1" max="52" value="6" />
             </div>
@@ -1063,7 +1124,7 @@ body.seat-view-mode .corner-curve-wrap { background: transparent !important; }
               <button type="button" class="btn-mini" id="addTableRowBtn">+ Add Table Row</button>
             </div>
             <div class="section-rows-row">
-              <label for="sectionTierOverride">Section Tier Override</label>
+              <label for="sectionTierOverride">Block Tier Override</label>
               <select id="sectionTierOverride">
                 <option value="">— Use Row Distribution —</option>
               </select>
@@ -1073,22 +1134,22 @@ body.seat-view-mode .corner-curve-wrap { background: transparent !important; }
               <div class="form-group" style="margin-bottom:0;"><label for="sectionYInput" style="font-size:10px;">Y Position (px)</label><input type="number" id="sectionYInput" min="0" max="20000" value="200" style="text-align:center;padding:8px;" /></div>
               <div class="form-group" style="margin-bottom:0;"><label for="sectionRotationInput" style="font-size:10px;">Rotation (°)</label><input type="number" id="sectionRotationInput" min="-360" max="360" value="0" style="text-align:center;padding:8px;" /></div>
             </div>
-            <p class="form-hint" style="margin:-4px 0 10px;">Sections auto-arrange. Editing X/Y switches to manual positioning.</p>
+            <p class="form-hint" style="margin:-4px 0 10px;">Blocks auto-arrange. Editing X/Y switches to manual positioning.</p>
             <div class="section-rows-row">
               <label for="sectionScaleInput">Scale (0.5× – 2×)</label>
               <span class="section-rows-badge" id="sectionScaleBadge">1.00×</span>
               <input type="range" id="sectionScaleInput" min="0.5" max="2" step="0.05" value="1" />
             </div>
             <div id="rowOverridesBlock">
-              <div class="row-overrides-hint">Each section has its own position, scale, level and row configuration.</div>
+              <div class="row-overrides-hint">Each block has its own position, scale, level and row configuration.</div>
               <div class="row-overrides-grid" id="rowOverridesGrid"></div>
             </div>
           </div>
         </div>
 
         <div class="form-group" id="rowTierGroup">
-          <label>Row Tier Distribution (front-to-back per section)</label>
-          <p class="form-hint" style="margin-top:0;margin-bottom:8px;">Assign tiers to rows. Ignored if section has a tier override.</p>
+          <label>Row Tier Distribution (front-to-back per block)</label>
+          <p class="form-hint" style="margin-top:0;margin-bottom:8px;">Assign tiers to rows. Ignored if block has a tier override.</p>
           <div class="tier-dist-grid" id="tierDistGrid">
             <div class="tier-dist-item" data-tier-dist="black">
               <div class="swatch" style="background:var(--tier-black)"></div>
@@ -1285,12 +1346,12 @@ body.seat-view-mode .corner-curve-wrap { background: transparent !important; }
     <div class="fs-actions">
       <span class="fs-field"><label for="fsSectionSpacing">Gap (px)</label><input type="number" id="fsSectionSpacing" min="0" max="500" step="1" value="40" /></span>
       <button type="button" class="fs-btn active" id="fsToggleAuto">⇔ Auto Layout</button>
-      <button type="button" class="fs-btn" id="fsToggleTwoPoint" title="Drag point A and B to shape the section layout">📍 Two-Point</button>
+      <button type="button" class="fs-btn" id="fsToggleTwoPoint" title="Drag point A and B to shape the block layout">📍 Two-Point</button>
       <span class="fs-field" id="fsArcField" style="display:none;"><label for="fsArcAmount">Arc</label><input type="number" id="fsArcAmount" min="-150" max="150" step="1" value="0" /></span>
       <button type="button" class="fs-btn" id="fsToggleAxis">↕ Vertical</button>
       <button type="button" class="fs-btn active" id="fsToggleGrid">Grid</button>
       <button type="button" class="fs-btn" id="fsResetView">↺ Reset</button>
-      <button type="button" class="fs-btn" id="fsToggleSeatView" title="Hide section box chrome — show only seats and arc">👁 Seats Only</button>
+      <button type="button" class="fs-btn" id="fsToggleSeatView" title="Hide block box chrome — show only seats and arc">👁 Seats Only</button>
       <div class="fs-tool-group" title="Pick a tool, then click the canvas to place it">
         <span class="fs-tool-label">Insert</span>
         <button type="button" class="fs-tool-btn" id="fsInsertRect"   title="Rectangle">▭</button>
@@ -1307,17 +1368,17 @@ body.seat-view-mode .corner-curve-wrap { background: transparent !important; }
   <div class="fs-canvas-outer" id="fsCanvasOuter">
     <div class="fs-canvas" id="fsCanvas">
       <div class="fs-stage-marker" id="fsStageMarker">STAGE</div>
-      <div class="fs-empty-hint" id="fsEmptyHint" style="display:none;">Add sections to see them placed here</div>
+      <div class="fs-empty-hint" id="fsEmptyHint" style="display:none;">Add blocks to see them placed here</div>
       <div class="fs-point-marker" id="fsPointA" data-point="A"><span class="pt-label">A</span></div>
       <div class="fs-point-marker" id="fsPointB" data-point="B"><span class="pt-label">B</span></div>
 
       <div class="fs-rotate-line" id="fsRotateLine"></div>
-      <div class="fs-rotate-handle" id="fsRotateHandle" title="Drag to rotate section (Shift = snap to 15°)">↻</div>
+      <div class="fs-rotate-handle" id="fsRotateHandle" title="Drag to rotate block (Shift = snap to 15°)">↻</div>
       <div class="fs-shape-rotate-line" id="fsShapeRotateLine"></div>
       <div class="fs-shape-rotate-handle" id="fsShapeRotateHandle" title="Drag to rotate element (Shift = snap to 15°)">↻</div>
 
       <div class="fs-section-controls" id="fsSectionControls">
-        <div class="fs-section-controls-title">Section Properties</div>
+        <div class="fs-section-controls-title">Block Properties</div>
         <div class="fs-ctrl-field"><label>X Position</label><input type="number" id="fsCtrlX" min="0" max="20000" step="1" /></div>
         <div class="fs-ctrl-field"><label>Y Position</label><input type="number" id="fsCtrlY" min="0" max="20000" step="1" /></div>
         <div class="fs-ctrl-field"><label>Rotation (°)</label><input type="number" id="fsCtrlRot" min="-360" max="360" step="1" /></div>
@@ -1342,16 +1403,16 @@ body.seat-view-mode .corner-curve-wrap { background: transparent !important; }
   </div>
   <div class="sp-seat-finder" id="seatFinder">
     <span class="spf-title">🔍 Seat Identifier</span>
-    <span class="spf-field"><label for="seatFinderSection">Section</label><select id="seatFinderSection"></select></span>
+    <span class="spf-field"><label for="seatFinderSection">Block</label><select id="seatFinderSection"></select></span>
     <span class="spf-field"><label for="seatFinderRow">Row</label><select id="seatFinderRow"></select></span>
     <span class="spf-field"><label for="seatFinderSeat">Seat</label><input type="number" id="seatFinderSeat" min="1" value="1" /></span>
     <button type="button" class="spf-btn primary" id="seatFinderFindBtn">Find Seat</button>
     <button type="button" class="spf-btn" id="seatFinderClearBtn">Clear</button>
-    <span class="spf-status info" id="seatFinderStatus">Pick a section, row and seat</span>
+    <span class="spf-status info" id="seatFinderStatus">Pick a block, row and seat</span>
   </div>
   <div class="sp-body" id="spBody">
     <div class="sp-inner" id="seatingPlanFullInner">
-      <div class="seating-plan-title">Add sections to begin</div>
+      <div class="seating-plan-title">Add blocks to begin</div>
     </div>
   </div>
 </div>
@@ -1391,11 +1452,8 @@ var expandedElementId = null;
 var lastFoundSeat = null;
 var ticketFlipped = false;
 
-/* ===== Corner Sections ===== */
 var sectionKinds = {};
 var cornerConfigs = {};
-
-/* ===== Seat View mode ===== */
 var seatViewMode = false;
 
 var twoPointMode = false;
@@ -1524,7 +1582,7 @@ document.addEventListener("DOMContentLoaded", function(){
   function snap(v) { return snapToGrid ? Math.round(v / gridSize) * gridSize : v; }
   function clampInt(v, min, max, fallback) { var n = parseInt(v, 10); if (isNaN(n)) n = fallback; return Math.max(min, Math.min(max, n)); }
   function clampFloat(v, min, max, fallback) { var n = parseFloat(v); if (isNaN(n)) n = fallback; return Math.max(min, Math.min(max, n)); }
-  function getSectionName(idx) { return sectionNames[idx] || ("Section " + blockLabel(idx)); }
+  function getSectionName(idx) { return sectionNames[idx] || ("Block " + blockLabel(idx)); }
   function setSectionName(idx, name) { if (name && name.trim()) sectionNames[idx] = name.trim(); else delete sectionNames[idx]; }
   function getSectionTierOverride(idx) { var t = sectionTierOverrides[idx] || null; if (t && !isTierActive(t)) t = null; return t; }
   function setSectionTierOverride(idx, tier) { if (tier && isTierActive(tier)) sectionTierOverrides[idx] = tier; else delete sectionTierOverrides[idx]; }
@@ -1547,7 +1605,6 @@ document.addEventListener("DOMContentLoaded", function(){
     return (c.hSeats * hRows) + (c.vSeats * c.vRows);
   }
 
-  /* Get the tier for a corner row — either from own distribution or a linked section */
   function getCornerTierForRow(cornerIdx, rowIdx, isVertical) {
     var cfg = getCornerConfig(cornerIdx);
     var linkIdx = cfg.linkSectionIdx;
@@ -1569,6 +1626,183 @@ document.addEventListener("DOMContentLoaded", function(){
     }
     var continueIdx = hRowsC + rowIdx;
     return linkMap[Math.min(continueIdx, linkMap.length - 1)];
+  }
+
+  /* ============ CORNER FIT-TO-STANDARD HELPERS ============ */
+  function measureStandardSectionMetrics(sectionIdx) {
+    var out = { seatW: 22, rowH: 26, rowGap: 4, blockPad: 8 };
+    var scopes = [
+      document.getElementById("seatingPlanPreview"),
+      document.getElementById("seatingPlanFullInner"),
+      document.getElementById("fsCanvas")
+    ];
+    for (var s = 0; s < scopes.length; s++) {
+      var scope = scopes[s];
+      if (!scope) continue;
+      var sel = '[data-section-idx="' + sectionIdx + '"], [data-section="' + sectionIdx + '"]';
+      var node = scope.querySelector(sel);
+      if (!node) continue;
+      var seatEl = node.querySelector(".row-seat, .fs-seat");
+      if (seatEl) {
+        var r = seatEl.getBoundingClientRect();
+        if (r.width > 2)  out.seatW = Math.round(r.width);
+        if (r.height > 2) out.rowH  = Math.round(r.height);
+      }
+      var rowEl = node.querySelector(".horizontal-row, .fs-row");
+      if (rowEl) {
+        var rr = rowEl.getBoundingClientRect();
+        if (rr.height > 2) out.rowGap = Math.max(0, Math.round(rr.height - out.rowH));
+      }
+      break;
+    }
+    return out;
+  }
+
+  function getStandardRowSeatCount(linkIdx, rowIdx) {
+    if (linkIdx === null || linkIdx === undefined) return 0;
+    return getSeatsForRow(linkIdx, rowIdx);
+  }
+
+  function resolveArcSeatWidth(linkIdx) {
+    var manual = $("cornerAutoSeatW");
+    if (manual && manual.value && manual.value !== "auto") {
+      return clampInt(manual.value, 4, 120, 22);
+    }
+    var m = measureStandardSectionMetrics(linkIdx);
+    return m.seatW;
+  }
+
+  function resolveArcRowSpacing(linkIdx) {
+    var manual = $("cornerArcRowSpacing");
+    if (manual) {
+      var v = clampInt(manual.value, 1, 120, 0);
+      if (v > 0) return v;
+    }
+    var m = measureStandardSectionMetrics(linkIdx);
+    return m.rowH + m.rowGap;
+  }
+
+  function dockCornerToStandard(cornerIdx, linkIdx, side, gapPx) {
+    var linkPos = getSectionPos(linkIdx);
+    var cornerPos = getSectionPos(cornerIdx);
+    var canvas = $("fsCanvas");
+    var linkEl = null, cornerEl = null;
+    if (canvas) {
+      linkEl = canvas.querySelector('[data-section="' + linkIdx + '"]');
+      cornerEl = canvas.querySelector('[data-section="' + cornerIdx + '"]');
+    }
+    var linkW = linkEl ? linkEl.offsetWidth  : 160;
+    var cornerW = cornerEl ? cornerEl.offsetWidth : 160;
+    var x, y;
+    if (side === "left") {
+      x = linkPos.x - cornerW - gapPx;
+      y = linkPos.y;
+    } else if (side === "right") {
+      x = linkPos.x + linkW + gapPx;
+      y = linkPos.y;
+    } else {
+      return;
+    }
+    cornerPos.x = Math.max(0, Math.round(x));
+    cornerPos.y = Math.max(0, Math.round(y));
+    cornerPos.rotation = 0;
+    cornerPos.scale = 1;
+
+    if (autoLayoutEnabled) {
+      autoLayoutEnabled = false;
+      var btn = $("fsToggleAuto"); if (btn) btn.classList.remove("active");
+    }
+  }
+
+  function updateCornerFitHint() {
+    var hint = $("fitToStandardHint");
+    var btn  = $("fitToStandardBtn");
+    if (!hint || !btn) return;
+    var idx = currentEditingSection;
+    if (!isCornerSection(idx)) {
+      hint.textContent = "Select a corner block to enable fitting.";
+      hint.className = "row-overrides-hint warn";
+      btn.disabled = true;
+      return;
+    }
+    var cc = getCornerConfig(idx);
+    if (cc.linkSectionIdx === null || cc.linkSectionIdx === undefined) {
+      hint.textContent = "Set 'Match Tiers From' to a standard block, then click Fit.";
+      hint.className = "row-overrides-hint warn";
+      btn.disabled = true;
+      return;
+    }
+    if (isCornerSection(cc.linkSectionIdx)) {
+      hint.textContent = "Linked block is a corner — pick a standard block instead.";
+      hint.className = "row-overrides-hint warn";
+      btn.disabled = false;
+      return;
+    }
+    var lName = getSectionName(cc.linkSectionIdx);
+    var lRows = getRowCount(cc.linkSectionIdx);
+    var maxS = 4;
+    for (var r = 0; r < lRows; r++) { var s = getSeatsForRow(cc.linkSectionIdx, r); if (s > maxS) maxS = s; }
+    hint.textContent = "Will match " + lName + ": " + lRows + " rows, up to " + maxS + " seats per arc row.";
+    hint.className = "row-overrides-hint ok";
+    btn.disabled = false;
+  }
+
+  function fitCornerToStandard() {
+    var idx = currentEditingSection;
+    if (!isCornerSection(idx)) {
+      showToast("This block is not a corner. Change Block Type first.", "error", 3200);
+      return;
+    }
+    var cc = getCornerConfig(idx);
+    if (cc.linkSectionIdx === null || cc.linkSectionIdx === undefined) {
+      showToast("Choose a 'Match Tiers From' standard block first.", "error", 3400);
+      return;
+    }
+    var linkIdx = cc.linkSectionIdx;
+    var linkRows = getRowCount(linkIdx);
+
+    setRowCount(idx, linkRows);
+
+    var maxSeats = 4;
+    for (var r = 0; r < linkRows; r++) {
+      var s = getStandardRowSeatCount(linkIdx, r);
+      if (s > maxSeats) maxSeats = s;
+    }
+    cc.hSeats = maxSeats;
+
+    var minSeats = 9999;
+    for (var r2 = 0; r2 < linkRows; r2++) {
+      var s2 = getStandardRowSeatCount(linkIdx, r2);
+      if (s2 > 0 && s2 < minSeats) minSeats = s2;
+    }
+    if (minSeats === 9999) minSeats = 4;
+    cc.vSeats = Math.max(1, minSeats);
+    cc.vRows  = linkRows;
+
+    var seatW = resolveArcSeatWidth(linkIdx);
+    var rowSp = resolveArcRowSpacing(linkIdx);
+
+    var seatEl = $("cornerArcSeatSpacing");
+    if (seatEl) seatEl.value = seatW;
+    var rowSpEl = $("cornerArcRowSpacing");
+    if (rowSpEl) rowSpEl.value = rowSp;
+
+    if (cc.linkSectionIdx === null || cc.linkSectionIdx === undefined) {
+      cc.linkSectionIdx = linkIdx;
+    }
+
+    var dockSide = $("cornerDockSide") ? $("cornerDockSide").value : "left";
+    var gap     = clampInt($("cornerDockGap") ? $("cornerDockGap").value : 8, 0, 80, 8);
+    if (dockSide !== "none") dockCornerToStandard(idx, linkIdx, dockSide, gap);
+
+    refreshSectionInputs();
+    calculateCapacity();
+    updateTierCountOptions();
+    updateRevenueCalculator();
+    renderSeatingPlan();
+    if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+    updateCornerFitHint();
+    showToast("Corner fitted to " + getSectionName(linkIdx), "success", 2600);
   }
 
   function getDefaultTableCount() { return Math.max(1, Math.min(50, parseInt($("tableCount").value) || 4)); }
@@ -1679,7 +1913,7 @@ document.addEventListener("DOMContentLoaded", function(){
     hideSectionGroup("Venue Canvas & Stage", !f.venueLayout);
     hideSectionGroup("Canvas Annotations", !f.annotations);
     hideSectionGroup("Levels / Floors", !f.levels);
-    hideSectionGroup("Sections", !f.seatingPlan);
+    hideSectionGroup("Blocks", !f.seatingPlan);
     hideSectionGroup("Tier Colours", !f.editTierColors);
     var tmToggle = $("tableModeToggle");
     var tmRow = tmToggle ? tmToggle.closest(".toggle-row") : null;
@@ -1918,7 +2152,6 @@ document.addEventListener("DOMContentLoaded", function(){
     $("sectionNameInput").placeholder = "e.g., VIP Stand (currently " + getSectionName(idx) + ")";
     $("sectionLevelSelect").value = getSectionPos(idx).levelId;
 
-    /* Corner UI */
     var kind = getSectionKind(idx);
     $("sectionKindSelect").value = kind;
     if (kind === "standard") {
@@ -1949,11 +2182,11 @@ document.addEventListener("DOMContentLoaded", function(){
 
     if (tableMode) {
       var totalTables = getTableCount(idx); var rowCount = getSectionTableRows(idx).length;
-      $("sectionRowsLabel").textContent = "Tables in this section"; $("sectionRowsInput").style.display = "none";
+      $("sectionRowsLabel").textContent = "Tables in this block"; $("sectionRowsInput").style.display = "none";
       $("sectionRowsBadge").textContent = rowCount + (rowCount === 1 ? " row" : " rows") + " · " + totalTables + (totalTables === 1 ? " table" : " tables");
     } else {
       var rows = getRowCount(idx);
-      $("sectionRowsLabel").textContent = (kind === "standard" ? "Rows in this section" : "Rows in horizontal leg"); $("sectionRowsInput").style.display = "";
+      $("sectionRowsLabel").textContent = (kind === "standard" ? "Rows in this block" : "Rows in horizontal leg"); $("sectionRowsInput").style.display = "";
       $("sectionRowsInput").value = rows; $("sectionRowsInput").max = 52;
       $("sectionRowsBadge").textContent = rows + (rows === 1 ? " row" : " rows");
     }
@@ -1963,6 +2196,24 @@ document.addEventListener("DOMContentLoaded", function(){
     $("sectionXInput").value = pos.x; $("sectionYInput").value = pos.y;
     $("sectionRotationInput").value = pos.rotation;
     $("sectionScaleInput").value = pos.scale; $("sectionScaleBadge").textContent = pos.scale.toFixed(2) + "×";
+
+    /* Update the fit helper state whenever a block is (re)selected */
+    if (typeof updateCornerFitHint === "function") updateCornerFitHint();
+
+    if (isCornerSection(idx)) {
+      var ccAuto = getCornerConfig(idx);
+      if (ccAuto.linkSectionIdx !== null && ccAuto.linkSectionIdx !== undefined) {
+        var mAuto = measureStandardSectionMetrics(ccAuto.linkSectionIdx);
+        var seatWInp = $("cornerArcSeatSpacing");
+        if (seatWInp && (!seatWInp.value || parseInt(seatWInp.value, 10) === 22)) {
+          seatWInp.value = mAuto.seatW;
+        }
+        var rowSpInp = $("cornerArcRowSpacing");
+        if (rowSpInp && (!rowSpInp.value || parseInt(rowSpInp.value, 10) === 22)) {
+          rowSpInp.value = mAuto.rowH + mAuto.rowGap;
+        }
+      }
+    }
   }
 
   function rebuildRowOverrides() {
@@ -2069,7 +2320,6 @@ document.addEventListener("DOMContentLoaded", function(){
     return buildCurvedCornerBlock(idx, cfg, seatClass);
   }
 
-  /* ---------- Square L ---------- */
   function buildSquareCornerBlock(idx, cfg, seatClass) {
     var kind = getSectionKind(idx);
     var alignRight = (kind === "corner-right");
@@ -2114,13 +2364,21 @@ document.addEventListener("DOMContentLoaded", function(){
     return wrap;
   }
 
-  /* ---------- Curved corner (quarter arc) ---------- */
   function buildCurvedCornerBlock(idx, cfg, seatClass) {
     var kind = getSectionKind(idx);
     var isRight = (kind === "corner-right");
     var isFs = (seatClass === "fs-seat");
-    var seatW = isFs ? 12 : 22;
-    var rowH  = isFs ? 12 : 22;
+
+    var manualSeatW = clampInt($("cornerArcSeatSpacing") ? $("cornerArcSeatSpacing").value : 22, 1, 120, 22);
+    var manualRowSp = clampInt($("cornerArcRowSpacing") ? $("cornerArcRowSpacing").value : 22, 1, 120, 22);
+
+    var arcSeatW = manualSeatW > 0 ? manualSeatW : (isFs ? 12 : 22);
+    var arcRowH  = manualRowSp > 0 ? manualRowSp : (isFs ? 12 : 22);
+
+    if (isFs) { arcSeatW = Math.max(6, Math.round(arcSeatW * 0.6)); arcRowH = Math.max(6, Math.round(arcRowH * 0.6)); }
+
+    var seatW = arcSeatW;
+    var rowH  = arcRowH;
 
     var outerSeats = Math.max(2, cfg.hSeats);
     var rows = Math.max(1, cfg.vRows);
@@ -2158,8 +2416,8 @@ document.addEventListener("DOMContentLoaded", function(){
         seat.className = "corner-curve-seat " + (seatClass || "fs-seat") + " " + rowTier;
         seat.style.left = (x - seatW / 2) + "px";
         seat.style.top  = (y - rowH / 2) + "px";
-        seat.style.width = seatW + "px";
-        seat.style.height = rowH + "px";
+        seat.style.width  = seatW + "px";
+        seat.style.height = Math.max(6, Math.round(rowH * 0.9)) + "px";
         seat.textContent = (j + 1);
         wrap.appendChild(seat);
       }
@@ -2554,7 +2812,7 @@ document.addEventListener("DOMContentLoaded", function(){
     }
     container.innerHTML = "";
     var l1 = parseInt($("totalLevel1").value) || 0;
-    if (l1 === 0) { container.innerHTML = '<div class="seating-plan-title">Add sections to begin</div>'; }
+    if (l1 === 0) { container.innerHTML = '<div class="seating-plan-title">Add blocks to begin</div>'; }
     else if (tableMode) { renderTableLayout(container, Math.min(l1, 8), 0.5); }
     else { renderStandardLayout(container, Math.min(l1, 8)); }
     if ($("seatingPlanOverlay").classList.contains("open")) { renderSeatingPlanFull(); }
@@ -2565,11 +2823,11 @@ document.addEventListener("DOMContentLoaded", function(){
     if (!FEATURES.seatingPlan) return;
     container.innerHTML = "";
     var l1 = parseInt($("totalLevel1").value) || 0;
-    if (l1 === 0) { container.innerHTML = '<div class="seating-plan-title">Add sections to begin</div>'; if ($("spSummary")) $("spSummary").textContent = ""; disableSeatFinder("Add sections to begin"); return; }
+    if (l1 === 0) { container.innerHTML = '<div class="seating-plan-title">Add blocks to begin</div>'; if ($("spSummary")) $("spSummary").textContent = ""; disableSeatFinder("Add blocks to begin"); return; }
     if (tableMode) renderTableLayout(container, l1, 1); else renderStandardLayout(container, l1);
     $("spModeLabel").textContent = tableMode ? "TABLES" : "ROWS";
     if ($("spSummary")) {
-      var sections = l1; var info = sections + " section" + (sections === 1 ? "" : "s");
+      var sections = l1; var info = sections + " block" + (sections === 1 ? "" : "s");
       if (tableMode) { var totalTables = 0, totalRows = 0; for (var i = 0; i < sections; i++) { totalTables += getTableCount(i); totalRows += getSectionTableRows(i).length; } info += " · " + totalRows + " rows · " + totalTables + " tables · " + chairsPerTable() + " chairs/table"; }
       else { var totalSeats = 0; for (var j = 0; j < sections; j++) { if (isCornerSection(j)) { totalSeats += cornerSeatCount(j); continue; } var r = getRowCount(j); for (var k = 0; k < r; k++) totalSeats += getSeatsForRow(j, k); } info += " · " + totalSeats + " seats"; }
       $("spSummary").textContent = info;
@@ -2584,7 +2842,7 @@ document.addEventListener("DOMContentLoaded", function(){
     if (finder) finder.classList.remove("spf-disabled");
     rebuildSeatFinderDropdowns();
     if (lastFoundSeat) { applySeatHighlight(lastFoundSeat.secIdx, lastFoundSeat.rowIdx, lastFoundSeat.seatNum, true); }
-    else if (status) { status.className = "spf-status info"; status.textContent = "Pick a section, row and seat"; }
+    else if (status) { status.className = "spf-status info"; status.textContent = "Pick a block, row and seat"; }
   }
 
   function rebuildSeatFinderDropdowns() {
@@ -2624,9 +2882,9 @@ document.addEventListener("DOMContentLoaded", function(){
     var secSel = $("seatFinderSection"), rowSel = $("seatFinderRow"), seatInp = $("seatFinderSeat"), status = $("seatFinderStatus");
     if (!secSel || !rowSel || !seatInp || !status) return;
     var secIdx = parseInt(secSel.value), rowIdx = parseInt(rowSel.value), seatNum = parseInt(seatInp.value);
-    if (isNaN(secIdx) || isNaN(rowIdx) || isNaN(seatNum)) { status.className = "spf-status err"; status.textContent = "Please choose a section, row and seat number."; return; }
+    if (isNaN(secIdx) || isNaN(rowIdx) || isNaN(seatNum)) { status.className = "spf-status err"; status.textContent = "Please choose a block, row and seat number."; return; }
     var totalSections = parseInt($("totalLevel1").value) || 0;
-    if (secIdx < 0 || secIdx >= totalSections) { status.className = "spf-status err"; status.textContent = "That section does not exist."; return; }
+    if (secIdx < 0 || secIdx >= totalSections) { status.className = "spf-status err"; status.textContent = "That block does not exist."; return; }
     var rowCount = getRowCount(secIdx);
     if (rowIdx < 0 || rowIdx >= rowCount) { status.className = "spf-status err"; status.textContent = "Row " + rowLabel(rowIdx) + " does not exist in " + getSectionName(secIdx) + "."; return; }
     var maxSeat = getSeatsForRow(secIdx, rowIdx);
@@ -2640,7 +2898,7 @@ document.addEventListener("DOMContentLoaded", function(){
 
   function clearSeatHighlight(silent) {
     var inner = $("seatingPlanFullInner"); if (inner) inner.querySelectorAll(".seat-found").forEach(function(el) { el.classList.remove("seat-found"); });
-    if (!silent) { lastFoundSeat = null; var status = $("seatFinderStatus"); if (status) { status.className = "spf-status info"; status.textContent = "Pick a section, row and seat"; } }
+    if (!silent) { lastFoundSeat = null; var status = $("seatFinderStatus"); if (status) { status.className = "spf-status info"; status.textContent = "Pick a block, row and seat"; } }
   }
 
   function rebuildLevelPills() {
@@ -2810,7 +3068,7 @@ document.addEventListener("DOMContentLoaded", function(){
       }
     }
     if (overlaps.length) {
-      text.textContent = "Sections overlap: " + overlaps.join(", ") + " — adjust positions or turn on Auto Layout.";
+      text.textContent = "Blocks overlap: " + overlaps.join(", ") + " — adjust positions or turn on Auto Layout.";
       warning.classList.remove("hidden");
     } else warning.classList.add("hidden");
   }
@@ -2906,7 +3164,6 @@ document.addEventListener("DOMContentLoaded", function(){
     var handle = $("fsRotateHandle"), canvas = $("fsCanvas");
     if (!handle || !canvas || handle._bound) return;
     handle._bound = true;
-
     function start(e) {
       if (selectedSectionIdx === null || seatViewMode) return;
       e.preventDefault(); e.stopPropagation();
@@ -3358,13 +3615,13 @@ document.addEventListener("DOMContentLoaded", function(){
     if (delBtn && !delBtn._bound) {
       delBtn._bound = true;
       delBtn.addEventListener('click', function() {
-        if (selectedSectionIdx === null) { showToast("No section selected", "error", 2500); return; }
+        if (selectedSectionIdx === null) { showToast("No block selected", "error", 2500); return; }
         deleteSection(selectedSectionIdx);
       });
     }
   }
 
-  /* ============ DELETE SECTION ============ */
+  /* ============ DELETE BLOCK ============ */
   function shiftKeyedMap(obj, removedIdx) {
     var out = {};
     Object.keys(obj).forEach(function(k) {
@@ -3378,7 +3635,7 @@ document.addEventListener("DOMContentLoaded", function(){
 
   function deleteSection(idx) {
     var total = parseInt($("totalLevel1").value) || 0;
-    if (total <= 1) { showToast("At least one section is required", "error", 3000); return; }
+    if (total <= 1) { showToast("At least one block is required", "error", 3000); return; }
     var name = getSectionName(idx);
     if (!confirm('Delete "' + name + '"? This cannot be undone.')) return;
 
@@ -3420,7 +3677,7 @@ document.addEventListener("DOMContentLoaded", function(){
     calculateCapacity(); updateTierCountOptions(); updateRevenueCalculator(); updateTierSummary();
     renderSeatingPlan(); updateTableSummary();
     if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
-    showToast('Section "' + name + '" deleted', "success", 2500);
+    showToast('Block "' + name + '" deleted', "success", 2500);
   }
 
   function renderFullscreen() {
@@ -3511,6 +3768,10 @@ document.addEventListener("DOMContentLoaded", function(){
           style: cc.style || "curved",
           linkSectionIdx: (cc.linkSectionIdx === undefined ? null : cc.linkSectionIdx),
           linkSectionName: (cc.linkSectionIdx !== null && cc.linkSectionIdx !== undefined) ? getSectionName(cc.linkSectionIdx) : null,
+          arcSeatSpacingPx: clampInt($("cornerArcSeatSpacing") ? $("cornerArcSeatSpacing").value : 22, 1, 120, 22),
+          arcRowSpacingPx: clampInt($("cornerArcRowSpacing") ? $("cornerArcRowSpacing").value : 22, 1, 120, 22),
+          dockSide: $("cornerDockSide") ? $("cornerDockSide").value : "left",
+          dockGapPx: clampInt($("cornerDockGap") ? $("cornerDockGap").value : 8, 0, 80, 8),
           totalSeats: cornerSeatCount(s)
         };
         sections.push(base);
@@ -3577,10 +3838,10 @@ document.addEventListener("DOMContentLoaded", function(){
   function exportCsv() {
     var name = $("eventName").value || "Untitled Event"; var lines;
     if (tableMode) {
-      lines = ["Section,Level,TableRow,TableIndex,Shape,Width(cm),Length(cm),Spacing(cm),Chairs,Tier,X,Y,Scale,Rotation"];
+      lines = ["Block,Level,TableRow,TableIndex,Shape,Width(cm),Length(cm),Spacing(cm),Chairs,Tier,X,Y,Scale,Rotation"];
       buildSectionsData().forEach(function(sec) { if (!sec.tables) return; sec.tables.forEach(function(t) { lines.push(['"' + sec.name + '"', '"' + (sec.level||"") + '"', t.row, t.table, t.shape, t.widthCm, t.lengthCm, t.spacingCm, t.chairs, t.tier, sec.x, sec.y, sec.scale, sec.rotation].join(",")); }); });
     } else {
-      lines = ["Section,Level,Type,Row,Seat,Tier,X,Y,Scale,Rotation"];
+      lines = ["Block,Level,Type,Row,Seat,Tier,X,Y,Scale,Rotation"];
       buildSectionsData().forEach(function(sec) {
         if (sec.mode === "corner" && sec.corner) {
           var cc = sec.corner;
@@ -3684,10 +3945,8 @@ document.addEventListener("DOMContentLoaded", function(){
     else badge.textContent = "Gap every " + seatGapEvery + " seats · " + seatGapSize + "× width";
   }
 
-  /* ============ SEAT VIEW MODE ============ */
   function applySeatViewMode() {
     document.body.classList.toggle("seat-view-mode", seatViewMode);
-
     var labels = [
       ["toggleSeatView", seatViewMode ? "👁 Seat View ON" : "👁 Seat View"],
       ["fsToggleSeatView", seatViewMode ? "👁 Seats Only ON" : "👁 Seats Only"],
@@ -3698,7 +3957,6 @@ document.addEventListener("DOMContentLoaded", function(){
       el.textContent = pair[1];
       el.classList.toggle("active", seatViewMode);
     });
-
     updateRotateHandle();
   }
 
@@ -3790,7 +4048,7 @@ document.addEventListener("DOMContentLoaded", function(){
     var lowest = getActiveTiers()[getActiveTiers().length - 1] || "cyan";
     if (sum === defaultRows) s.textContent = "✓ Perfect — " + sum + " rows assigned.";
     else if (sum < defaultRows) s.textContent = "Assigned " + sum + ". Rows beyond default to " + getTierLabel(lowest) + ".";
-    else s.textContent = "Sum " + sum + " (extras ignored per section).";
+    else s.textContent = "Sum " + sum + " (extras ignored per block).";
   }
 
   var sge = $("seatGapEvery");
@@ -3888,14 +4146,15 @@ document.addEventListener("DOMContentLoaded", function(){
   $("sectionNameInput").addEventListener("input", function() { setSectionName(currentEditingSection, this.value); rebuildSectionTabs(); renderSeatingPlan(); updateTableValidation(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
   $("sectionLevelSelect").addEventListener("change", function() { setSectionPos(currentEditingSection, "levelId", parseInt(this.value)); renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
 
-  /* ============ CORNER SECTION EVENT WIRING ============ */
+  /* ============ CORNER BLOCK EVENT WIRING ============ */
   $("sectionKindSelect").addEventListener("change", function() {
     setSectionKind(currentEditingSection, this.value);
     refreshSectionInputs();
     calculateCapacity(); updateTierCountOptions(); updateRevenueCalculator();
     rebuildRowOverrides(); renderSeatingPlan(); rebuildSectionTabs();
     if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
-    showToast("Section type: " + this.value, "info", 1800);
+    updateCornerFitHint();
+    showToast("Block type: " + this.value, "info", 1800);
   });
 
   ["cornerHSeats","cornerVSeats","cornerVRows"].forEach(function(id) {
@@ -3908,6 +4167,7 @@ document.addEventListener("DOMContentLoaded", function(){
       $("cornerSeatBadge").textContent = "Corner total: " + cornerSeatCount(idx) + " seats";
       calculateCapacity(); updateTierCountOptions(); updateRevenueCalculator(); renderSeatingPlan();
       if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+      updateCornerFitHint();
     });
   });
 
@@ -3917,6 +4177,7 @@ document.addEventListener("DOMContentLoaded", function(){
     c.style = this.value;
     renderSeatingPlan();
     if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+    updateCornerFitHint();
     showToast("Corner shape: " + this.value, "info", 1600);
   });
 
@@ -3929,11 +4190,34 @@ document.addEventListener("DOMContentLoaded", function(){
     renderSeatingPlan();
     rebuildSectionTabs();
     if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+    updateCornerFitHint();
     var label = c.linkSectionIdx === null ? "own distribution" : getSectionName(c.linkSectionIdx);
     showToast("Corner tiers now follow: " + label, "success", 2000);
   });
 
-  /* ============ SEAT VIEW TOGGLE WIRING ============ */
+  /* ============ FIT TO STANDARD ============ */
+  $("fitToStandardBtn").addEventListener("click", function() {
+    fitCornerToStandard();
+  });
+
+  ["cornerArcSeatSpacing","cornerArcRowSpacing","cornerAutoSeatW","cornerDockSide","cornerDockGap"].forEach(function(id) {
+    var el = $(id); if (!el) return;
+    el.addEventListener("input", function() {
+      renderSeatingPlan();
+      if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+    });
+    el.addEventListener("change", function() {
+      renderSeatingPlan();
+      if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+    });
+  });
+
+  ["sectionKindSelect","cornerLinkSection"].forEach(function(id) {
+    var el = $(id); if (!el) return;
+    el.addEventListener("change", updateCornerFitHint);
+  });
+
+  /* ============ SEAT VIEW TOGGLE ============ */
   ["toggleSeatView","fsToggleSeatView","spToggleSeatView"].forEach(function(id) {
     var btn = $(id);
     if (!btn) return;
@@ -4027,7 +4311,7 @@ document.addEventListener("DOMContentLoaded", function(){
   $("fsSectionSpacing").addEventListener("input", function() { var v = Math.max(0, Math.min(500, parseInt(this.value) || 0)); sectionSpacingPx = v; if (autoLayoutEnabled) renderFullscreen(); });
   $("fsSectionSpacing").addEventListener("change", function() { var v = Math.max(0, Math.min(500, parseInt(this.value) || 40)); this.value = v; sectionSpacingPx = v; if (autoLayoutEnabled) renderFullscreen(); });
   $("fsResetView").addEventListener("click", function() {
-    if (!confirm("Reset all section positions, scales and rotations?")) return;
+    if (!confirm("Reset all block positions, scales and rotations?")) return;
     sectionPositions = {}; autoLayoutEnabled = true;
     autoLayoutAxis = tableMode ? "vertical" : "horizontal";
     twoPointMode = false;
@@ -4049,7 +4333,7 @@ document.addEventListener("DOMContentLoaded", function(){
   $("closeSeatingPlanFull").addEventListener("click", function() { $("seatingPlanOverlay").classList.remove("open"); document.body.style.overflow = ""; });
 
   $("clearAllOverrides").addEventListener("click", function() {
-    if (!confirm("Clear all section overrides, canvas elements, and reset positions?")) return;
+    if (!confirm("Clear all block overrides, canvas elements, and reset positions?")) return;
     sectionRowOverrides = {}; sectionRowCounts = {}; sectionNames = {};
     sectionTierOverrides = {}; sectionPositions = {}; sectionTableRows = {};
     sectionKinds = {}; cornerConfigs = {};
@@ -4142,6 +4426,7 @@ document.addEventListener("DOMContentLoaded", function(){
   updateInsertToolUI();
   applyPlanFeatures();
   applySeatViewMode();
+  updateCornerFitHint();
 });
 })();
 </script>
