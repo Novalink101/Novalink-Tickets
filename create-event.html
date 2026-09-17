@@ -359,6 +359,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .layout-legend .lg-swatch.cyan { background: var(--tier-cyan); }
 .layout-legend .lg-swatch.tier5 { background: var(--tier-tier5); }
 .layout-legend .lg-swatch.tier6 { background: var(--tier-tier6); }
+.layout-legend .lg-swatch.staff { background: #dc2626; }
 
 /* ========== CORNER SECTIONS ========== */
 .fs-corner-rows { display: flex; flex-direction: column; gap: 2px; align-items: flex-start; }
@@ -494,6 +495,25 @@ body.seat-view-mode .corner-curve-seat.fs-seat {
 }
 body.seat-view-mode .corner-curve-wrap { background: transparent !important; }
 
+/* ========== STAFF SEAT MODE ========== */
+body.staff-seat-mode .row-seat,
+body.staff-seat-mode .corner-curve-seat {
+  cursor: pointer !important;
+}
+body.staff-seat-mode .row-seat:hover,
+body.staff-seat-mode .corner-curve-seat:hover {
+  outline: 2px solid #fff;
+  outline-offset: 2px;
+  transform: scale(1.2);
+}
+.row-seat.staff-seat,
+.corner-curve-seat.staff-seat {
+  background: #dc2626 !important;
+  color: #ffffff !important;
+  border: 1px solid #991b1b;
+  box-shadow: 0 0 6px rgba(220,38,38,0.6);
+}
+
 .fullscreen-overlay { position: fixed; inset: 0; background: #0a0f14; z-index: 9999; display: none; flex-direction: column; padding: 16px; }
 .fullscreen-overlay.open { display: flex; }
 .fs-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; color: #fff; gap: 10px; flex-wrap: wrap; }
@@ -504,6 +524,7 @@ body.seat-view-mode .corner-curve-wrap { background: transparent !important; }
 .fs-btn:hover { background: #00FFFF; color: #04161c; border-color: #00FFFF; }
 .fs-btn-close:hover { background: #dc2626; color: #fff; border-color: #dc2626; }
 .fs-btn.active { background: #00FFFF; color: #04161c; border-color: #00FFFF; }
+.fs-btn.staff-active { background: #dc2626; color: #fff; border-color: #dc2626; box-shadow: 0 0 10px rgba(220,38,38,0.6); }
 .fs-field { display: inline-flex; align-items: center; gap: 6px; font-size: 11.5px; font-weight: 700; color: rgba(255,255,255,0.85); }
 .fs-field label { margin: 0; font-size: 10.5px; text-transform: uppercase; letter-spacing: 0.06em; }
 .fs-field input { width: 62px; padding: 5px 8px; background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); border-radius: 6px; color: #fff; font-family: inherit; font-weight: 700; font-size: 11.5px; text-align: center; }
@@ -1357,6 +1378,7 @@ body.seat-view-mode .corner-curve-wrap { background: transparent !important; }
       <button type="button" class="fs-btn active" id="fsToggleGrid">Grid</button>
       <button type="button" class="fs-btn" id="fsResetView">↺ Reset</button>
       <button type="button" class="fs-btn" id="fsToggleSeatView" title="Hide block box chrome — show only seats and arc">👁 Seats Only</button>
+      <button type="button" class="fs-btn" id="fsToggleStaffSeat" title="Click seats to assign them as Staff (Red)">🔴 Staff Seat Mode</button>
       <div class="fs-tool-group" title="Pick a tool, then click the canvas to place it">
         <span class="fs-tool-label">Insert</span>
         <button type="button" class="fs-tool-btn" id="fsInsertRect"   title="Rectangle">▭</button>
@@ -1403,6 +1425,7 @@ body.seat-view-mode .corner-curve-wrap { background: transparent !important; }
     <div class="sp-actions">
       <span class="sp-info" id="spSummary" style="color:rgba(255,255,255,0.7);font-size:11.5px;font-weight:700;"></span>
       <button type="button" class="fs-btn" id="spToggleSeatView" title="Hide block chrome — show only seats and arc">👁 Seats Only</button>
+      <button type="button" class="fs-btn" id="spToggleStaffSeat" title="Click seats to assign them as Staff (Red)">🔴 Staff Seat Mode</button>
       <button type="button" class="fs-btn fs-btn-close" id="closeSeatingPlanFull">✕ Close</button>
     </div>
   </div>
@@ -1460,6 +1483,9 @@ var ticketFlipped = false;
 var sectionKinds = {};
 var cornerConfigs = {};
 var seatViewMode = false;
+var staffSeatMode = false;
+var staffSeats = {}; // Key format: "sectionIdx:rowIdx:seatNum" -> true
+var selectedStaffSeat = null;
 
 var twoPointMode = false;
 var pointA = { x: 200, y: 480 };
@@ -1481,7 +1507,15 @@ var insertTool = null;
 var TIER_KEYS = ["black", "gold", "silver", "cyan", "tier5", "tier6"];
 var TIER_DEFAULTS = { black: "#1a202c", gold: "#ecc94b", silver: "#cbd5e1", cyan: "#00FFFF", tier5: "#a855f7", tier6: "#f472b6" };
 var TIER_DEFAULT_NAMES = { black: "Elite", gold: "VIP", silver: "Silver", cyan: "Standard", tier5: "Platinum", tier6: "Diamond" };
-var TIER_COLORS = Object.assign({}, TIER_DEFAULTS);
+// Strict color palette
+var TIER_COLORS = {
+  black: "#1a202c",
+  gold: "#ecc94b",
+  silver: "#cbd5e1",
+  cyan: "#00FFFF",
+  tier5: "#a855f7",
+  tier6: "#f472b6"
+};
 var TIER_NAMES = Object.assign({}, TIER_DEFAULT_NAMES);
 var TIER_PRICES = { black: 0, gold: 0, silver: 0, cyan: 0, tier5: 0, tier6: 0 };
 
@@ -1885,9 +1919,10 @@ document.addEventListener("DOMContentLoaded", function(){
   }
   function applyTierColourLock(){
     var editable = FEATURES.editTierColors;
-    document.querySelectorAll(".tier-color-input").forEach(function(inp){ inp.disabled = !editable; });
+    // Strictly disable native color picker to prevent custom colors
+    document.querySelectorAll(".tier-color-input").forEach(function(inp){ inp.disabled = true; });
     var rb = $("resetTierColorsBtn");
-    if (rb) rb.style.display = editable ? "" : "none";
+    if (rb) rb.style.display = "none";
     if (!editable) {
       TIER_KEYS.forEach(function(k){ TIER_COLORS[k] = TIER_DEFAULTS[k]; var el = document.querySelector('.tier-color-input[data-tier="' + k + '"]'); if (el) el.value = TIER_DEFAULTS[k]; });
       applyTierColors();
@@ -2089,6 +2124,8 @@ document.addEventListener("DOMContentLoaded", function(){
   function buildLegend() {
     var legend = document.createElement("div"); legend.className = "layout-legend";
     getActiveTiers().forEach(function(t){ var el = document.createElement("div"); el.className = "lg-item"; el.innerHTML = '<div class="lg-swatch ' + t + '"></div> ' + getTierLabel(t); legend.appendChild(el); });
+    // Add Staff legend item
+    var staffItem = document.createElement("div"); staffItem.className = "lg-item"; staffItem.innerHTML = '<div class="lg-swatch staff"></div> Staff'; legend.appendChild(staffItem);
     return legend;
   }
 
@@ -2293,7 +2330,22 @@ document.addEventListener("DOMContentLoaded", function(){
       var seat = document.createElement("div");
       seat.className = (seatClass || "row-seat") + " " + tier;
       seat.textContent = (s + 1);
-      if (seatClass !== 'fs-seat') seat.dataset.seatNum = (s + 1);
+      if (seatClass !== 'fs-seat') {
+        seat.dataset.seatNum = (s + 1);
+        seat.dataset.sectionIdx = sectionIdx;
+        seat.dataset.rowIdx = rowIdx;
+        // Check if staff seat
+        var key = sectionIdx + ":" + rowIdx + ":" + (s+1);
+        if (staffSeats[key]) {
+          seat.classList.add("staff-seat");
+        }
+        seat.addEventListener("click", function(e) {
+          if (staffSeatMode) {
+            e.stopPropagation();
+            toggleStaffSeat(sectionIdx, rowIdx, s+1, this);
+          }
+        });
+      }
       seatsWrap.appendChild(seat);
       if (doGap && seatGapEvery > 0 && ((s + 1) % seatGapEvery === 0) && (s + 1) < seatCount) {
         var gap = document.createElement("div");
@@ -2303,6 +2355,21 @@ document.addEventListener("DOMContentLoaded", function(){
         seatsWrap.appendChild(gap);
       }
     }
+  }
+
+  function toggleStaffSeat(sectionIdx, rowIdx, seatNum, el) {
+    var key = sectionIdx + ":" + rowIdx + ":" + seatNum;
+    if (staffSeats[key]) {
+      delete staffSeats[key];
+      el.classList.remove("staff-seat");
+      showToast("Seat removed from Staff", "info", 1500);
+    } else {
+      staffSeats[key] = true;
+      el.classList.add("staff-seat");
+      showToast("Seat marked as Staff", "success", 1500);
+    }
+    // If in full screen, re-render to keep everything in sync
+    if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
   }
 
   /* ============ CORNER RENDERERS ============ */
@@ -3965,6 +4032,22 @@ document.addEventListener("DOMContentLoaded", function(){
     updateRotateHandle();
   }
 
+  function applyStaffSeatMode() {
+    document.body.classList.toggle("staff-seat-mode", staffSeatMode);
+    var labels = [
+      ["fsToggleStaffSeat", staffSeatMode ? "🔴 Staff Mode ON" : "🔴 Staff Seat Mode"],
+      ["spToggleStaffSeat", staffSeatMode ? "🔴 Staff Mode ON" : "🔴 Staff Seat Mode"]
+    ];
+    labels.forEach(function(pair) {
+      var el = $(pair[0]); if (!el) return;
+      el.textContent = pair[1];
+      el.classList.toggle("staff-active", staffSeatMode);
+    });
+    // Re-render to update event listeners if necessary
+    renderSeatingPlan();
+    if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+  }
+
   document.querySelectorAll('input[name="plan"]').forEach(function(radio){
     radio.addEventListener("change", function(){
       var card = this.closest(".plan-card"); if (!card) return;
@@ -4028,7 +4111,7 @@ document.addEventListener("DOMContentLoaded", function(){
   }
 
   document.querySelectorAll(".tier-color-input").forEach(function(el){
-    el.addEventListener("input", function(){ if (!FEATURES.editTierColors) return; var t = this.dataset.tier; TIER_COLORS[t] = this.value; applyTierColors(); renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
+    el.addEventListener("input", function(){ /* Disabled - colors are locked */ });
   });
   var resetBtn = $("resetTierColorsBtn");
   if (resetBtn) {
@@ -4235,6 +4318,17 @@ document.addEventListener("DOMContentLoaded", function(){
     });
   });
 
+  /* ============ STAFF SEAT TOGGLE ============ */
+  ["fsToggleStaffSeat","spToggleStaffSeat"].forEach(function(id) {
+    var btn = $(id);
+    if (!btn) return;
+    btn.addEventListener("click", function() {
+      staffSeatMode = !staffSeatMode;
+      applyStaffSeatMode();
+      showToast(staffSeatMode ? "Staff Seat Mode ON — click seats to toggle Red" : "Staff Seat Mode OFF", staffSeatMode ? "success" : "info", 2600);
+    });
+  });
+
   $("sectionRowsInput").addEventListener("input", function() {
     if (tableMode) return;
     var v = parseInt(this.value); if (isNaN(v)) return;
@@ -4343,6 +4437,7 @@ document.addEventListener("DOMContentLoaded", function(){
     sectionTierOverrides = {}; sectionPositions = {}; sectionTableRows = {};
     sectionKinds = {}; cornerConfigs = {};
     canvasElements = []; nextCanvasElementId = 1; expandedElementId = null; lastFoundSeat = null; selectedElementId = null;
+    staffSeats = {};
     levels = [{ id: 0, name: "Ground Floor", color: "#00FFFF", visible: true }];
     nextLevelId = 1; currentEditingSection = 0;
     autoLayoutEnabled = true; autoLayoutAxis = tableMode ? "vertical" : "horizontal";
@@ -4431,6 +4526,7 @@ document.addEventListener("DOMContentLoaded", function(){
   updateInsertToolUI();
   applyPlanFeatures();
   applySeatViewMode();
+  applyStaffSeatMode();
   updateCornerFitHint();
 });
 })();
