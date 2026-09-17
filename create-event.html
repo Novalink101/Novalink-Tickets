@@ -495,19 +495,22 @@ body.seat-view-mode .corner-curve-seat.fs-seat {
 }
 body.seat-view-mode .corner-curve-wrap { background: transparent !important; }
 
-/* ========== STAFF SEAT MODE ========== */
+/* ========== STAFF SEAT MODE (GLOBAL — applies in BOTH views) ========== */
 body.staff-seat-mode .row-seat,
-body.staff-seat-mode .corner-curve-seat {
+body.staff-seat-mode .corner-curve-seat,
+body.staff-seat-mode .fs-seat {
   cursor: pointer !important;
 }
 body.staff-seat-mode .row-seat:hover,
-body.staff-seat-mode .corner-curve-seat:hover {
+body.staff-seat-mode .corner-curve-seat:hover,
+body.staff-seat-mode .fs-seat:hover {
   outline: 2px solid #fff;
   outline-offset: 2px;
   transform: scale(1.2);
 }
 .row-seat.staff-seat,
-.corner-curve-seat.staff-seat {
+.corner-curve-seat.staff-seat,
+.fs-seat.staff-seat {
   background: #dc2626 !important;
   color: #ffffff !important;
   border: 1px solid #991b1b;
@@ -1484,8 +1487,7 @@ var sectionKinds = {};
 var cornerConfigs = {};
 var seatViewMode = false;
 var staffSeatMode = false;
-var staffSeats = {}; // Key format: "sectionIdx:rowIdx:seatNum" -> true
-var selectedStaffSeat = null;
+var staffSeats = {}; // Key format: "sectionIdx:rowIdx:seatNum" -> true — GLOBAL, shared by both views
 
 var twoPointMode = false;
 var pointA = { x: 200, y: 480 };
@@ -2330,22 +2332,21 @@ document.addEventListener("DOMContentLoaded", function(){
       var seat = document.createElement("div");
       seat.className = (seatClass || "row-seat") + " " + tier;
       seat.textContent = (s + 1);
-      if (seatClass !== 'fs-seat') {
-        seat.dataset.seatNum = (s + 1);
-        seat.dataset.sectionIdx = sectionIdx;
-        seat.dataset.rowIdx = rowIdx;
-        // Check if staff seat
-        var key = sectionIdx + ":" + rowIdx + ":" + (s+1);
-        if (staffSeats[key]) {
-          seat.classList.add("staff-seat");
-        }
-        seat.addEventListener("click", function(e) {
-          if (staffSeatMode) {
-            e.stopPropagation();
-            toggleStaffSeat(sectionIdx, rowIdx, s+1, this);
-          }
-        });
+      seat.dataset.seatNum = (s + 1);
+      seat.dataset.sectionIdx = sectionIdx;
+      seat.dataset.rowIdx = rowIdx;
+      // Check if staff seat — same key used by BOTH views
+      var key = sectionIdx + ":" + rowIdx + ":" + (s+1);
+      if (staffSeats[key]) {
+        seat.classList.add("staff-seat");
       }
+      // Attach click handler — works in both views
+      seat.addEventListener("click", function(e) {
+        if (staffSeatMode) {
+          e.stopPropagation();
+          toggleStaffSeat(sectionIdx, rowIdx, s+1, this);
+        }
+      });
       seatsWrap.appendChild(seat);
       if (doGap && seatGapEvery > 0 && ((s + 1) % seatGapEvery === 0) && (s + 1) < seatCount) {
         var gap = document.createElement("div");
@@ -2361,15 +2362,18 @@ document.addEventListener("DOMContentLoaded", function(){
     var key = sectionIdx + ":" + rowIdx + ":" + seatNum;
     if (staffSeats[key]) {
       delete staffSeats[key];
-      el.classList.remove("staff-seat");
       showToast("Seat removed from Staff", "info", 1500);
     } else {
       staffSeats[key] = true;
-      el.classList.add("staff-seat");
       showToast("Seat marked as Staff", "success", 1500);
     }
-    // If in full screen, re-render to keep everything in sync
+    // Immediately toggle the clicked element for instant feedback
+    el.classList.toggle("staff-seat");
+
+    // Re-render ALL active views so the state is perfectly in sync
+    renderSeatingPlan();
     if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+    if ($("seatingPlanOverlay").classList.contains("open")) renderSeatingPlanFull();
   }
 
   /* ============ CORNER RENDERERS ============ */
@@ -4032,6 +4036,7 @@ document.addEventListener("DOMContentLoaded", function(){
     updateRotateHandle();
   }
 
+  // Global staff mode — applies to BOTH views
   function applyStaffSeatMode() {
     document.body.classList.toggle("staff-seat-mode", staffSeatMode);
     var labels = [
@@ -4043,9 +4048,10 @@ document.addEventListener("DOMContentLoaded", function(){
       el.textContent = pair[1];
       el.classList.toggle("staff-active", staffSeatMode);
     });
-    // Re-render to update event listeners if necessary
+    // Re-render ALL views so click handlers and colors refresh consistently
     renderSeatingPlan();
     if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+    if ($("seatingPlanOverlay").classList.contains("open")) renderSeatingPlanFull();
   }
 
   document.querySelectorAll('input[name="plan"]').forEach(function(radio){
@@ -4318,7 +4324,7 @@ document.addEventListener("DOMContentLoaded", function(){
     });
   });
 
-  /* ============ STAFF SEAT TOGGLE ============ */
+  /* ============ STAFF SEAT TOGGLE — global, both views in sync ============ */
   ["fsToggleStaffSeat","spToggleStaffSeat"].forEach(function(id) {
     var btn = $(id);
     if (!btn) return;
@@ -4354,6 +4360,8 @@ document.addEventListener("DOMContentLoaded", function(){
     if (!FEATURES.venueLayout) { showToast("The venue layout editor is available on Premium and Enterprise plans.", "error", 4200); return; }
     $("fullscreenOverlay").classList.add("open"); document.body.style.overflow = "hidden"; renderFullscreen();
     setupSectionDrag(); setupControlsPanel(); setupRotateHandle(); setupShapeRotateHandle(); setupStageDrag(); setupInsertTools(); updateInsertToolUI();
+    // Reapply staff mode so the full screen reflects the current global state
+    applyStaffSeatMode();
   });
   $("closeFullscreen").addEventListener("click", function() {
     $("fullscreenOverlay").classList.remove("open"); document.body.style.overflow = "";
@@ -4428,6 +4436,8 @@ document.addEventListener("DOMContentLoaded", function(){
   $("viewSeatingPlanFull").addEventListener("click", function() {
     if (!FEATURES.seatingPlan) { showToast("Seating plans are not available on the Basic plan.", "error", 4200); return; }
     $("seatingPlanOverlay").classList.add("open"); document.body.style.overflow = "hidden"; lastFoundSeat = null; renderSeatingPlanFull();
+    // Reapply staff mode so the overlay reflects the current global state
+    applyStaffSeatMode();
   });
   $("closeSeatingPlanFull").addEventListener("click", function() { $("seatingPlanOverlay").classList.remove("open"); document.body.style.overflow = ""; });
 
@@ -4532,4 +4542,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-          </html>
+                                                                    </html>
