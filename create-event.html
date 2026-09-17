@@ -379,11 +379,38 @@ h1,h2,h3{line-height:1.15;font-weight:700}
   font-size: 10px; color: var(--text-muted); font-style: italic;
   margin-bottom: 6px;
 }
-.corner-preview-block { display: flex; flex-direction: column; gap: 3px; align-items: flex-start; }
-.corner-preview-block.right { align-items: flex-end; }
-.corner-preview-row { display: flex; gap: 3px; }
-.corner-preview-row.right { justify-content: flex-end; }
-.corner-preview-row.vertical { align-items: center; }
+
+/* ========== CURVED CORNER ========== */
+.corner-curve-wrap {
+  position: relative;
+  display: block;
+  margin: 4px auto 2px;
+}
+.corner-curve-seat {
+  position: absolute;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: ui-monospace, monospace;
+  font-weight: 800;
+  border-radius: 3px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.15);
+}
+.corner-curve-seat.fs-seat { font-size: 6px; border-radius: 2px; box-shadow: none; }
+.corner-curve-seat.row-seat { font-size: 9px; }
+.corner-curve-seat.black  { background: var(--tier-black);  color: var(--tier-black-text); }
+.corner-curve-seat.gold   { background: var(--tier-gold);   color: var(--tier-gold-text); }
+.corner-curve-seat.silver { background: var(--tier-silver); color: var(--tier-silver-text); }
+.corner-curve-seat.cyan   { background: var(--tier-cyan);   color: var(--tier-cyan-text); }
+.corner-curve-seat.tier5  { background: var(--tier-tier5);  color: var(--tier-tier5-text); }
+.corner-curve-seat.tier6  { background: var(--tier-tier6);  color: var(--tier-tier6-text); }
+.corner-linked-badge {
+  display: inline-block; font-size: 8px; font-weight: 900;
+  background: #0a0f14; color: #00FFFF;
+  padding: 1px 5px; border-radius: 3px;
+  margin-left: 4px; letter-spacing: 0.3px;
+  text-transform: uppercase;
+}
 
 .fullscreen-overlay { position: fixed; inset: 0; background: #0a0f14; z-index: 9999; display: none; flex-direction: column; padding: 16px; }
 .fullscreen-overlay.open { display: flex; }
@@ -932,7 +959,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
               </div>
               <div class="form-row-3" style="margin-bottom:8px;">
                 <div class="form-group" style="margin-bottom:0;">
-                  <label for="cornerHSeats" style="font-size:10px;">Top Seats (per row)</label>
+                  <label for="cornerHSeats" style="font-size:10px;">Outer Arc Seats</label>
                   <input type="number" id="cornerHSeats" min="2" max="90" value="10" style="text-align:center;padding:8px;" />
                 </div>
                 <div class="form-group" style="margin-bottom:0;">
@@ -940,8 +967,23 @@ h1,h2,h3{line-height:1.15;font-weight:700}
                   <input type="number" id="cornerVSeats" min="1" max="90" value="4" style="text-align:center;padding:8px;" />
                 </div>
                 <div class="form-group" style="margin-bottom:0;">
-                  <label for="cornerVRows" style="font-size:10px;">Vertical Leg Rows</label>
+                  <label for="cornerVRows" style="font-size:10px;">Curved Rows</label>
                   <input type="number" id="cornerVRows" min="1" max="52" value="6" style="text-align:center;padding:8px;" />
+                </div>
+              </div>
+              <div class="form-row" style="margin-bottom:8px;">
+                <div class="form-group" style="margin-bottom:0;">
+                  <label for="cornerStyle" style="font-size:10px;">Corner Shape</label>
+                  <select id="cornerStyle">
+                    <option value="curved" selected>Curved (quarter arc)</option>
+                    <option value="square">Square L</option>
+                  </select>
+                </div>
+                <div class="form-group" style="margin-bottom:0;">
+                  <label for="cornerLinkSection" style="font-size:10px;">Match Tiers From</label>
+                  <select id="cornerLinkSection">
+                    <option value="">— Own row distribution —</option>
+                  </select>
                 </div>
               </div>
               <div class="section-rows-badge" id="cornerSeatBadge">Corner total: 0 seats</div>
@@ -1428,13 +1470,39 @@ document.addEventListener("DOMContentLoaded", function(){
   function setSectionKind(idx, kind) { if (kind === "standard") delete sectionKinds[idx]; else sectionKinds[idx] = kind; }
   function isCornerSection(idx) { var k = getSectionKind(idx); return k === "corner-left" || k === "corner-right"; }
   function getCornerConfig(idx) {
-    if (!cornerConfigs[idx]) cornerConfigs[idx] = { hSeats: 10, vSeats: 4, vRows: 6 };
+    if (!cornerConfigs[idx]) cornerConfigs[idx] = { hSeats: 10, vSeats: 4, vRows: 6, style: "curved", linkSectionIdx: null };
+    if (!cornerConfigs[idx].style) cornerConfigs[idx].style = "curved";
+    if (cornerConfigs[idx].linkSectionIdx === undefined) cornerConfigs[idx].linkSectionIdx = null;
     return cornerConfigs[idx];
   }
   function cornerSeatCount(idx) {
     var c = getCornerConfig(idx);
     var hRows = getRowCount(idx);
     return (c.hSeats * hRows) + (c.vSeats * c.vRows);
+  }
+
+  /* Get the tier for a corner row — either from own distribution or a linked section */
+  function getCornerTierForRow(cornerIdx, rowIdx, isVertical) {
+    var cfg = getCornerConfig(cornerIdx);
+    var linkIdx = cfg.linkSectionIdx;
+
+    if (linkIdx === null || linkIdx === undefined) {
+      var hRows = getRowCount(cornerIdx);
+      var totalRows = hRows + cfg.vRows;
+      var map = buildRowTierMap(totalRows, cornerIdx);
+      return map[rowIdx] || "cyan";
+    }
+
+    var linkRows = getRowCount(linkIdx);
+    var linkMap = buildRowTierMap(linkRows, linkIdx);
+    if (!linkMap.length) return "cyan";
+
+    var hRowsC = getRowCount(cornerIdx);
+    if (!isVertical) {
+      return linkMap[Math.min(rowIdx, linkMap.length - 1)];
+    }
+    var continueIdx = hRowsC + rowIdx;
+    return linkMap[Math.min(continueIdx, linkMap.length - 1)];
   }
 
   function getDefaultTableCount() { return Math.max(1, Math.min(50, parseInt($("tableCount").value) || 4)); }
@@ -1795,6 +1863,21 @@ document.addEventListener("DOMContentLoaded", function(){
       $("cornerHSeats").value = cc.hSeats;
       $("cornerVSeats").value = cc.vSeats;
       $("cornerVRows").value = cc.vRows;
+      $("cornerStyle").value = cc.style || "curved";
+
+      var linkSel = $("cornerLinkSection");
+      linkSel.innerHTML = '<option value="">— Own row distribution —</option>';
+      var secCount = parseInt($("totalLevel1").value) || 0;
+      for (var si = 0; si < secCount; si++) {
+        if (si === idx) continue;
+        if (isCornerSection(si)) continue;
+        var opt = document.createElement("option");
+        opt.value = si;
+        opt.textContent = getSectionName(si);
+        linkSel.appendChild(opt);
+      }
+      linkSel.value = (cc.linkSectionIdx === null || cc.linkSectionIdx === undefined) ? "" : String(cc.linkSectionIdx);
+
       $("cornerSeatBadge").textContent = "Corner total: " + cornerSeatCount(idx) + " seats";
     }
 
@@ -1913,27 +1996,31 @@ document.addEventListener("DOMContentLoaded", function(){
     return rowEl;
   }
 
-  function buildCornerSeatingBlock(idx, tierForRow, seatClass) {
+  function buildCornerSeatingBlock(idx, tierForRowFn, seatClass) {
     var cfg = getCornerConfig(idx);
+    var style = cfg.style || "curved";
+    if (style === "square") return buildSquareCornerBlock(idx, cfg, seatClass);
+    return buildCurvedCornerBlock(idx, cfg, seatClass);
+  }
+
+  /* ---------- Square L ---------- */
+  function buildSquareCornerBlock(idx, cfg, seatClass) {
     var kind = getSectionKind(idx);
     var alignRight = (kind === "corner-right");
     var hRows = getRowCount(idx);
     var wrap = document.createElement("div");
     wrap.className = "fs-corner-rows";
 
-    // Horizontal leg (full width of L) — top rows
     for (var r = 0; r < hRows; r++) {
-      var rowTier = tierForRow ? tierForRow(r, "h") : "cyan";
+      var rowTier = getCornerTierForRow(idx, r, false);
       wrap.appendChild(buildCornerRow(rowTier, cfg.hSeats, seatClass, false));
     }
-    // Vertical-only rows (bottom of L) — aligned left or right
     var seatPx = (seatClass === "fs-seat") ? 12 : 22;
     for (var v = 0; v < cfg.vRows; v++) {
-      var rowTierV = tierForRow ? tierForRow(hRows + v, "v") : "cyan";
+      var rowTierV = getCornerTierForRow(idx, v, true);
       var rEl = document.createElement("div");
       rEl.className = "fs-corner-row" + (alignRight ? " right" : "");
       if (!alignRight) {
-        // seats on the left
         for (var a = 0; a < cfg.vSeats; a++) {
           var sA = document.createElement("div");
           sA.className = (seatClass || "fs-seat") + " " + rowTierV;
@@ -1957,6 +2044,59 @@ document.addEventListener("DOMContentLoaded", function(){
         }
       }
       wrap.appendChild(rEl);
+    }
+    return wrap;
+  }
+
+  /* ---------- Curved corner (quarter arc) ---------- */
+  function buildCurvedCornerBlock(idx, cfg, seatClass) {
+    var kind = getSectionKind(idx);
+    var isRight = (kind === "corner-right");
+    var isFs = (seatClass === "fs-seat");
+    var seatW = isFs ? 12 : 22;
+    var rowH  = isFs ? 12 : 22;
+
+    var outerSeats = Math.max(2, cfg.hSeats);
+    var rows = Math.max(1, cfg.vRows);
+
+    var R_outer = Math.max(seatW * 2, (2 * outerSeats * seatW) / Math.PI);
+    var R_inner = R_outer - (rows - 1) * rowH;
+    if (R_inner < seatW) R_inner = seatW;
+
+    var boxSize = R_outer;
+
+    var wrap = document.createElement("div");
+    wrap.className = "corner-curve-wrap";
+    wrap.style.width = boxSize + "px";
+    wrap.style.height = boxSize + "px";
+
+    var cx = isRight ? 0 : boxSize;
+    var cy = boxSize;
+
+    for (var r = 0; r < rows; r++) {
+      var R = R_outer - r * rowH;
+      if (R < seatW * 0.8) continue;
+      var arcLen = Math.PI / 2 * R;
+      var seatsInRow = Math.max(1, Math.floor(arcLen / seatW));
+      var rowTier = getCornerTierForRow(idx, r, true);
+
+      for (var j = 0; j < seatsInRow; j++) {
+        var t = (j + 0.5) / seatsInRow;
+        var theta;
+        if (!isRight) theta = -Math.PI / 2 - t * (Math.PI / 2);
+        else          theta = -Math.PI / 2 + t * (Math.PI / 2);
+        var x = cx + R * Math.cos(theta);
+        var y = cy + R * Math.sin(theta);
+
+        var seat = document.createElement("div");
+        seat.className = "corner-curve-seat " + (seatClass || "fs-seat") + " " + rowTier;
+        seat.style.left = (x - seatW / 2) + "px";
+        seat.style.top  = (y - rowH / 2) + "px";
+        seat.style.width = seatW + "px";
+        seat.style.height = rowH + "px";
+        seat.textContent = (j + 1);
+        wrap.appendChild(seat);
+      }
     }
     return wrap;
   }
@@ -2279,7 +2419,12 @@ document.addEventListener("DOMContentLoaded", function(){
 
       var bl = document.createElement("div"); bl.className = "block-label";
       var kindTag = kind === "corner-left" ? " · LEFT CORNER" : (kind === "corner-right" ? " · RIGHT CORNER" : "");
-      bl.textContent = getSectionName(b) + kindTag + " · " + getRowCount(b) + " rows" + (lvl ? " · " + lvl.name : "");
+      var linkTag = "";
+      if (isCornerSection(b)) {
+        var cfg2 = getCornerConfig(b);
+        if (cfg2.linkSectionIdx !== null && cfg2.linkSectionIdx !== undefined) linkTag = " ← " + getSectionName(cfg2.linkSectionIdx);
+      }
+      bl.textContent = getSectionName(b) + kindTag + linkTag + " · " + getRowCount(b) + " rows" + (lvl ? " · " + lvl.name : "");
       blockEl.appendChild(bl);
 
       var stageLine = document.createElement("div"); stageLine.className = "stage-line"; stageLine.textContent = stageName; blockEl.appendChild(stageLine);
@@ -2287,12 +2432,11 @@ document.addEventListener("DOMContentLoaded", function(){
       if (isCornerSection(b)) {
         var cfg = getCornerConfig(b);
         var hRows = getRowCount(b);
-        var mapC = buildRowTierMap(hRows + cfg.vRows, b);
         var hint = document.createElement("div");
         hint.className = "corner-hint";
-        hint.textContent = "Top " + cfg.hSeats + " seats × " + hRows + " rows · Leg " + cfg.vSeats + " seats × " + cfg.vRows + " rows";
+        hint.textContent = (cfg.style || "curved") + " · " + cfg.hSeats + " outer × " + hRows + " rows · " + cfg.vSeats + " leg × " + cfg.vRows + " rows";
         blockEl.appendChild(hint);
-        var cornerWrap = buildCornerSeatingBlock(b, function(r) { return mapC[r] || "cyan"; }, "row-seat");
+        var cornerWrap = buildCornerSeatingBlock(b, null, "row-seat");
         blockEl.appendChild(cornerWrap);
       } else {
         var rowCount = getRowCount(b); var map = buildRowTierMap(rowCount, b);
@@ -2461,6 +2605,12 @@ document.addEventListener("DOMContentLoaded", function(){
       var badge = document.createElement("span"); badge.className = "fs-corner-badge";
       badge.textContent = (kind === "corner-left" ? "L-L" : "L-R");
       title.appendChild(badge);
+      var cfgB = getCornerConfig(sectionIdx);
+      if (cfgB.linkSectionIdx !== null && cfgB.linkSectionIdx !== undefined) {
+        var lk = document.createElement("span"); lk.className = "corner-linked-badge";
+        lk.textContent = "← " + getSectionName(cfgB.linkSectionIdx);
+        title.appendChild(lk);
+      }
     }
     el.appendChild(title);
 
@@ -2478,11 +2628,10 @@ document.addEventListener("DOMContentLoaded", function(){
     } else if (isCorner) {
       var cfg = getCornerConfig(sectionIdx);
       var hRows = getRowCount(sectionIdx);
-      loc.textContent = (lv ? lv.name.toUpperCase() : "—") + " · CORNER " + (kind === "corner-left" ? "LEFT" : "RIGHT") + " · " + cfg.hSeats + "×" + hRows + " + " + cfg.vSeats + "×" + cfg.vRows;
+      loc.textContent = (lv ? lv.name.toUpperCase() : "—") + " · CORNER " + (kind === "corner-left" ? "LEFT" : "RIGHT") + " · " + (cfg.style || "curved");
       if (lv) loc.style.color = lv.color;
       el.appendChild(loc); el.appendChild(stage);
-      var mapC = buildRowTierMap(hRows + cfg.vRows, sectionIdx);
-      var cornerWrap = buildCornerSeatingBlock(sectionIdx, function(r) { return mapC[r] || "cyan"; }, "fs-seat");
+      var cornerWrap = buildCornerSeatingBlock(sectionIdx, null, "fs-seat");
       el.appendChild(cornerWrap);
     } else {
       var rowCount = getRowCount(sectionIdx); var map = buildRowTierMap(rowCount, sectionIdx);
@@ -3185,6 +3334,15 @@ document.addEventListener("DOMContentLoaded", function(){
     sectionKinds = shiftKeyedMap(sectionKinds, idx);
     cornerConfigs = shiftKeyedMap(cornerConfigs, idx);
 
+    // Fix any corner link indices that now point past the deleted section
+    Object.keys(cornerConfigs).forEach(function(k) {
+      var cfg = cornerConfigs[k];
+      if (cfg && cfg.linkSectionIdx !== null && cfg.linkSectionIdx !== undefined) {
+        if (cfg.linkSectionIdx === idx) cfg.linkSectionIdx = null;
+        else if (cfg.linkSectionIdx > idx) cfg.linkSectionIdx = cfg.linkSectionIdx - 1;
+      }
+    });
+
     var newTotal = total - 1;
     $("totalLevel1").value = newTotal;
     if (currentEditingSection >= newTotal) currentEditingSection = Math.max(0, newTotal - 1);
@@ -3285,6 +3443,9 @@ document.addEventListener("DOMContentLoaded", function(){
           vSeats: cc.vSeats,
           vRows: cc.vRows,
           hRows: getRowCount(s),
+          style: cc.style || "curved",
+          linkSectionIdx: (cc.linkSectionIdx === undefined ? null : cc.linkSectionIdx),
+          linkSectionName: (cc.linkSectionIdx !== null && cc.linkSectionIdx !== undefined) ? getSectionName(cc.linkSectionIdx) : null,
           totalSeats: cornerSeatCount(s)
         };
         sections.push(base);
@@ -3667,6 +3828,28 @@ document.addEventListener("DOMContentLoaded", function(){
     });
   });
 
+  $("cornerStyle").addEventListener("change", function() {
+    var idx = currentEditingSection;
+    var c = getCornerConfig(idx);
+    c.style = this.value;
+    renderSeatingPlan();
+    if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+    showToast("Corner shape: " + this.value, "info", 1600);
+  });
+
+  $("cornerLinkSection").addEventListener("change", function() {
+    var idx = currentEditingSection;
+    var c = getCornerConfig(idx);
+    var v = this.value;
+    c.linkSectionIdx = (v === "") ? null : parseInt(v, 10);
+    updateRevenueCalculator();
+    renderSeatingPlan();
+    rebuildSectionTabs();
+    if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
+    var label = c.linkSectionIdx === null ? "own distribution" : getSectionName(c.linkSectionIdx);
+    showToast("Corner tiers now follow: " + label, "success", 2000);
+  });
+
   $("sectionRowsInput").addEventListener("input", function() {
     if (tableMode) return;
     var v = parseInt(this.value); if (isNaN(v)) return;
@@ -3866,4 +4049,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-  </html>
+                                                                                                                                                                   </html>
