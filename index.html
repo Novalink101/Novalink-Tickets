@@ -8,6 +8,9 @@
 <title>Novalink - Digital Event Cards</title>
 
 <script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 
 <style>
 :root{
@@ -175,7 +178,7 @@ h3{font-size:1.2rem}
 
 .compact-grid{ display:grid; gap:14px; grid-template-columns:repeat(auto-fill,minmax(260px,1fr)); }
 
-.event-card{flex:0 0 280px;scroll-snap-align:start;background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);transition:transform 0.3s var(--ease-smooth),box-shadow 0.3s var(--ease-smooth),border-color 0.3s ease;display:flex;flex-direction:column}
+.event-card{flex:0 0 280px;scroll-snap-align:start;background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);transition:transform 0.3s var(--ease-smooth),box-shadow 0.3s var(--ease-smooth),border-color 0.3s ease;display:flex;flex-direction:column;position:relative}
 .event-card:hover{transform:translateY(-6px) scale(1.02);box-shadow:0 16px 32px rgba(10,15,20,0.12);border-color:var(--cyan-500)}
 .event-card-img{height:150px;background-size:cover;background-position:center;position:relative;overflow:hidden}
 .event-card-img::after{content:'';position:absolute;inset:0;background:linear-gradient(to top, rgba(10,15,20,0.6), transparent);opacity:0;transition:opacity 0.3s ease}
@@ -188,6 +191,9 @@ h3{font-size:1.2rem}
 .event-card-meta i{width:13px;height:13px}
 .event-card-price{margin-top:auto;padding-top:6px;font-size:13.5px;font-weight:700;color:#0f172a}
 .event-card-price span{color:var(--cyan-600)}
+.event-card-delete{position:absolute;top:10px;right:10px;z-index:5;background:#dc2626;color:#fff;border:none;width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 12px rgba(220,38,38,0.4);transition:transform .2s ease, background .2s ease}
+.event-card-delete:hover{transform:scale(1.12);background:#b91c1c}
+.event-card-delete i{width:15px;height:15px}
 
 .package-card{flex:0 0 280px;scroll-snap-align:start;background:var(--surface);border:2px solid var(--border);border-radius:var(--radius);padding:22px 20px;display:flex;flex-direction:column;gap:12px;transition:all 0.3s var(--ease-smooth);position:relative;overflow:hidden}
 .package-card:hover{border-color:var(--cyan-500);transform:translateY(-6px);box-shadow:0 16px 40px rgba(6,182,212,0.15)}
@@ -806,99 +812,49 @@ h3{font-size:1.2rem}
 'use strict';
 
 /* ============================================================
-   PURE FRONT-END BUILD
-   No Firebase, no backend, no network calls.
-   Accounts + session + events are stored in localStorage.
+   NOVALINK — Firebase-backed index.html
+   - Events stored in Firestore "events" collection
+   - Visible to everyone (public read)
+   - Only creator (ownerUid) or admin can delete
+   - Accounts via Firebase Auth (email/password + Google)
    ============================================================ */
 
-var SESSION_KEY = "novalink_session";
-var USERS_KEY   = "novalink_users";
-var EVENTS_KEY  = "novalink_events";
-var ADMIN_EMAILS = ["admin@novalink.co.za"];
+/* ===== FIREBASE CONFIG ===== */
+var firebaseConfig = {
+  apiKey: "AIzaSyDSnns131jOlBXAqKo6qy7lTW4Rij-1oWU",
+  authDomain: "novalink-864cf.firebaseapp.com",
+  projectId: "novalink-864cf",
+  storageBucket: "novalink-864cf.firebasestorage.app",
+  messagingSenderId: "602780280140",
+  appId: "1:602780280140:web:5d9ff2351e5a7d5e66dbe9"
+};
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+var db   = firebase.firestore();
+var auth = firebase.auth();
+var EVENTS_COLLECTION = "events";
 
+/* ===== ADMIN EMAIL (must match Firestore rules) ===== */
+var ADMIN_EMAILS = ["nylnathan340@gmail.com"];
+
+/* ===== STATE ===== */
 var currentUser = null;
 var isAdmin = false;
 var authMode = "signin";
 var carouselTimer = null;
 var carouselIndex = 0;
+var eventsUnsub = null;
 
-/* ---------- Static fallback demo events (used only if no saved events exist) ---------- */
-var DEMO_EVENTS = [
-  {
-    id: "demo-1",
-    eventName: "Sunset Rooftop Sessions",
-    startDate: "2025-12-06",
-    startTime: "18:00",
-    city: "Johannesburg",
-    cost: "R150",
-    totalAttendees: 220,
-    source: "demo"
-  },
-  {
-    id: "demo-2",
-    eventName: "Cape Town Jazz Gala",
-    startDate: "2025-12-13",
-    startTime: "19:30",
-    city: "Cape Town",
-    cost: "R450",
-    totalAttendees: 480,
-    source: "demo"
-  },
-  {
-    id: "demo-3",
-    eventName: "Durban Beach Festival",
-    startDate: "2026-01-10",
-    startTime: "12:00",
-    city: "Durban",
-    cost: "R250",
-    totalAttendees: 1200,
-    source: "demo"
-  },
-  {
-    id: "demo-4",
-    eventName: "Pretoria Tech Conference",
-    startDate: "2026-02-21",
-    startTime: "08:30",
-    city: "Pretoria",
-    cost: "Free",
-    totalAttendees: 350,
-    source: "demo"
-  },
-  {
-    id: "demo-5",
-    eventName: "Winelands Food & Wine Fair",
-    startDate: "2026-03-14",
-    startTime: "11:00",
-    city: "Stellenbosch",
-    cost: "R320",
-    totalAttendees: 800,
-    source: "demo"
-  },
-  {
-    id: "demo-6",
-    eventName: "Soweto Marathon Expo",
-    startDate: "2026-04-05",
-    startTime: "07:00",
-    city: "Soweto",
-    cost: "R100",
-    totalAttendees: 2500,
-    source: "demo"
-  }
-];
-
-/* ---------- Helpers ---------- */
+/* ===== HELPERS ===== */
 function $(id){ return document.getElementById(id); }
 function icon(n){ return '<i data-lucide="'+n+'"></i>'; }
 function refreshIcons(){ if(window.lucide) lucide.createIcons(); }
 function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
-function uid(){ return "u_" + Date.now().toString(36) + Math.random().toString(36).slice(2, 8); }
 
 function initialsFrom(name,email){
   if(name && name.trim()){ var p = name.trim().split(/\s+/); if(p.length>=2) return (p[0][0]+p[1][0]).toUpperCase(); return p[0].slice(0,2).toUpperCase(); }
   if(email) return email.slice(0,2).toUpperCase();
   return "??";
 }
-
 function showToast(msg,type,ms){
   type = type || "info"; ms = ms || 3000;
   var t = $("toast");
@@ -911,101 +867,17 @@ function showToast(msg,type,ms){
   showToast._t = setTimeout(function(){ t.classList.remove("show"); }, ms);
 }
 
-/* ---------- Local "database" ---------- */
-function getUsers(){
-  try { return JSON.parse(localStorage.getItem(USERS_KEY) || "[]"); }
-  catch(e){ return []; }
-}
-function saveUsers(list){
-  try { localStorage.setItem(USERS_KEY, JSON.stringify(list)); } catch(e){}
-}
-function findUserByEmail(email){
-  email = String(email || "").toLowerCase();
-  var users = getUsers();
-  for(var i=0;i<users.length;i++){ if(users[i].email.toLowerCase() === email) return users[i]; }
-  return null;
-}
-function saveSession(u){
-  try {
-    if(u) localStorage.setItem(SESSION_KEY, JSON.stringify({ uid: u.uid, email: u.email }));
-    else localStorage.removeItem(SESSION_KEY);
-  } catch(e){}
-}
-function readSession(){
-  try { return JSON.parse(localStorage.getItem(SESSION_KEY) || "null"); }
-  catch(e){ return null; }
-}
-
-/* ---------- Events storage (created by create-event.html) ---------- */
-function getStoredEvents(){
-  try {
-    var raw = localStorage.getItem(EVENTS_KEY);
-    if(!raw) return [];
-    var list = JSON.parse(raw);
-    return Array.isArray(list) ? list : [];
-  } catch(e){ return []; }
-}
-function sortEventsByDate(list){
-  return list.slice().sort(function(a,b){
-    var da = a.startDate || "", db = b.startDate || "";
-    if(da && db) return new Date(da) - new Date(db);
-    if(da) return -1;
-    if(db) return 1;
-    return 0;
-  });
-}
-function getFeaturedEvents(){
-  var saved = getStoredEvents();
-  // Saved events (newest first) come first, then demo fallback events.
-  var savedSorted = saved.slice().sort(function(a,b){
-    var ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-    var tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-    return tb - ta;
-  });
-  var combined = savedSorted.concat(DEMO_EVENTS);
-  // Limit to 18 cards to keep the strip snappy
-  return combined.slice(0, 18);
-}
-
-/* ---------- Auth actions ---------- */
-function signUp(name, email, password){
-  if(findUserByEmail(email)) throw new Error("An account with that email already exists.");
-  var users = getUsers();
-  var user = {
-    uid: uid(),
-    name: name || email.split("@")[0],
-    email: email,
-    password: password,
-    createdAt: new Date().toISOString()
-  };
-  users.push(user);
-  saveUsers(users);
-  return user;
-}
-function signIn(email, password){
-  var user = findUserByEmail(email);
-  if(!user) throw new Error("No account found with that email.");
-  if(user.password !== password) throw new Error("Incorrect password.");
-  return user;
-}
-function signOutUser(){ currentUser = null; isAdmin = false; saveSession(null); applyAuthState(null); }
-function deleteUserAccount(u){
-  var users = getUsers().filter(function(x){ return x.uid !== u.uid; });
-  saveUsers(users);
-  saveSession(null);
-}
-
-/* ---------- UI state ---------- */
+/* ===== AUTH STATE UI ===== */
 function applyAuthState(user){
   currentUser = user;
-  isAdmin = !!(user && ADMIN_EMAILS.indexOf(String(user.email).toLowerCase()) !== -1);
+  isAdmin = !!(user && ADMIN_EMAILS.map(function(e){return e.toLowerCase();}).indexOf(String(user.email).toLowerCase()) !== -1);
 
   if(user){
-    var display = user.name || user.email.split("@")[0];
+    var display = user.displayName || user.email.split("@")[0];
     $("signInBtn").style.display = "none";
     $("userMenuBtn").style.display = "inline-flex";
     $("userName").textContent = display;
-    $("userAvatar").textContent = initialsFrom(user.name, user.email);
+    $("userAvatar").textContent = initialsFrom(user.displayName, user.email);
     $("ddName").textContent = display;
     $("ddEmail").textContent = user.email;
     $("adminBadge").style.display = isAdmin ? "inline-block" : "none";
@@ -1020,121 +892,68 @@ function applyAuthState(user){
   refreshIcons();
 }
 
-/* ---------- Scroll reveal ---------- */
-function initScrollReveal() {
-  var reveals = document.querySelectorAll(".reveal");
-  if (!reveals.length || !("IntersectionObserver" in window)) {
-    reveals.forEach(function(el){ el.classList.add("active"); });
-    return;
-  }
-  var observer = new IntersectionObserver(function(entries) {
-    entries.forEach(function(entry) {
-      if (entry.isIntersecting) {
-        entry.target.classList.add("active");
-        observer.unobserve(entry.target);
-      }
-    });
-  }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
-  reveals.forEach(function(el) { observer.observe(el); });
-}
-
-function initHeaderScroll() {
-  var header = document.querySelector(".site-header");
-  window.addEventListener("scroll", function() {
-    if (window.scrollY > 20) { header.classList.add("scrolled"); } else { header.classList.remove("scrolled"); }
-  }, { passive: true });
-}
-
-function startCarousel(){
-  var slides = document.querySelectorAll(".carousel-slide");
-  var dots = document.querySelectorAll(".carousel-dot");
-  if(!slides.length) return;
-  function show(idx){
-    carouselIndex = idx;
-    slides.forEach(function(s, i){ s.classList.toggle("active", i === idx); });
-    dots.forEach(function(d, i){ d.classList.toggle("active", i === idx); });
-  }
-  function restart(){
-    if(carouselTimer) clearInterval(carouselTimer);
-    carouselTimer = setInterval(function(){
-      carouselIndex = (carouselIndex + 1) % slides.length;
-      show(carouselIndex);
-    }, 6000);
-  }
-  dots.forEach(function(dot){
-    dot.addEventListener("click", function(){
-      show(parseInt(dot.dataset.slide, 10));
-      restart();
-    });
-  });
-  restart();
-}
-
-function initTabs(){
-  var buttons = document.querySelectorAll(".tab-btn");
-  var panels = document.querySelectorAll(".tab-panel");
-  buttons.forEach(function(btn){
-    btn.addEventListener("click", function(){
-      var target = btn.dataset.tab;
-      buttons.forEach(function(b){ b.classList.toggle("active", b === btn); });
-      panels.forEach(function(p){ p.classList.toggle("active", p.id === target); });
-      refreshIcons();
-      var activePanel = document.querySelector(".tab-panel.active");
-      if (activePanel) {
-        var reveals = activePanel.querySelectorAll(".reveal");
-        reveals.forEach(function(el) {
-          el.classList.remove("active");
-          void el.offsetWidth;
-          el.classList.add("active");
-        });
-      }
-    });
-  });
-}
-
-/* ---------- Featured events (reads from localStorage, falls back to demo) ---------- */
+/* ===== EVENTS — REALTIME FROM FIRESTORE ===== */
 function formatEventCost(e){
   if(typeof e.cost === "number"){
     if(e.cost <= 0) return "Free";
     return "R" + Number(e.cost).toFixed(2).replace(/\.00$/, "");
   }
-  if(typeof e.cost === "string" && e.cost.trim() !== ""){
-    return e.cost;
-  }
-  if(typeof e.costFormatted === "string" && e.costFormatted.trim() !== ""){
-    return e.costFormatted;
-  }
+  if(typeof e.cost === "string" && e.cost.trim() !== "") return e.cost;
+  if(typeof e.costFormatted === "string" && e.costFormatted.trim() !== "") return e.costFormatted;
   return "Free";
 }
-
 function eventAttendeeCount(e){
   if(typeof e.totalAttendees === "number") return e.totalAttendees;
   if(e.venue && typeof e.venue.totalAttendees === "number") return e.venue.totalAttendees;
   return 0;
 }
-
 function eventCityLabel(e){
   if(e.city) return e.city;
   if(e.venueAddress) return e.venueAddress;
   if(e.venue && e.venue.stage && e.venue.stage.name) return e.venue.stage.name;
   return "Venue";
 }
-
 function eventDateLabel(e){
   var dateStr = e.startDate || "";
   if(e.startTime) dateStr += (dateStr ? " · " : "") + e.startTime;
   if(!dateStr) dateStr = "Date TBA";
   return dateStr;
 }
+function canDeleteEvent(e){
+  if (!currentUser) return false;
+  if (isAdmin) return true;
+  return e.ownerUid && e.ownerUid === currentUser.uid;
+}
 
-function loadFeaturedEvents() {
+function attachEventsListener(){
+  var container = $("eventsScroll");
+  if (!container) return;
+  container.innerHTML = '<p style="color: var(--text-muted); padding: 20px; font-size: 14px;">Loading events…</p>';
+
+  if (eventsUnsub) { try { eventsUnsub(); } catch(e){} }
+
+  eventsUnsub = db.collection(EVENTS_COLLECTION)
+    .orderBy("createdAt", "desc")
+    .limit(30)
+    .onSnapshot(function(snapshot){
+      var events = [];
+      snapshot.forEach(function(doc){
+        var d = doc.data() || {};
+        d.id = doc.id;
+        events.push(d);
+      });
+      renderFeaturedEvents(events);
+    }, function(err){
+      console.error("Events listener error:", err);
+      container.innerHTML = '<p style="color: #991b1b; padding: 20px; font-size: 14px;">Could not load events. ' + esc(err.message) + '</p>';
+    });
+}
+
+function renderFeaturedEvents(events){
   var container = $("eventsScroll");
   if (!container) return;
 
-  var events = getFeaturedEvents();
-  container.innerHTML = "";
-
-  if (!events.length) {
+  if (!events || !events.length) {
     container.innerHTML = '<p style="color: var(--text-muted); padding: 20px; font-size: 14px;">No events yet. Be the first to create one!</p>';
     return;
   }
@@ -1147,7 +966,9 @@ function loadFeaturedEvents() {
     "linear-gradient(135deg, #34d399 0%, #059669 100%)"
   ];
 
-  events.forEach(function(e, idx) {
+  container.innerHTML = "";
+
+  events.forEach(function(e, idx){
     var card = document.createElement("div");
     card.className = "event-card";
     card.style.cursor = "pointer";
@@ -1158,19 +979,23 @@ function loadFeaturedEvents() {
     var costStr = formatEventCost(e);
     var eventName = e.eventName || "Untitled Event";
     var seats = eventAttendeeCount(e);
-    var badge = (e.source === "demo") ? "EVENT" : "NEW";
+    var badge = e.source === "demo" ? "EVENT" : "NEW";
 
-    // Optional custom background image from event payload
     var bgStyle = "background:" + gradient;
-    if (e.heroImage && typeof e.heroImage === "string") {
-      bgStyle = "background-image:url('" + esc(e.heroImage) + "');background-size:cover;background-position:center;";
-    } else if (e.coverImage && typeof e.coverImage === "string") {
-      bgStyle = "background-image:url('" + esc(e.coverImage) + "');background-size:cover;background-position:center;";
+    if (e.heroImage)  bgStyle = "background-image:url('" + esc(e.heroImage) + "');background-size:cover;background-position:center;";
+    else if (e.coverImage) bgStyle = "background-image:url('" + esc(e.coverImage) + "');background-size:cover;background-position:center;";
+
+    var deleteBtnHTML = "";
+    if (canDeleteEvent(e)) {
+      deleteBtnHTML =
+        '<button class="event-card-delete" data-id="' + esc(e.id) + '" title="Delete event">' +
+        '<i data-lucide="trash-2"></i></button>';
     }
 
     card.innerHTML =
       '<div class="event-card-img" style="' + bgStyle + '">' +
         '<span class="event-card-badge">' + esc(badge) + '</span>' +
+        deleteBtnHTML +
       '</div>' +
       '<div class="event-card-body">' +
         '<h3>' + esc(eventName) + '</h3>' +
@@ -1180,20 +1005,42 @@ function loadFeaturedEvents() {
         '<div class="event-card-price">From <span>' + esc(costStr) + '</span></div>' +
       '</div>';
 
-    card.addEventListener("click", function() {
+    card.addEventListener("click", function(ev){
+      if (ev.target.closest(".event-card-delete")) return;
       window.location.href = "view-event.html?id=" + encodeURIComponent(e.id);
     });
 
     container.appendChild(card);
   });
 
+  // Bind delete buttons
+  container.querySelectorAll(".event-card-delete").forEach(function(btn){
+    btn.addEventListener("click", function(ev){
+      ev.stopPropagation();
+      var id = btn.getAttribute("data-id");
+      if (!id) return;
+      if (!confirm("Delete this event permanently? This cannot be undone.")) return;
+      btn.disabled = true;
+      btn.innerHTML = '<span style="display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;"></span>';
+      db.collection(EVENTS_COLLECTION).doc(id).delete()
+        .then(function(){ showToast("Event deleted", "success"); })
+        .catch(function(err){
+          console.error(err);
+          showToast("Could not delete: " + err.message, "error", 4000);
+          btn.disabled = false;
+          btn.innerHTML = '<i data-lucide="trash-2"></i>';
+          refreshIcons();
+        });
+    });
+  });
+
   refreshIcons();
 }
 
-/* ---------- Modal wiring ---------- */
+/* ===== AUTH MODAL ===== */
 $("signInBtn").addEventListener("click", function(){ $("authModal").classList.add("open"); document.body.style.overflow = "hidden"; });
 $("authClose").addEventListener("click", function(){ $("authModal").classList.remove("open"); document.body.style.overflow = ""; });
-$("authModal").addEventListener("click", function(e){ if(e.target === this) { this.classList.remove("open"); document.body.style.overflow = ""; } });
+$("authModal").addEventListener("click", function(e){ if(e.target === this){ this.classList.remove("open"); document.body.style.overflow = ""; } });
 
 document.querySelectorAll(".auth-tab").forEach(function(tab){
   tab.addEventListener("click", function(){
@@ -1222,61 +1069,61 @@ $("authForm").addEventListener("submit", function(e){
   var password = $("authPassword").value;
   var name = $("authName").value.trim();
 
-  if(!email || !password) { showToast("Please fill in all fields", "error"); return; }
+  if(!email || !password){ showToast("Please fill in all fields", "error"); return; }
   if(authMode === "signup" && password.length < 6){ showToast("Password must be at least 6 characters", "error"); return; }
 
   $("authSubmit").disabled = true;
   $("authSubmit").innerHTML = '<span class="spinner"></span> Processing...';
 
-  setTimeout(function(){
-    try {
-      var user;
-      if(authMode === "signup"){
-        user = signUp(name, email, password);
+  if(authMode === "signup"){
+    auth.createUserWithEmailAndPassword(email, password)
+      .then(function(cred){
+        if (name) return cred.user.updateProfile({ displayName: name }).then(function(){ return cred; });
+        return cred;
+      })
+      .then(function(){
         showToast("Account created successfully", "success");
-      } else {
-        user = signIn(email, password);
+        $("authModal").classList.remove("open");
+        document.body.style.overflow = "";
+        $("authForm").reset();
+      })
+      .catch(function(err){ showToast(err.message, "error"); })
+      .finally(function(){
+        $("authSubmit").disabled = false;
+        $("authSubmit").innerHTML = icon("user-plus") + " Create account";
+        refreshIcons();
+      });
+  } else {
+    auth.signInWithEmailAndPassword(email, password)
+      .then(function(){
         showToast("Signed in successfully", "success");
-      }
-      saveSession(user);
-      applyAuthState(user);
-      $("authModal").classList.remove("open");
-      document.body.style.overflow = "";
-      $("authForm").reset();
-    } catch(err){
-      showToast(err.message, "error");
-    } finally {
-      $("authSubmit").disabled = false;
-      if(authMode === "signup") $("authSubmit").innerHTML = icon("user-plus") + " Create account";
-      else $("authSubmit").innerHTML = icon("log-in") + " Sign in";
-      refreshIcons();
-    }
-  }, 400);
+        $("authModal").classList.remove("open");
+        document.body.style.overflow = "";
+        $("authForm").reset();
+      })
+      .catch(function(err){ showToast(err.message, "error"); })
+      .finally(function(){
+        $("authSubmit").disabled = false;
+        $("authSubmit").innerHTML = icon("log-in") + " Sign in";
+        refreshIcons();
+      });
+  }
 });
 
 $("googleBtn").addEventListener("click", function(){
+  var provider = new firebase.auth.GoogleAuthProvider();
   $("googleBtn").disabled = true;
-  setTimeout(function(){
-    try {
-      var email = "demo.google@gmail.com";
-      var user = findUserByEmail(email);
-      if(!user){
-        user = signUp("Demo Google User", email, "google-demo-" + Math.random().toString(36).slice(2, 8));
-      }
-      saveSession(user);
-      applyAuthState(user);
+  auth.signInWithPopup(provider)
+    .then(function(){
       showToast("Signed in with Google", "success");
       $("authModal").classList.remove("open");
       document.body.style.overflow = "";
-    } catch(err){
-      showToast(err.message, "error");
-    } finally {
-      $("googleBtn").disabled = false;
-    }
-  }, 500);
+    })
+    .catch(function(err){ showToast(err.message, "error"); })
+    .finally(function(){ $("googleBtn").disabled = false; });
 });
 
-/* ---------- User dropdown ---------- */
+/* ===== USER DROPDOWN ===== */
 $("userMenuBtn").addEventListener("click", function(e){
   e.stopPropagation();
   var open = $("userDropdown").classList.toggle("open");
@@ -1288,15 +1135,14 @@ document.addEventListener("click", function(){
 });
 
 $("ddSignOut").addEventListener("click", function(){
-  signOutUser();
-  showToast("Signed out", "success");
+  auth.signOut().then(function(){ showToast("Signed out", "success"); });
 });
 
 $("ddMyEvents").addEventListener("click", function(){ window.location.href = "events.html"; });
 $("ddCreateEvent").addEventListener("click", function(){ window.location.href = "create-event.html"; });
 $("ddMyCards").addEventListener("click", function(){ window.location.href = "view-card.html"; });
 
-/* ---------- Delete account ---------- */
+/* ===== DELETE ACCOUNT ===== */
 $("ddDeleteAccount").addEventListener("click", function(){
   $("deleteAccountModal").classList.add("open");
   document.body.style.overflow = "hidden";
@@ -1305,7 +1151,6 @@ $("ddDeleteAccount").addEventListener("click", function(){
   $("userDropdown").classList.remove("open");
   $("userMenuBtn").classList.remove("active");
 });
-
 function closeDeleteModal(){
   $("deleteAccountModal").classList.remove("open");
   document.body.style.overflow = "";
@@ -1313,22 +1158,90 @@ function closeDeleteModal(){
 $("deleteAccountClose").addEventListener("click", closeDeleteModal);
 $("deleteAccountCancelBtn").addEventListener("click", closeDeleteModal);
 $("deleteAccountModal").addEventListener("click", function(e){ if(e.target === this) closeDeleteModal(); });
-
 $("deleteAccountConfirmInput").addEventListener("input", function(e){
   $("deleteAccountConfirmBtn").disabled = e.target.value.trim().toUpperCase() !== "DELETE MY ACCOUNT";
 });
-
 $("deleteAccountConfirmBtn").addEventListener("click", function(){
-  if(!currentUser) { closeDeleteModal(); return; }
+  if(!currentUser){ closeDeleteModal(); return; }
   if(!confirm("Are you absolutely sure? This action cannot be undone.")) return;
+
+  var uid = currentUser.uid;
   var email = currentUser.email;
-  deleteUserAccount(currentUser);
-  applyAuthState(null);
-  closeDeleteModal();
-  showToast("Account for " + email + " deleted.", "success", 5000);
+
+  db.collection(EVENTS_COLLECTION).where("ownerUid", "==", uid).get()
+    .then(function(snap){
+      var batch = db.batch();
+      snap.forEach(function(doc){ batch.delete(doc.ref); });
+      if (snap.size > 0) return batch.commit();
+    })
+    .then(function(){ return currentUser.delete(); })
+    .then(function(){
+      closeDeleteModal();
+      showToast("Account for " + email + " deleted.", "success", 5000);
+    })
+    .catch(function(err){
+      console.error(err);
+      showToast("Delete failed: " + err.message + " — you may need to re-sign in.", "error", 6000);
+    });
 });
 
-/* ---------- Boot ---------- */
+/* ===== CAROUSEL / TABS / REVEAL ===== */
+function initScrollReveal() {
+  var reveals = document.querySelectorAll(".reveal");
+  if (!reveals.length || !("IntersectionObserver" in window)) { reveals.forEach(function(el){ el.classList.add("active"); }); return; }
+  var observer = new IntersectionObserver(function(entries) {
+    entries.forEach(function(entry) {
+      if (entry.isIntersecting) { entry.target.classList.add("active"); observer.unobserve(entry.target); }
+    });
+  }, { threshold: 0.1, rootMargin: "0px 0px -50px 0px" });
+  reveals.forEach(function(el) { observer.observe(el); });
+}
+function initHeaderScroll() {
+  var header = document.querySelector(".site-header");
+  window.addEventListener("scroll", function() {
+    if (window.scrollY > 20) header.classList.add("scrolled"); else header.classList.remove("scrolled");
+  }, { passive: true });
+}
+function startCarousel(){
+  var slides = document.querySelectorAll(".carousel-slide");
+  var dots = document.querySelectorAll(".carousel-dot");
+  if(!slides.length) return;
+  function show(idx){
+    carouselIndex = idx;
+    slides.forEach(function(s, i){ s.classList.toggle("active", i === idx); });
+    dots.forEach(function(d, i){ d.classList.toggle("active", i === idx); });
+  }
+  function restart(){
+    if(carouselTimer) clearInterval(carouselTimer);
+    carouselTimer = setInterval(function(){
+      carouselIndex = (carouselIndex + 1) % slides.length;
+      show(carouselIndex);
+    }, 6000);
+  }
+  dots.forEach(function(dot){
+    dot.addEventListener("click", function(){ show(parseInt(dot.dataset.slide, 10)); restart(); });
+  });
+  restart();
+}
+function initTabs(){
+  var buttons = document.querySelectorAll(".tab-btn");
+  var panels = document.querySelectorAll(".tab-panel");
+  buttons.forEach(function(btn){
+    btn.addEventListener("click", function(){
+      var target = btn.dataset.tab;
+      buttons.forEach(function(b){ b.classList.toggle("active", b === btn); });
+      panels.forEach(function(p){ p.classList.toggle("active", p.id === target); });
+      refreshIcons();
+      var activePanel = document.querySelector(".tab-panel.active");
+      if (activePanel) {
+        var reveals = activePanel.querySelectorAll(".reveal");
+        reveals.forEach(function(el) { el.classList.remove("active"); void el.offsetWidth; el.classList.add("active"); });
+      }
+    });
+  });
+}
+
+/* ===== BOOT ===== */
 document.addEventListener("DOMContentLoaded", function(){
   $("year").textContent = new Date().getFullYear();
   startCarousel();
@@ -1337,30 +1250,14 @@ document.addEventListener("DOMContentLoaded", function(){
   initHeaderScroll();
   refreshIcons();
 
-  // Restore session
-  var session = readSession();
-  if(session && session.uid){
-    var users = getUsers();
-    var found = null;
-    for(var i=0;i<users.length;i++){ if(users[i].uid === session.uid){ found = users[i]; break; } }
-    applyAuthState(found);
-  } else {
-    applyAuthState(null);
-  }
+  auth.onAuthStateChanged(function(user){
+    applyAuthState(user);
+    attachEventsListener();
+  });
 
   if (window.location.hash === "#signin") {
     setTimeout(function(){ $("authModal").classList.add("open"); }, 300);
   }
-
-  loadFeaturedEvents();
-
-  // Refresh featured events whenever the tab regains focus or storage changes
-  window.addEventListener("storage", function(ev){
-    if(ev.key === EVENTS_KEY) loadFeaturedEvents();
-  });
-  window.addEventListener("focus", function(){
-    loadFeaturedEvents();
-  });
 });
 
 })();
