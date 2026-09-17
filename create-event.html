@@ -6,6 +6,9 @@
 <meta name="theme-color" content="#0a0f14" />
 <title>Create an Event - Novalink Studio</title>
 <script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <style>
 :root{
   --cyan-50:#e6ffff;--cyan-100:#b3ffff;--cyan-400:#00FFFF;--cyan-500:#00E5E5;--cyan-600:#00CCCC;--cyan-700:#009999;
@@ -1508,9 +1511,21 @@ body.staff-seat-mode .fs-seat:hover{outline:2px solid #fff;outline-offset:2px;tr
 
 function $(id){ return document.getElementById(id); }
 
-/* ============= PERSISTENCE ============= */
-var STORAGE_KEY = "novalink_events";
+/* ============= FIREBASE ============= */
 var SAVE_FLAG_KEY = "novalink_last_saved_event_id";
+
+var firebaseConfig = {
+  apiKey: "AIzaSyDSnns131jOlBXAqKo6qy7lTW4Rij-1oWU",
+  authDomain: "novalink-864cf.firebaseapp.com",
+  projectId: "novalink-864cf",
+  storageBucket: "novalink-864cf.firebasestorage.app",
+  messagingSenderId: "602780280140",
+  appId: "1:602780280140:web:5d9ff2351e5a7d5e66dbe9"
+};
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+var db   = firebase.firestore();
+var auth = firebase.auth();
+var EVENTS_COLLECTION = "events";
 
 /* ============= STEP STATE ============= */
 var TOTAL_STEPS = 5;
@@ -3398,7 +3413,7 @@ document.addEventListener("DOMContentLoaded", function(){
     showToast("Venue exported as CSV", "success");
   }
 
-  /* ============= SAVE EVENT (writes to localStorage[novalink_events]) ============= */
+  /* ============= SAVE EVENT (writes to Firestore) ============= */
   function generateEventId() {
     var name = ($("eventName").value || "event").toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 24).replace(/^-|-$/g, "");
     var suffix = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -3431,42 +3446,47 @@ document.addEventListener("DOMContentLoaded", function(){
         planFeePct: currentPlan.fee, planId: currentPlan.id,
         totalTickets: totalTickets
       },
-      createdAt: new Date().toISOString(),
       source: "user"
     }, buildVenuePayload());
 
     return payload;
   }
 
-  function persistEvent(payload) {
-    var list = [];
-    try {
-      var raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) {
-        var parsed = JSON.parse(raw);
-        if (Array.isArray(parsed)) list = parsed;
-      }
-    } catch(e) { list = []; }
-    // Remove any older copy of the same event id (defensive)
-    list = list.filter(function(x){ return x && x.id !== payload.id; });
-    list.push(payload);
-    try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(list));
-      return true;
-    } catch(e) {
-      console.error("Save failed:", e);
-      return false;
+  function persistEvent(payload, onDone) {
+    var user = auth.currentUser;
+    if (!user) {
+      onDone({ ok: false, error: "You must be signed in to save an event. Please sign in first." });
+      return;
     }
+
+    payload.ownerUid = user.uid;
+    payload.ownerEmail = user.email || "";
+    payload.ownerName = user.displayName || (user.email ? user.email.split("@")[0] : "");
+
+    var ref = db.collection(EVENTS_COLLECTION).doc();
+    payload.id = ref.id;
+    payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+
+    ref.set(payload)
+      .then(function(){ onDone({ ok: true, id: ref.id }); })
+      .catch(function(err){
+        console.error("Firestore save error:", err);
+        onDone({ ok: false, error: err.message });
+      });
   }
 
   function handleSaveEvent() {
-    // HARD GUARD: refuse if already saved
     if (isSaved) {
       showToast("This event has already been saved.", "info", 3000);
       return;
     }
 
-    // Validate essential fields
+    if (!auth.currentUser) {
+      showToast("Please sign in before saving an event. Redirecting…", "error", 4000);
+      setTimeout(function(){ window.location.href = "index.html#signin"; }, 1200);
+      return;
+    }
+
     var requiredFields = [
       { id: "hostName", msg: "Host name is required" },
       { id: "hostEmail", msg: "Host email is required" },
@@ -3486,7 +3506,6 @@ document.addEventListener("DOMContentLoaded", function(){
       }
     }
 
-    // Cost validation only if price group is visible
     if (costInput && $("basePriceGroup") && $("basePriceGroup").style.display !== "none") {
       var cv = parseFloat(costInput.value);
       if (isNaN(cv) || cv < 0) {
@@ -3503,35 +3522,25 @@ document.addEventListener("DOMContentLoaded", function(){
     btn.disabled = true;
     btn.innerHTML = '<span class="spinner"></span> Saving...';
 
-    // Small async delay so the spinner is visible
-    setTimeout(function(){
-      try {
-        var eventId = generateEventId();
-        var payload = buildEventPayload(eventId);
-        var ok = persistEvent(payload);
-        if (!ok) {
-          btn.disabled = false;
-          btn.innerHTML = orig;
-          if (window.lucide) lucide.createIcons();
-          showToast("Save failed — storage is full or blocked.", "error", 5000);
-          return;
-        }
-        markAsSaved(eventId);
-        showToast("Event saved! It now appears on the home page.", "success", 4500);
-        // Optionally, after 2s take user back home to see the event
-        setTimeout(function(){
-          if (confirm("Event saved. View it on the home page now?")) {
-            window.location.href = "index.html";
-          }
-        }, 900);
-      } catch(err) {
-        console.error(err);
+    var eventId = generateEventId();
+    var payload = buildEventPayload(eventId);
+
+    persistEvent(payload, function(res){
+      if (!res.ok) {
         btn.disabled = false;
         btn.innerHTML = orig;
         if (window.lucide) lucide.createIcons();
-        showToast("Save failed: " + err.message, "error", 5000);
+        showToast("Save failed: " + res.error, "error", 6000);
+        return;
       }
-    }, 350);
+      markAsSaved(res.id);
+      showToast("Event saved! It now appears for everyone on the home page.", "success", 4500);
+      setTimeout(function(){
+        if (confirm("Event saved. View it on the home page now?")) {
+          window.location.href = "index.html";
+        }
+      }, 900);
+    });
   }
 
   function readScale() {
@@ -3911,7 +3920,6 @@ document.addEventListener("DOMContentLoaded", function(){
   $("exportJsonBtn").addEventListener("click", exportJson);
   $("exportCsvBtn").addEventListener("click", exportCsv);
 
-  // ===== SAVE BUTTON (must be bound LAST, after validation helpers are defined) =====
   $("submitBtn").addEventListener("click", function(e) {
     e.preventDefault();
     handleSaveEvent();
@@ -3961,18 +3969,6 @@ document.addEventListener("DOMContentLoaded", function(){
   setupRotateHandle(); setupShapeRotateHandle(); setupStageDrag(); setupInsertTools();
   updateInsertToolUI(); applyPlanFeatures(); applySeatViewMode(); applyStaffSeatMode(); updateCornerFitHint();
 
-  // Restore saved-state if the user is returning to a page where they already saved
-  try {
-    var lastSaved = sessionStorage.getItem(SAVE_FLAG_KEY);
-    if (lastSaved) {
-      // Don't restore full "saved" state on a fresh page load — that would lock the form
-      // for a *new* event. We only keep the flag so a hard refresh within the same tab
-      // doesn't allow duplicate saves of the same event under a new ID.
-      // The user can start a new event by reloading the tab (closes sessionStorage on tab close).
-    }
-  } catch(e) {}
-
-  // Start on Step 1
   goToStep(1);
 });
 })();
