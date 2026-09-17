@@ -808,12 +808,12 @@ h3{font-size:1.2rem}
 /* ============================================================
    PURE FRONT-END BUILD
    No Firebase, no backend, no network calls.
-   Accounts + session are stored in localStorage.
-   Events below are static demo data.
+   Accounts + session + events are stored in localStorage.
    ============================================================ */
 
 var SESSION_KEY = "novalink_session";
 var USERS_KEY   = "novalink_users";
+var EVENTS_KEY  = "novalink_events";
 var ADMIN_EMAILS = ["admin@novalink.co.za"];
 
 var currentUser = null;
@@ -822,7 +822,7 @@ var authMode = "signin";
 var carouselTimer = null;
 var carouselIndex = 0;
 
-/* ---------- Static demo event data ---------- */
+/* ---------- Static fallback demo events (used only if no saved events exist) ---------- */
 var DEMO_EVENTS = [
   {
     id: "demo-1",
@@ -831,7 +831,8 @@ var DEMO_EVENTS = [
     startTime: "18:00",
     city: "Johannesburg",
     cost: "R150",
-    totalAttendees: 220
+    totalAttendees: 220,
+    source: "demo"
   },
   {
     id: "demo-2",
@@ -840,7 +841,8 @@ var DEMO_EVENTS = [
     startTime: "19:30",
     city: "Cape Town",
     cost: "R450",
-    totalAttendees: 480
+    totalAttendees: 480,
+    source: "demo"
   },
   {
     id: "demo-3",
@@ -849,7 +851,8 @@ var DEMO_EVENTS = [
     startTime: "12:00",
     city: "Durban",
     cost: "R250",
-    totalAttendees: 1200
+    totalAttendees: 1200,
+    source: "demo"
   },
   {
     id: "demo-4",
@@ -858,7 +861,8 @@ var DEMO_EVENTS = [
     startTime: "08:30",
     city: "Pretoria",
     cost: "Free",
-    totalAttendees: 350
+    totalAttendees: 350,
+    source: "demo"
   },
   {
     id: "demo-5",
@@ -867,7 +871,8 @@ var DEMO_EVENTS = [
     startTime: "11:00",
     city: "Stellenbosch",
     cost: "R320",
-    totalAttendees: 800
+    totalAttendees: 800,
+    source: "demo"
   },
   {
     id: "demo-6",
@@ -876,7 +881,8 @@ var DEMO_EVENTS = [
     startTime: "07:00",
     city: "Soweto",
     cost: "R100",
-    totalAttendees: 2500
+    totalAttendees: 2500,
+    source: "demo"
   }
 ];
 
@@ -928,6 +934,37 @@ function saveSession(u){
 function readSession(){
   try { return JSON.parse(localStorage.getItem(SESSION_KEY) || "null"); }
   catch(e){ return null; }
+}
+
+/* ---------- Events storage (created by create-event.html) ---------- */
+function getStoredEvents(){
+  try {
+    var raw = localStorage.getItem(EVENTS_KEY);
+    if(!raw) return [];
+    var list = JSON.parse(raw);
+    return Array.isArray(list) ? list : [];
+  } catch(e){ return []; }
+}
+function sortEventsByDate(list){
+  return list.slice().sort(function(a,b){
+    var da = a.startDate || "", db = b.startDate || "";
+    if(da && db) return new Date(da) - new Date(db);
+    if(da) return -1;
+    if(db) return 1;
+    return 0;
+  });
+}
+function getFeaturedEvents(){
+  var saved = getStoredEvents();
+  // Saved events (newest first) come first, then demo fallback events.
+  var savedSorted = saved.slice().sort(function(a,b){
+    var ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+    var tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+    return tb - ta;
+  });
+  var combined = savedSorted.concat(DEMO_EVENTS);
+  // Limit to 18 cards to keep the strip snappy
+  return combined.slice(0, 18);
 }
 
 /* ---------- Auth actions ---------- */
@@ -1055,14 +1092,49 @@ function initTabs(){
   });
 }
 
-/* ---------- Featured events (static demo data) ---------- */
+/* ---------- Featured events (reads from localStorage, falls back to demo) ---------- */
+function formatEventCost(e){
+  if(typeof e.cost === "number"){
+    if(e.cost <= 0) return "Free";
+    return "R" + Number(e.cost).toFixed(2).replace(/\.00$/, "");
+  }
+  if(typeof e.cost === "string" && e.cost.trim() !== ""){
+    return e.cost;
+  }
+  if(typeof e.costFormatted === "string" && e.costFormatted.trim() !== ""){
+    return e.costFormatted;
+  }
+  return "Free";
+}
+
+function eventAttendeeCount(e){
+  if(typeof e.totalAttendees === "number") return e.totalAttendees;
+  if(e.venue && typeof e.venue.totalAttendees === "number") return e.venue.totalAttendees;
+  return 0;
+}
+
+function eventCityLabel(e){
+  if(e.city) return e.city;
+  if(e.venueAddress) return e.venueAddress;
+  if(e.venue && e.venue.stage && e.venue.stage.name) return e.venue.stage.name;
+  return "Venue";
+}
+
+function eventDateLabel(e){
+  var dateStr = e.startDate || "";
+  if(e.startTime) dateStr += (dateStr ? " · " : "") + e.startTime;
+  if(!dateStr) dateStr = "Date TBA";
+  return dateStr;
+}
+
 function loadFeaturedEvents() {
   var container = $("eventsScroll");
   if (!container) return;
 
+  var events = getFeaturedEvents();
   container.innerHTML = "";
 
-  if (!DEMO_EVENTS.length) {
+  if (!events.length) {
     container.innerHTML = '<p style="color: var(--text-muted); padding: 20px; font-size: 14px;">No events yet. Be the first to create one!</p>';
     return;
   }
@@ -1075,23 +1147,30 @@ function loadFeaturedEvents() {
     "linear-gradient(135deg, #34d399 0%, #059669 100%)"
   ];
 
-  DEMO_EVENTS.forEach(function(e, idx) {
+  events.forEach(function(e, idx) {
     var card = document.createElement("div");
     card.className = "event-card";
     card.style.cursor = "pointer";
 
     var gradient = gradients[idx % gradients.length];
-
-    var dateStr = e.startDate || "";
-    if (e.startTime) dateStr += " · " + e.startTime;
-    var location = e.city || "Venue";
-    var costStr = e.cost || "Free";
+    var dateStr = eventDateLabel(e);
+    var location = eventCityLabel(e);
+    var costStr = formatEventCost(e);
     var eventName = e.eventName || "Untitled Event";
-    var seats = e.totalAttendees || 0;
+    var seats = eventAttendeeCount(e);
+    var badge = (e.source === "demo") ? "EVENT" : "NEW";
+
+    // Optional custom background image from event payload
+    var bgStyle = "background:" + gradient;
+    if (e.heroImage && typeof e.heroImage === "string") {
+      bgStyle = "background-image:url('" + esc(e.heroImage) + "');background-size:cover;background-position:center;";
+    } else if (e.coverImage && typeof e.coverImage === "string") {
+      bgStyle = "background-image:url('" + esc(e.coverImage) + "');background-size:cover;background-position:center;";
+    }
 
     card.innerHTML =
-      '<div class="event-card-img" style="background:' + gradient + '">' +
-        '<span class="event-card-badge">EVENT</span>' +
+      '<div class="event-card-img" style="' + bgStyle + '">' +
+        '<span class="event-card-badge">' + esc(badge) + '</span>' +
       '</div>' +
       '<div class="event-card-body">' +
         '<h3>' + esc(eventName) + '</h3>' +
@@ -1176,7 +1255,6 @@ $("authForm").addEventListener("submit", function(e){
 });
 
 $("googleBtn").addEventListener("click", function(){
-  // Simulated Google sign-in (front-end only demo)
   $("googleBtn").disabled = true;
   setTimeout(function(){
     try {
@@ -1259,7 +1337,7 @@ document.addEventListener("DOMContentLoaded", function(){
   initHeaderScroll();
   refreshIcons();
 
-  // Restore session (front-end only)
+  // Restore session
   var session = readSession();
   if(session && session.uid){
     var users = getUsers();
@@ -1270,15 +1348,22 @@ document.addEventListener("DOMContentLoaded", function(){
     applyAuthState(null);
   }
 
-  // Auto-open auth modal if URL is index.html#signin
   if (window.location.hash === "#signin") {
     setTimeout(function(){ $("authModal").classList.add("open"); }, 300);
   }
 
   loadFeaturedEvents();
+
+  // Refresh featured events whenever the tab regains focus or storage changes
+  window.addEventListener("storage", function(ev){
+    if(ev.key === EVENTS_KEY) loadFeaturedEvents();
+  });
+  window.addEventListener("focus", function(){
+    loadFeaturedEvents();
+  });
 });
 
 })();
 </script>
 </body>
-            </html>
+  </html>
