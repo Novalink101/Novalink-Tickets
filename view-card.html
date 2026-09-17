@@ -4,8 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="theme-color" content="#0a0f14" />
-<meta name="description" content="Your Novalink ticket." />
-<title>Your Ticket · Novalink</title>
+<meta name="description" content="View event details and get tickets on Novalink." />
+<title>Event · Novalink</title>
 
 <script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
@@ -19,133 +19,165 @@
   --bg:#ffffff;--bg-2:#f6f8fb;--surface:#ffffff;--surface-2:#f1f4f8;
   --border:#e4e9f0;--border-2:#d3dbe5;
   --text:#0a0f14;--text-2:#2b3644;--text-muted:#6b7787;
-  --radius:14px;--max-width:640px;
+  --radius:14px;--max-width:1180px;
   --font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
-  --danger:#dc2626;--danger-soft:#fef2f2;
-  --success:#059669;--success-soft:#ecfdf5;
-  --warn:#d97706;--warn-soft:#fffbeb;
+  --danger:#dc2626;--danger-soft:#fef2f2;--danger-border:#fecaca;
+  --success:#059669;--success-soft:#ecfdf5;--success-border:#a7f3d0;
   --navy:#1e2f4d;
   --ease-smooth:cubic-bezier(0.25,0.8,0.25,1);
   --ease-bounce:cubic-bezier(0.175,0.885,0.32,1.275);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
+img{max-width:100%;display:block}
 a{color:inherit;text-decoration:none}
 button{font:inherit;font-family:inherit;touch-action:manipulation;cursor:pointer}
-body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column}
-.container{max-width:var(--max-width);margin:0 auto;padding:0 20px;width:100%}
+body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column}
+.container{max-width:var(--max-width);margin:0 auto;padding:0 24px;width:100%}
+h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-0.02em}
+h1{font-size:clamp(2rem,4.5vw,3.2rem)}
+h2{font-size:clamp(1.35rem,2.4vw,1.75rem);margin-bottom:8px}
+h3{font-size:1.15rem}
 
 .novalink-logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none;margin-left:12px;padding-left:4px}
 .novalink-logo .mark{width:34px;height:42px;flex-shrink:0;display:block}
 .novalink-logo .wordmark{font-weight:800;font-size:1.1rem;letter-spacing:0.02em;color:var(--navy);line-height:1}
 @media (max-width:480px){.novalink-logo{margin-left:16px}.novalink-logo .mark{width:30px;height:37px}.novalink-logo .wordmark{font-size:1.02rem}}
 
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 18px;border-radius:12px;font-weight:600;font-size:14px;border:1px solid transparent;cursor:pointer;transition:all 0.2s var(--ease-smooth);white-space:nowrap;font-family:inherit;text-decoration:none}
-.btn svg,.btn i{width:16px;height:16px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:12px;font-weight:600;font-size:14px;border:1px solid transparent;cursor:pointer;transition:all 0.2s var(--ease-smooth);white-space:nowrap;font-family:inherit;text-decoration:none}
+.btn svg,.btn i{width:17px;height:17px}
 .btn-primary{background:#0a0f14;color:#fff}
 .btn-primary:hover{background:#1a2129;transform:translateY(-2px);box-shadow:0 4px 12px rgba(10,15,20,0.15)}
 .btn-accent{background:linear-gradient(135deg,var(--cyan-400),var(--cyan-600));color:#04161c}
 .btn-accent:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(6,182,212,0.35)}
 .btn-ghost{background:transparent;color:var(--text-2);border:1px solid var(--border-2)}
-.btn-ghost:hover{background:var(--surface-2);border-color:var(--cyan-500);color:var(--cyan-700)}
-.btn-sm{padding:8px 12px;font-size:13px}
+.btn-ghost:hover{background:var(--surface-2);border-color:var(--cyan-500);color:var(--cyan-700);transform:translateY(-1px)}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-danger:hover{background:#b91c1c;transform:translateY(-2px);box-shadow:0 4px 12px rgba(220,38,38,0.25)}
 .btn-block{width:100%}
+.btn-lg{padding:15px 26px;font-size:15px}
 .btn:disabled{opacity:0.55;cursor:not-allowed;transform:none!important;box-shadow:none!important}
 
-.site-header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,0.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--border)}
+.site-header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,0.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--border);transition:box-shadow 0.3s ease}
+.site-header.scrolled{box-shadow:0 4px 20px rgba(10,15,20,0.05)}
 .header-inner{display:flex;align-items:center;justify-content:space-between;padding:12px 0;gap:12px;flex-wrap:wrap}
 
-.page-wrap{flex:1;padding:32px 0 64px;display:flex;align-items:flex-start}
+.user-menu-btn{display:none;align-items:center;gap:8px;padding:5px 12px 5px 5px;background:var(--surface-2);border:1px solid var(--border);border-radius:99px;cursor:pointer;font-family:inherit;transition:all 0.2s ease}
+.user-menu-btn:hover{border-color:var(--cyan-500);box-shadow:0 0 0 3px rgba(6,182,212,0.1)}
+.user-menu-btn .avatar{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--cyan-400),var(--cyan-600));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;color:#04161c;flex-shrink:0}
+.user-menu-btn .name{font-size:13px;font-weight:600}
+.user-menu-btn .admin-badge{background:#fef3c7;color:#92400e;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;padding:2px 8px;border-radius:99px}
+
+.user-dropdown{position:absolute;top:calc(100% + 8px);right:0;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 20px 60px rgba(10,15,20,0.15);min-width:250px;padding:8px;display:none;z-index:60;overflow:hidden}
+.user-dropdown.open{display:block}
+.user-dropdown-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:9px;cursor:pointer;font-size:13.5px;font-weight:500;color:var(--text-2);transition:all .2s ease;border:none;background:transparent;width:100%;font-family:inherit;text-align:left}
+.user-dropdown-item:hover{background:var(--surface-2);color:var(--text);transform:translateX(4px)}
+.user-dropdown-item i{width:16px;height:16px;color:var(--text-muted)}
+.user-dropdown-item.danger{color:var(--danger)}
+.user-dropdown-item.danger i{color:var(--danger)}
+
+.page-wrap{flex:1;padding:32px 0 64px}
 @media (min-width:1024px){.page-wrap{padding:48px 0 80px}}
 
-.loading-state{text-align:center;padding:80px 20px;color:var(--text-muted);width:100%}
+.loading-state{text-align:center;padding:80px 20px;color:var(--text-muted)}
 .loading-state i{width:32px;height:32px;margin:0 auto 12px;color:var(--cyan-500);animation:spin 1.2s linear infinite;display:block}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-.error-state{text-align:center;padding:60px 24px;max-width:480px;margin:0 auto;width:100%}
+.error-state{text-align:center;padding:60px 24px;max-width:480px;margin:0 auto}
 .error-state .icon{width:64px;height:64px;border-radius:50%;background:var(--danger-soft);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;color:var(--danger)}
 .error-state .icon i{width:28px;height:28px}
 .error-state h2{margin-bottom:8px}
 .error-state p{color:var(--text-muted);margin-bottom:22px}
 
-/* TICKET */
-.ticket-wrap{width:100%;max-width:560px;margin:0 auto}
-.ticket-card{background:var(--surface);border-radius:22px;overflow:hidden;box-shadow:0 25px 60px -20px rgba(10,15,20,0.28),0 0 0 1px rgba(10,15,20,0.04);position:relative}
-.ticket-top{padding:28px 26px 22px;background:linear-gradient(135deg,#0a0f14 0%,#1a2129 100%);color:#fff;position:relative;overflow:hidden}
-.ticket-top::before{content:'';position:absolute;top:-60px;right:-60px;width:200px;height:200px;background:radial-gradient(circle,rgba(0,255,255,0.15),transparent 70%);border-radius:50%;pointer-events:none}
-.ticket-top::after{content:'';position:absolute;bottom:-80px;left:-60px;width:220px;height:220px;background:radial-gradient(circle,rgba(0,255,255,0.08),transparent 70%);border-radius:50%;pointer-events:none}
-.ticket-brand-row{display:flex;justify-content:space-between;align-items:center;position:relative;z-index:2;margin-bottom:20px}
-.ticket-brand{display:flex;align-items:center;gap:8px}
-.ticket-brand .mark{width:26px;height:32px}
-.ticket-brand .wordmark{font-weight:800;font-size:13px;letter-spacing:2px;color:#fff}
-.ticket-brand .wordmark span{color:#00FFFF}
-.ticket-status{font-size:10px;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;padding:5px 11px;border-radius:99px;position:relative;z-index:2}
-.ticket-status.valid{background:#00FFFF;color:#04161c}
-.ticket-status.scanned{background:rgba(255,255,255,0.15);color:#fff;border:1px solid rgba(255,255,255,0.3)}
-.ticket-status.revoked{background:var(--danger);color:#fff}
+/* HERO */
+.event-hero{position:relative;border-radius:20px;overflow:hidden;min-height:320px;background:linear-gradient(135deg,#22d3ee 0%,#0891b2 100%);display:flex;align-items:flex-end;padding:32px;color:#fff;margin-bottom:32px;box-shadow:0 20px 50px -12px rgba(6,182,212,0.35)}
+@media (min-width:768px){.event-hero{min-height:420px;padding:48px}}
+.event-hero-bg{position:absolute;inset:0;background-size:cover;background-position:center;z-index:0}
+.event-hero::before{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(10,15,20,0.85) 0%,rgba(10,15,20,0.35) 55%,rgba(10,15,20,0.15) 100%);z-index:1}
+.event-hero-content{position:relative;z-index:2;width:100%;max-width:760px}
+.event-badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.event-badge{background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.35);color:#fff;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;padding:5px 11px;border-radius:99px;backdrop-filter:blur(8px)}
+.event-badge.owned{background:#00FFFF;color:#04161c;border-color:#00FFFF}
+.event-title{font-size:clamp(1.75rem,4vw,2.9rem);font-weight:800;letter-spacing:-0.02em;line-height:1.08;margin-bottom:14px;text-shadow:0 3px 20px rgba(0,0,0,0.35)}
+.event-meta-row{display:flex;gap:20px;flex-wrap:wrap;margin-top:12px}
+.event-meta-item{display:inline-flex;align-items:center;gap:7px;font-size:14px;font-weight:600;color:rgba(255,255,255,0.92)}
+.event-meta-item i{width:16px;height:16px;color:#67e8f9}
 
-.ticket-event-name{font-size:24px;font-weight:800;line-height:1.1;letter-spacing:-0.02em;margin-bottom:8px;word-break:break-word;position:relative;z-index:2}
-.ticket-event-meta{font-size:12.5px;color:rgba(255,255,255,0.7);font-weight:600;text-transform:uppercase;letter-spacing:0.08em;word-break:break-word;position:relative;z-index:2}
-.ticket-tier-row{display:flex;align-items:center;gap:10px;margin-top:18px;position:relative;z-index:2}
-.ticket-tier-pill{padding:6px 14px;border-radius:99px;font-size:11px;font-weight:900;letter-spacing:0.08em;text-transform:uppercase}
-.ticket-guest-pill{padding:6px 14px;border-radius:99px;background:rgba(255,255,255,0.15);color:#fff;font-size:11px;font-weight:800;letter-spacing:0.04em;text-transform:uppercase}
+/* LAYOUT */
+.event-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:32px}
+@media (min-width:960px){.event-layout{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}}
 
-/* CUT LINE */
-.ticket-cut{height:24px;background:var(--bg-2);position:relative}
-.ticket-cut::before,.ticket-cut::after{content:'';position:absolute;top:50%;transform:translateY(-50%);width:24px;height:24px;border-radius:50%;background:var(--bg-2);box-shadow:inset 0 2px 6px rgba(10,15,20,0.08)}
-.ticket-cut::before{left:-12px}
-.ticket-cut::after{right:-12px}
-.ticket-dashed{position:absolute;top:50%;left:20px;right:20px;height:1px;background:repeating-linear-gradient(to right,var(--border-2) 0,var(--border-2) 4px,transparent 4px,transparent 8px);transform:translateY(-50%)}
+.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;box-shadow:0 6px 20px rgba(10,15,20,0.04)}
+.card + .card{margin-top:20px}
+.card h2{font-size:1.15rem;margin-bottom:12px;color:var(--navy)}
 
-.ticket-body{padding:24px 26px 30px;background:var(--surface)}
-.qr-frame{background:#fff;border-radius:16px;padding:18px;display:flex;align-items:center;justify-content:center;border:1px solid var(--border);box-shadow:0 4px 14px rgba(10,15,20,0.04);margin-bottom:20px}
-#qrCanvas{display:block;width:100%;height:auto;max-width:260px;image-rendering:pixelated}
+.section-label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:var(--cyan-700);margin-bottom:10px}
 
-.detail-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:14px;margin-bottom:20px}
-@media (max-width:480px){.detail-grid{grid-template-columns:1fr}}
-.detail-item{background:var(--bg-2);border-radius:12px;padding:12px 14px}
-.detail-item .label{font-size:9.5px;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;color:var(--text-muted);margin-bottom:4px}
-.detail-item .value{font-size:14px;font-weight:800;color:var(--text);word-break:break-word;font-family:ui-monospace,monospace}
-.detail-item .value.plain{font-family:var(--font);font-weight:700}
+.detail-list{list-style:none;padding:0;display:flex;flex-direction:column;gap:12px}
+.detail-list li{display:flex;gap:12px;align-items:flex-start;font-size:14px;color:var(--text-2);line-height:1.5}
+.detail-list li i{width:18px;height:18px;color:var(--cyan-600);flex-shrink:0;margin-top:2px}
+.detail-list li strong{display:block;font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:2px}
 
-.barcode-area{background:#fff;border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:20px}
-.barcode-graphic{height:52px;background:repeating-linear-gradient(to right,#000 0,#000 2px,#fff 2px,#fff 4px,#000 4px,#000 6px,#fff 6px,#fff 11px,#000 11px,#000 12px,#fff 12px,#fff 16px);border-radius:3px}
-.barcode-num{font-family:ui-monospace,monospace;font-size:11px;font-weight:800;color:#000;letter-spacing:2px;text-align:center;margin-top:8px;word-break:break-all}
+.tier-list{display:flex;flex-direction:column;gap:12px}
+.tier-row{display:flex;align-items:center;gap:14px;padding:14px;border:1px solid var(--border);border-radius:12px;background:var(--surface);transition:all 0.2s ease}
+.tier-row:hover{border-color:var(--cyan-400);background:var(--bg-2)}
+.tier-swatch{width:22px;height:22px;border-radius:6px;flex-shrink:0;border:1px solid rgba(0,0,0,0.1)}
+.tier-info{flex:1;min-width:0}
+.tier-name{font-weight:800;font-size:14.5px;line-height:1.2}
+.tier-seats{font-size:11.5px;color:var(--text-muted);font-weight:600;margin-top:2px}
+.tier-price{font-weight:800;font-size:16px;color:var(--cyan-700);white-space:nowrap;font-family:ui-monospace,monospace}
 
-.ticket-note{font-size:12px;color:var(--text-muted);line-height:1.6;text-align:center;padding:0 6px 4px;font-weight:600}
+.action-stack{display:flex;flex-direction:column;gap:10px;position:sticky;top:80px}
+.action-stack .btn{width:100%}
 
-/* STATUS BANNERS */
-.status-banner{border-radius:14px;padding:16px 18px;margin-bottom:22px;display:flex;gap:12px;align-items:flex-start}
-.status-banner i{width:20px;height:20px;flex-shrink:0;margin-top:2px}
-.status-banner .head{font-weight:800;font-size:14px;margin-bottom:3px}
-.status-banner .desc{font-size:13px;line-height:1.5;font-weight:600;opacity:0.9}
-.status-banner.scanned{background:var(--warn-soft);border:1px solid #fde68a;color:#92400e}
-.status-banner.revoked{background:var(--danger-soft);border:1px solid #fecaca;color:#991b1b}
+.price-summary{background:linear-gradient(135deg,#0a0f14,#1a2129);color:#fff;border-radius:var(--radius);padding:20px;margin-bottom:14px;box-shadow:0 12px 30px rgba(10,15,20,0.15)}
+.price-summary .label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#67e8f9;margin-bottom:6px}
+.price-summary .value{font-size:24px;font-weight:800;line-height:1.1;color:#fff}
+.price-summary .sub{font-size:12px;color:rgba(255,255,255,0.65);margin-top:4px}
 
-/* DEBUG BOX */
-.debug-box{background:#fffbeb;border:1px dashed #fbbf24;color:#78350f;border-radius:10px;padding:12px 14px;font-family:ui-monospace,monospace;font-size:11.5px;line-height:1.6;margin-top:20px;word-break:break-all}
-.debug-box strong{display:block;margin-bottom:6px;font-family:var(--font);font-size:10.5px;text-transform:uppercase;letter-spacing:0.08em}
-.debug-box .row{margin-bottom:3px}
-.debug-box .row b{color:#0f172a;}
+.host-card{display:flex;align-items:center;gap:12px;padding:14px;background:var(--bg-2);border-radius:12px;border:1px solid var(--border)}
+.host-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--cyan-400),var(--cyan-600));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#04161c;flex-shrink:0}
+.host-name{font-weight:800;font-size:14px}
+.host-label{font-size:11.5px;color:var(--text-muted);font-weight:600}
 
-/* ACTIONS */
-.ticket-actions{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:20px}
-@media (max-width:480px){.ticket-actions{grid-template-columns:1fr}}
+.owner-actions{display:flex;flex-direction:column;gap:8px;margin-top:16px;padding-top:16px;border-top:1px dashed var(--border)}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(10,15,20,0.6);backdrop-filter:blur(8px);display:none;align-items:flex-start;justify-content:center;z-index:100;padding:24px 20px;overflow-y:auto}
+.modal-overlay.open{display:flex}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;max-width:520px;width:100%;padding:30px 26px;position:relative;margin:auto;animation:modalIn 0.25s var(--ease-bounce)}
+@keyframes modalIn{from{opacity:0;transform:translateY(20px) scale(0.95)}to{opacity:1;transform:translateY(0) scale(1)}}
+.modal-close{position:absolute;top:14px;right:14px;background:var(--surface-2);border:1px solid var(--border);color:var(--text-2);padding:6px;border-radius:10px;display:flex;align-items:center;justify-content:center;transition:all 0.2s ease}
+.modal-close:hover{background:var(--danger-soft);color:var(--danger);transform:rotate(90deg)}
+.modal h3{margin-bottom:6px;font-size:1.35rem}
+.modal .modal-sub{color:var(--text-muted);font-size:14px;margin-bottom:22px}
+
+.form-group{margin-bottom:16px;min-width:0}
+.form-group label{display:block;font-size:12px;font-weight:700;color:var(--text-2);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em}
+.form-group input, .form-group select{width:100%;padding:12px 14px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:10px;color:var(--text);font-size:14.5px;font-family:inherit;transition:border-color 0.2s, box-shadow 0.2s;min-width:0}
+.form-group input:focus, .form-group select:focus{outline:none;border-color:var(--cyan-500);background:#fff;box-shadow:0 0 0 3px rgba(6,182,212,0.15)}
+.form-group select{appearance:none;-webkit-appearance:none;-moz-appearance:none;padding-right:36px;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7787' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:12px;cursor:pointer}
+.form-hint{font-size:11.5px;color:var(--text-muted);margin-top:6px;font-style:italic}
+
+.price-callout{background:var(--cyan-50);border:1px solid var(--cyan-200);border-radius:12px;padding:14px 16px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;gap:12px}
+.price-callout .label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;color:var(--cyan-700)}
+.price-callout .value{font-size:22px;font-weight:900;color:var(--cyan-700);font-family:ui-monospace,monospace}
+
+.modal .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+.modal .actions .btn{flex:1;min-width:120px}
+
+.info-banner{background:var(--success-soft);border:1px solid var(--success-border);color:#065f46;border-radius:12px;padding:12px 14px;font-size:12.5px;font-weight:700;display:flex;align-items:flex-start;gap:8px;margin-bottom:18px;line-height:1.5}
+.info-banner i{width:16px;height:16px;flex-shrink:0;margin-top:2px}
 
 .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(120%);background:#0a0f14;color:#fff;padding:12px 18px;border-radius:12px;font-size:13.5px;z-index:200;transition:transform 0.4s var(--ease-bounce),opacity 0.3s ease;max-width:calc(100vw - 40px);display:flex;align-items:center;gap:10px;pointer-events:none;opacity:0}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 .toast.success{background:#065f46}
 .toast.error{background:#991b1b}
 
+.spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,0.35);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block}
+
 .site-footer{background:#0a0f14;color:#c9d2dd;padding:32px 0 22px;margin-top:auto;font-size:13px}
 .footer-bottom{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;color:#6b7787;font-size:12px}
-
-@media print{
-  .site-header,.site-footer,.ticket-actions,.toast,.status-banner,.debug-box{display:none!important}
-  body{background:#fff}
-  .page-wrap{padding:0}
-  .ticket-card{box-shadow:none;border:1px solid #ddd}
-}
 </style>
 </head>
 <body>
@@ -156,8 +188,18 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
       <svg class="mark" viewBox="0 0 60 74"><path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/><path fill="#00FFFF" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/></svg>
       <span class="wordmark">NOVALINK</span>
     </a>
-    <div style="display:flex;gap:8px">
-      <a href="index.html" class="btn btn-ghost btn-sm"><i data-lucide="home"></i> Home</a>
+    <div style="display:flex;gap:8px;align-items:center;position:relative">
+      <a href="index.html" class="btn btn-ghost" style="font-size:13px;padding:8px 12px;"><i data-lucide="arrow-left"></i> Home</a>
+      <button id="userMenuBtn" class="user-menu-btn">
+        <span class="avatar" id="userAvatar">?</span>
+        <span class="name" id="userName">User</span>
+        <span class="admin-badge" id="adminBadge" style="display:none">Admin</span>
+        <i data-lucide="chevron-down" style="width:14px;height:14px;color:var(--text-muted)"></i>
+      </button>
+      <div class="user-dropdown" id="userDropdown">
+        <button class="user-dropdown-item" id="ddSignOut"><i data-lucide="log-out"></i> Sign out</button>
+        <button class="user-dropdown-item" id="ddCreateEvent"><i data-lucide="plus-circle"></i> Create an event</button>
+      </div>
     </div>
   </div>
 </header>
@@ -167,104 +209,81 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
 
     <div id="loadingState" class="loading-state">
       <i data-lucide="loader-2"></i>
-      <p>Loading your ticket…</p>
+      <p>Loading event…</p>
     </div>
 
     <div id="errorState" class="error-state" style="display:none">
       <div class="icon"><i data-lucide="alert-circle"></i></div>
-      <h2 id="errorTitle">Ticket not found</h2>
-      <p id="errorMsg">This ticket doesn't exist or the link is broken.</p>
-
-      <div class="debug-box" id="debugBox" style="display:none;text-align:left">
-        <strong>Debug info (screenshot this and send it)</strong>
-        <div id="debugContent"></div>
-      </div>
-
-      <div style="margin-top:22px">
-        <a href="index.html" class="btn btn-accent"><i data-lucide="arrow-left"></i> Back to home</a>
-      </div>
+      <h2 id="errorTitle">Event not found</h2>
+      <p id="errorMsg">This event may have been deleted or the link is broken.</p>
+      <a href="index.html" class="btn btn-accent"><i data-lucide="arrow-left"></i> Back to home</a>
     </div>
 
-    <div id="ticketWrap" class="ticket-wrap" style="display:none">
+    <div id="eventContent" style="display:none">
 
-      <div class="status-banner" id="scannedBanner" style="display:none">
-        <i data-lucide="clock"></i>
+      <section class="event-hero" id="eventHero">
+        <div class="event-hero-bg" id="eventHeroBg"></div>
+        <div class="event-hero-content">
+          <div class="event-badge-row" id="eventBadges"></div>
+          <h1 class="event-title" id="eventTitle">Event Name</h1>
+          <div class="event-meta-row">
+            <span class="event-meta-item"><i data-lucide="calendar"></i> <span id="eventDate">Date</span></span>
+            <span class="event-meta-item"><i data-lucide="map-pin"></i> <span id="eventCity">City</span></span>
+            <span class="event-meta-item" id="eventSeatsMeta" style="display:none"><i data-lucide="users"></i> <span id="eventSeats">0 seats</span></span>
+          </div>
+        </div>
+      </section>
+
+      <div class="event-layout">
+
         <div>
-          <div class="head">Already scanned</div>
-          <div class="desc" id="scannedDesc">This ticket was used at the door.</div>
-        </div>
-      </div>
+          <div class="card">
+            <div class="section-label">Event details</div>
+            <ul class="detail-list">
+              <li><i data-lucide="calendar-check"></i> <div><strong>Date & time</strong><span id="detailDateTime">—</span></div></li>
+              <li><i data-lucide="map-pin"></i> <div><strong>Venue</strong><span id="detailVenue">—</span></div></li>
+              <li><i data-lucide="building"></i> <div><strong>City</strong><span id="detailCity">—</span></div></li>
+              <li><i data-lucide="tag"></i> <div><strong>Event type</strong><span id="detailType">—</span></div></li>
+            </ul>
+          </div>
 
-      <div class="status-banner revoked" id="revokedBanner" style="display:none">
-        <i data-lucide="x-circle"></i>
+          <div class="card">
+            <div class="section-label">Ticket tiers</div>
+            <div class="tier-list" id="tierList">
+              <p style="color:var(--text-muted);font-size:13.5px;">No tier information available.</p>
+            </div>
+          </div>
+        </div>
+
         <div>
-          <div class="head">Ticket revoked</div>
-          <div class="desc">This ticket has been cancelled. Contact the organiser for details.</div>
+          <div class="action-stack">
+            <div class="price-summary">
+              <div class="label">From</div>
+              <div class="value" id="priceFrom">Free</div>
+              <div class="sub" id="priceSub">Cheapest ticket tier</div>
+            </div>
+            <button class="btn btn-accent btn-lg btn-block" id="getTicketsBtn"><i data-lucide="ticket"></i> Get tickets</button>
+
+            <div class="card" style="margin-top:6px;padding:16px;">
+              <div class="section-label" style="margin-bottom:10px;">Hosted by</div>
+              <div class="host-card">
+                <div class="host-avatar" id="hostAvatar">?</div>
+                <div style="min-width:0;flex:1;">
+                  <div class="host-name" id="hostName">Host</div>
+                  <div class="host-label" id="hostEmail">—</div>
+                </div>
+              </div>
+            </div>
+
+            <div class="owner-actions" id="ownerActions" style="display:none">
+              <div class="section-label" style="margin:0 0 4px;">Owner controls</div>
+              <button class="btn btn-ghost" id="editBtn"><i data-lucide="edit-3"></i> Edit event</button>
+              <button class="btn btn-danger" id="deleteBtn"><i data-lucide="trash-2"></i> Delete event</button>
+            </div>
+          </div>
         </div>
+
       </div>
-
-      <div class="ticket-card">
-        <div class="ticket-top">
-          <div class="ticket-brand-row">
-            <div class="ticket-brand">
-              <svg class="mark" viewBox="0 0 60 74"><path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/><path fill="#00FFFF" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/></svg>
-              <span class="wordmark">NOVA<span>LINK</span></span>
-            </div>
-            <span class="ticket-status valid" id="ticketStatus">VALID</span>
-          </div>
-          <div class="ticket-event-name" id="ticketEventName">Event Name</div>
-          <div class="ticket-event-meta" id="ticketEventMeta">DATE · VENUE</div>
-          <div class="ticket-tier-row">
-            <span class="ticket-tier-pill" id="ticketTierPill" style="background:#00FFFF;color:#04161c;">STANDARD</span>
-            <span class="ticket-guest-pill" id="ticketGuestPill">GUEST</span>
-          </div>
-        </div>
-
-        <div class="ticket-cut">
-          <div class="ticket-dashed"></div>
-        </div>
-
-        <div class="ticket-body">
-          <div class="qr-frame">
-            <canvas id="qrCanvas" width="260" height="260" aria-label="Ticket QR code"></canvas>
-          </div>
-
-          <div class="detail-grid">
-            <div class="detail-item">
-              <div class="label">Ticket ID</div>
-              <div class="value" id="detailTicketId">—</div>
-            </div>
-            <div class="detail-item">
-              <div class="label">Seat</div>
-              <div class="value" id="detailSeat">—</div>
-            </div>
-            <div class="detail-item">
-              <div class="label">Date</div>
-              <div class="value plain" id="detailDate">—</div>
-            </div>
-            <div class="detail-item">
-              <div class="label">Venue</div>
-              <div class="value plain" id="detailVenue">—</div>
-            </div>
-          </div>
-
-          <div class="barcode-area">
-            <div class="barcode-graphic"></div>
-            <div class="barcode-num" id="barcodeNum">0000 0000 0000 0000</div>
-          </div>
-
-          <p class="ticket-note">
-            Show this screen at the door. Each ticket is scanned once.<br>
-            Screenshots are accepted — the QR is unique to you.
-          </p>
-        </div>
-      </div>
-
-      <div class="ticket-actions">
-        <button class="btn btn-primary" id="printBtn"><i data-lucide="download"></i> Save / Print</button>
-        <a class="btn btn-ghost" id="eventLinkBtn" href="#"><i data-lucide="arrow-left"></i> Back to event</a>
-      </div>
-
     </div>
 
   </div>
@@ -278,6 +297,59 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
     </div>
   </div>
 </footer>
+
+<!-- ====== GET TICKETS MODAL ====== -->
+<div class="modal-overlay" id="buyModal">
+  <div class="modal">
+    <button class="modal-close" id="buyClose"><i data-lucide="x"></i></button>
+    <h3>Get your ticket</h3>
+    <p class="modal-sub" id="buyModalSub">Pick a tier and enter your name.</p>
+
+    <div class="info-banner">
+      <i data-lucide="info"></i>
+      <span>Free test mode — no payment required. Ticket will be issued instantly.</span>
+    </div>
+
+    <div class="form-group">
+      <label for="buyTier">Ticket tier</label>
+      <select id="buyTier"></select>
+      <p class="form-hint" id="buyTierHint">Pick a tier</p>
+    </div>
+
+    <div class="form-group">
+      <label for="buyGuestName">Guest name</label>
+      <input type="text" id="buyGuestName" placeholder="e.g., Jane Smith" maxlength="60" autocomplete="name" />
+    </div>
+
+    <div class="form-group">
+      <label for="buySeat">Seat (optional)</label>
+      <input type="text" id="buySeat" placeholder="e.g., A-12" maxlength="10" />
+    </div>
+
+    <div class="price-callout">
+      <span class="label">Total</span>
+      <span class="value" id="buyTotal">Free</span>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-ghost" id="buyCancel">Cancel</button>
+      <button class="btn btn-accent" id="buyConfirm"><i data-lucide="check"></i> Confirm ticket</button>
+    </div>
+  </div>
+</div>
+
+<!-- ====== DELETE MODAL ====== -->
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal">
+    <button class="modal-close" id="deleteModalClose"><i data-lucide="x"></i></button>
+    <h3>Delete this event?</h3>
+    <p class="modal-sub">This will permanently remove <strong id="deleteEventName">this event</strong> and cannot be undone. All tickets linked to this event will also be removed.</p>
+    <div class="actions">
+      <button class="btn btn-ghost" id="deleteCancel">Cancel</button>
+      <button class="btn btn-danger" id="deleteConfirm"><i data-lucide="trash-2"></i> Delete</button>
+    </div>
+  </div>
+</div>
 
 <div class="toast" id="toast"></div>
 
@@ -299,17 +371,25 @@ var db   = firebase.firestore();
 var auth = firebase.auth();
 var EVENTS_COLLECTION = "events";
 
+var ADMIN_EMAILS = ["nylnathan340@gmail.com"];
+
 /* ================= STATE ================= */
-var ticketData = null;
+var currentUser = null;
+var isAdmin = false;
 var eventData = null;
-var ticketId = null;
 var eventId = null;
+var unsubscribeEvent = null;
 
 /* ================= HELPERS ================= */
 function $(id){ return document.getElementById(id); }
 function icon(n){ return '<i data-lucide="'+n+'"></i>'; }
 function refreshIcons(){ if(window.lucide) lucide.createIcons(); }
 function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function initialsFrom(name,email){
+  if(name && name.trim()){ var p = name.trim().split(/\s+/); if(p.length>=2) return (p[0][0]+p[1][0]).toUpperCase(); return p[0].slice(0,2).toUpperCase(); }
+  if(email) return email.slice(0,2).toUpperCase();
+  return "??";
+}
 function showToast(msg,type,ms){
   type = type || "info"; ms = ms || 3000;
   var t = $("toast");
@@ -321,537 +401,379 @@ function showToast(msg,type,ms){
   clearTimeout(showToast._t);
   showToast._t = setTimeout(function(){ t.classList.remove("show"); }, ms);
 }
+function formatMoney(v){
+  if (typeof v !== "number") v = parseFloat(v) || 0;
+  if (v <= 0) return "Free";
+  return "R " + v.toFixed(2).replace(/\.00$/, "");
+}
 function formatDate(dateStr, timeStr){
   if (!dateStr) return "Date TBA";
   try {
     var d = new Date(dateStr + "T" + (timeStr || "00:00"));
-    if (isNaN(d.getTime())) return dateStr;
+    if (isNaN(d.getTime())) return dateStr + (timeStr ? " · " + timeStr : "");
     var opts = { weekday: "short", day: "numeric", month: "short", year: "numeric" };
     var out = d.toLocaleDateString("en-ZA", opts);
     if (timeStr) out += " · " + timeStr;
     return out;
   } catch(e){ return dateStr; }
 }
+function getEventTypeLabel(t){
+  if (!t) return "Event";
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
 function getQueryParam(name){
-  try {
-    var p = new URLSearchParams(window.location.search);
-    return p.get(name);
-  } catch(e){ return null; }
+  try { return new URLSearchParams(window.location.search).get(name); }
+  catch(e){ return null; }
 }
 
-/* ================= MINIMAL QR CODE RENDERER =================
-   Lightweight QR encoder — MIT-style implementation
-   Produces a QR matrix from a string. Renders as canvas.
-   Supports byte mode, level L, versions 1-10 (enough for our data)
-============================================================ */
-var QR = (function(){
-  var RS_BLOCK_TABLE = [
-    [1, 26, 7, 1],
-    [2, 44, 10, 1],
-    [3, 70, 15, 1],
-    [4, 100, 20, 1],
-    [5, 134, 26, 1],
-    [6, 172, 18, 2],
-    [7, 196, 20, 2],
-    [8, 242, 24, 2],
-    [9, 292, 30, 2],
-    [10, 346, 18, 4]
-  ];
-
-  function getRSBlocks(version){
-    for (var i = 0; i < RS_BLOCK_TABLE.length; i++){
-      if (RS_BLOCK_TABLE[i][0] === version) return RS_BLOCK_TABLE[i];
-    }
-    return null;
+/* ================= AUTH ================= */
+function applyAuthState(user){
+  currentUser = user;
+  isAdmin = !!(user && ADMIN_EMAILS.map(function(e){return e.toLowerCase();}).indexOf(String(user.email).toLowerCase()) !== -1);
+  if (user){
+    var display = user.displayName || user.email.split("@")[0];
+    $("userMenuBtn").style.display = "inline-flex";
+    $("userName").textContent = display;
+    $("userAvatar").textContent = initialsFrom(user.displayName, user.email);
+    $("adminBadge").style.display = isAdmin ? "inline-block" : "none";
+  } else {
+    $("userMenuBtn").style.display = "none";
+    $("adminBadge").style.display = "none";
   }
+  if (eventData) renderOwnerControls();
+}
 
-  var EXP = new Array(256);
-  var LOG = new Array(256);
-  (function(){
-    var x = 1;
-    for (var i = 0; i < 256; i++){
-      EXP[i] = x;
-      x <<= 1;
-      if (x & 0x100) x ^= 0x11d;
-    }
-    for (var j = 0; j < 255; j++) LOG[EXP[j]] = j;
-  })();
-
-  function mul(a, b){
-    if (a === 0 || b === 0) return 0;
-    return EXP[(LOG[a] + LOG[b]) % 255];
-  }
-
-  function genPoly(n){
-    var g = [1];
-    for (var i = 0; i < n; i++){
-      var next = new Array(g.length + 1);
-      for (var k = 0; k < next.length; k++) next[k] = 0;
-      for (var j = 0; j < g.length; j++){
-        next[j] ^= mul(g[j], 1);
-        next[j + 1] ^= mul(g[j], EXP[i]);
-      }
-      g = next;
-    }
-    return g;
-  }
-
-  function rsEncode(data, ecCount){
-    var gen = genPoly(ecCount);
-    var res = new Array(ecCount);
-    for (var i = 0; i < ecCount; i++) res[i] = 0;
-    for (var d = 0; d < data.length; d++){
-      var factor = data[d] ^ res[0];
-      res.shift();
-      res.push(0);
-      if (factor !== 0){
-        for (var j = 0; j < ecCount; j++){
-          res[j] ^= mul(gen[j + 1], factor);
-        }
-      }
-    }
-    return res;
-  }
-
-  function getDataCapacityBits(version){
-    var rs = getRSBlocks(version);
-    if (!rs) return 0;
-    var totalCW = rs[1];
-    var ecCW = rs[2] * rs[3];
-    var dataCW = totalCW - ecCW;
-    return dataCW * 8;
-  }
-
-  function bitsToBytes(bits){
-    var out = [];
-    for (var i = 0; i < bits.length; i += 8){
-      var b = 0;
-      for (var j = 0; j < 8; j++){
-        b = (b << 1) | (bits[i + j] || 0);
-      }
-      out.push(b);
-    }
-    return out;
-  }
-
-  function encodeData(str, version){
-    var bits = [];
-    bits.push(0,1,0,0);
-    var bytes = [];
-    for (var i = 0; i < str.length; i++){
-      var code = str.charCodeAt(i);
-      if (code < 0x80) bytes.push(code);
-      else if (code < 0x800){ bytes.push(0xc0 | (code >> 6), 0x80 | (code & 0x3f)); }
-      else { bytes.push(0xe0 | (code >> 12), 0x80 | ((code >> 6) & 0x3f), 0x80 | (code & 0x3f)); }
-    }
-    var len = bytes.length;
-    for (var l = 7; l >= 0; l--) bits.push((len >> l) & 1);
-    for (var b = 0; b < bytes.length; b++){
-      var byte = bytes[b];
-      for (var k = 7; k >= 0; k--) bits.push((byte >> k) & 1);
-    }
-    var capacity = getDataCapacityBits(version);
-    for (var t = 0; t < 4 && bits.length < capacity; t++) bits.push(0);
-    while (bits.length % 8 !== 0) bits.push(0);
-    var padBytes = [0xEC, 0x11];
-    var pi = 0;
-    while (bits.length < capacity){
-      var pb = padBytes[pi % 2];
-      for (var pk = 7; pk >= 0; pk--) bits.push((pb >> pk) & 1);
-      pi++;
-    }
-    return bitsToBytes(bits);
-  }
-
-  function makeMatrix(version){
-    var size = 17 + 4 * version;
-    var m = [];
-    for (var y = 0; y < size; y++){
-      m[y] = [];
-      for (var x = 0; x < size; x++) m[y][x] = null;
-    }
-    return { size: size, matrix: m };
-  }
-
-  function putFinder(m, x, y){
-    for (var dy = -1; dy <= 7; dy++){
-      for (var dx = -1; dx <= 7; dx++){
-        var xx = x + dx, yy = y + dy;
-        if (xx < 0 || xx >= m.size || yy < 0 || yy >= m.size) continue;
-        if (dx === -1 || dx === 7 || dy === -1 || dy === 7) m.matrix[yy][xx] = 0;
-        else if (dx === 0 || dx === 6 || dy === 0 || dy === 6) m.matrix[yy][xx] = 1;
-        else if (dx >= 2 && dx <= 4 && dy >= 2 && dy <= 4) m.matrix[yy][xx] = 1;
-        else m.matrix[yy][xx] = 0;
-      }
-    }
-  }
-
-  function putTiming(m){
-    for (var i = 8; i < m.size - 8; i++){
-      if (m.matrix[6][i] === null) m.matrix[6][i] = (i % 2 === 0) ? 1 : 0;
-      if (m.matrix[i][6] === null) m.matrix[i][6] = (i % 2 === 0) ? 1 : 0;
-    }
-  }
-
-  function reserveFormat(m){
-    for (var i = 0; i < 9; i++){
-      if (m.matrix[8][i] === null) m.matrix[8][i] = 0;
-      if (m.matrix[i][8] === null) m.matrix[i][8] = 0;
-    }
-    for (var j = 0; j < 8; j++){
-      if (m.matrix[8][m.size - 1 - j] === null) m.matrix[8][m.size - 1 - j] = 0;
-      if (m.matrix[m.size - 1 - j][8] === null) m.matrix[m.size - 1 - j][8] = 0;
-    }
-    m.matrix[m.size - 8][8] = 1;
-  }
-
-  function placeData(m, bytes){
-    var bits = [];
-    for (var i = 0; i < bytes.length; i++){
-      var b = bytes[i];
-      for (var k = 7; k >= 0; k--) bits.push((b >> k) & 1);
-    }
-    var dir = -1; var row = m.size - 1; var col = m.size - 1; var idx = 0;
-    while (col > 0){
-      if (col === 6) col--;
-      while (true){
-        if (m.matrix[row][col] === null){
-          var bit = (idx < bits.length) ? bits[idx++] : 0;
-          m.matrix[row][col] = bit;
-        }
-        row += dir;
-        if (row < 0 || row >= m.size){ row -= dir; dir = -dir; break; }
-      }
-      col -= 2;
-    }
-  }
-
-  function applyMask(matrix, size){
-    for (var y = 0; y < size; y++){
-      for (var x = 0; x < size; x++){
-        if ((x + y) % 2 === 0) matrix[y][x] ^= 1;
-      }
-    }
-  }
-
-  function applyFormatBits(m){
-    var data = 0b01000;
-    var poly = 0x537;
-    var rem = data << 10;
-    for (var i = 14; i >= 10; i--){
-      if ((rem >> i) & 1) rem ^= poly << (i - 10);
-    }
-    var fmt = ((data << 10) | rem) ^ 0x5412;
-    var size = m.size;
-    for (var j = 0; j < 6; j++) m.matrix[8][j] = (fmt >> (14 - j)) & 1;
-    m.matrix[8][7] = (fmt >> 8) & 1;
-    m.matrix[8][8] = (fmt >> 7) & 1;
-    m.matrix[7][8] = (fmt >> 6) & 1;
-    for (var k = 0; k < 6; k++) m.matrix[5 - k][8] = (fmt >> k) & 1;
-    for (var a = 0; a < 8; a++) m.matrix[8][size - 1 - a] = (fmt >> (14 - a)) & 1;
-    for (var b = 0; b < 7; b++) m.matrix[size - 1 - b][8] = (fmt >> b) & 1;
-  }
-
-  function render(dataStr, canvas){
-    var version = 1;
-    for (var v = 1; v <= 10; v++){
-      var cap = getDataCapacityBits(v);
-      var estBytes = new TextEncoder ? new TextEncoder().encode(dataStr).length : dataStr.length;
-      var neededBits = 4 + 8 + estBytes * 8 + 4;
-      if (neededBits <= cap){ version = v; break; }
-      version = v;
-    }
-
-    var rs = getRSBlocks(version);
-    if (!rs) return;
-
-    var dataBytes = encodeData(dataStr, version);
-    var ecCW = rs[2];
-    var totalCW = rs[1];
-    var dataCW = totalCW - ecCW;
-
-    if (dataBytes.length > dataCW) dataBytes = dataBytes.slice(0, dataCW);
-    while (dataBytes.length < dataCW) dataBytes.push(0xEC);
-
-    var ecBytes = rsEncode(dataBytes, ecCW);
-    var allBytes = dataBytes.concat(ecBytes);
-
-    var m = makeMatrix(version);
-    putFinder(m, 0, 0);
-    putFinder(m, m.size - 7, 0);
-    putFinder(m, 0, m.size - 7);
-    putTiming(m);
-    reserveFormat(m);
-    placeData(m, allBytes);
-    applyMask(m.matrix, m.size);
-    applyFormatBits(m);
-
-    var size = m.size;
-    var ctx = canvas.getContext("2d");
-    var quiet = 4;
-    var totalModules = size + quiet * 2;
-    var px = Math.floor(260 / totalModules);
-    var realSize = px * totalModules;
-    canvas.width = realSize;
-    canvas.height = realSize;
-    canvas.style.width = realSize + "px";
-    canvas.style.height = realSize + "px";
-
-    ctx.fillStyle = "#ffffff";
-    ctx.fillRect(0, 0, realSize, realSize);
-    ctx.fillStyle = "#0a0f14";
-    for (var y = 0; y < size; y++){
-      for (var x = 0; x < size; x++){
-        if (m.matrix[y][x] === 1){
-          ctx.fillRect((quiet + x) * px, (quiet + y) * px, px, px);
-        }
-      }
-    }
-  }
-
-  return { render: render };
-})();
-
-/* ================= BARCODE STRING ================= */
-function buildBarcodeString(ticket, event){
-  var ev = event && event.id ? event.id : (ticket.eventId || "event");
-  var tk = ticket.ticketId || ticket.id || "ticket";
-  var tier = ticket.tier || "standard";
-  var seat = ticket.seat || "";
-  var raw = ev + "|" + tk + "|" + tier + "|" + seat;
-  var hash = 0;
-  for (var i = 0; i < raw.length; i++){
-    hash = ((hash << 5) - hash + raw.charCodeAt(i)) | 0;
-  }
-  hash = Math.abs(hash).toString(36).padStart(6, "0").slice(0, 6);
-  return "NVLK|" + ev + "|" + tk + "|" + tier + "|" + seat + "|" + hash;
+/* ================= OWNERSHIP ================= */
+function canEditOrDelete(){
+  if (!eventData) return false;
+  if (!currentUser) return false;
+  if (isAdmin) return true;
+  return eventData.ownerUid && eventData.ownerUid === currentUser.uid;
+}
+function renderOwnerControls(){
+  $("ownerActions").style.display = canEditOrDelete() ? "flex" : "none";
 }
 
 /* ================= RENDER ================= */
-function tierPalette(tier){
-  return {
-    black:{bg:"#1a202c",text:"#ffffff",label:"ELITE"},
-    gold:{bg:"#ecc94b",text:"#0a0f14",label:"VIP"},
-    silver:{bg:"#cbd5e1",text:"#0a0f14",label:"SILVER"},
-    cyan:{bg:"#00FFFF",text:"#04161c",label:"STANDARD"},
-    tier5:{bg:"#a855f7",text:"#ffffff",label:"PLATINUM"},
-    tier6:{bg:"#f472b6",text:"#0a0f14",label:"DIAMOND"}
-  }[tier] || {bg:"#00FFFF",text:"#04161c",label:"STANDARD"};
-}
+function renderEvent(data){
+  eventData = data;
 
-function renderTicket(ticket, event){
-  ticketData = ticket;
-  eventData = event;
-
-  var tier = ticket.tier || "cyan";
-  var pal = tierPalette(tier);
-  var tierName = (event && event.tierNames && event.tierNames[tier]) || pal.label;
-
-  $("ticketEventName").textContent = (event && event.eventName) || ticket.eventName || "Event";
-  var dateStr = event ? formatDate(event.startDate, event.startTime) : (ticket.startDate || "Date TBA");
-  var venueStr = (event && event.venueAddress) || ticket.venueAddress || "Venue";
-  $("ticketEventMeta").textContent = dateStr;
-
-  var pill = $("ticketTierPill");
-  pill.style.background = pal.bg;
-  pill.style.color = pal.text;
-  pill.textContent = tierName.toUpperCase();
-
-  $("ticketGuestPill").textContent = ticket.guestName || "Guest";
-
-  $("detailTicketId").textContent = ticket.ticketId || ticket.id || "—";
-  $("detailSeat").textContent = ticket.seat || "—";
-  $("detailDate").textContent = dateStr;
-  $("detailVenue").textContent = venueStr;
-
-  var barcodeStr = buildBarcodeString(ticket, event);
-  $("barcodeNum").textContent = barcodeStr.replace(/\|/g, " · ");
-
-  try {
-    QR.render(barcodeStr, $("qrCanvas"));
-  } catch(e){
-    console.error("QR render failed:", e);
-    var ctx = $("qrCanvas").getContext("2d");
-    $("qrCanvas").width = 260; $("qrCanvas").height = 260;
-    ctx.fillStyle = "#f1f4f8";
-    ctx.fillRect(0, 0, 260, 260);
-    ctx.fillStyle = "#6b7787";
-    ctx.font = "14px sans-serif";
-    ctx.textAlign = "center";
-    ctx.fillText("QR unavailable", 130, 130);
-  }
-
-  var status = ticket.status || "valid";
-  var statusEl = $("ticketStatus");
-  statusEl.className = "ticket-status " + status;
-  if (status === "valid") {
-    statusEl.textContent = "VALID";
-    $("scannedBanner").style.display = "none";
-    $("revokedBanner").style.display = "none";
-  } else if (status === "scanned") {
-    statusEl.textContent = "SCANNED";
-    var when = ticket.scannedAt;
-    var txt = "This ticket was already used at the door.";
-    try {
-      if (when && when.toDate) {
-        var d = when.toDate();
-        txt = "Scanned on " + d.toLocaleString("en-ZA") + ".";
-      } else if (when) {
-        txt = "Scanned on " + new Date(when).toLocaleString("en-ZA") + ".";
-      }
-    } catch(e){}
-    $("scannedDesc").textContent = txt;
-    $("scannedBanner").style.display = "flex";
-    $("revokedBanner").style.display = "none";
-  } else if (status === "revoked") {
-    statusEl.textContent = "REVOKED";
-    $("scannedBanner").style.display = "none";
-    $("revokedBanner").style.display = "flex";
-  }
-
-  if (event && event.id) {
-    $("eventLinkBtn").href = "view-event.html?id=" + encodeURIComponent(event.id);
+  var bg = $("eventHeroBg");
+  if (data.heroImage) {
+    bg.style.backgroundImage = "url('" + esc(data.heroImage) + "')";
+    bg.style.backgroundSize = "cover";
+    bg.style.backgroundPosition = "center";
+  } else if (data.coverImage) {
+    bg.style.backgroundImage = "url('" + esc(data.coverImage) + "')";
+    bg.style.backgroundSize = "cover";
+    bg.style.backgroundPosition = "center";
   } else {
-    $("eventLinkBtn").style.display = "none";
+    bg.style.background = "linear-gradient(135deg, #22d3ee 0%, #0891b2 100%)";
   }
 
-  $("loadingState").style.display = "none";
-  $("ticketWrap").style.display = "block";
+  var badges = [];
+  badges.push('<span class="event-badge">' + esc(getEventTypeLabel(data.eventType)) + '</span>');
+  if (canEditOrDelete()) badges.push('<span class="event-badge owned">' + (isAdmin && !(data.ownerUid === (currentUser && currentUser.uid)) ? 'Admin view' : 'Your event') + '</span>');
+  $("eventBadges").innerHTML = badges.join("");
+
+  $("eventTitle").textContent = data.eventName || "Untitled Event";
+  $("eventDate").textContent = formatDate(data.startDate, data.startTime);
+  $("eventCity").textContent = data.city || data.venueAddress || "Venue";
+  var seats = data.totalAttendees || (data.venue && data.venue.totalAttendees) || 0;
+  if (seats > 0){ $("eventSeatsMeta").style.display = "inline-flex"; $("eventSeats").textContent = seats + " seats"; }
+  else { $("eventSeatsMeta").style.display = "none"; }
+
+  $("detailDateTime").textContent = formatDate(data.startDate, data.startTime);
+  $("detailVenue").textContent = data.venueAddress || "—";
+  $("detailCity").textContent = data.city || "—";
+  $("detailType").textContent = getEventTypeLabel(data.eventType);
+
+  renderTiers(data);
+  renderPriceFrom(data);
+
+  var hostName = data.hostName || "Host";
+  var hostEmail = data.hostEmail || "";
+  $("hostName").textContent = hostName;
+  $("hostEmail").textContent = hostEmail || "—";
+  $("hostAvatar").textContent = initialsFrom(hostName, hostEmail);
+
+  renderOwnerControls();
   refreshIcons();
 }
 
-/* ================= LOAD ================= */
-function showDebug(info){
-  var box = $("debugBox");
-  var content = $("debugContent");
-  if (!box || !content) return;
-  var html = "";
-  Object.keys(info).forEach(function(k){
-    html += '<div class="row"><b>' + esc(k) + ':</b> ' + esc(String(info[k])) + '</div>';
+function renderTiers(data){
+  var list = $("tierList");
+  list.innerHTML = "";
+  var tiers = data.tierPrices || {};
+  var names = data.tierNames || {};
+  var colours = data.tierColours || {};
+  var active = data.activeTierCount || 4;
+  var tierKeys = ["black","gold","silver","cyan","tier5","tier6"].slice(0, active);
+  var seatCounts = estimateSeatCounts(data);
+
+  var anyShown = false;
+  tierKeys.forEach(function(t){
+    var price = parseFloat(tiers[t]) || 0;
+    var name = names[t] || ({black:"Elite",gold:"VIP",silver:"Silver",cyan:"Standard",tier5:"Platinum",tier6:"Diamond"})[t];
+    var colour = colours[t] || ({black:"#1a202c",gold:"#ecc94b",silver:"#cbd5e1",cyan:"#00FFFF",tier5:"#a855f7",tier6:"#f472b6"})[t];
+    var seats = seatCounts[t] || 0;
+    if (price === 0 && seats === 0) return;
+    anyShown = true;
+
+    var row = document.createElement("div");
+    row.className = "tier-row";
+    row.innerHTML =
+      '<div class="tier-swatch" style="background:' + esc(colour) + '"></div>' +
+      '<div class="tier-info">' +
+        '<div class="tier-name">' + esc(name) + '</div>' +
+        '<div class="tier-seats">' + (seats > 0 ? seats + ' seats available' : 'Available') + '</div>' +
+      '</div>' +
+      '<div class="tier-price">' + (price > 0 ? esc(formatMoney(price)) : 'Free') + '</div>';
+    list.appendChild(row);
   });
-  content.innerHTML = html;
-  box.style.display = "block";
+
+  if (!anyShown) {
+    list.innerHTML = '<p style="color:var(--text-muted);font-size:13.5px;">Tiers will be shown once the host sets prices.</p>';
+  }
 }
 
-function showError(title, msg, debugInfo){
+function estimateSeatCounts(data){
+  var counts = {};
+  var active = data.activeTierCount || 4;
+  ["black","gold","silver","cyan","tier5","tier6"].slice(0, active).forEach(function(t){ counts[t] = 0; });
+
+  try {
+    if (data.venue && data.venue.sections && data.venue.sections.length) {
+      data.venue.sections.forEach(function(sec){
+        if (sec.mode === "tables" && Array.isArray(sec.tables)) {
+          sec.tables.forEach(function(tbl){
+            var tier = tbl.tier || "cyan";
+            counts[tier] = (counts[tier] || 0) + (tbl.chairs || 1);
+          });
+        } else if (sec.mode === "rows" && Array.isArray(sec.rows)) {
+          sec.rows.forEach(function(row){
+            (row.seats || []).forEach(function(seat){
+              var tier = seat.tier || "cyan";
+              counts[tier] = (counts[tier] || 0) + 1;
+            });
+          });
+        } else if (sec.mode === "corner" && sec.corner) {
+          var hRows = sec.corner.hRows || 0;
+          var hSeats = sec.corner.hSeats || 0;
+          var vRows = sec.corner.vRows || 0;
+          var vSeats = sec.corner.vSeats || 0;
+          counts["cyan"] = (counts["cyan"] || 0) + (hRows * hSeats) + (vRows * vSeats);
+        }
+      });
+    }
+  } catch(e){ /* silent */ }
+  return counts;
+}
+
+function renderPriceFrom(data){
+  var tiers = data.tierPrices || {};
+  var prices = [];
+  ["black","gold","silver","cyan","tier5","tier6"].forEach(function(t){
+    var v = parseFloat(tiers[t]);
+    if (!isNaN(v) && v > 0) prices.push(v);
+  });
+  if (!prices.length) {
+    $("priceFrom").textContent = "Free";
+    $("priceSub").textContent = "No ticket price set";
+  } else {
+    var min = Math.min.apply(null, prices);
+    $("priceFrom").textContent = formatMoney(min);
+    $("priceSub").textContent = "Cheapest ticket tier";
+  }
+}
+
+/* ================= LOAD EVENT ================= */
+function showError(title, msg){
   $("loadingState").style.display = "none";
-  $("ticketWrap").style.display = "none";
+  $("eventContent").style.display = "none";
   $("errorState").style.display = "block";
   $("errorTitle").textContent = title;
   $("errorMsg").textContent = msg;
-  if (debugInfo) showDebug(debugInfo);
   refreshIcons();
 }
 
-function loadTicket(){
-  var eventParam = getQueryParam("event");
-  var ticketParam = getQueryParam("ticket");
-  var idParam = getQueryParam("id");
+function attachEventListener(){
+  if (unsubscribeEvent) { try { unsubscribeEvent(); } catch(e){} }
 
-  var urlDebug = {
-    "Full URL": window.location.href,
-    "event param": eventParam || "(none)",
-    "ticket param": ticketParam || "(none)",
-    "id param": idParam || "(none)"
-  };
-
-  if (eventParam && ticketParam) {
-    eventId = eventParam;
-    ticketId = ticketParam;
-    loadByPath(urlDebug);
-    return;
-  }
-
-  if (ticketParam) {
-    db.collectionGroup("tickets").where("ticketId", "==", ticketParam).limit(1).get()
-      .then(function(snap){
-        if (snap.empty) {
-          urlDebug["collectionGroup lookup"] = "no match for ticketId " + ticketParam;
-          showError("Ticket not found", "We couldn't find that ticket.", urlDebug);
-          return;
-        }
-        var doc = snap.docs[0];
-        eventId = doc.ref.parent.parent.id;
-        ticketId = doc.id;
-        loadByPath(urlDebug);
-      })
-      .catch(function(err){
-        console.error(err);
-        urlDebug["collectionGroup error"] = err.message || err.code || "unknown";
-        showError("Lookup failed", "Please use the full ticket link from your purchase confirmation.", urlDebug);
-      });
-    return;
-  }
-
-  if (idParam) {
-    // id may be a ticket doc id — try loading via collectionGroup by doc id
-    db.collectionGroup("tickets").where("ticketId", "==", idParam).limit(1).get()
-      .then(function(snap){
-        if (snap.empty) {
-          urlDebug["lookup by id"] = "no match for " + idParam;
-          showError("Ticket not found", "We couldn't find that ticket.", urlDebug);
-          return;
-        }
-        var doc = snap.docs[0];
-        eventId = doc.ref.parent.parent.id;
-        ticketId = doc.id;
-        loadByPath(urlDebug);
-      })
-      .catch(function(err){
-        console.error(err);
-        urlDebug["lookup by id error"] = err.message || err.code || "unknown";
-        showError("Lookup failed", "Please use the full ticket link.", urlDebug);
-      });
-    return;
-  }
-
-  showError("Missing ticket link", "The URL is missing the ticket identifier.", urlDebug);
+  unsubscribeEvent = db.collection(EVENTS_COLLECTION).doc(eventId).onSnapshot(function(snap){
+    if (!snap.exists) {
+      showError("Event not found", "This event may have been deleted or the link is broken.");
+      return;
+    }
+    $("loadingState").style.display = "none";
+    $("errorState").style.display = "none";
+    $("eventContent").style.display = "block";
+    var data = snap.data() || {};
+    data.id = snap.id;
+    renderEvent(data);
+  }, function(err){
+    console.error("Event load error:", err);
+    showError("Could not load event", err.message || "Please try again.");
+  });
 }
 
-function loadByPath(urlDebug){
-  if (!eventId || !ticketId) { showError("Invalid link", "Missing ticket reference."); return; }
+/* ================= BUY TICKET FLOW ================= */
+function openBuyModal(){
+  if (!eventData) return;
+  if (!currentUser) {
+    showToast("Please sign in to get tickets.", "error");
+    setTimeout(function(){ window.location.href = "index.html#signin"; }, 1200);
+    return;
+  }
 
-  var eventRef = db.collection(EVENTS_COLLECTION).doc(eventId);
-  var ticketRef = eventRef.collection("tickets").doc(ticketId);
+  // Populate tier dropdown
+  var tierSel = $("buyTier");
+  tierSel.innerHTML = "";
+  var active = eventData.activeTierCount || 4;
+  var tierKeys = ["black","gold","silver","cyan","tier5","tier6"].slice(0, active);
+  var names = eventData.tierNames || {};
+  var prices = eventData.tierPrices || {};
+  var defaultNames = {black:"Elite",gold:"VIP",silver:"Silver",cyan:"Standard",tier5:"Platinum",tier6:"Diamond"};
 
-  Promise.all([eventRef.get(), ticketRef.get()])
-    .then(function(results){
-      var evSnap = results[0];
-      var tkSnap = results[1];
+  tierKeys.forEach(function(t){
+    var name = names[t] || defaultNames[t];
+    var price = parseFloat(prices[t]) || 0;
+    var opt = document.createElement("option");
+    opt.value = t;
+    opt.textContent = name + (price > 0 ? " — " + formatMoney(price) : " — Free");
+    tierSel.appendChild(opt);
+  });
 
-      // Print debug to console AND include in on-screen debug
-      var debugInfo = {
-        "Full URL": window.location.href,
-        "eventId used": eventId,
-        "ticketId used": ticketId,
-        "Firestore path": ticketRef.path,
-        "Event exists?": evSnap.exists ? "YES" : "NO",
-        "Ticket exists?": tkSnap.exists ? "YES" : "NO"
-      };
-      console.log("DEBUG →", debugInfo);
+  // Prefill name from user profile
+  $("buyGuestName").value = currentUser.displayName || "";
+  $("buySeat").value = "";
 
-      if (!tkSnap.exists) {
-        showError("Ticket not found", "This ticket no longer exists.", debugInfo);
-        return;
-      }
-      var event = evSnap.exists ? evSnap.data() : null;
-      if (event) event.id = evSnap.id;
-      var ticket = tkSnap.data() || {};
-      ticket.id = tkSnap.id;
-      renderTicket(ticket, event);
+  updateBuyPrice();
+  $("buyModal").classList.add("open");
+  document.body.style.overflow = "hidden";
+  refreshIcons();
+}
+
+function updateBuyPrice(){
+  if (!eventData) return;
+  var tier = $("buyTier").value;
+  var prices = eventData.tierPrices || {};
+  var price = parseFloat(prices[tier]) || 0;
+  $("buyTotal").textContent = price > 0 ? formatMoney(price) : "Free";
+  var names = eventData.tierNames || {};
+  var defaultNames = {black:"Elite",gold:"VIP",silver:"Silver",cyan:"Standard",tier5:"Platinum",tier6:"Diamond"};
+  $("buyTierHint").textContent = "You selected: " + (names[tier] || defaultNames[tier] || tier);
+}
+
+function generateTicketId(){
+  var rand = Math.random().toString(36).slice(2, 8).toUpperCase();
+  var t = Date.now().toString(36).slice(-4).toUpperCase();
+  return "TKT-" + t + "-" + rand;
+}
+
+function confirmBuy(){
+  if (!eventData) return;
+  if (!currentUser) { showToast("Please sign in first.", "error"); return; }
+
+  var tier = $("buyTier").value;
+  var guestName = ($("buyGuestName").value || "").trim();
+  var seat = ($("buySeat").value || "").trim().toUpperCase();
+
+  if (!guestName) {
+    showToast("Please enter a guest name.", "error");
+    $("buyGuestName").focus();
+    return;
+  }
+
+  var btn = $("buyConfirm");
+  var orig = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Creating…';
+
+  var ticketId = generateTicketId();
+  var prices = eventData.tierPrices || {};
+  var pricePaid = parseFloat(prices[tier]) || 0;
+
+  var ticketData = {
+    ticketId: ticketId,
+    eventId: eventId,
+    eventName: eventData.eventName || "",
+    tier: tier,
+    guestName: guestName,
+    seat: seat || "",
+    status: "valid",
+    pricePaid: pricePaid,
+    buyerUid: currentUser.uid,
+    buyerEmail: currentUser.email || "",
+    buyerName: currentUser.displayName || "",
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  // Create the ticket doc
+  var ticketsRef = db.collection(EVENTS_COLLECTION).doc(eventId).collection("tickets");
+
+  ticketsRef.add(ticketData)
+    .then(function(docRef){
+      // Log scan/create event (best-effort, optional)
+      return db.collection(EVENTS_COLLECTION).doc(eventId).collection("scanLogs").add({
+        action: "created",
+        ticketId: ticketId,
+        byUid: currentUser.uid,
+        byEmail: currentUser.email || "",
+        at: firebase.firestore.FieldValue.serverTimestamp()
+      }).catch(function(){ /* ignore if scanLogs rules block */ })
+      .then(function(){ return docRef; });
+    })
+    .then(function(docRef){
+      showToast("Ticket created successfully!", "success");
+      setTimeout(function(){
+        // Redirect to the ticket card page
+        window.location.href = "view-card.html?event=" + encodeURIComponent(eventId) + "&ticket=" + encodeURIComponent(docRef.id);
+      }, 700);
+    })
+    .catch(function(err){
+      console.error("Ticket creation error:", err);
+      showToast("Could not create ticket: " + err.message, "error", 6000);
+      btn.disabled = false;
+      btn.innerHTML = orig;
+      refreshIcons();
+    });
+}
+
+/* ================= DELETE ================= */
+function deleteEvent(){
+  if (!eventData) return;
+  if (!canEditOrDelete()) { showToast("You don't have permission to delete this event.", "error"); return; }
+  $("deleteEventName").textContent = eventData.eventName || "this event";
+  $("deleteModal").classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+
+function performDelete(){
+  if (!eventData) return;
+  var btn = $("deleteConfirm");
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Deleting…';
+  db.collection(EVENTS_COLLECTION).doc(eventId).delete()
+    .then(function(){
+      $("deleteModal").classList.remove("open");
+      document.body.style.overflow = "";
+      showToast("Event deleted", "success");
+      setTimeout(function(){ window.location.href = "index.html"; }, 900);
     })
     .catch(function(err){
       console.error(err);
-      var debugInfo = {
-        "Full URL": window.location.href,
-        "eventId used": eventId,
-        "ticketId used": ticketId,
-        "Firestore path": ticketRef.path,
-        "Error code": err.code || "(none)",
-        "Error message": err.message || "(none)"
-      };
-      showError("Could not load ticket", err.message || "Please try again.", debugInfo);
+      showToast("Delete failed: " + err.message, "error", 5000);
+      btn.disabled = false;
+      btn.innerHTML = icon("trash-2") + " Delete";
+      refreshIcons();
     });
+}
+
+function editEvent(){
+  if (!eventData) return;
+  if (!canEditOrDelete()) { showToast("You don't have permission to edit this event.", "error"); return; }
+  window.location.href = "create-event.html?edit=" + encodeURIComponent(eventId);
 }
 
 /* ================= BOOT ================= */
@@ -859,9 +781,44 @@ document.addEventListener("DOMContentLoaded", function(){
   $("year").textContent = new Date().getFullYear();
   refreshIcons();
 
-  $("printBtn").addEventListener("click", function(){ window.print(); });
+  eventId = getQueryParam("id");
+  if (!eventId) {
+    showError("Missing event ID", "The link is missing an event identifier.");
+    return;
+  }
 
-  auth.onAuthStateChanged(function(){ loadTicket(); });
+  auth.onAuthStateChanged(function(user){
+    applyAuthState(user);
+    attachEventListener();
+  });
+
+  // User menu
+  $("userMenuBtn").addEventListener("click", function(e){
+    e.stopPropagation();
+    $("userDropdown").classList.toggle("open");
+  });
+  document.addEventListener("click", function(){ $("userDropdown").classList.remove("open"); });
+
+  $("ddSignOut").addEventListener("click", function(){ auth.signOut().then(function(){ showToast("Signed out","success"); }); });
+  $("ddCreateEvent").addEventListener("click", function(){ window.location.href = "create-event.html"; });
+
+  // Buy flow
+  $("getTicketsBtn").addEventListener("click", openBuyModal);
+  $("buyTier").addEventListener("change", updateBuyPrice);
+  $("buyClose").addEventListener("click", function(){ $("buyModal").classList.remove("open"); document.body.style.overflow = ""; });
+  $("buyCancel").addEventListener("click", function(){ $("buyModal").classList.remove("open"); document.body.style.overflow = ""; });
+  $("buyModal").addEventListener("click", function(e){ if (e.target === this){ this.classList.remove("open"); document.body.style.overflow = ""; } });
+  $("buyConfirm").addEventListener("click", confirmBuy);
+
+  // Delete
+  $("deleteBtn").addEventListener("click", deleteEvent);
+  $("deleteModalClose").addEventListener("click", function(){ $("deleteModal").classList.remove("open"); document.body.style.overflow = ""; });
+  $("deleteCancel").addEventListener("click", function(){ $("deleteModal").classList.remove("open"); document.body.style.overflow = ""; });
+  $("deleteConfirm").addEventListener("click", performDelete);
+  $("deleteModal").addEventListener("click", function(e){ if (e.target === this){ this.classList.remove("open"); document.body.style.overflow = ""; } });
+
+  // Edit
+  $("editBtn").addEventListener("click", editEvent);
 });
 })();
 </script>
