@@ -561,13 +561,11 @@ body.staff-seat-mode .fs-seat:hover{outline:2px solid #fff;outline-offset:2px;tr
 #coverPreviewImg{display:block;width:100%;height:190px;object-fit:cover;}
 #coverRemoveBtn{position:absolute;top:10px;right:10px;background:rgba(220,38,38,.92);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-weight:800;font-size:11px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.2);}
 #coverRemoveBtn:hover{background:#b91c1c;}
-
-/* ===== New venue fields (plain text + city dropdown) ===== */
 .venue-preset-hint{display:inline-flex;align-items:center;gap:6px;margin-top:6px;padding:5px 10px;background:var(--cyan-50);border:1px solid var(--cyan-400);border-radius:8px;font-size:11.5px;font-weight:700;color:var(--cyan-700);word-break:break-word;max-width:100%}
 .venue-preset-hint i{width:13px;height:13px;flex-shrink:0}
 </style>
-</head>
-<body>
+  </head>
+  <body>
 <header class="site-header">
   <div class="container header-inner">
     <a href="index.html" class="novalink-logo">
@@ -1644,37 +1642,6 @@ var VENUE_PRESETS = {
   ]
 };
 
-function updateVenueFields() {
-  var nameEl = $("venueName"), cityEl = $("venueCity"), addrEl = $("venueAddress");
-  if (!nameEl || !cityEl || !addrEl) return;
-  selectedLocation.venueName = (nameEl.value || "").trim();
-  selectedLocation.city     = (cityEl.value || "").trim();
-  selectedLocation.address  = (addrEl.value || "").trim();
-  if (!selectedLocation.address && selectedLocation.venueName && selectedLocation.city) {
-    selectedLocation.address = selectedLocation.venueName + ", " + selectedLocation.city;
-  }
-  updateAllTicketPreviews();
-}
-
-function updateVenuePresetHint() {
-  var hint = $("venuePresetHint"), text = $("venuePresetText");
-  if (!hint || !text) return;
-  var city = $("venueCity").value;
-  var nameVal = ($("venueName").value || "").trim().toLowerCase();
-  if (!city || !VENUE_PRESETS[city]) { hint.style.display = "none"; return; }
-  var venues = VENUE_PRESETS[city];
-  var match = venues.find(function(v){ return v.name.toLowerCase() === nameVal; });
-  if (match) {
-    $("venueAddress").value = match.address;
-    selectedLocation.address = match.address;
-    text.textContent = "Address auto-filled from " + match.name + ".";
-  } else {
-    text.textContent = venues.length + " known venue" + (venues.length === 1 ? "" : "s") + " in " + city + ": " + venues.map(function(v){return v.name;}).join(" · ");
-  }
-  hint.style.display = "inline-flex";
-  updateAllTicketPreviews();
-}
-
 var TIER_KEYS = (RE.TIER_KEYS || ["black", "gold", "silver", "cyan", "tier5", "tier6"]).slice();
 var TIER_DEFAULTS = Object.assign({ black: "#1a202c", gold: "#ecc94b", silver: "#cbd5e1", cyan: "#00FFFF", tier5: "#a855f7", tier6: "#f472b6" }, RE.TIER_DEFAULTS || {});
 var TIER_DEFAULT_NAMES = Object.assign({ black: "Elite", gold: "VIP", silver: "Silver", cyan: "Standard", tier5: "Platinum", tier6: "Diamond" }, RE.TIER_DEFAULT_NAMES || {});
@@ -1726,19 +1693,79 @@ function mixWithBlack(hex, ratio){ var c = hexToRgbObj(hex); if (!c) return hex;
 function relativeLuminance(hex){ var c = hexToRgbObj(hex); if (!c) return 0; var arr = [c.r, c.g, c.b].map(function(v){ v /= 255; return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4); }); return 0.2126 * arr[0] + 0.7152 * arr[1] + 0.0722 * arr[2]; }
 function contrastTextOn(hex){ return relativeLuminance(hex) > 0.5 ? "#0a0f14" : "#ffffff"; }
 
-function applyTierColors(){
-  var root = document.documentElement;
-  TIER_KEYS.forEach(function(name){
-    var hex = TIER_COLORS[name] || TIER_DEFAULTS[name];
-    root.style.setProperty("--tier-" + name, hex);
-    root.style.setProperty("--tier-" + name + "-light", mixWithWhite(hex, 0.85));
-    root.style.setProperty("--tier-" + name + "-text", contrastTextOn(hex));
-    root.style.setProperty("--tier-" + name + "-text-light", mixWithBlack(hex, 0.45));
-    var sw = $("tierSwatch" + tierIdToCap(name));
-    if (sw) sw.style.background = hex;
+/* ===== TOP-LEVEL HELPERS (moved out of DOMContentLoaded to fix scope bug) ===== */
+function tierIdToCap(t){ return t.charAt(0).toUpperCase() + t.slice(1); }
+function getActiveTiers(){ return TIER_KEYS.slice(0, activeTierCount); }
+function isTierActive(t){ return getActiveTiers().indexOf(t) !== -1; }
+
+function updateAllTicketPreviews() {
+  var eventName = $("eventName").value || "EVENT NAME";
+  var venueDisplay = selectedLocation.venueName
+    ? (selectedLocation.venueName + (selectedLocation.city ? ", " + selectedLocation.city : ""))
+    : (selectedLocation.address || "VENUE");
+  var dateVenue = ($("startDate").value || "DATE") + " · " + venueDisplay;
+  var guestName = $("guestName").value || "GUEST NAME";
+  var seatCode = reBuildSeatCode($("seatBlock").value, $("seatRow").value, $("seatNum").value);
+  var seatDisp = seatCode || "Seat not assigned";
+  var refDisp = "Ref: " + (seatCode ? reBuildTicketRef(seatCode.replace(/-/g,""), "PREVIEW") : "NL-XXXXXX");
+  [1,2,3].forEach(function(i){
+    var sfx = (i === 1) ? "" : String(i);
+    var en = $("prevEventName" + sfx); if (en) en.textContent = eventName;
+    var dv = $("prevDateVenue" + sfx); if (dv) dv.textContent = dateVenue;
+    var gn = $("prevGuestName" + sfx); if (gn) gn.textContent = guestName;
+    var ps = $("prevSeat" + sfx); if (ps) ps.textContent = seatDisp;
+    var pr = $("prevRef" + sfx); if (pr) pr.textContent = refDisp;
+    var pv = $("prevVenueLocation" + sfx); if (pv) pv.textContent = venueDisplay;
+    var be = $("prevBackEventName" + sfx); if (be) be.textContent = eventName;
+    var br = $("prevBackRef" + sfx); if (br) br.textContent = refDisp;
   });
+  var seatDispEl = $("seatPreviewDisplay");
+  if (seatDispEl) {
+    if (seatCode) { seatDispEl.textContent = seatCode; seatDispEl.classList.remove("empty"); }
+    else { seatDispEl.textContent = "Enter block, row and seat to preview"; seatDispEl.classList.add("empty"); }
+  }
+  var tier = $("tierColor") ? $("tierColor").value : "cyan";
+  if (!isTierActive(tier)) tier = getActiveTiers()[getActiveTiers().length - 1] || "cyan";
+  var tierLabel = (TIER_NAMES[tier] || tier).toUpperCase();
+  [1,2,3].forEach(function(i){
+    var sfx = (i === 1) ? "" : String(i);
+    var ptb = $("prevTierBadge" + sfx); if (ptb) ptb.textContent = tierLabel;
+    var pbtb = $("prevBackTierBadge" + sfx); if (pbtb) pbtb.textContent = tierLabel;
+  });
+  applyTicketPaletteToAll(tier);
+}
+
+function updateVenueFields() {
+  var nameEl = $("venueName"), cityEl = $("venueCity"), addrEl = $("venueAddress");
+  if (!nameEl || !cityEl || !addrEl) return;
+  selectedLocation.venueName = (nameEl.value || "").trim();
+  selectedLocation.city     = (cityEl.value || "").trim();
+  selectedLocation.address  = (addrEl.value || "").trim();
+  if (!selectedLocation.address && selectedLocation.venueName && selectedLocation.city) {
+    selectedLocation.address = selectedLocation.venueName + ", " + selectedLocation.city;
+  }
   updateAllTicketPreviews();
 }
+
+function updateVenuePresetHint() {
+  var hint = $("venuePresetHint"), text = $("venuePresetText");
+  if (!hint || !text) return;
+  var city = $("venueCity").value;
+  var nameVal = ($("venueName").value || "").trim().toLowerCase();
+  if (!city || !VENUE_PRESETS[city]) { hint.style.display = "none"; return; }
+  var venues = VENUE_PRESETS[city];
+  var match = venues.find(function(v){ return v.name.toLowerCase() === nameVal; });
+  if (match) {
+    $("venueAddress").value = match.address;
+    selectedLocation.address = match.address;
+    text.textContent = "Address auto-filled from " + match.name + ".";
+  } else {
+    text.textContent = venues.length + " known venue" + (venues.length === 1 ? "" : "s") + " in " + city + ": " + venues.map(function(v){return v.name;}).join(" · ");
+  }
+  hint.style.display = "inline-flex";
+  updateAllTicketPreviews();
+}
+
 function getTicketPalette(hex){
   var lum = relativeLuminance(hex);
   var isDark = lum < 0.35;
@@ -1752,6 +1779,20 @@ function applyTicketPaletteToAll(tier){
   var p = getTicketPalette(hex);
   ["dynamicTicket","dynamicTicket2","dynamicTicket3"].forEach(function(id){ applyPaletteToCard($(id), p); });
   ["dynamicTicketBack","dynamicTicketBack2","dynamicTicketBack3"].forEach(function(id){ applyPaletteToCard($(id), p); });
+}
+
+function applyTierColors(){
+  var root = document.documentElement;
+  TIER_KEYS.forEach(function(name){
+    var hex = TIER_COLORS[name] || TIER_DEFAULTS[name];
+    root.style.setProperty("--tier-" + name, hex);
+    root.style.setProperty("--tier-" + name + "-light", mixWithWhite(hex, 0.85));
+    root.style.setProperty("--tier-" + name + "-text", contrastTextOn(hex));
+    root.style.setProperty("--tier-" + name + "-text-light", mixWithBlack(hex, 0.45));
+    var sw = $("tierSwatch" + tierIdToCap(name));
+    if (sw) sw.style.background = hex;
+  });
+  updateAllTicketPreviews();
 }
 
 function readCost(){ var v = parseFloat($("cost") ? $("cost").value : ""); if (isNaN(v) || v < 0) v = 0; return Math.round(v * 100) / 100; }
@@ -1777,9 +1818,6 @@ document.addEventListener("DOMContentLoaded", function(){
   function blockLabel(index) { return String.fromCharCode(65 + index); }
   function tierTagText(t) { return getTierLabel(t); }
   function getTierLabel(tier){ return TIER_NAMES[tier] || tier; }
-  function tierIdToCap(t){ return t.charAt(0).toUpperCase() + t.slice(1); }
-  function getActiveTiers(){ return TIER_KEYS.slice(0, activeTierCount); }
-  function isTierActive(t){ return getActiveTiers().indexOf(t) !== -1; }
   function snap(v) { return snapToGrid ? Math.round(v / gridSize) * gridSize : v; }
   function clampInt(v, min, max, fallback) { var n = parseInt(v, 10); if (isNaN(n)) n = fallback; return Math.max(min, Math.min(max, n)); }
   function clampFloat(v, min, max, fallback) { var n = parseFloat(v); if (isNaN(n)) n = fallback; return Math.max(min, Math.min(max, n)); }
@@ -2122,42 +2160,6 @@ document.addEventListener("DOMContentLoaded", function(){
     });
     updateAllTicketPreviews(); renderSeatingPlan();
     if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
-  }
-  function updateAllTicketPreviews() {
-    var eventName = $("eventName").value || "EVENT NAME";
-    var venueDisplay = selectedLocation.venueName
-      ? (selectedLocation.venueName + (selectedLocation.city ? ", " + selectedLocation.city : ""))
-      : (selectedLocation.address || "VENUE");
-    var dateVenue = ($("startDate").value || "DATE") + " · " + venueDisplay;
-    var guestName = $("guestName").value || "GUEST NAME";
-    var seatCode = reBuildSeatCode($("seatBlock").value, $("seatRow").value, $("seatNum").value);
-    var seatDisp = seatCode || "Seat not assigned";
-    var refDisp = "Ref: " + (seatCode ? reBuildTicketRef(seatCode.replace(/-/g,""), "PREVIEW") : "NL-XXXXXX");
-    [1,2,3].forEach(function(i){
-      var sfx = (i === 1) ? "" : String(i);
-      var en = $("prevEventName" + sfx); if (en) en.textContent = eventName;
-      var dv = $("prevDateVenue" + sfx); if (dv) dv.textContent = dateVenue;
-      var gn = $("prevGuestName" + sfx); if (gn) gn.textContent = guestName;
-      var ps = $("prevSeat" + sfx); if (ps) ps.textContent = seatDisp;
-      var pr = $("prevRef" + sfx); if (pr) pr.textContent = refDisp;
-      var pv = $("prevVenueLocation" + sfx); if (pv) pv.textContent = venueDisplay;
-      var be = $("prevBackEventName" + sfx); if (be) be.textContent = eventName;
-      var br = $("prevBackRef" + sfx); if (br) br.textContent = refDisp;
-    });
-    var seatDispEl = $("seatPreviewDisplay");
-    if (seatDispEl) {
-      if (seatCode) { seatDispEl.textContent = seatCode; seatDispEl.classList.remove("empty"); }
-      else { seatDispEl.textContent = "Enter block, row and seat to preview"; seatDispEl.classList.add("empty"); }
-    }
-    var tier = $("tierColor") ? $("tierColor").value : "cyan";
-    if (!isTierActive(tier)) tier = getActiveTiers()[getActiveTiers().length - 1] || "cyan";
-    var tierLabel = (TIER_NAMES[tier] || tier).toUpperCase();
-    [1,2,3].forEach(function(i){
-      var sfx = (i === 1) ? "" : String(i);
-      var ptb = $("prevTierBadge" + sfx); if (ptb) ptb.textContent = tierLabel;
-      var pbtb = $("prevBackTierBadge" + sfx); if (pbtb) pbtb.textContent = tierLabel;
-    });
-    applyTicketPaletteToAll(tier);
   }
   function setTicketFlipped(flipped) {
     ["ticketFlipInner","ticketFlipInner2","ticketFlipInner3"].forEach(function(id){ var el = $(id); if (el) el.classList.toggle("flipped", flipped); });
@@ -4124,4 +4126,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-  </html>
+</html>
