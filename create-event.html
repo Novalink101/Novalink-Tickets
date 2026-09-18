@@ -606,6 +606,12 @@ body.staff-seat-mode .fs-seat:hover{outline:2px solid #fff;outline-offset:2px;tr
 .seat-builder .seat-sep{color:var(--text-muted);font-weight:800;font-size:16px;flex-shrink:0;}
 .seat-preview-display{margin-top:10px;padding:10px 14px;background:var(--surface-2);border:1px dashed var(--cyan-500);border-radius:8px;font-family:ui-monospace,monospace;font-weight:800;font-size:16px;color:var(--cyan-700);text-align:center;letter-spacing:1px;min-height:42px;display:flex;align-items:center;justify-content:center;word-break:break-all;}
 .seat-preview-display.empty{color:var(--text-muted);font-weight:600;font-family:var(--font);font-size:12px;letter-spacing:0;border-color:var(--border-2);border-style:solid;}
+
+/* ============= COVER IMAGE PREVIEW ============= */
+#coverPreviewWrap{display:none;margin:-8px 0 18px;border-radius:12px;overflow:hidden;border:1px solid var(--border);position:relative;}
+#coverPreviewImg{display:block;width:100%;height:190px;object-fit:cover;}
+#coverRemoveBtn{position:absolute;top:10px;right:10px;background:rgba(220,38,38,.92);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-weight:800;font-size:11px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.2);}
+#coverRemoveBtn:hover{background:#b91c1c;}
 </style>
 </head>
 <body>
@@ -725,6 +731,23 @@ body.staff-seat-mode .fs-seat:hover{outline:2px solid #fff;outline-offset:2px;tr
           <div class="section-divider"><span>Event Details</span></div>
           <div class="form-group"><label for="eventName">Event Name</label><input type="text" id="eventName" placeholder="e.g., Neon Nights Live" required /></div>
           <div class="form-group"><label for="venueAddress">Venue Name &amp; Address</label><input type="text" id="venueAddress" placeholder="e.g., Grand Amphitheatre, 123 Main Rd" required /></div>
+
+          <!-- ============= COVER IMAGE ============= -->
+          <div class="section-divider"><span>Cover Image</span></div>
+          <div class="form-group">
+            <label for="coverImageUrl">Cover Image URL (optional)</label>
+            <input type="url" id="coverImageUrl" placeholder="https://images.unsplash.com/photo-..." />
+            <p class="form-hint">Paste a direct image link. It becomes the hero banner on the event page and the thumbnail on the home feed.</p>
+          </div>
+          <div class="form-group">
+            <label for="coverImageFile">Or upload a cover (max 500 KB)</label>
+            <input type="file" id="coverImageFile" accept="image/*" />
+            <p class="form-hint">Stored as a small base64 image. Keep under 500 KB — Firestore documents cap at 1 MB.</p>
+          </div>
+          <div id="coverPreviewWrap">
+            <img id="coverPreviewImg" alt="Cover preview" />
+            <button type="button" id="coverRemoveBtn">Remove</button>
+          </div>
 
           <div class="step-nav">
             <button type="button" class="btn btn-ghost" disabled>← Previous</button>
@@ -1527,6 +1550,10 @@ var db   = firebase.firestore();
 var auth = firebase.auth();
 var EVENTS_COLLECTION = "events";
 
+/* Resolved auth user (avoids race with onAuthStateChanged) */
+window._nvCurrentUser = null;
+auth.onAuthStateChanged(function(u){ window._nvCurrentUser = u; });
+
 /* ============= STEP STATE ============= */
 var TOTAL_STEPS = 5;
 var STEP_NAMES = {1: "Event Details", 2: "Pricing Plan", 3: "Tiers", 4: "Seating Plan", 5: "Revenue"};
@@ -1554,7 +1581,7 @@ function goToStep(n) {
   if (n === 5) { updateRevenueCalculator(); renderTierBreakdown(); }
 }
 
-/* ============= SAVE STATE (SAVE ONCE) ============= */
+/* ============= SAVE STATE ============= */
 var isSaved = false;
 var savedEventId = null;
 
@@ -1905,7 +1932,6 @@ document.addEventListener("DOMContentLoaded", function(){
   function applyTierColourLock(){
     var editable = FEATURES.editTierColors;
     document.querySelectorAll(".tier-color-input").forEach(function(inp){ inp.disabled = !editable; });
-    var rb = $("resetTierColorsBtn"); if (rb) rb.style.display = editable ? "" : "none";
     if (!editable) { TIER_KEYS.forEach(function(k){ TIER_COLORS[k] = TIER_DEFAULTS[k]; var el = document.querySelector('.tier-color-input[data-tier="' + k + '"]'); if (el) el.value = TIER_DEFAULTS[k]; }); applyTierColors(); }
   }
   function resetTierNamesToDefaults(){
@@ -3413,7 +3439,57 @@ document.addEventListener("DOMContentLoaded", function(){
     showToast("Venue exported as CSV", "success");
   }
 
-  /* ============= SAVE EVENT (writes to Firestore) ============= */
+  /* ============= COVER IMAGE ============= */
+  var coverDataUrl = "";
+  var coverUrlEl  = $("coverImageUrl");
+  var coverFileEl = $("coverImageFile");
+  var coverWrapEl = $("coverPreviewWrap");
+  var coverImgEl  = $("coverPreviewImg");
+
+  function showCoverPreview(src){
+    if (!coverWrapEl) return;
+    if (!src){ coverWrapEl.style.display = "none"; coverImgEl.removeAttribute("src"); return; }
+    coverImgEl.src = src;
+    coverWrapEl.style.display = "block";
+  }
+  function getCoverImagePayload(){
+    var u = coverUrlEl && coverUrlEl.value ? coverUrlEl.value.trim() : "";
+    return u || coverDataUrl || "";
+  }
+  if (coverUrlEl){
+    coverUrlEl.addEventListener("input", function(){
+      coverDataUrl = "";
+      showCoverPreview(this.value.trim());
+    });
+  }
+  if (coverFileEl){
+    coverFileEl.addEventListener("change", function(){
+      var f = this.files && this.files[0];
+      if (!f) return;
+      if (!/^image\//.test(f.type)){ showToast("Please choose an image file.", "error"); this.value=""; return; }
+      if (f.size > 500 * 1024){ showToast("Image must be under 500 KB. Try compressing it or paste a URL instead.", "error", 5000); this.value=""; return; }
+      var reader = new FileReader();
+      reader.onload = function(ev){
+        coverDataUrl = ev.target.result;
+        if (coverUrlEl) coverUrlEl.value = "";
+        showCoverPreview(coverDataUrl);
+        showToast("Cover loaded", "success", 1800);
+      };
+      reader.onerror = function(){ showToast("Could not read that file.", "error"); };
+      reader.readAsDataURL(f);
+    });
+  }
+  var coverRemoveBtn = $("coverRemoveBtn");
+  if (coverRemoveBtn){
+    coverRemoveBtn.addEventListener("click", function(){
+      if (coverUrlEl) coverUrlEl.value = "";
+      if (coverFileEl) coverFileEl.value = "";
+      coverDataUrl = "";
+      showCoverPreview("");
+    });
+  }
+
+  /* ============= SAVE EVENT ============= */
   function generateEventId() {
     var name = ($("eventName").value || "event").toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 24).replace(/^-|-$/g, "");
     var suffix = Date.now().toString(36) + Math.random().toString(36).slice(2, 6);
@@ -3427,10 +3503,13 @@ document.addEventListener("DOMContentLoaded", function(){
     active.forEach(function(t){ totalTickets += counts[t] || 0; gross += (counts[t]||0) * (TIER_PRICES[t]||0); });
     var fee = gross * (currentPlan.fee / 100); var net = gross - fee;
     var tierColor = $("tierColor") && isTierActive($("tierColor").value) ? $("tierColor").value : (active[active.length - 1] || "cyan");
+    var coverSrc = getCoverImagePayload();
 
     var payload = Object.assign({
       id: eventId,
       eventName: $("eventName").value.trim() || "Untitled Event",
+      coverImage: coverSrc,
+      heroImage: coverSrc,
       hostName: $("hostName").value.trim(),
       hostEmail: $("hostEmail").value.trim(),
       city: $("city").value,
@@ -3453,7 +3532,7 @@ document.addEventListener("DOMContentLoaded", function(){
   }
 
   function persistEvent(payload, onDone) {
-    var user = auth.currentUser;
+    var user = window._nvCurrentUser || auth.currentUser;
     if (!user) {
       onDone({ ok: false, error: "You must be signed in to save an event. Please sign in first." });
       return;
@@ -3481,7 +3560,7 @@ document.addEventListener("DOMContentLoaded", function(){
       return;
     }
 
-    if (!auth.currentUser) {
+    if (!(window._nvCurrentUser || auth.currentUser)) {
       showToast("Please sign in before saving an event. Redirecting…", "error", 4000);
       setTimeout(function(){ window.location.href = "index.html#signin"; }, 1200);
       return;
@@ -3974,4 +4053,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-  </html>
+              </html>
