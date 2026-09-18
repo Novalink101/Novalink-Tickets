@@ -131,3 +131,494 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 }
 </style>
 </head>
+<body>
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a href="index.html" class="logo">
+      <svg class="mark" viewBox="0 0 60 74"><path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/><path fill="#00FFFF" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/></svg>
+      <span class="wm">NOVALINK</span>
+    </a>
+    <div class="hdr-actions">
+      <a href="index.html" class="btn btn-ghost" style="font-size:13px;padding:8px 12px;"><i data-lucide="arrow-left"></i> Home</a>
+      <button id="userMenuBtn" class="user-btn">
+        <span class="av" id="userAvatar">?</span>
+        <span class="nm" id="userName">User</span>
+        <span class="badge" id="adminBadge" style="display:none">Admin</span>
+      </button>
+      <div class="dd" id="userDropdown">
+        <button class="dd-item" id="ddSignOut"><i data-lucide="log-out"></i> Sign out</button>
+        <button class="dd-item" id="ddCreateEvent"><i data-lucide="plus-circle"></i> Create an event</button>
+        <button class="dd-item" id="ddMyCards"><i data-lucide="ticket"></i> My cards</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="page">
+  <div class="container">
+
+    <!-- Loading -->
+    <div id="loadingState" class="ls">
+      <i data-lucide="loader-2"></i>
+      <p>Loading your cards…</p>
+    </div>
+
+    <!-- Error -->
+    <div id="errorState" class="es" style="display:none">
+      <div class="ic"><i data-lucide="alert-circle" id="errorIcon"></i></div>
+      <h2 id="errorTitle">Could not load</h2>
+      <p id="errorMsg">Something went wrong.</p>
+      <div class="actions">
+        <a href="index.html" class="btn btn-accent"><i data-lucide="arrow-left"></i> Back to home</a>
+      </div>
+    </div>
+
+    <!-- Sign-in prompt -->
+    <div id="signinState" class="es" style="display:none">
+      <div class="ic"><i data-lucide="lock"></i></div>
+      <h2>Sign in to see your cards</h2>
+      <p>Your tickets are tied to your account. Sign in to view them.</p>
+      <div class="actions">
+        <a href="index.html#signin" class="btn btn-accent"><i data-lucide="log-in"></i> Sign in</a>
+        <a href="index.html" class="btn btn-ghost"><i data-lucide="arrow-left"></i> Home</a>
+      </div>
+    </div>
+
+    <!-- Content -->
+    <div id="cardsContent" style="display:none">
+
+      <div class="page-head">
+        <span class="eyebrow"><i data-lucide="ticket"></i> My cards</span>
+        <h1>Your tickets, all in one place</h1>
+        <p>Every event you've booked. Tap a card to open the QR and barcode for scanning.</p>
+      </div>
+
+      <!-- Stats -->
+      <div class="stats" id="statsRow">
+        <div class="stat"><span class="lbl">Total</span><span class="val" id="statTotal">0</span></div>
+        <div class="stat valid"><span class="lbl">Valid</span><span class="val" id="statValid">0</span></div>
+        <div class="stat cancelled"><span class="lbl">Cancelled</span><span class="val" id="statCancelled">0</span></div>
+      </div>
+
+      <!-- Empty state -->
+      <div class="empty-state" id="emptyState" style="display:none">
+        <div class="ic"><i data-lucide="ticket"></i></div>
+        <h2>No cards yet</h2>
+        <p>You haven't booked any tickets. Once you buy a ticket, it'll appear here with its QR code.</p>
+        <a href="events.html" class="btn btn-accent btn-lg"><i data-lucide="search"></i> Browse events</a>
+      </div>
+
+      <!-- Upcoming section -->
+      <div class="section" id="upcomingSection" style="display:none">
+        <div class="section-head">
+          <h2>Upcoming</h2>
+          <span class="count" id="upcomingCount">0</span>
+        </div>
+        <div class="cards-grid" id="upcomingGrid"></div>
+      </div>
+
+      <!-- Past section -->
+      <div class="section" id="pastSection" style="display:none">
+        <div class="section-head">
+          <h2>Past events</h2>
+          <span class="count" id="pastCount">0</span>
+        </div>
+        <div class="cards-grid" id="pastGrid"></div>
+      </div>
+
+    </div>
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <div class="fb">
+      <span>&copy; <span id="year"></span> Novalink. All rights reserved.</span>
+      <span>Johannesburg, South Africa</span>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+<script src="routing-engine.js"></script>
+<script>
+(function(){
+'use strict';
+
+var firebaseConfig = {
+  apiKey: "AIzaSyDSnns131jOlBXAqKo6qy7lTW4Rij-1oWU",
+  authDomain: "novalink-864cf.firebaseapp.com",
+  projectId: "novalink-864cf",
+  storageBucket: "novalink-864cf.firebasestorage.app",
+  messagingSenderId: "602780280140",
+  appId: "1:602780280140:web:5d9ff2351e5a7d5e66dbe9"
+};
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+var db = firebase.firestore();
+var auth = firebase.auth();
+var EVENTS = "events";
+var ADMINS = ["nylnathan340@gmail.com"];
+
+var currentUser = null;
+var isAdmin = false;
+var allCards = [];
+
+function $(id){ return document.getElementById(id); }
+function refreshIcons(){ if(window.lucide) lucide.createIcons(); }
+function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+function initialsFrom(name,email){
+  if(name && name.trim()){ var p = name.trim().split(/\s+/); if(p.length>=2) return (p[0][0]+p[1][0]).toUpperCase(); return p[0].slice(0,2).toUpperCase(); }
+  if(email) return email.slice(0,2).toUpperCase();
+  return "??";
+}
+
+function showToast(msg,type,ms){
+  type = type || "info"; ms = ms || 3000;
+  var t = $("toast");
+  t.className = "toast " + type;
+  var ic = type === "error" ? "alert-circle" : (type === "success" ? "check-circle" : "info");
+  t.innerHTML = '<i data-lucide="'+ic+'"></i><span>'+esc(msg)+'</span>';
+  refreshIcons();
+  requestAnimationFrame(function(){ t.classList.add("show"); });
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(function(){ t.classList.remove("show"); }, ms);
+}
+
+function formatDate(dateStr){
+  if (!dateStr) return "Date TBA";
+  try {
+    var d = new Date(dateStr + "T00:00");
+    if (isNaN(d.getTime())) return dateStr;
+    var opts = { weekday: "short", day: "numeric", month: "short", year: "numeric" };
+    return d.toLocaleDateString("en-ZA", opts);
+  } catch(e){ return dateStr; }
+}
+
+/* ===== Colour helpers (mirror create-event + view-card) ===== */
+var TIER_DEFAULTS = {
+  black:"#1a202c", gold:"#ecc94b", silver:"#cbd5e1",
+  cyan:"#00FFFF", tier5:"#a855f7", tier6:"#f472b6"
+};
+var TIER_DEFAULT_NAMES = {
+  black:"Elite", gold:"VIP", silver:"Silver",
+  cyan:"Standard", tier5:"Platinum", tier6:"Diamond"
+};
+
+function hexToRgbObj(hex){
+  var c = String(hex || "").replace("#","");
+  if (c.length === 3) c = c[0]+c[0]+c[1]+c[1]+c[2]+c[2];
+  if (c.length !== 6) return null;
+  return { r: parseInt(c.substring(0,2),16), g: parseInt(c.substring(2,4),16), b: parseInt(c.substring(4,6),16) };
+}
+function rgbObjToHex(c){
+  return "#" + [c.r,c.g,c.b].map(function(x){
+    return Math.max(0, Math.min(255, Math.round(x))).toString(16).padStart(2,"0");
+  }).join("");
+}
+function mixWithWhite(hex, ratio){
+  var c = hexToRgbObj(hex); if (!c) return hex;
+  return rgbObjToHex({ r: c.r+(255-c.r)*ratio, g: c.g+(255-c.g)*ratio, b: c.b+(255-c.b)*ratio });
+}
+function mixWithBlack(hex, ratio){
+  var c = hexToRgbObj(hex); if (!c) return hex;
+  return rgbObjToHex({ r: c.r*(1-ratio), g: c.g*(1-ratio), b: c.b*(1-ratio) });
+}
+function relativeLuminance(hex){
+  var c = hexToRgbObj(hex); if (!c) return 0;
+  var arr = [c.r, c.g, c.b].map(function(v){
+    v /= 255;
+    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * arr[0] + 0.7152 * arr[1] + 0.0722 * arr[2];
+}
+function contrastTextOn(hex){ return relativeLuminance(hex) > 0.5 ? "#0a0f14" : "#ffffff"; }
+
+function getPalette(hex){
+  var lum = relativeLuminance(hex);
+  var isDark = lum < 0.35;
+  if (isDark) return {
+    c1: mixWithWhite(hex, 0.06), c2: mixWithBlack(hex, 0.45),
+    text: "#ffffff", muted: "rgba(255,255,255,0.65)",
+    logo: "#00FFFF", badgeBg: "rgba(255,255,255,0.15)", badgeText: "#ffffff",
+    isDark: true
+  };
+  var c1 = mixWithWhite(hex, 0.92);
+  var c2 = mixWithWhite(hex, 0.4);
+  var text = contrastTextOn(c2);
+  var isLightText = text === "#ffffff";
+  return {
+    c1: c1, c2: c2, text: text,
+    muted: isLightText ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.6)",
+    logo: isLightText ? "#00FFFF" : "#1e2f4d",
+    badgeBg: isLightText ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.08)",
+    badgeText: isLightText ? "#ffffff" : "#4a5568",
+    isDark: false
+  };
+}
+
+function applyPalette(el, hex){
+  var p = getPalette(hex);
+  el.style.setProperty("--tc-1", p.c1);
+  el.style.setProperty("--tc-2", p.c2);
+  el.style.setProperty("--tc-text", p.text);
+  el.style.setProperty("--tc-muted", p.muted);
+  el.style.setProperty("--tc-logo", p.logo);
+  el.style.setProperty("--tc-badge-bg", p.badgeBg);
+  el.style.setProperty("--tc-badge-text", p.badgeText);
+  el.setAttribute("data-is-dark", p.isDark ? "1" : "0");
+}
+
+/* ===== Auth UI ===== */
+function applyAuth(user){
+  currentUser = user;
+  isAdmin = !!(user && ADMINS.map(function(e){return e.toLowerCase();}).indexOf(String(user.email).toLowerCase()) !== -1);
+  if (user){
+    var display = user.displayName || user.email.split("@")[0];
+    $("userMenuBtn").style.display = "inline-flex";
+    $("userName").textContent = display;
+    $("userAvatar").textContent = initialsFrom(user.displayName, user.email);
+    $("adminBadge").style.display = isAdmin ? "inline-block" : "none";
+  } else {
+    $("userMenuBtn").style.display = "none";
+    $("adminBadge").style.display = "none";
+  }
+}
+
+/* ===== State display ===== */
+function showSignin(){
+  $("loadingState").style.display = "none";
+  $("cardsContent").style.display = "none";
+  $("errorState").style.display = "none";
+  $("signinState").style.display = "block";
+  refreshIcons();
+}
+
+function showError(title, msg, icon){
+  $("loadingState").style.display = "none";
+  $("cardsContent").style.display = "none";
+  $("signinState").style.display = "none";
+  $("errorState").style.display = "block";
+  $("errorTitle").textContent = title;
+  $("errorMsg").textContent = msg;
+  $("errorIcon").setAttribute("data-lucide", icon || "alert-circle");
+  refreshIcons();
+}
+
+function showContent(){
+  $("loadingState").style.display = "none";
+  $("errorState").style.display = "none";
+  $("signinState").style.display = "none";
+  $("cardsContent").style.display = "block";
+  refreshIcons();
+}
+
+/* ===== Load cards =====
+   Strategy: fetch all events (public read), then for each event,
+   fetch tickets where buyerUid == uid. Combine into a flat list.
+*/
+function loadCards(){
+  if (!currentUser) { showSignin(); return; }
+
+  return db.collection(EVENTS).get()
+    .then(function(evSnap){
+      var events = [];
+      evSnap.forEach(function(doc){
+        var d = doc.data() || {};
+        d.id = doc.id;
+        events.push(d);
+      });
+
+      // For each event, query tickets owned by this user
+      var promises = events.map(function(ev){
+        return db.collection(EVENTS).doc(ev.id).collection("tickets")
+          .where("buyerUid", "==", currentUser.uid)
+          .get()
+          .then(function(tSnap){
+            var out = [];
+            tSnap.forEach(function(tDoc){
+              var t = tDoc.data() || {};
+              t.id = tDoc.id;
+              t._event = ev;
+              out.push(t);
+            });
+            return out;
+          })
+          .catch(function(err){
+            // If the user can't read tickets for this event (e.g., event deleted), skip it
+            console.warn("Skipping event " + ev.id + ": " + err.message);
+            return [];
+          });
+      });
+
+      return Promise.all(promises).then(function(results){
+        var flat = [];
+        results.forEach(function(arr){ arr.forEach(function(x){ flat.push(x); }); });
+        return flat;
+      });
+    })
+    .then(function(cards){
+      allCards = cards;
+      renderAll();
+    });
+}
+
+/* ===== Render ===== */
+function renderAll(){
+  var total = allCards.length;
+  var valid = 0, cancelled = 0;
+  var todayStr = new Date().toISOString().slice(0, 10);
+  var upcoming = [];
+  var past = [];
+
+  allCards.forEach(function(c){
+    if (c.status === "valid" || c.status === "checked-in" || c.status === "checked_in") valid++;
+    else if (c.status === "cancelled") cancelled++;
+
+    var eventDate = (c._event && c._event.startDate) || "";
+    if (eventDate && eventDate < todayStr) past.push(c);
+    else upcoming.push(c);
+  });
+
+  $("statTotal").textContent = total;
+  $("statValid").textContent = valid;
+  $("statCancelled").textContent = cancelled;
+
+  if (!total) {
+    $("emptyState").style.display = "block";
+    $("upcomingSection").style.display = "none";
+    $("pastSection").style.display = "none";
+    return;
+  }
+
+  $("emptyState").style.display = "none";
+
+  // Sort upcoming by date ascending (next event first)
+  upcoming.sort(function(a, b){
+    var da = (a._event && a._event.startDate) || "9999";
+    var db_ = (b._event && b._event.startDate) || "9999";
+    return da.localeCompare(db_);
+  });
+
+  // Sort past by date descending (most recent first)
+  past.sort(function(a, b){
+    var da = (a._event && a._event.startDate) || "";
+    var db_ = (b._event && b._event.startDate) || "";
+    return db_.localeCompare(da);
+  });
+
+  renderGrid("upcoming", upcoming);
+  renderGrid("past", past);
+
+  showContent();
+}
+
+function renderGrid(which, list){
+  var section = $(which + "Section");
+  var grid = $(which + "Grid");
+  var count = $(which + "Count");
+
+  if (!list.length) {
+    section.style.display = "none";
+    return;
+  }
+
+  section.style.display = "block";
+  count.textContent = list.length;
+  grid.innerHTML = "";
+
+  list.forEach(function(card){
+    grid.appendChild(buildCard(card));
+  });
+  refreshIcons();
+}
+
+function buildCard(card){
+  var ev = card._event || {};
+  var tierKey = card.tier || "cyan";
+  var tierName = (ev.tierNames && ev.tierNames[tierKey]) || TIER_DEFAULT_NAMES[tierKey] || tierKey;
+  var tierColour = (ev.tierColours && ev.tierColours[tierKey]) || TIER_DEFAULTS[tierKey] || "#00FFFF";
+
+  var el = document.createElement("div");
+  el.className = "ticket-mini";
+
+  var status = card.status || "valid";
+  if (status === "cancelled") el.classList.add("cancelled");
+  else if (status === "checked-in" || status === "checked_in") el.classList.add("used");
+
+  applyPalette(el, tierColour);
+
+  var eventName = ev.eventName || card.eventName || "Untitled Event";
+  var dateLabel = formatDate(ev.startDate);
+  var venue = ev.venueName
+    ? (ev.venueName + (ev.city ? ", " + ev.city : ""))
+    : (ev.venueAddress || ev.city || "");
+
+  // Status badge
+  var statusBadge = "VALID";
+  if (status === "cancelled") statusBadge = "CANCELLED";
+  else if (status === "checked-in" || status === "checked_in") statusBadge = "USED";
+
+  el.innerHTML =
+    '<div class="tm-top">' +
+      '<div class="tm-logo">NOVALINK</div>' +
+      '<div class="tm-badges">' +
+        '<span class="tm-badge">' + esc(statusBadge) + '</span>' +
+        '<span class="tm-badge">' + esc(String(tierName).toUpperCase()) + '</span>' +
+      '</div>' +
+    '</div>' +
+    '<div class="tm-event">' + esc(eventName) + '</div>' +
+    '<div class="tm-date"><i data-lucide="calendar"></i> ' + esc(dateLabel) + '</div>' +
+    '<div class="tm-divider"></div>' +
+    '<div class="tm-bottom">' +
+      '<div class="tm-info">' +
+        '<div class="tm-lbl">Guest</div>' +
+        '<div class="tm-val">' + esc(card.guestName || "Guest") + '</div>' +
+        '<div class="tm-lbl" style="margin-top:8px;">Seat</div>' +
+        '<div class="tm-val tm-seat">' + esc(card.seat || "—") + '</div>' +
+        (venue ? '<div class="tm-lbl" style="margin-top:8px;">Venue</div>' +
+                 '<div class="tm-val" style="font-size:12px;font-weight:600;">' + esc(venue) + '</div>' : '') +
+      '</div>' +
+      '<div class="tm-arrow"><i data-lucide="chevron-right"></i></div>' +
+    '</div>';
+
+  el.addEventListener("click", function(){
+    window.location.href = "view-card.html?event=" + encodeURIComponent(ev.id)
+                          + "&ticket=" + encodeURIComponent(card.id);
+  });
+
+  return el;
+}
+
+/* ===== Boot ===== */
+document.addEventListener("DOMContentLoaded", function(){
+  $("year").textContent = new Date().getFullYear();
+  refreshIcons();
+
+  // Header menu
+  $("userMenuBtn").addEventListener("click", function(e){
+    e.stopPropagation();
+    $("userDropdown").classList.toggle("open");
+  });
+  document.addEventListener("click", function(){ $("userDropdown").classList.remove("open"); });
+  $("ddSignOut").addEventListener("click", function(){ auth.signOut().then(function(){ showToast("Signed out","success"); }); });
+  $("ddCreateEvent").addEventListener("click", function(){ window.location.href = "create-event.html"; });
+  $("ddMyCards").addEventListener("click", function(){ window.location.href = "my-cards.html"; });
+
+  auth.onAuthStateChanged(function(user){
+    applyAuth(user);
+    if (!user) {
+      showSignin();
+      return;
+    }
+    loadCards().catch(function(err){
+      console.error("Load cards error:", err);
+      showError("Could not load cards", err.message || "Try again.", "alert-circle");
+    });
+  });
+});
+})();
+</script>
+</body>
+</html>
