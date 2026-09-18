@@ -1,137 +1,128 @@
-/* ==========================================================================
-   NOVALINK — DYNAMIC ROUTING ENGINE
-   ========================================================================== */
+/* ============================================================
+   Novalink Routing Engine
+   Single source of truth for:
+     - Tier keys, default names, default colours
+     - Seat code format & parsing
+     - Ticket reference format
+     - QR payload format
+   Loaded on: index.html, create-event.html, view-event.html,
+              view-card.html, create-trip.html, events.html
+   ============================================================ */
 (function (global) {
   'use strict';
 
-  const EventRoutingEngine = {
-    "stadium":    { label1: "Stand / Block",    label2: "Row",  label3: "Seat",  requiresCalculation: true },
-    "arena":      { label1: "Tier / Section",   label2: "Row",  label3: "Seat",  requiresCalculation: true },
-    "theater":    { label1: "Zone / Level",     label2: "Row",  label3: "Seat",  requiresCalculation: true },
-    "auditorium": { label1: "Balcony / Stalls", label2: "Row",  label3: "Seat",  requiresCalculation: true },
-    "hall": {
-      "seat_types":    { label1: "Section", label2: "Row", label3: "Seat",  requiresCalculation: true },
-      "tables_chairs": { label1: "Table",   label2: null,  label3: "Chair", requiresCalculation: true }
-    }
+  var TIER_KEYS = ["black", "gold", "silver", "cyan", "tier5", "tier6"];
+
+  var TIER_DEFAULTS = {
+    black: "#1a202c", gold: "#ecc94b", silver: "#cbd5e1",
+    cyan: "#00FFFF", tier5: "#a855f7", tier6: "#f472b6"
   };
 
-  const StadiumSubTypes = [
-    { value: "horseshoe",   label: "Horseshoe" },
-    { value: "rectangular", label: "Rectangular" },
-    { value: "one_stand",   label: "1 Stand" },
-    { value: "arena",       label: "Arena" },
-    { value: "octagonal",   label: "Octagonal" }
-  ];
-
-  const AuditoriumSubTypes = [
-    { value: "traverse",    label: "Traverse / Alley Layout" },
-    { value: "continental", label: "Continental Seating Layout" },
-    { value: "straight",    label: "Straight Row Layout" }
-  ];
-
-  const TableSubTypes = [
-    { value: "circular",    label: "Circular Table",    maxChairs: 10, description: "Up to 10 chairs placed evenly around the table." },
-    { value: "rectangular", label: "Rectangular Table", maxChairs: 12, description: "Chairs split across long sides. Max 1 chair on each short side." },
-    { value: "square",      label: "Square Table",      maxChairs: 8,  description: "Up to 2 chairs per side (max 8 total)." }
-  ];
-
-  const TripRoutingEngine = {
-    "bus":     { term_coach: false, term_carriage: false, term_row: true,  term_seat: true },
-    "plane":   { term_coach: false, term_carriage: false, term_row: true,  term_seat: true },
-    "train":   { term_coach: true,  term_carriage: true,  term_row: true,  term_seat: true },
-    "shuttle": { term_coach: false, term_carriage: false, term_row: false, term_seat: true }
+  var TIER_DEFAULT_NAMES = {
+    black: "Elite", gold: "VIP", silver: "Silver",
+    cyan: "Standard", tier5: "Platinum", tier6: "Diamond"
   };
 
-  function resolveEventConfig(venueType, isTablesMode) {
-    if (venueType === "hall") {
-      if (isTablesMode) return Object.assign({}, EventRoutingEngine.hall.tables_chairs, { mode: "tables_chairs" });
-      return Object.assign({}, EventRoutingEngine.hall.seat_types, { mode: "seat_types" });
-    }
-    if (EventRoutingEngine[venueType]) return Object.assign({}, EventRoutingEngine[venueType], { mode: "seat_types" });
-    return { label1: "Section", label2: "Row", label3: "Seat", mode: "seat_types", requiresCalculation: true };
-  }
+  var MAX_TIERS = 6;
+  var MIN_TIERS = 2;
+  var DEFAULT_TIERS = 4;
+  var LARGE_VENUE_THRESHOLD = 5000;
 
-  function resolveTripRules(vehicleType) {
-    return TripRoutingEngine[vehicleType] || TripRoutingEngine["bus"];
-  }
-
-  function calculateEventCapacity(config, l1, l2, l3) {
-    var a = parseInt(l1) || 0, b = parseInt(l2) || 0, c = parseInt(l3) || 0;
-    if (config.mode === "tables_chairs" || config.label2 === null) return a * c;
-    return a * b * c;
-  }
-
-  function calculateTripCapacity(activeToggles) {
-    var carriage = activeToggles.useCarriage ? (parseInt(activeToggles.carriage) || 1) : 1;
-    var coach    = activeToggles.useCoach    ? (parseInt(activeToggles.coach)    || 1) : 1;
-    var row      = activeToggles.useRow      ? (parseInt(activeToggles.row)      || 1) : 1;
-    var seat     = parseInt(activeToggles.seat) || 1;
-    return carriage * coach * row * seat;
-  }
-
-  function buildTripSeatPlaceholder(activeToggles) {
-    var parts = [];
-    if (activeToggles.useCarriage) parts.push("Carriage D");
-    if (activeToggles.useCoach)    parts.push("Coach 2");
-    if (activeToggles.useRow)      parts.push("Row 5");
-    parts.push("Seat A");
-    return "e.g., " + parts.join(", ");
-  }
-
-  function resolveTableShape(shapeValue) {
-    for (var i = 0; i < TableSubTypes.length; i++) if (TableSubTypes[i].value === shapeValue) return TableSubTypes[i];
-    return TableSubTypes[0];
-  }
-
-  function distributeChairs(shape, requestedChairs) {
-    var total = parseInt(requestedChairs) || 0;
-    if (shape === "circular") {
-      var n = Math.min(total, 10);
-      return { shape: "circular", count: n, requested: total, total: n, capped: total > 10 };
-    }
-    if (shape === "rectangular") {
-      var short = total > 0 ? 1 : 0;
-      var remaining = Math.max(0, total - (short * 2));
-      var topCount = Math.ceil(remaining / 2);
-      var bottomCount = Math.floor(remaining / 2);
-      return { shape: "rectangular", top: topCount, bottom: bottomCount, left: short, right: short, total: short * 2 + topCount + bottomCount, requested: total, capped: false };
-    }
-    if (shape === "square") {
-      var capped = Math.min(total, 8);
-      var perSide = Math.floor(capped / 4);
-      var extra = capped % 4;
-      return { shape: "square", top: perSide + (extra > 0 ? 1 : 0), right: perSide + (extra > 1 ? 1 : 0), bottom: perSide + (extra > 2 ? 1 : 0), left: perSide, total: capped, requested: total, capped: total > 8 };
-    }
-    return { shape: "circular", count: Math.min(total, 10), requested: total, total: Math.min(total, 10), capped: total > 10 };
-  }
+  /* -------- Seat codes --------
+     Canonical format: <BLOCK>-<ROW>-<SEAT>
+       BLOCK: single A–Z letter
+       ROW:   single A–Z letter
+       SEAT:  positive integer
+     Examples: "A-A-1", "C-B-12"
+     Anything else returns "" (never throw). */
 
   function buildSeatCode(block, row, seat) {
-    var b = (block || "").toString().trim().toUpperCase();
-    var r = (row || "").toString().trim().toUpperCase();
-    var n = (seat || "").toString().trim();
-    var letters = (b + r).trim();
-    if (!letters && !n) return "";
-    if (!n) return letters;
-    if (!letters) return n;
-    return letters + " " + n;
+    var b = String(block == null ? "" : block).trim().toUpperCase();
+    var r = String(row == null ? "" : row).trim().toUpperCase();
+    var s = parseInt(seat, 10);
+    if (!/^[A-Z]$/.test(b)) return "";
+    if (!/^[A-Z]$/.test(r)) return "";
+    if (!isFinite(s) || s < 1 || s > 9999) return "";
+    return b + "-" + r + "-" + s;
   }
 
-  function buildTableChairCode(tableNum, chairNum) {
-    var t = (tableNum || "").toString().trim();
-    var c = (chairNum || "").toString().trim();
-    if (!t && !c) return "";
-    if (!c) return "T" + t;
-    if (!t) return "C" + c;
-    return "T" + t + " C" + c;
+  function parseSeatCode(code) {
+    var m = /^([A-Z])-([A-Z])-(\d{1,4})$/.exec(String(code == null ? "" : code).trim().toUpperCase());
+    if (!m) return null;
+    return { block: m[1], row: m[2], seat: parseInt(m[3], 10) };
+  }
+
+  /* "A-B-12" -> "AB12" — for compact refs & QR payloads */
+  function seatCodeToRef(code) {
+    var p = parseSeatCode(code);
+    return p ? p.block + p.row + p.seat : "";
+  }
+
+  /* -------- Ticket references --------
+     "NL-<shortEvent>-<shortTicket>", e.g. "NL-A3F9-K27C"
+     Non-cryptographic — for human display only. */
+
+  function shortId(id) {
+    var s = String(id == null ? "" : id).replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+    if (!s) return "";
+    return s.length <= 4 ? s : s.slice(-4);
+  }
+
+  function buildTicketRef(eventId, ticketId) {
+    var e = shortId(eventId), t = shortId(ticketId);
+    if (!e || !t) return "NL-XXXXXX";
+    return "NL-" + e + "-" + t;
+  }
+
+  /* -------- QR payloads --------
+     Keep the payload minimal. NEVER include price, name, or tier —
+     anyone can read a QR. All real validation happens server-side
+     against the ticket document. */
+
+  function buildQrPayload(ticket) {
+    if (!ticket || !ticket.eventId || !ticket.ticketId) return "";
+    return JSON.stringify({ v: 1, e: String(ticket.eventId), t: String(ticket.ticketId) });
+  }
+
+  function parseQrPayload(str) {
+    try {
+      var o = JSON.parse(String(str == null ? "" : str));
+      if (!o || o.v !== 1 || !o.e || !o.t) return null;
+      return { eventId: o.e, ticketId: o.t };
+    } catch (e) { return null; }
+  }
+
+  /* -------- Helpers -------- */
+
+  function formatMoney(v) {
+    if (typeof v !== "number") v = parseFloat(v) || 0;
+    if (v <= 0) return "Free";
+    return "R " + v.toFixed(2).replace(/\.00$/, "");
+  }
+
+  function getActiveTiers(activeCount) {
+    var n = parseInt(activeCount, 10);
+    if (!isFinite(n) || n < MIN_TIERS) n = DEFAULT_TIERS;
+    if (n > MAX_TIERS) n = MAX_TIERS;
+    return TIER_KEYS.slice(0, n);
   }
 
   global.NovalinkRoutingEngine = {
-    EventRoutingEngine, TripRoutingEngine,
-    StadiumSubTypes, AuditoriumSubTypes, TableSubTypes,
-    resolveEventConfig, resolveTripRules, resolveTableShape,
-    calculateEventCapacity, calculateTripCapacity,
-    buildTripSeatPlaceholder, distributeChairs,
-    buildSeatCode, buildTableChairCode
+    version: "1.0.0",
+    TIER_KEYS: TIER_KEYS,
+    TIER_DEFAULTS: TIER_DEFAULTS,
+    TIER_DEFAULT_NAMES: TIER_DEFAULT_NAMES,
+    MAX_TIERS: MAX_TIERS,
+    MIN_TIERS: MIN_TIERS,
+    DEFAULT_TIERS: DEFAULT_TIERS,
+    LARGE_VENUE_THRESHOLD: LARGE_VENUE_THRESHOLD,
+    buildSeatCode: buildSeatCode,
+    parseSeatCode: parseSeatCode,
+    seatCodeToRef: seatCodeToRef,
+    buildTicketRef: buildTicketRef,
+    buildQrPayload: buildQrPayload,
+    parseQrPayload: parseQrPayload,
+    formatMoney: formatMoney,
+    getActiveTiers: getActiveTiers
   };
-
 })(window);
