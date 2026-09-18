@@ -561,12 +561,10 @@ body.staff-seat-mode .fs-seat:hover{outline:2px solid #fff;outline-offset:2px;tr
 #coverPreviewImg{display:block;width:100%;height:190px;object-fit:cover;}
 #coverRemoveBtn{position:absolute;top:10px;right:10px;background:rgba(220,38,38,.92);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-weight:800;font-size:11px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.2);}
 #coverRemoveBtn:hover{background:#b91c1c;}
-.location-search-wrapper{position:relative}
-.location-search-wrapper input{padding-right:36px}
-.location-search-wrapper .search-icon{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none;width:16px;height:16px}
-.location-selected-badge{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:6px 12px;background:var(--cyan-50);border:1px solid var(--cyan-400);border-radius:8px;font-size:12px;font-weight:700;color:var(--cyan-700);word-break:break-word;max-width:100%}
-.location-selected-badge .clear-loc{cursor:pointer;color:var(--text-muted);font-weight:900;font-size:14px;line-height:1;padding:0 2px}
-.location-selected-badge .clear-loc:hover{color:#dc2626}
+
+/* ===== New venue fields (plain text + city dropdown) ===== */
+.venue-preset-hint{display:inline-flex;align-items:center;gap:6px;margin-top:6px;padding:5px 10px;background:var(--cyan-50);border:1px solid var(--cyan-400);border-radius:8px;font-size:11.5px;font-weight:700;color:var(--cyan-700);word-break:break-word;max-width:100%}
+.venue-preset-hint i{width:13px;height:13px;flex-shrink:0}
 </style>
 </head>
 <body>
@@ -627,18 +625,33 @@ body.staff-seat-mode .fs-seat:hover{outline:2px solid #fff;outline-offset:2px;tr
           <div class="form-group"><label for="hostName">Host Name</label><input type="text" id="hostName" placeholder="e.g., John Doe" required /></div>
           <div class="form-group"><label for="hostEmail">Host Email</label><input type="email" id="hostEmail" placeholder="e.g., john@example.com" required /></div>
 
+          <div class="form-row">
+            <div class="form-group">
+              <label for="venueName">Venue Name</label>
+              <input type="text" id="venueName" placeholder="e.g., Boksburg Stadium" required autocomplete="off" />
+              <p class="form-hint">Type the venue name. Pick a city below to see known venues.</p>
+            </div>
+            <div class="form-group">
+              <label for="venueCity">City / Town</label>
+              <select id="venueCity">
+                <option value="">Select a city or town…</option>
+                <option value="Boksburg">Boksburg</option>
+                <option value="Germiston">Germiston</option>
+                <option value="Reiger Park">Reiger Park</option>
+                <option value="Boksburg North">Boksburg North</option>
+                <option value="Boksburg West">Boksburg West</option>
+              </select>
+              <p class="form-hint">Choose from our current operating region.</p>
+            </div>
+          </div>
+
           <div class="form-group">
-            <label for="locationSearch">Location / Venue</label>
-            <div class="location-search-wrapper">
-              <input type="text" id="locationSearch" placeholder="Paste a Google Maps link, or type the venue address" autocomplete="off" />
-              <i data-lucide="search" class="search-icon"></i>
+            <label for="venueAddress">Full Address (optional)</label>
+            <input type="text" id="venueAddress" placeholder="e.g., Jubilee Rd, Leeuwpoort 113-Ir, Boksburg" autocomplete="off" />
+            <div class="venue-preset-hint" id="venuePresetHint" style="display:none;">
+              <i data-lucide="map-pin"></i>
+              <span id="venuePresetText"></span>
             </div>
-            <div id="locationSelectedBadge" class="location-selected-badge" style="display:none;">
-              <i data-lucide="map-pin" style="width:14px;height:14px;"></i>
-              <span id="locationText"></span>
-              <span class="clear-loc" id="clearLocationBtn" title="Clear location">&times;</span>
-            </div>
-            <p class="form-hint">Paste a Google Maps link, or type the venue name and address. It saves as you type — no confirmation needed.</p>
           </div>
 
           <div class="form-row">
@@ -1471,7 +1484,6 @@ body.staff-seat-mode .fs-seat:hover{outline:2px solid #fff;outline-offset:2px;tr
 </div>
 
 <div class="toast" id="toast"></div>
-
 <script src="routing-engine.js"></script>
 <script>
 (function(){
@@ -1606,7 +1618,62 @@ var dragStartX = 0, dragStartY = 0;
 var dragSectionStartX = 0, dragSectionStartY = 0;
 var insertTool = null;
 
-var selectedLocation = { address: "", lat: null, lng: null, placeId: "", city: "", link: "" };
+/* ===== Venue location (plain text + city dropdown, no API) ===== */
+var selectedLocation = { address: "", venueName: "", city: "" };
+
+var VENUE_PRESETS = {
+  "Boksburg": [
+    { name: "Boksburg Stadium",      address: "Jubilee Rd, Leeuwpoort 113-Ir, Boksburg" },
+    { name: "ERPM Golf Club",        address: "85 Pretoria Rd, Boksburg West" },
+    { name: "Wild Waters Boksburg",  address: "Lozides Street, Boksburg North" },
+    { name: "Indoor Swimming Pool",  address: "45 Fourth St, Boksburg North" },
+    { name: "WJ Clements Stadium",   address: "6 Goedehoop Avenue, Reiger Park, Boksburg" }
+  ],
+  "Germiston": [
+    { name: "Germiston Stadium",     address: "Delville North Rd, Germiston" }
+  ],
+  "Reiger Park": [
+    { name: "WJ Clements Stadium",   address: "6 Goedehoop Avenue, Reiger Park, Boksburg" }
+  ],
+  "Boksburg North": [
+    { name: "Wild Waters Boksburg",  address: "Lozides Street, Boksburg North" },
+    { name: "Indoor Swimming Pool",  address: "45 Fourth St, Boksburg North" }
+  ],
+  "Boksburg West": [
+    { name: "ERPM Golf Club",        address: "85 Pretoria Rd, Boksburg West" }
+  ]
+};
+
+function updateVenueFields() {
+  var nameEl = $("venueName"), cityEl = $("venueCity"), addrEl = $("venueAddress");
+  if (!nameEl || !cityEl || !addrEl) return;
+  selectedLocation.venueName = (nameEl.value || "").trim();
+  selectedLocation.city     = (cityEl.value || "").trim();
+  selectedLocation.address  = (addrEl.value || "").trim();
+  if (!selectedLocation.address && selectedLocation.venueName && selectedLocation.city) {
+    selectedLocation.address = selectedLocation.venueName + ", " + selectedLocation.city;
+  }
+  updateAllTicketPreviews();
+}
+
+function updateVenuePresetHint() {
+  var hint = $("venuePresetHint"), text = $("venuePresetText");
+  if (!hint || !text) return;
+  var city = $("venueCity").value;
+  var nameVal = ($("venueName").value || "").trim().toLowerCase();
+  if (!city || !VENUE_PRESETS[city]) { hint.style.display = "none"; return; }
+  var venues = VENUE_PRESETS[city];
+  var match = venues.find(function(v){ return v.name.toLowerCase() === nameVal; });
+  if (match) {
+    $("venueAddress").value = match.address;
+    selectedLocation.address = match.address;
+    text.textContent = "Address auto-filled from " + match.name + ".";
+  } else {
+    text.textContent = venues.length + " known venue" + (venues.length === 1 ? "" : "s") + " in " + city + ": " + venues.map(function(v){return v.name;}).join(" · ");
+  }
+  hint.style.display = "inline-flex";
+  updateAllTicketPreviews();
+}
 
 var TIER_KEYS = (RE.TIER_KEYS || ["black", "gold", "silver", "cyan", "tier5", "tier6"]).slice();
 var TIER_DEFAULTS = Object.assign({ black: "#1a202c", gold: "#ecc94b", silver: "#cbd5e1", cyan: "#00FFFF", tier5: "#a855f7", tier6: "#f472b6" }, RE.TIER_DEFAULTS || {});
@@ -1701,76 +1768,6 @@ function showToast(msg, type, ms) {
   requestAnimationFrame(function(){ t.classList.add("show"); });
   clearTimeout(showToast._t);
   showToast._t = setTimeout(function(){ t.classList.remove("show"); }, ms);
-}
-
-/* ============= LOCATION (paste-a-link, no Google, no Enter needed) ============= */
-function shortenUrlForDisplay(val) {
-  val = String(val || "").trim();
-  if (!/^https?:\/\//i.test(val)) return val;
-  try {
-    var u = new URL(val);
-    var host = u.hostname.replace(/^www\./, "");
-    // Try to extract a readable place name from Google Maps URLs.
-    var m = /\/maps\/place\/([^/@]+)/i.exec(u.pathname);
-    if (m && m[1]) return decodeURIComponent(m[1].replace(/\+/g, " "));
-    var q = u.searchParams.get("q");
-    if (q) return decodeURIComponent(q.replace(/\+/g, " "));
-    return host + (u.pathname !== "/" ? u.pathname : "");
-  } catch (e) {
-    return val;
-  }
-}
-
-function initLocationAutocomplete() {
-  var input = $("locationSearch");
-  if (!input) return;
-
-  input.placeholder = "Paste a Google Maps link, or type the venue address";
-
-  function commit(val) {
-    val = String(val || "").trim();
-    if (!val) {
-      selectedLocation = { address: "", lat: null, lng: null, placeId: "", city: "", link: "" };
-      var b0 = $("locationSelectedBadge"); if (b0) b0.style.display = "none";
-      updateAllTicketPreviews();
-      return;
-    }
-    var isLink = /^https?:\/\//i.test(val);
-    var display = isLink ? shortenUrlForDisplay(val) : val;
-    selectedLocation = {
-      address: display || val,
-      raw: val,
-      link: isLink ? val : "",
-      lat: null, lng: null, placeId: "",
-      city: ""
-    };
-    showLocationBadge(selectedLocation.address);
-    updateAllTicketPreviews();
-  }
-
-  input.addEventListener("input", function() { commit(input.value); });
-  input.addEventListener("paste", function() {
-    setTimeout(function(){ commit(input.value); }, 0);
-  });
-  input.addEventListener("change", function() { commit(input.value); });
-}
-
-function showLocationBadge(text) {
-  var badge = $("locationSelectedBadge");
-  var txt = $("locationText");
-  if (badge && txt) {
-    txt.textContent = text;
-    badge.style.display = "inline-flex";
-  }
-}
-
-function clearLocation() {
-  var input = $("locationSearch");
-  var badge = $("locationSelectedBadge");
-  if (input) input.value = "";
-  if (badge) badge.style.display = "none";
-  selectedLocation = { address: "", lat: null, lng: null, placeId: "", city: "", link: "" };
-  updateAllTicketPreviews();
 }
 
 document.addEventListener("DOMContentLoaded", function(){
@@ -2128,10 +2125,12 @@ document.addEventListener("DOMContentLoaded", function(){
   }
   function updateAllTicketPreviews() {
     var eventName = $("eventName").value || "EVENT NAME";
-    var dateVenue = ($("startDate").value || "DATE") + " · " + (selectedLocation.address || "VENUE");
+    var venueDisplay = selectedLocation.venueName
+      ? (selectedLocation.venueName + (selectedLocation.city ? ", " + selectedLocation.city : ""))
+      : (selectedLocation.address || "VENUE");
+    var dateVenue = ($("startDate").value || "DATE") + " · " + venueDisplay;
     var guestName = $("guestName").value || "GUEST NAME";
     var seatCode = reBuildSeatCode($("seatBlock").value, $("seatRow").value, $("seatNum").value);
-    var venue = selectedLocation.address || "VENUE";
     var seatDisp = seatCode || "Seat not assigned";
     var refDisp = "Ref: " + (seatCode ? reBuildTicketRef(seatCode.replace(/-/g,""), "PREVIEW") : "NL-XXXXXX");
     [1,2,3].forEach(function(i){
@@ -2141,7 +2140,7 @@ document.addEventListener("DOMContentLoaded", function(){
       var gn = $("prevGuestName" + sfx); if (gn) gn.textContent = guestName;
       var ps = $("prevSeat" + sfx); if (ps) ps.textContent = seatDisp;
       var pr = $("prevRef" + sfx); if (pr) pr.textContent = refDisp;
-      var pv = $("prevVenueLocation" + sfx); if (pv) pv.textContent = venue;
+      var pv = $("prevVenueLocation" + sfx); if (pv) pv.textContent = venueDisplay;
       var be = $("prevBackEventName" + sfx); if (be) be.textContent = eventName;
       var br = $("prevBackRef" + sfx); if (br) br.textContent = refDisp;
     });
@@ -3452,7 +3451,7 @@ document.addEventListener("DOMContentLoaded", function(){
   }
   function exportJson() {
     var name = $("eventName").value || "Untitled Event"; var costVal = readCost();
-    var payload = Object.assign({ eventName: name, hostName: $("hostName").value, hostEmail: $("hostEmail").value, city: selectedLocation.city, location: selectedLocation, eventType: $("eventType").value, cost: costVal, costFormatted: formatCurrency(costVal), startDate: $("startDate").value, startTime: $("startTime").value, venueAddress: selectedLocation.address, exportedAt: new Date().toISOString() }, buildVenuePayload());
+    var payload = Object.assign({ eventName: name, hostName: $("hostName").value, hostEmail: $("hostEmail").value, city: $("venueCity").value || "", location: { address: selectedLocation.address, venueName: selectedLocation.venueName, city: selectedLocation.city }, eventType: $("eventType").value, cost: costVal, costFormatted: formatCurrency(costVal), startDate: $("startDate").value, startTime: $("startTime").value, venueAddress: selectedLocation.address, venueName: selectedLocation.venueName, exportedAt: new Date().toISOString() }, buildVenuePayload());
     downloadFile(JSON.stringify(payload, null, 2), name.toLowerCase().replace(/[^a-z0-9]+/g,"-") + "-venue.json", "application/json");
     showToast("Venue exported as JSON", "success");
   }
@@ -3542,15 +3541,19 @@ document.addEventListener("DOMContentLoaded", function(){
       heroImage: coverSrc,
       hostName: $("hostName").value.trim(),
       hostEmail: $("hostEmail").value.trim(),
-      city: selectedLocation.city,
-      location: selectedLocation,
+      city: $("venueCity").value || "",
+      location: {
+        address: selectedLocation.address,
+        venueName: selectedLocation.venueName,
+        city: selectedLocation.city
+      },
       eventType: $("eventType").value,
       cost: costVal,
       costFormatted: formatCurrency(costVal),
       startDate: $("startDate").value,
       startTime: $("startTime").value,
       venueAddress: selectedLocation.address,
-      venueLink: selectedLocation.link || "",
+      venueName: selectedLocation.venueName,
       tierColor: tierColor,
       revenue: {
         gross: gross, fee: fee, net: net,
@@ -3617,12 +3620,21 @@ document.addEventListener("DOMContentLoaded", function(){
       }
     }
 
-    if (!selectedLocation.address) {
-      showToast("Please paste a Google Maps link or type the venue address.", "error", 4200);
+    if (!$("venueName").value.trim()) {
+      showToast("Please enter the venue name.", "error", 4200);
       goToStep(1);
-      setTimeout(function(){ $("locationSearch").focus(); }, 350);
+      setTimeout(function(){ $("venueName").focus(); }, 350);
       return;
     }
+    if (!$("venueCity").value) {
+      showToast("Please select a city or town.", "error", 4200);
+      goToStep(1);
+      setTimeout(function(){ $("venueCity").focus(); }, 350);
+      return;
+    }
+    selectedLocation.venueName = $("venueName").value.trim();
+    selectedLocation.city = $("venueCity").value;
+    selectedLocation.address = ($("venueAddress").value.trim()) || (selectedLocation.venueName + ", " + selectedLocation.city);
 
     if (costInput && $("basePriceGroup") && $("basePriceGroup").style.display !== "none") {
       var cv = parseFloat(costInput.value);
@@ -4044,6 +4056,29 @@ document.addEventListener("DOMContentLoaded", function(){
   ["tierColor"].forEach(function(id) { $(id).addEventListener("change", updateAllTicketPreviews); });
   ["seatBlock","seatRow"].forEach(function(id) { $(id).addEventListener("input", function() { this.value = this.value.toUpperCase().replace(/[^A-Z]/g,"").slice(0,1); }); });
 
+  /* ===== New venue fields wiring ===== */
+  ["venueName", "venueCity", "venueAddress"].forEach(function(id){
+    var el = $(id);
+    if (!el) return;
+    var evt = (id === "venueCity") ? "change" : "input";
+    el.addEventListener(evt, function(){
+      updateVenueFields();
+      updateVenuePresetHint();
+    });
+  });
+
+  /* Pre-fill from query string (?venue=...&city=...) */
+  (function prefillVenueFromQuery() {
+    try {
+      var params = new URLSearchParams(window.location.search);
+      var v = params.get("venue");
+      var c = params.get("city");
+      if (v) $("venueName").value = v;
+      if (c) $("venueCity").value = c;
+      if (v || c) { updateVenueFields(); updateVenuePresetHint(); }
+    } catch(e) {}
+  })();
+
   document.addEventListener("keydown", function(e) {
     if (e.key === "Escape") {
       if (insertTool) { insertTool = null; updateInsertToolUI(); return; }
@@ -4083,11 +4118,6 @@ document.addEventListener("DOMContentLoaded", function(){
   setupPointDrag(); setupSectionDrag(); setupControlsPanel();
   setupRotateHandle(); setupShapeRotateHandle(); setupStageDrag(); setupInsertTools();
   updateInsertToolUI(); applyPlanFeatures(); applySeatViewMode(); applyStaffSeatMode(); updateCornerFitHint();
-
-  initLocationAutocomplete();
-
-  var clearLocBtn = $("clearLocationBtn");
-  if (clearLocBtn) clearLocBtn.addEventListener("click", clearLocation);
 
   goToStep(1);
 });
