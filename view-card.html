@@ -4,333 +4,298 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="theme-color" content="#0a0f14" />
-<meta name="description" content="View event details and get tickets on Novalink." />
 <title>Event · Novalink</title>
-
 <script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-
 <style>
-:root{
-  --cyan-50:#ecfeff;--cyan-100:#cffafe;--cyan-200:#a5f3fc;--cyan-300:#67e8f9;
-  --cyan-400:#22d3ee;--cyan-500:#06b6d4;--cyan-600:#0891b2;--cyan-700:#0e7490;
-  --bg:#ffffff;--bg-2:#f6f8fb;--surface:#ffffff;--surface-2:#f1f4f8;
-  --border:#e4e9f0;--border-2:#d3dbe5;
-  --text:#0a0f14;--text-2:#2b3644;--text-muted:#6b7787;
-  --radius:14px;--max-width:1180px;
-  --font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
-  --danger:#dc2626;--danger-soft:#fef2f2;--danger-border:#fecaca;
-  --success:#059669;--success-soft:#ecfdf5;--success-border:#a7f3d0;
-  --navy:#1e2f4d;
-  --ease-smooth:cubic-bezier(0.25,0.8,0.25,1);
-  --ease-bounce:cubic-bezier(0.175,0.885,0.32,1.275);
-}
+:root{--cy:#00FFFF;--cy2:#00CCCC;--cy3:#009999;--cyf:#e6ffff;--bg:#fff;--bg2:#f6f8fb;--sf:#fff;--sf2:#f1f4f8;--bd:#e4e9f0;--bd2:#d3dbe5;--tx:#0a0f14;--tx2:#2b3644;--mut:#6b7787;--rd:14px;--font:'Inter',system-ui,-apple-system,sans-serif;--dg:#dc2626;--dgf:#fef2f2;--sv:#059669;--svf:#ecfdf5;--nv:#1e2f4d;--ease:cubic-bezier(0.25,0.8,0.25,1)}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-img{max-width:100%;display:block}
-a{color:inherit;text-decoration:none}
-button{font:inherit;font-family:inherit;touch-action:manipulation;cursor:pointer}
-body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column}
-.container{max-width:var(--max-width);margin:0 auto;padding:0 24px;width:100%}
-h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-0.02em}
+body{font-family:var(--font);background:var(--bg);color:var(--tx);line-height:1.6;min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
+.container{max-width:1180px;margin:0 auto;padding:0 24px;width:100%}
+h1,h2,h3{line-height:1.15;font-weight:700}
 h1{font-size:clamp(2rem,4.5vw,3.2rem)}
-h2{font-size:clamp(1.35rem,2.4vw,1.75rem);margin-bottom:8px}
-h3{font-size:1.15rem}
-
-.novalink-logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none;margin-left:12px;padding-left:4px}
-.novalink-logo .mark{width:34px;height:42px;flex-shrink:0;display:block}
-.novalink-logo .wordmark{font-weight:800;font-size:1.1rem;letter-spacing:0.02em;color:var(--navy);line-height:1}
-@media (max-width:480px){.novalink-logo{margin-left:16px}.novalink-logo .mark{width:30px;height:37px}.novalink-logo .wordmark{font-size:1.02rem}}
-
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:12px;font-weight:600;font-size:14px;border:1px solid transparent;cursor:pointer;transition:all 0.2s var(--ease-smooth);white-space:nowrap;font-family:inherit;text-decoration:none}
+h2{font-size:1.75rem;margin-bottom:8px}
+a{color:inherit;text-decoration:none}
+button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation}
+.logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none;margin-left:12px}
+.logo .mark{width:34px;height:42px;flex-shrink:0}
+.logo .wm{font-weight:800;font-size:1.1rem;color:var(--nv)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:12px;font-weight:600;font-size:14px;border:1px solid transparent;cursor:pointer;transition:all 0.2s var(--ease);white-space:nowrap;font-family:inherit;text-decoration:none}
 .btn svg,.btn i{width:17px;height:17px}
-.btn-primary{background:#0a0f14;color:#fff}
-.btn-primary:hover{background:#1a2129;transform:translateY(-2px);box-shadow:0 4px 12px rgba(10,15,20,0.15)}
-.btn-accent{background:linear-gradient(135deg,var(--cyan-400),var(--cyan-600));color:#04161c}
-.btn-accent:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(6,182,212,0.35)}
-.btn-ghost{background:transparent;color:var(--text-2);border:1px solid var(--border-2)}
-.btn-ghost:hover{background:var(--surface-2);border-color:var(--cyan-500);color:var(--cyan-700);transform:translateY(-1px)}
-.btn-danger{background:var(--danger);color:#fff}
-.btn-danger:hover{background:#b91c1c;transform:translateY(-2px);box-shadow:0 4px 12px rgba(220,38,38,0.25)}
+.btn-accent{background:linear-gradient(135deg,var(--cy),var(--cy2));color:#04161c}
+.btn-accent:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,255,255,0.35)}
+.btn-ghost{background:transparent;color:var(--tx2);border:1px solid var(--bd2)}
+.btn-ghost:hover{background:var(--sf2);border-color:var(--cy);color:var(--cy3)}
+.btn-danger{background:var(--dg);color:#fff}
+.btn-danger:hover{background:#b91c1c;transform:translateY(-2px)}
 .btn-block{width:100%}
 .btn-lg{padding:15px 26px;font-size:15px}
-.btn:disabled{opacity:0.55;cursor:not-allowed;transform:none!important;box-shadow:none!important}
+.btn:disabled{opacity:0.55;cursor:not-allowed;transform:none!important}
+.site-header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,0.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--bd);padding:12px 0}
+.header-inner{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.hdr-actions{display:flex;gap:8px;align-items:center;position:relative}
+.user-btn{display:none;align-items:center;gap:8px;padding:5px 12px 5px 5px;background:var(--sf2);border:1px solid var(--bd);border-radius:99px;font-family:inherit}
+.user-btn .av{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--cy),var(--cy2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;color:#04161c}
+.user-btn .nm{font-size:13px;font-weight:600}
+.user-btn .badge{background:#fef3c7;color:#92400e;font-size:10px;font-weight:800;padding:2px 8px;border-radius:99px}
+.dd{position:absolute;top:calc(100% + 8px);right:0;background:var(--sf);border:1px solid var(--bd);border-radius:14px;box-shadow:0 20px 60px rgba(10,15,20,0.15);min-width:250px;padding:8px;display:none;z-index:60}
+.dd.open{display:block}
+.dd-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:9px;font-size:13.5px;font-weight:500;color:var(--tx2);border:none;background:transparent;width:100%;font-family:inherit;text-align:left}
+.dd-item:hover{background:var(--sf2);color:var(--tx)}
+.dd-item i{width:16px;height:16px;color:var(--mut)}
+.page{flex:1;padding:32px 0 64px}
+.ls{text-align:center;padding:80px 20px;color:var(--mut)}
+.ls i{width:32px;height:32px;margin:0 auto 12px;color:var(--cy3);animation:sp 1.2s linear infinite;display:block}
+@keyframes sp{to{transform:rotate(360deg)}}
+.es{text-align:center;padding:60px 24px;max-width:480px;margin:0 auto}
+.es .ic{width:64px;height:64px;border-radius:50%;background:var(--dgf);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;color:var(--dg)}
+.es .ic i{width:28px;height:28px}
+.es h2{margin-bottom:8px}
+.es p{color:var(--mut);margin-bottom:22px}
+.hero{position:relative;border-radius:20px;overflow:hidden;min-height:320px;background:linear-gradient(135deg,#00FFFF,#00A3C4);display:flex;align-items:flex-end;padding:32px;color:#fff;margin-bottom:32px}
+@media (min-width:768px){.hero{min-height:420px;padding:48px}}
+.hero-bg{position:absolute;inset:0;background-size:cover;background-position:center;z-index:0}
+.hero::before{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(10,15,20,0.85) 0%,rgba(10,15,20,0.35) 55%,rgba(10,15,20,0.15) 100%);z-index:1}
+.hero-c{position:relative;z-index:2;width:100%;max-width:760px}
+.badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.badge{background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.35);color:#fff;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;padding:5px 11px;border-radius:99px;backdrop-filter:blur(8px)}
+.badge.own{background:#00FFFF;color:#04161c;border-color:#00FFFF}
+.hero-title{font-size:clamp(1.75rem,4vw,2.9rem);font-weight:800;line-height:1.08;margin-bottom:14px;text-shadow:0 3px 20px rgba(0,0,0,0.35)}
+.hero-meta{display:flex;gap:20px;flex-wrap:wrap;margin-top:12px}
+.hero-mi{display:inline-flex;align-items:center;gap:7px;font-size:14px;font-weight:600;color:rgba(255,255,255,0.92)}
+.hero-mi i{width:16px;height:16px;color:#67e8f9}
+.layout{display:grid;grid-template-columns:1fr;gap:32px}
+@media (min-width:960px){.layout{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}}
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rd);padding:24px;box-shadow:0 6px 20px rgba(10,15,20,0.04)}
+.card+.card{margin-top:20px}
+.sl{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:var(--cy3);margin-bottom:10px}
+.dl{list-style:none;padding:0;display:flex;flex-direction:column;gap:12px}
+.dl li{display:flex;gap:12px;align-items:flex-start;font-size:14px;color:var(--tx2)}
+.dl li i{width:18px;height:18px;color:var(--cy3);flex-shrink:0;margin-top:2px}
+.dl li strong{display:block;font-size:11.5px;font-weight:800;text-transform:uppercase;color:var(--mut);margin-bottom:2px}
+.tiers{display:flex;flex-direction:column;gap:12px}
+.tier{display:flex;align-items:center;gap:14px;padding:14px;border:1px solid var(--bd);border-radius:12px;background:var(--sf)}
+.tsw{width:22px;height:22px;border-radius:6px;flex-shrink:0;border:1px solid rgba(0,0,0,0.1)}
+.ti{flex:1;min-width:0}
+.tn{font-weight:800;font-size:14.5px}
+.tseats{font-size:11.5px;color:var(--mut);font-weight:600}
+.tp{font-weight:800;font-size:16px;color:var(--cy3);font-family:ui-monospace,monospace}
+.stack{display:flex;flex-direction:column;gap:10px;position:sticky;top:80px}
+.psum{background:linear-gradient(135deg,#0a0f14,#1a2129);color:#fff;border-radius:var(--rd);padding:20px;margin-bottom:14px}
+.psum .lbl{font-size:11px;font-weight:800;text-transform:uppercase;color:#67e8f9;margin-bottom:6px}
+.psum .val{font-size:24px;font-weight:800;color:#fff}
+.psum .sub{font-size:12px;color:rgba(255,255,255,0.65);margin-top:4px}
+.host{display:flex;align-items:center;gap:12px;padding:14px;background:var(--bg2);border-radius:12px;border:1px solid var(--bd)}
+.hav{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--cy),var(--cy2));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#04161c;flex-shrink:0}
+.hn{font-weight:800;font-size:14px}
+.hl{font-size:11.5px;color:var(--mut);font-weight:600}
+.own-actions{display:flex;flex-direction:column;gap:8px;margin-top:16px;padding-top:16px;border-top:1px dashed var(--bd)}
 
-.site-header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,0.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--border);transition:box-shadow 0.3s ease}
-.site-header.scrolled{box-shadow:0 4px 20px rgba(10,15,20,0.05)}
-.header-inner{display:flex;align-items:center;justify-content:space-between;padding:12px 0;gap:12px;flex-wrap:wrap}
+/* SEATING PLAN */
+.sp-section{margin-top:40px;padding-top:32px;border-top:1px dashed var(--bd);display:none}
+.sp-section.visible{display:block}
+.sp-head{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;margin-bottom:18px}
+.sp-head h2{margin:0;font-size:1.5rem;color:var(--nv)}
+.sp-head p{margin:4px 0 0;color:var(--mut);font-size:13.5px}
+.sp-hint{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:var(--cy3);background:var(--cyf);padding:6px 11px;border-radius:99px;border:1px solid var(--cy)}
+.sp-hint i{width:13px;height:13px}
+.sp-scroll{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rd);padding:20px;overflow:auto;max-height:75vh;box-shadow:0 6px 20px rgba(10,15,20,0.04)}
+.sp-canvas{position:relative;background:#fff;border:2px solid var(--bd2);border-radius:10px;margin:0 auto;background-image:linear-gradient(to right,rgba(0,255,255,0.08) 1px,transparent 1px),linear-gradient(to bottom,rgba(0,255,255,0.08) 1px,transparent 1px);background-size:50px 50px}
+.sp-stage{position:absolute;background:linear-gradient(135deg,#1e2f4d,#2a4365);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;letter-spacing:3px;text-transform:uppercase;border-radius:6px;box-shadow:0 4px 14px rgba(30,47,77,0.35);z-index:5;white-space:nowrap;padding:4px 10px}
+.sp-blk{position:absolute;background:#fff;border:2px solid var(--bd);border-radius:10px;padding:8px;box-shadow:0 4px 14px rgba(10,15,20,0.08);transform-origin:center center;z-index:10}
+.sp-blk-title{font-size:10px;font-weight:900;color:var(--cy3);letter-spacing:0.5px;margin-bottom:4px;text-align:center;white-space:nowrap}
+.sp-blk-loc{text-align:center;font-size:8px;font-weight:800;color:var(--mut);letter-spacing:1px;text-transform:uppercase;margin-bottom:4px}
+.sp-blk-stage{text-align:center;font-size:7px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#fff;background:linear-gradient(135deg,#1e2f4d,#2a4365);padding:3px;border-radius:4px;margin-bottom:6px}
+.sp-row{display:grid;grid-template-columns:32px 1fr 36px;align-items:center;gap:3px;margin-bottom:2px}
+.sp-row-label{font-size:8px;font-weight:800;color:var(--mut);text-align:right;text-transform:uppercase}
+.sp-seats{display:flex;gap:2px;justify-content:center;align-items:center;flex-wrap:nowrap}
+.sp-seat{width:12px;height:12px;border-radius:2px;flex-shrink:0;display:inline-flex;align-items:center;justify-content:center;font-family:ui-monospace,monospace;font-size:6px;font-weight:800;color:#fff}
+.sp-seat-gap{flex-shrink:0;display:inline-block}
+.sp-tier-tag{font-size:7px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;color:var(--mut)}
+.sp-corner{display:flex;flex-direction:column;gap:2px;align-items:flex-start}
+.sp-corner-row{display:flex;gap:2px;align-items:center}
+.sp-corner-spacer{flex:1 1 auto}
+.sp-tbl-wrap{position:relative;margin:8px auto 4px}
+.sp-tbl{position:absolute}
+.sp-tbl-shape{position:absolute;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:800;border:1.5px solid rgba(0,0,0,0.12);box-shadow:0 1px 4px rgba(0,0,0,0.08);color:#fff;border-radius:5px}
+.sp-tbl-shape.circular{border-radius:50%}
+.sp-tbl-chair{position:absolute;border-radius:50%}
+.sp-marker{position:absolute;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#fff;border-radius:6px;font-weight:900;font-size:9px;letter-spacing:0.5px;box-shadow:0 4px 10px rgba(0,0,0,0.25);border:2px solid rgba(255,255,255,0.4);padding:2px}
+.sp-marker .mic{font-size:14px;line-height:1;margin-bottom:2px}
+.sp-marker .mlb{line-height:1;text-align:center;word-break:break-word}
+.sp-anno-shape{position:absolute;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.5px;padding:4px;text-align:center;transform-origin:center center}
+.sp-anno-line{position:absolute;transform-origin:0 50%}
+.sp-legend{display:flex;flex-wrap:wrap;gap:14px;margin-top:16px;padding-top:16px;border-top:1px dashed var(--bd);justify-content:center}
+.sp-lgi{display:inline-flex;align-items:center;gap:6px;font-size:11.5px;font-weight:700;color:var(--tx2)}
+.sp-lgsw{width:14px;height:14px;border-radius:4px;flex-shrink:0;border:1px solid rgba(0,0,0,0.1)}
+.sp-lgsw.staff{background:#dc2626}
+.sp-empty{text-align:center;color:var(--mut);font-size:13.5px;padding:24px}
 
-.user-menu-btn{display:none;align-items:center;gap:8px;padding:5px 12px 5px 5px;background:var(--surface-2);border:1px solid var(--border);border-radius:99px;cursor:pointer;font-family:inherit;transition:all 0.2s ease}
-.user-menu-btn:hover{border-color:var(--cyan-500);box-shadow:0 0 0 3px rgba(6,182,212,0.1)}
-.user-menu-btn .avatar{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--cyan-400),var(--cyan-600));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;color:#04161c;flex-shrink:0}
-.user-menu-btn .name{font-size:13px;font-weight:600}
-.user-menu-btn .admin-badge{background:#fef3c7;color:#92400e;font-size:10px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;padding:2px 8px;border-radius:99px}
-
-.user-dropdown{position:absolute;top:calc(100% + 8px);right:0;background:var(--surface);border:1px solid var(--border);border-radius:14px;box-shadow:0 20px 60px rgba(10,15,20,0.15);min-width:250px;padding:8px;display:none;z-index:60;overflow:hidden}
-.user-dropdown.open{display:block}
-.user-dropdown-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:9px;cursor:pointer;font-size:13.5px;font-weight:500;color:var(--text-2);transition:all .2s ease;border:none;background:transparent;width:100%;font-family:inherit;text-align:left}
-.user-dropdown-item:hover{background:var(--surface-2);color:var(--text);transform:translateX(4px)}
-.user-dropdown-item i{width:16px;height:16px;color:var(--text-muted)}
-.user-dropdown-item.danger{color:var(--danger)}
-.user-dropdown-item.danger i{color:var(--danger)}
-
-.page-wrap{flex:1;padding:32px 0 64px}
-@media (min-width:1024px){.page-wrap{padding:48px 0 80px}}
-
-.loading-state{text-align:center;padding:80px 20px;color:var(--text-muted)}
-.loading-state i{width:32px;height:32px;margin:0 auto 12px;color:var(--cyan-500);animation:spin 1.2s linear infinite;display:block}
-@keyframes spin{to{transform:rotate(360deg)}}
-
-.error-state{text-align:center;padding:60px 24px;max-width:480px;margin:0 auto}
-.error-state .icon{width:64px;height:64px;border-radius:50%;background:var(--danger-soft);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;color:var(--danger)}
-.error-state .icon i{width:28px;height:28px}
-.error-state h2{margin-bottom:8px}
-.error-state p{color:var(--text-muted);margin-bottom:22px}
-
-/* HERO */
-.event-hero{position:relative;border-radius:20px;overflow:hidden;min-height:320px;background:linear-gradient(135deg,#22d3ee 0%,#0891b2 100%);display:flex;align-items:flex-end;padding:32px;color:#fff;margin-bottom:32px;box-shadow:0 20px 50px -12px rgba(6,182,212,0.35)}
-@media (min-width:768px){.event-hero{min-height:420px;padding:48px}}
-.event-hero-bg{position:absolute;inset:0;background-size:cover;background-position:center;z-index:0}
-.event-hero::before{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(10,15,20,0.85) 0%,rgba(10,15,20,0.35) 55%,rgba(10,15,20,0.15) 100%);z-index:1}
-.event-hero-content{position:relative;z-index:2;width:100%;max-width:760px}
-.event-badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
-.event-badge{background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.35);color:#fff;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;padding:5px 11px;border-radius:99px;backdrop-filter:blur(8px)}
-.event-badge.owned{background:#00FFFF;color:#04161c;border-color:#00FFFF}
-.event-title{font-size:clamp(1.75rem,4vw,2.9rem);font-weight:800;letter-spacing:-0.02em;line-height:1.08;margin-bottom:14px;text-shadow:0 3px 20px rgba(0,0,0,0.35)}
-.event-meta-row{display:flex;gap:20px;flex-wrap:wrap;margin-top:12px}
-.event-meta-item{display:inline-flex;align-items:center;gap:7px;font-size:14px;font-weight:600;color:rgba(255,255,255,0.92)}
-.event-meta-item i{width:16px;height:16px;color:#67e8f9}
-
-/* LAYOUT */
-.event-layout{display:grid;grid-template-columns:minmax(0,1fr);gap:32px}
-@media (min-width:960px){.event-layout{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}}
-
-.card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:24px;box-shadow:0 6px 20px rgba(10,15,20,0.04)}
-.card + .card{margin-top:20px}
-.card h2{font-size:1.15rem;margin-bottom:12px;color:var(--navy)}
-
-.section-label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:var(--cyan-700);margin-bottom:10px}
-
-.detail-list{list-style:none;padding:0;display:flex;flex-direction:column;gap:12px}
-.detail-list li{display:flex;gap:12px;align-items:flex-start;font-size:14px;color:var(--text-2);line-height:1.5}
-.detail-list li i{width:18px;height:18px;color:var(--cyan-600);flex-shrink:0;margin-top:2px}
-.detail-list li strong{display:block;font-size:11.5px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;color:var(--text-muted);margin-bottom:2px}
-
-.tier-list{display:flex;flex-direction:column;gap:12px}
-.tier-row{display:flex;align-items:center;gap:14px;padding:14px;border:1px solid var(--border);border-radius:12px;background:var(--surface);transition:all 0.2s ease}
-.tier-row:hover{border-color:var(--cyan-400);background:var(--bg-2)}
-.tier-swatch{width:22px;height:22px;border-radius:6px;flex-shrink:0;border:1px solid rgba(0,0,0,0.1)}
-.tier-info{flex:1;min-width:0}
-.tier-name{font-weight:800;font-size:14.5px;line-height:1.2}
-.tier-seats{font-size:11.5px;color:var(--text-muted);font-weight:600;margin-top:2px}
-.tier-price{font-weight:800;font-size:16px;color:var(--cyan-700);white-space:nowrap;font-family:ui-monospace,monospace}
-
-.action-stack{display:flex;flex-direction:column;gap:10px;position:sticky;top:80px}
-.action-stack .btn{width:100%}
-
-.price-summary{background:linear-gradient(135deg,#0a0f14,#1a2129);color:#fff;border-radius:var(--radius);padding:20px;margin-bottom:14px;box-shadow:0 12px 30px rgba(10,15,20,0.15)}
-.price-summary .label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:#67e8f9;margin-bottom:6px}
-.price-summary .value{font-size:24px;font-weight:800;line-height:1.1;color:#fff}
-.price-summary .sub{font-size:12px;color:rgba(255,255,255,0.65);margin-top:4px}
-
-.host-card{display:flex;align-items:center;gap:12px;padding:14px;background:var(--bg-2);border-radius:12px;border:1px solid var(--border)}
-.host-avatar{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--cyan-400),var(--cyan-600));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#04161c;flex-shrink:0}
-.host-name{font-weight:800;font-size:14px}
-.host-label{font-size:11.5px;color:var(--text-muted);font-weight:600}
-
-.owner-actions{display:flex;flex-direction:column;gap:8px;margin-top:16px;padding-top:16px;border-top:1px dashed var(--border)}
-
-/* MODAL */
-.modal-overlay{position:fixed;inset:0;background:rgba(10,15,20,0.6);backdrop-filter:blur(8px);display:none;align-items:flex-start;justify-content:center;z-index:100;padding:24px 20px;overflow-y:auto}
-.modal-overlay.open{display:flex}
-.modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;max-width:520px;width:100%;padding:30px 26px;position:relative;margin:auto;animation:modalIn 0.25s var(--ease-bounce)}
-@keyframes modalIn{from{opacity:0;transform:translateY(20px) scale(0.95)}to{opacity:1;transform:translateY(0) scale(1)}}
-.modal-close{position:absolute;top:14px;right:14px;background:var(--surface-2);border:1px solid var(--border);color:var(--text-2);padding:6px;border-radius:10px;display:flex;align-items:center;justify-content:center;transition:all 0.2s ease}
-.modal-close:hover{background:var(--danger-soft);color:var(--danger);transform:rotate(90deg)}
+/* MODALS */
+.mo{position:fixed;inset:0;background:rgba(10,15,20,0.6);backdrop-filter:blur(8px);display:none;align-items:flex-start;justify-content:center;z-index:100;padding:24px 20px;overflow-y:auto}
+.mo.open{display:flex}
+.modal{background:var(--sf);border:1px solid var(--bd);border-radius:18px;max-width:520px;width:100%;padding:30px 26px;position:relative;margin:auto}
+.mc{position:absolute;top:14px;right:14px;background:var(--sf2);border:1px solid var(--bd);color:var(--tx2);padding:6px;border-radius:10px;display:flex;align-items:center;justify-content:center}
+.mc:hover{background:var(--dgf);color:var(--dg)}
 .modal h3{margin-bottom:6px;font-size:1.35rem}
-.modal .modal-sub{color:var(--text-muted);font-size:14px;margin-bottom:22px}
-
-.form-group{margin-bottom:16px;min-width:0}
-.form-group label{display:block;font-size:12px;font-weight:700;color:var(--text-2);margin-bottom:6px;text-transform:uppercase;letter-spacing:0.05em}
-.form-group input, .form-group select{width:100%;padding:12px 14px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:10px;color:var(--text);font-size:14.5px;font-family:inherit;transition:border-color 0.2s, box-shadow 0.2s;min-width:0}
-.form-group input:focus, .form-group select:focus{outline:none;border-color:var(--cyan-500);background:#fff;box-shadow:0 0 0 3px rgba(6,182,212,0.15)}
-.form-group select{appearance:none;-webkit-appearance:none;-moz-appearance:none;padding-right:36px;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7787' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:12px;cursor:pointer}
-.form-hint{font-size:11.5px;color:var(--text-muted);margin-top:6px;font-style:italic}
-
-.price-callout{background:var(--cyan-50);border:1px solid var(--cyan-200);border-radius:12px;padding:14px 16px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;gap:12px}
-.price-callout .label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.05em;color:var(--cyan-700)}
-.price-callout .value{font-size:22px;font-weight:900;color:var(--cyan-700);font-family:ui-monospace,monospace}
-
+.modal .msub{color:var(--mut);font-size:14px;margin-bottom:22px}
+.fg{margin-bottom:16px}
+.fg label{display:block;font-size:12px;font-weight:700;color:var(--tx2);margin-bottom:6px;text-transform:uppercase}
+.fg input,.fg select{width:100%;padding:12px 14px;background:var(--bg2);border:1px solid var(--bd2);border-radius:10px;color:var(--tx);font-size:14.5px;font-family:inherit}
+.fg input:focus,.fg select:focus{outline:none;border-color:var(--cy);background:#fff;box-shadow:0 0 0 3px rgba(0,255,255,0.15)}
+.fg select{appearance:none;padding-right:36px;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7787' stroke-width='3'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:12px;cursor:pointer}
+.pc{background:var(--cyf);border:1px solid var(--cy);border-radius:12px;padding:14px 16px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center}
+.pc .lbl{font-size:11px;font-weight:800;text-transform:uppercase;color:var(--cy3)}
+.pc .val{font-size:22px;font-weight:900;color:var(--cy3);font-family:ui-monospace,monospace}
 .modal .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
 .modal .actions .btn{flex:1;min-width:120px}
-
-.info-banner{background:var(--success-soft);border:1px solid var(--success-border);color:#065f46;border-radius:12px;padding:12px 14px;font-size:12.5px;font-weight:700;display:flex;align-items:flex-start;gap:8px;margin-bottom:18px;line-height:1.5}
-.info-banner i{width:16px;height:16px;flex-shrink:0;margin-top:2px}
-
-.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(120%);background:#0a0f14;color:#fff;padding:12px 18px;border-radius:12px;font-size:13.5px;z-index:200;transition:transform 0.4s var(--ease-bounce),opacity 0.3s ease;max-width:calc(100vw - 40px);display:flex;align-items:center;gap:10px;pointer-events:none;opacity:0}
+.info-b{background:var(--svf);border:1px solid #a7f3d0;color:#065f46;border-radius:12px;padding:12px 14px;font-size:12.5px;font-weight:700;display:flex;align-items:flex-start;gap:8px;margin-bottom:18px}
+.info-b i{width:16px;height:16px;flex-shrink:0;margin-top:2px}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(120%);background:#0a0f14;color:#fff;padding:12px 18px;border-radius:12px;font-size:13.5px;z-index:200;transition:transform 0.4s ease,opacity 0.3s ease;display:flex;align-items:center;gap:10px;pointer-events:none;opacity:0;max-width:calc(100vw - 40px)}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 .toast.success{background:#065f46}
 .toast.error{background:#991b1b}
-
-.spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,0.35);border-top-color:#fff;border-radius:50%;animation:spin 0.7s linear infinite;display:inline-block}
-
-.site-footer{background:#0a0f14;color:#c9d2dd;padding:32px 0 22px;margin-top:auto;font-size:13px}
-.footer-bottom{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;color:#6b7787;font-size:12px}
+.spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,0.35);border-top-color:#fff;border-radius:50%;animation:sp 0.7s linear infinite;display:inline-block}
+.footer{background:#0a0f14;color:#c9d2dd;padding:32px 0 22px;margin-top:auto;font-size:13px}
+.fb{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;color:#6b7787;font-size:12px}
 </style>
 </head>
 <body>
 
 <header class="site-header">
   <div class="container header-inner">
-    <a href="index.html" class="novalink-logo">
+    <a href="index.html" class="logo">
       <svg class="mark" viewBox="0 0 60 74"><path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/><path fill="#00FFFF" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/></svg>
-      <span class="wordmark">NOVALINK</span>
+      <span class="wm">NOVALINK</span>
     </a>
-    <div style="display:flex;gap:8px;align-items:center;position:relative">
+    <div class="hdr-actions">
       <a href="index.html" class="btn btn-ghost" style="font-size:13px;padding:8px 12px;"><i data-lucide="arrow-left"></i> Home</a>
-      <button id="userMenuBtn" class="user-menu-btn">
-        <span class="avatar" id="userAvatar">?</span>
-        <span class="name" id="userName">User</span>
-        <span class="admin-badge" id="adminBadge" style="display:none">Admin</span>
-        <i data-lucide="chevron-down" style="width:14px;height:14px;color:var(--text-muted)"></i>
+      <button id="userMenuBtn" class="user-btn">
+        <span class="av" id="userAvatar">?</span>
+        <span class="nm" id="userName">User</span>
+        <span class="badge" id="adminBadge" style="display:none">Admin</span>
       </button>
-      <div class="user-dropdown" id="userDropdown">
-        <button class="user-dropdown-item" id="ddSignOut"><i data-lucide="log-out"></i> Sign out</button>
-        <button class="user-dropdown-item" id="ddCreateEvent"><i data-lucide="plus-circle"></i> Create an event</button>
+      <div class="dd" id="userDropdown">
+        <button class="dd-item" id="ddSignOut"><i data-lucide="log-out"></i> Sign out</button>
+        <button class="dd-item" id="ddCreateEvent"><i data-lucide="plus-circle"></i> Create an event</button>
       </div>
     </div>
   </div>
 </header>
 
-<main class="page-wrap">
+<main class="page">
   <div class="container">
 
-    <div id="loadingState" class="loading-state">
+    <div id="loadingState" class="ls">
       <i data-lucide="loader-2"></i>
       <p>Loading event…</p>
     </div>
 
-    <div id="errorState" class="error-state" style="display:none">
-      <div class="icon"><i data-lucide="alert-circle"></i></div>
+    <div id="errorState" class="es" style="display:none">
+      <div class="ic"><i data-lucide="alert-circle"></i></div>
       <h2 id="errorTitle">Event not found</h2>
       <p id="errorMsg">This event may have been deleted or the link is broken.</p>
       <a href="index.html" class="btn btn-accent"><i data-lucide="arrow-left"></i> Back to home</a>
     </div>
 
     <div id="eventContent" style="display:none">
-
-      <section class="event-hero" id="eventHero">
-        <div class="event-hero-bg" id="eventHeroBg"></div>
-        <div class="event-hero-content">
-          <div class="event-badge-row" id="eventBadges"></div>
-          <h1 class="event-title" id="eventTitle">Event Name</h1>
-          <div class="event-meta-row">
-            <span class="event-meta-item"><i data-lucide="calendar"></i> <span id="eventDate">Date</span></span>
-            <span class="event-meta-item"><i data-lucide="map-pin"></i> <span id="eventCity">City</span></span>
-            <span class="event-meta-item" id="eventSeatsMeta" style="display:none"><i data-lucide="users"></i> <span id="eventSeats">0 seats</span></span>
+      <section class="hero">
+        <div class="hero-bg" id="eventHeroBg"></div>
+        <div class="hero-c">
+          <div class="badges" id="eventBadges"></div>
+          <h1 class="hero-title" id="eventTitle">Event Name</h1>
+          <div class="hero-meta">
+            <span class="hero-mi"><i data-lucide="calendar"></i> <span id="eventDate">Date</span></span>
+            <span class="hero-mi"><i data-lucide="map-pin"></i> <span id="eventCity">City</span></span>
+            <span class="hero-mi" id="eventSeatsMeta" style="display:none"><i data-lucide="users"></i> <span id="eventSeats">0 seats</span></span>
           </div>
         </div>
       </section>
 
-      <div class="event-layout">
-
+      <div class="layout">
         <div>
           <div class="card">
-            <div class="section-label">Event details</div>
-            <ul class="detail-list">
+            <div class="sl">Event details</div>
+            <ul class="dl">
               <li><i data-lucide="calendar-check"></i> <div><strong>Date & time</strong><span id="detailDateTime">—</span></div></li>
               <li><i data-lucide="map-pin"></i> <div><strong>Venue</strong><span id="detailVenue">—</span></div></li>
               <li><i data-lucide="building"></i> <div><strong>City</strong><span id="detailCity">—</span></div></li>
               <li><i data-lucide="tag"></i> <div><strong>Event type</strong><span id="detailType">—</span></div></li>
             </ul>
           </div>
-
           <div class="card">
-            <div class="section-label">Ticket tiers</div>
-            <div class="tier-list" id="tierList">
-              <p style="color:var(--text-muted);font-size:13.5px;">No tier information available.</p>
+            <div class="sl">Ticket tiers</div>
+            <div class="tiers" id="tierList">
+              <p style="color:var(--mut);font-size:13.5px;">Loading…</p>
             </div>
           </div>
         </div>
-
         <div>
-          <div class="action-stack">
-            <div class="price-summary">
-              <div class="label">From</div>
-              <div class="value" id="priceFrom">Free</div>
+          <div class="stack">
+            <div class="psum">
+              <div class="lbl">From</div>
+              <div class="val" id="priceFrom">Free</div>
               <div class="sub" id="priceSub">Cheapest ticket tier</div>
             </div>
             <button class="btn btn-accent btn-lg btn-block" id="getTicketsBtn"><i data-lucide="ticket"></i> Get tickets</button>
-
             <div class="card" style="margin-top:6px;padding:16px;">
-              <div class="section-label" style="margin-bottom:10px;">Hosted by</div>
-              <div class="host-card">
-                <div class="host-avatar" id="hostAvatar">?</div>
+              <div class="sl" style="margin-bottom:10px;">Hosted by</div>
+              <div class="host">
+                <div class="hav" id="hostAvatar">?</div>
                 <div style="min-width:0;flex:1;">
-                  <div class="host-name" id="hostName">Host</div>
-                  <div class="host-label" id="hostEmail">—</div>
+                  <div class="hn" id="hostName">Host</div>
+                  <div class="hl" id="hostEmail">—</div>
                 </div>
               </div>
             </div>
-
-            <div class="owner-actions" id="ownerActions" style="display:none">
-              <div class="section-label" style="margin:0 0 4px;">Owner controls</div>
+            <div class="own-actions" id="ownerActions" style="display:none">
+              <div class="sl" style="margin:0 0 4px;">Owner controls</div>
               <button class="btn btn-ghost" id="editBtn"><i data-lucide="edit-3"></i> Edit event</button>
               <button class="btn btn-danger" id="deleteBtn"><i data-lucide="trash-2"></i> Delete event</button>
             </div>
           </div>
         </div>
-
       </div>
-    </div>
 
+      <section class="sp-section" id="seatingSection">
+        <div class="sp-head">
+          <div>
+            <h2>Seating Plan</h2>
+            <p id="spSummary">Layout for this venue</p>
+          </div>
+          <span class="sp-hint"><i data-lucide="move"></i> Scroll the canvas to explore</span>
+        </div>
+        <div class="sp-scroll">
+          <div class="sp-canvas" id="spCanvas"></div>
+        </div>
+        <div class="sp-legend" id="spLegend"></div>
+      </section>
+
+    </div>
   </div>
 </main>
 
-<footer class="site-footer">
+<footer class="footer">
   <div class="container">
-    <div class="footer-bottom">
+    <div class="fb">
       <span>&copy; <span id="year"></span> Novalink. All rights reserved.</span>
       <span>Johannesburg, South Africa</span>
     </div>
   </div>
 </footer>
 
-<!-- ====== GET TICKETS MODAL ====== -->
-<div class="modal-overlay" id="buyModal">
+<div class="mo" id="buyModal">
   <div class="modal">
-    <button class="modal-close" id="buyClose"><i data-lucide="x"></i></button>
+    <button class="mc" id="buyClose"><i data-lucide="x"></i></button>
     <h3>Get your ticket</h3>
-    <p class="modal-sub" id="buyModalSub">Pick a tier and enter your name.</p>
-
-    <div class="info-banner">
-      <i data-lucide="info"></i>
-      <span>Free test mode — no payment required. Ticket will be issued instantly.</span>
-    </div>
-
-    <div class="form-group">
-      <label for="buyTier">Ticket tier</label>
-      <select id="buyTier"></select>
-      <p class="form-hint" id="buyTierHint">Pick a tier</p>
-    </div>
-
-    <div class="form-group">
-      <label for="buyGuestName">Guest name</label>
-      <input type="text" id="buyGuestName" placeholder="e.g., Jane Smith" maxlength="60" autocomplete="name" />
-    </div>
-
-    <div class="form-group">
-      <label for="buySeat">Seat (optional)</label>
-      <input type="text" id="buySeat" placeholder="e.g., A-12" maxlength="10" />
-    </div>
-
-    <div class="price-callout">
-      <span class="label">Total</span>
-      <span class="value" id="buyTotal">Free</span>
-    </div>
-
+    <p class="msub">Pick a tier and enter your name.</p>
+    <div class="info-b"><i data-lucide="info"></i><span>Free test mode — no payment required.</span></div>
+    <div class="fg"><label for="buyTier">Ticket tier</label><select id="buyTier"></select></div>
+    <div class="fg"><label for="buyGuestName">Guest name</label><input type="text" id="buyGuestName" placeholder="e.g., Jane Smith" maxlength="60" /></div>
+    <div class="fg"><label for="buySeat">Seat (optional)</label><input type="text" id="buySeat" placeholder="e.g., A-12" maxlength="10" /></div>
+    <div class="pc"><span class="lbl">Total</span><span class="val" id="buyTotal">Free</span></div>
     <div class="actions">
       <button class="btn btn-ghost" id="buyCancel">Cancel</button>
       <button class="btn btn-accent" id="buyConfirm"><i data-lucide="check"></i> Confirm ticket</button>
@@ -338,12 +303,11 @@ h3{font-size:1.15rem}
   </div>
 </div>
 
-<!-- ====== DELETE MODAL ====== -->
-<div class="modal-overlay" id="deleteModal">
+<div class="mo" id="deleteModal">
   <div class="modal">
-    <button class="modal-close" id="deleteModalClose"><i data-lucide="x"></i></button>
+    <button class="mc" id="deleteModalClose"><i data-lucide="x"></i></button>
     <h3>Delete this event?</h3>
-    <p class="modal-sub">This will permanently remove <strong id="deleteEventName">this event</strong> and cannot be undone. All tickets linked to this event will also be removed.</p>
+    <p class="msub">This will permanently remove <strong id="deleteEventName">this event</strong> and cannot be undone.</p>
     <div class="actions">
       <button class="btn btn-ghost" id="deleteCancel">Cancel</button>
       <button class="btn btn-danger" id="deleteConfirm"><i data-lucide="trash-2"></i> Delete</button>
@@ -357,7 +321,6 @@ h3{font-size:1.15rem}
 (function(){
 'use strict';
 
-/* ================= FIREBASE ================= */
 var firebaseConfig = {
   apiKey: "AIzaSyDSnns131jOlBXAqKo6qy7lTW4Rij-1oWU",
   authDomain: "novalink-864cf.firebaseapp.com",
@@ -367,45 +330,45 @@ var firebaseConfig = {
   appId: "1:602780280140:web:5d9ff2351e5a7d5e66dbe9"
 };
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-var db   = firebase.firestore();
+var db = firebase.firestore();
 var auth = firebase.auth();
-var EVENTS_COLLECTION = "events";
+var EVENTS = "events";
+var ADMINS = ["nylnathan340@gmail.com"];
 
-var ADMIN_EMAILS = ["nylnathan340@gmail.com"];
-
-/* ================= STATE ================= */
 var currentUser = null;
 var isAdmin = false;
 var eventData = null;
 var eventId = null;
-var unsubscribeEvent = null;
+var unsub = null;
 
-/* ================= HELPERS ================= */
 function $(id){ return document.getElementById(id); }
-function icon(n){ return '<i data-lucide="'+n+'"></i>'; }
 function refreshIcons(){ if(window.lucide) lucide.createIcons(); }
 function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
 function initialsFrom(name,email){
   if(name && name.trim()){ var p = name.trim().split(/\s+/); if(p.length>=2) return (p[0][0]+p[1][0]).toUpperCase(); return p[0].slice(0,2).toUpperCase(); }
   if(email) return email.slice(0,2).toUpperCase();
   return "??";
 }
+
 function showToast(msg,type,ms){
   type = type || "info"; ms = ms || 3000;
   var t = $("toast");
-  var i = type === "error" ? "alert-circle" : (type === "success" ? "check-circle" : "info");
   t.className = "toast " + type;
-  t.innerHTML = icon(i) + "<span>" + esc(msg) + "</span>";
+  var ic = type === "error" ? "alert-circle" : (type === "success" ? "check-circle" : "info");
+  t.innerHTML = '<i data-lucide="'+ic+'"></i><span>'+esc(msg)+'</span>';
   refreshIcons();
   requestAnimationFrame(function(){ t.classList.add("show"); });
   clearTimeout(showToast._t);
   showToast._t = setTimeout(function(){ t.classList.remove("show"); }, ms);
 }
+
 function formatMoney(v){
   if (typeof v !== "number") v = parseFloat(v) || 0;
   if (v <= 0) return "Free";
   return "R " + v.toFixed(2).replace(/\.00$/, "");
 }
+
 function formatDate(dateStr, timeStr){
   if (!dateStr) return "Date TBA";
   try {
@@ -417,19 +380,20 @@ function formatDate(dateStr, timeStr){
     return out;
   } catch(e){ return dateStr; }
 }
-function getEventTypeLabel(t){
+
+function typeLabel(t){
   if (!t) return "Event";
   return t.charAt(0).toUpperCase() + t.slice(1);
 }
-function getQueryParam(name){
-  try { return new URLSearchParams(window.location.search).get(name); }
+
+function getParam(n){
+  try { return new URLSearchParams(window.location.search).get(n); }
   catch(e){ return null; }
 }
 
-/* ================= AUTH ================= */
-function applyAuthState(user){
+function applyAuth(user){
   currentUser = user;
-  isAdmin = !!(user && ADMIN_EMAILS.map(function(e){return e.toLowerCase();}).indexOf(String(user.email).toLowerCase()) !== -1);
+  isAdmin = !!(user && ADMINS.map(function(e){return e.toLowerCase();}).indexOf(String(user.email).toLowerCase()) !== -1);
   if (user){
     var display = user.displayName || user.email.split("@")[0];
     $("userMenuBtn").style.display = "inline-flex";
@@ -443,18 +407,17 @@ function applyAuthState(user){
   if (eventData) renderOwnerControls();
 }
 
-/* ================= OWNERSHIP ================= */
-function canEditOrDelete(){
-  if (!eventData) return false;
-  if (!currentUser) return false;
+function canEdit(){
+  if (!eventData || !currentUser) return false;
   if (isAdmin) return true;
   return eventData.ownerUid && eventData.ownerUid === currentUser.uid;
 }
+
 function renderOwnerControls(){
-  $("ownerActions").style.display = canEditOrDelete() ? "flex" : "none";
+  $("ownerActions").style.display = canEdit() ? "flex" : "none";
 }
 
-/* ================= RENDER ================= */
+/* ============ MAIN RENDER ============ */
 function renderEvent(data){
   eventData = data;
 
@@ -468,12 +431,11 @@ function renderEvent(data){
     bg.style.backgroundSize = "cover";
     bg.style.backgroundPosition = "center";
   } else {
-    bg.style.background = "linear-gradient(135deg, #22d3ee 0%, #0891b2 100%)";
+    bg.style.background = "linear-gradient(135deg, #00FFFF 0%, #00A3C4 100%)";
   }
 
-  var badges = [];
-  badges.push('<span class="event-badge">' + esc(getEventTypeLabel(data.eventType)) + '</span>');
-  if (canEditOrDelete()) badges.push('<span class="event-badge owned">' + (isAdmin && !(data.ownerUid === (currentUser && currentUser.uid)) ? 'Admin view' : 'Your event') + '</span>');
+  var badges = ['<span class="badge">' + esc(typeLabel(data.eventType)) + '</span>'];
+  if (canEdit()) badges.push('<span class="badge own">Your event</span>');
   $("eventBadges").innerHTML = badges.join("");
 
   $("eventTitle").textContent = data.eventName || "Untitled Event";
@@ -486,16 +448,17 @@ function renderEvent(data){
   $("detailDateTime").textContent = formatDate(data.startDate, data.startTime);
   $("detailVenue").textContent = data.venueAddress || "—";
   $("detailCity").textContent = data.city || "—";
-  $("detailType").textContent = getEventTypeLabel(data.eventType);
+  $("detailType").textContent = typeLabel(data.eventType);
 
   renderTiers(data);
-  renderPriceFrom(data);
+  renderPrice(data);
+  renderSeatingPlan(data);
 
-  var hostName = data.hostName || "Host";
-  var hostEmail = data.hostEmail || "";
-  $("hostName").textContent = hostName;
-  $("hostEmail").textContent = hostEmail || "—";
-  $("hostAvatar").textContent = initialsFrom(hostName, hostEmail);
+  var hn = data.hostName || "Host";
+  var he = data.hostEmail || "";
+  $("hostName").textContent = hn;
+  $("hostEmail").textContent = he || "—";
+  $("hostAvatar").textContent = initialsFrom(hn, he);
 
   renderOwnerControls();
   refreshIcons();
@@ -504,90 +467,363 @@ function renderEvent(data){
 function renderTiers(data){
   var list = $("tierList");
   list.innerHTML = "";
-  var tiers = data.tierPrices || {};
+  var prices = data.tierPrices || {};
   var names = data.tierNames || {};
   var colours = data.tierColours || {};
   var active = data.activeTierCount || 4;
-  var tierKeys = ["black","gold","silver","cyan","tier5","tier6"].slice(0, active);
-  var seatCounts = estimateSeatCounts(data);
-
+  var keys = ["black","gold","silver","cyan","tier5","tier6"].slice(0, active);
+  var defaults = {black:"Elite",gold:"VIP",silver:"Silver",cyan:"Standard",tier5:"Platinum",tier6:"Diamond"};
+  var defCols = {black:"#1a202c",gold:"#ecc94b",silver:"#cbd5e1",cyan:"#00FFFF",tier5:"#a855f7",tier6:"#f472b6"};
   var anyShown = false;
-  tierKeys.forEach(function(t){
-    var price = parseFloat(tiers[t]) || 0;
-    var name = names[t] || ({black:"Elite",gold:"VIP",silver:"Silver",cyan:"Standard",tier5:"Platinum",tier6:"Diamond"})[t];
-    var colour = colours[t] || ({black:"#1a202c",gold:"#ecc94b",silver:"#cbd5e1",cyan:"#00FFFF",tier5:"#a855f7",tier6:"#f472b6"})[t];
-    var seats = seatCounts[t] || 0;
-    if (price === 0 && seats === 0) return;
+  keys.forEach(function(t){
+    var price = parseFloat(prices[t]) || 0;
+    if (price === 0) return;
     anyShown = true;
-
+    var name = names[t] || defaults[t];
+    var colour = colours[t] || defCols[t];
     var row = document.createElement("div");
-    row.className = "tier-row";
+    row.className = "tier";
     row.innerHTML =
-      '<div class="tier-swatch" style="background:' + esc(colour) + '"></div>' +
-      '<div class="tier-info">' +
-        '<div class="tier-name">' + esc(name) + '</div>' +
-        '<div class="tier-seats">' + (seats > 0 ? seats + ' seats available' : 'Available') + '</div>' +
-      '</div>' +
-      '<div class="tier-price">' + (price > 0 ? esc(formatMoney(price)) : 'Free') + '</div>';
+      '<div class="tsw" style="background:' + esc(colour) + '"></div>' +
+      '<div class="ti"><div class="tn">' + esc(name) + '</div><div class="tseats">Available</div></div>' +
+      '<div class="tp">' + esc(formatMoney(price)) + '</div>';
     list.appendChild(row);
   });
-
   if (!anyShown) {
-    list.innerHTML = '<p style="color:var(--text-muted);font-size:13.5px;">Tiers will be shown once the host sets prices.</p>';
+    keys.forEach(function(t){
+      var name = names[t] || defaults[t];
+      var colour = colours[t] || defCols[t];
+      var row = document.createElement("div");
+      row.className = "tier";
+      row.innerHTML =
+        '<div class="tsw" style="background:' + esc(colour) + '"></div>' +
+        '<div class="ti"><div class="tn">' + esc(name) + '</div><div class="tseats">Free</div></div>' +
+        '<div class="tp">Free</div>';
+      list.appendChild(row);
+    });
   }
 }
 
-function estimateSeatCounts(data){
-  var counts = {};
-  var active = data.activeTierCount || 4;
-  ["black","gold","silver","cyan","tier5","tier6"].slice(0, active).forEach(function(t){ counts[t] = 0; });
-
-  try {
-    if (data.venue && data.venue.sections && data.venue.sections.length) {
-      data.venue.sections.forEach(function(sec){
-        if (sec.mode === "tables" && Array.isArray(sec.tables)) {
-          sec.tables.forEach(function(tbl){
-            var tier = tbl.tier || "cyan";
-            counts[tier] = (counts[tier] || 0) + (tbl.chairs || 1);
-          });
-        } else if (sec.mode === "rows" && Array.isArray(sec.rows)) {
-          sec.rows.forEach(function(row){
-            (row.seats || []).forEach(function(seat){
-              var tier = seat.tier || "cyan";
-              counts[tier] = (counts[tier] || 0) + 1;
-            });
-          });
-        } else if (sec.mode === "corner" && sec.corner) {
-          var hRows = sec.corner.hRows || 0;
-          var hSeats = sec.corner.hSeats || 0;
-          var vRows = sec.corner.vRows || 0;
-          var vSeats = sec.corner.vSeats || 0;
-          counts["cyan"] = (counts["cyan"] || 0) + (hRows * hSeats) + (vRows * vSeats);
-        }
-      });
-    }
-  } catch(e){ /* silent */ }
-  return counts;
-}
-
-function renderPriceFrom(data){
-  var tiers = data.tierPrices || {};
-  var prices = [];
+function renderPrice(data){
+  var prices = data.tierPrices || {};
+  var list = [];
   ["black","gold","silver","cyan","tier5","tier6"].forEach(function(t){
-    var v = parseFloat(tiers[t]);
-    if (!isNaN(v) && v > 0) prices.push(v);
+    var v = parseFloat(prices[t]);
+    if (!isNaN(v) && v > 0) list.push(v);
   });
-  if (!prices.length) {
+  if (!list.length) {
     $("priceFrom").textContent = "Free";
     $("priceSub").textContent = "No ticket price set";
   } else {
-    var min = Math.min.apply(null, prices);
+    var min = Math.min.apply(null, list);
     $("priceFrom").textContent = formatMoney(min);
     $("priceSub").textContent = "Cheapest ticket tier";
   }
 }
 
-/* ================= LOAD EVENT ================= */
+/* ============ SEATING PLAN RENDERER ============ */
+function tierColour(data, tier){
+  var cols = data.tierColours || {};
+  var defaults = {black:"#1a202c",gold:"#ecc94b",silver:"#cbd5e1",cyan:"#00FFFF",tier5:"#a855f7",tier6:"#f472b6"};
+  return cols[tier] || defaults[tier] || "#00FFFF";
+}
+
+function tierContrast(hex){
+  var c = String(hex).replace("#","");
+  if (c.length === 3) c = c[0]+c[0]+c[1]+c[1]+c[2]+c[2];
+  if (c.length !== 6) return "#000";
+  var r = parseInt(c.substring(0,2),16);
+  var g = parseInt(c.substring(2,4),16);
+  var b = parseInt(c.substring(4,6),16);
+  var lum = (0.2126 * r + 0.7152 * g + 0.0722 * b) / 255;
+  return lum > 0.5 ? "#0a0f14" : "#ffffff";
+}
+
+function rowLabelFn(index){
+  var n = index, label = "";
+  do { label = String.fromCharCode(65 + (n % 26)) + label; n = Math.floor(n / 26) - 1; } while (n >= 0);
+  return label;
+}
+
+function renderSeatingPlan(data){
+  var sections = data.sections || [];
+  var hasSeatData = sections.length > 0 && (data.seatingMode || sections[0].mode);
+  var section = $("seatingSection");
+
+  if (!hasSeatData){
+    section.classList.remove("visible");
+    return;
+  }
+  section.classList.add("visible");
+
+  var canvasW = data.canvasWidth || 1200;
+  var canvasH = data.canvasHeight || 800;
+  var stage = data.stage || { x: 500, y: 60, width: 200, height: 60, name: "STAGE" };
+  var levels = data.levels || [{ id: 0, name: "Ground Floor", color: "#00FFFF", visible: true }];
+
+  var canvas = $("spCanvas");
+  canvas.innerHTML = "";
+  canvas.style.width = canvasW + "px";
+  canvas.style.height = canvasH + "px";
+  var gridSz = (data.gridSize || 50) + "px";
+  canvas.style.backgroundSize = gridSz + " " + gridSz;
+
+  // Summary line
+  var summary = $("spSummary");
+  var mode = data.seatingMode === "tables" ? "Tables & chairs" : "Rows & seats";
+  summary.textContent = mode + " · " + sections.length + " block" + (sections.length === 1 ? "" : "s") + " · " + (data.totalAttendees || 0) + " seats total";
+
+  // Stage
+  var stageEl = document.createElement("div");
+  stageEl.className = "sp-stage";
+  stageEl.textContent = (stage.name || "STAGE").toUpperCase();
+  stageEl.style.left = stage.x + "px";
+  stageEl.style.top = stage.y + "px";
+  stageEl.style.width = stage.width + "px";
+  stageEl.style.height = stage.height + "px";
+  canvas.appendChild(stageEl);
+
+  // Canvas annotations (shapes, lines, markers)
+  (data.canvasElements || []).forEach(function(item){
+    var lv = levels.find(function(x){ return x.id === item.levelId; });
+    if (lv && lv.visible === false) return;
+
+    if (item.type === "shape"){
+      var s = document.createElement("div");
+      s.className = "sp-anno-shape " + (item.shapeKind || "rectangle");
+      s.style.left = item.x + "px"; s.style.top = item.y + "px";
+      s.style.width = item.w + "px"; s.style.height = item.h + "px";
+      s.style.background = hexA(item.color, 0.15);
+      s.style.border = "2px solid " + (item.color || "#00FFFF");
+      s.style.color = item.color || "#00FFFF";
+      s.style.zIndex = String((item.z || 6) + 5);
+      s.style.borderRadius = item.shapeKind === "circle" ? "50%" : "4px";
+      if (item.rotation) { s.style.transform = "rotate(" + item.rotation + "deg)"; s.style.transformOrigin = "center center"; }
+      if (item.label) s.textContent = item.label;
+      canvas.appendChild(s);
+    } else if (item.type === "line"){
+      var dx = item.x2 - item.x1, dy = item.y2 - item.y1;
+      var len = Math.sqrt(dx*dx + dy*dy);
+      var ang = Math.atan2(dy, dx) * 180 / Math.PI;
+      var l = document.createElement("div");
+      l.className = "sp-anno-line";
+      l.style.left = item.x1 + "px"; l.style.top = item.y1 + "px";
+      l.style.width = len + "px"; l.style.height = (item.thickness || 2) + "px";
+      l.style.background = item.color || "#facc15";
+      l.style.borderRadius = ((item.thickness || 2) / 2) + "px";
+      l.style.transform = "rotate(" + ang + "deg)"; l.style.transformOrigin = "0 50%";
+      l.style.zIndex = String((item.z || 6) + 5);
+      canvas.appendChild(l);
+    } else if (item.type === "marker"){
+      var mt = { exit:{c:"#10b981",i:"↗"}, entrance:{c:"#3b82f6",i:"→"}, bathroom:{c:"#a855f7",i:"🚻"} }[item.markerKind] || {c:"#10b981",i:"↗"};
+      var m = document.createElement("div");
+      m.className = "sp-marker";
+      m.style.left = item.x + "px"; m.style.top = item.y + "px";
+      m.style.width = item.w + "px"; m.style.height = item.h + "px";
+      m.style.background = mt.c;
+      m.style.zIndex = String((item.z || 6) + 5);
+      if (item.rotation) { m.style.transform = "rotate(" + item.rotation + "deg)"; m.style.transformOrigin = "center center"; }
+      m.innerHTML = '<span class="mic">' + mt.i + '</span><span class="mlb">' + esc(item.label || "") + '</span>';
+      canvas.appendChild(m);
+    }
+  });
+
+  // Sections
+  sections.forEach(function(sec){
+    var lv = levels.find(function(x){ return x.name === sec.level; });
+    if (lv && lv.visible === false) return;
+
+    var blk = document.createElement("div");
+    blk.className = "sp-blk";
+    blk.style.left = (sec.x || 0) + "px";
+    blk.style.top = (sec.y || 0) + "px";
+    var sc = sec.scale || 1, rot = sec.rotation || 0;
+    blk.style.transform = "rotate(" + rot + "deg) scale(" + sc + ")";
+
+    var title = document.createElement("div");
+    title.className = "sp-blk-title";
+    title.textContent = sec.name || "Block";
+    blk.appendChild(title);
+
+    var loc = document.createElement("div");
+    loc.className = "sp-blk-loc";
+    loc.textContent = (lv ? lv.name.toUpperCase() : "—") + (sec.tierOverride ? " · " + sec.tierOverride : "");
+    if (lv) loc.style.color = lv.color;
+    blk.appendChild(loc);
+
+    var stageSm = document.createElement("div");
+    stageSm.className = "sp-blk-stage";
+    stageSm.textContent = (stage.name || "STAGE").toUpperCase();
+    blk.appendChild(stageSm);
+
+    if (sec.mode === "rows" && sec.rows){
+      sec.rows.forEach(function(row, rIdx){
+        var rowEl = document.createElement("div");
+        rowEl.className = "sp-row";
+        var rl = document.createElement("div");
+        rl.className = "sp-row-label";
+        rl.textContent = "Row " + (row.row || rowLabelFn(rIdx));
+        rowEl.appendChild(rl);
+
+        var seats = document.createElement("div");
+        seats.className = "sp-seats";
+        var gapEvery = sec.seatGapEvery || 0;
+        var gapSize = sec.seatGapSize || 1;
+        var totalSeats = (row.seats || []).length;
+        (row.seats || []).forEach(function(seat, sIdx){
+          var seatEl = document.createElement("div");
+          seatEl.className = "sp-seat " + (seat.tier || "cyan");
+          var colour = tierColour(data, seat.tier || "cyan");
+          seatEl.style.background = colour;
+          seatEl.style.color = tierContrast(colour);
+          seatEl.textContent = seat.seat;
+          seats.appendChild(seatEl);
+          if (gapEvery > 0 && (sIdx + 1) % gapEvery === 0 && (sIdx + 1) < totalSeats){
+            var gap = document.createElement("div");
+            gap.className = "sp-seat-gap";
+            gap.style.width = (12 * gapSize) + "px";
+            gap.style.height = "12px";
+            seats.appendChild(gap);
+          }
+        });
+        rowEl.appendChild(seats);
+
+        var tier = (row.seats && row.seats[0]) ? row.seats[0].tier : "cyan";
+        var tt = document.createElement("div");
+        tt.className = "sp-tier-tag";
+        tt.textContent = (data.tierNames && data.tierNames[tier]) || tier;
+        rowEl.appendChild(tt);
+        blk.appendChild(rowEl);
+      });
+    } else if (sec.mode === "corner" && sec.corner){
+      var c = sec.corner;
+      var wrap = document.createElement("div");
+      wrap.className = "sp-corner";
+      var hRows = c.hRows || 0;
+      var hSeats = c.hSeats || 0;
+      var vRows = c.vRows || 0;
+      var vSeats = c.vSeats || 0;
+      var isRight = c.kind === "corner-right";
+      // Horizontal leg
+      for (var r = 0; r < hRows; r++){
+        var rowEl = document.createElement("div");
+        rowEl.className = "sp-corner-row";
+        for (var i = 0; i < hSeats; i++){
+          var s = document.createElement("div");
+          var tierH = (sec.tierOverride || "cyan");
+          s.className = "sp-seat " + tierH;
+          var ch = tierColour(data, tierH);
+          s.style.background = ch; s.style.color = tierContrast(ch);
+          s.textContent = (i + 1);
+          rowEl.appendChild(s);
+        }
+        wrap.appendChild(rowEl);
+      }
+      // Vertical leg
+      var seatPx = 12;
+      for (var v = 0; v < vRows; v++){
+        var rEl = document.createElement("div");
+        rEl.className = "sp-corner-row";
+        if (!isRight){
+          for (var a = 0; a < vSeats; a++){
+            var sA = document.createElement("div");
+            var tierV = (sec.tierOverride || "cyan");
+            sA.className = "sp-seat " + tierV;
+            var chA = tierColour(data, tierV);
+            sA.style.background = chA; sA.style.color = tierContrast(chA);
+            sA.textContent = (a + 1);
+            rEl.appendChild(sA);
+          }
+          var spA = document.createElement("div");
+          spA.className = "sp-corner-spacer";
+          spA.style.height = seatPx + "px";
+          rEl.appendChild(spA);
+        } else {
+          var spB = document.createElement("div");
+          spB.className = "sp-corner-spacer";
+          spB.style.height = seatPx + "px";
+          rEl.appendChild(spB);
+          for (var b = 0; b < vSeats; b++){
+            var sB = document.createElement("div");
+            var tierB = (sec.tierOverride || "cyan");
+            sB.className = "sp-seat " + tierB;
+            var chB = tierColour(data, tierB);
+            sB.style.background = chB; sB.style.color = tierContrast(chB);
+            sB.textContent = (b + 1);
+            rEl.appendChild(sB);
+          }
+        }
+        wrap.appendChild(rEl);
+      }
+      blk.appendChild(wrap);
+    } else if (sec.mode === "tables" && sec.tables){
+      // Simplified table render
+      var tw = (sec.tableWidthCm || 150);
+      var tl = (sec.tableLengthCm || tw);
+      var tblW = 40, tblH = 40;
+      var gap = 8;
+      var wrap = document.createElement("div");
+      wrap.className = "sp-tbl-wrap";
+      var rows = sec.tableRows || [1];
+      var maxCols = 1; rows.forEach(function(c){ if (c > maxCols) maxCols = c; });
+      wrap.style.width = (maxCols * (tblW + gap)) + "px";
+      wrap.style.height = (rows.length * (tblH + gap)) + "px";
+      var n = 1;
+      rows.forEach(function(c, ri){
+        for (var j = 0; j < c; j++){
+          var t = document.createElement("div");
+          t.className = "sp-tbl";
+          t.style.left = ((j * (tblW + gap)) + gap / 2) + "px";
+          t.style.top = ((ri * (tblH + gap)) + gap / 2) + "px";
+          var sh = document.createElement("div");
+          sh.className = "sp-tbl-shape " + (sec.tableShape || "circular") + " " + (sec.tierOverride || "cyan");
+          sh.style.width = tblW + "px"; sh.style.height = tblH + "px";
+          var tierT = sec.tierOverride || "cyan";
+          var chT = tierColour(data, tierT);
+          sh.style.background = chT; sh.style.color = tierContrast(chT);
+          sh.textContent = n++;
+          t.appendChild(sh);
+          wrap.appendChild(t);
+        }
+      });
+      blk.appendChild(wrap);
+    }
+
+    canvas.appendChild(blk);
+  });
+
+  // Legend
+  var legend = $("spLegend");
+  legend.innerHTML = "";
+  var active = data.activeTierCount || 4;
+  var keys = ["black","gold","silver","cyan","tier5","tier6"].slice(0, active);
+  var defaultNames = {black:"Elite",gold:"VIP",silver:"Silver",cyan:"Standard",tier5:"Platinum",tier6:"Diamond"};
+  keys.forEach(function(t){
+    var name = (data.tierNames && data.tierNames[t]) || defaultNames[t];
+    var colour = tierColour(data, t);
+    var item = document.createElement("div");
+    item.className = "sp-lgi";
+    item.innerHTML = '<span class="sp-lgsw" style="background:' + esc(colour) + '"></span> ' + esc(name);
+    legend.appendChild(item);
+  });
+  var staffItem = document.createElement("div");
+  staffItem.className = "sp-lgi";
+  staffItem.innerHTML = '<span class="sp-lgsw staff"></span> Staff';
+  legend.appendChild(staffItem);
+  refreshIcons();
+}
+
+function hexA(hex, alpha){
+  var c = String(hex || "#00FFFF").replace("#","");
+  if (c.length === 3) c = c[0]+c[0]+c[1]+c[1]+c[2]+c[2];
+  if (c.length !== 6) return "rgba(0,255,255," + alpha + ")";
+  var r = parseInt(c.substring(0,2),16);
+  var g = parseInt(c.substring(2,4),16);
+  var b = parseInt(c.substring(4,6),16);
+  return "rgba(" + r + "," + g + "," + b + "," + alpha + ")";
+}
+
+/* ============ LOAD / LISTENERS ============ */
 function showError(title, msg){
   $("loadingState").style.display = "none";
   $("eventContent").style.display = "none";
@@ -597,10 +833,9 @@ function showError(title, msg){
   refreshIcons();
 }
 
-function attachEventListener(){
-  if (unsubscribeEvent) { try { unsubscribeEvent(); } catch(e){} }
-
-  unsubscribeEvent = db.collection(EVENTS_COLLECTION).doc(eventId).onSnapshot(function(snap){
+function attachListener(){
+  if (unsub) { try { unsub(); } catch(e){} }
+  unsub = db.collection(EVENTS).doc(eventId).onSnapshot(function(snap){
     if (!snap.exists) {
       showError("Event not found", "This event may have been deleted or the link is broken.");
       return;
@@ -617,37 +852,31 @@ function attachEventListener(){
   });
 }
 
-/* ================= BUY TICKET FLOW ================= */
-function openBuyModal(){
+/* ============ BUY MODAL ============ */
+function openBuy(){
   if (!eventData) return;
   if (!currentUser) {
     showToast("Please sign in to get tickets.", "error");
     setTimeout(function(){ window.location.href = "index.html#signin"; }, 1200);
     return;
   }
-
-  // Populate tier dropdown
-  var tierSel = $("buyTier");
-  tierSel.innerHTML = "";
+  var sel = $("buyTier");
+  sel.innerHTML = "";
   var active = eventData.activeTierCount || 4;
-  var tierKeys = ["black","gold","silver","cyan","tier5","tier6"].slice(0, active);
+  var keys = ["black","gold","silver","cyan","tier5","tier6"].slice(0, active);
   var names = eventData.tierNames || {};
   var prices = eventData.tierPrices || {};
-  var defaultNames = {black:"Elite",gold:"VIP",silver:"Silver",cyan:"Standard",tier5:"Platinum",tier6:"Diamond"};
-
-  tierKeys.forEach(function(t){
-    var name = names[t] || defaultNames[t];
+  var defaults = {black:"Elite",gold:"VIP",silver:"Silver",cyan:"Standard",tier5:"Platinum",tier6:"Diamond"};
+  keys.forEach(function(t){
+    var name = names[t] || defaults[t];
     var price = parseFloat(prices[t]) || 0;
     var opt = document.createElement("option");
     opt.value = t;
     opt.textContent = name + (price > 0 ? " — " + formatMoney(price) : " — Free");
-    tierSel.appendChild(opt);
+    sel.appendChild(opt);
   });
-
-  // Prefill name from user profile
   $("buyGuestName").value = currentUser.displayName || "";
   $("buySeat").value = "";
-
   updateBuyPrice();
   $("buyModal").classList.add("open");
   document.body.style.overflow = "hidden";
@@ -656,34 +885,24 @@ function openBuyModal(){
 
 function updateBuyPrice(){
   if (!eventData) return;
-  var tier = $("buyTier").value;
+  var t = $("buyTier").value;
   var prices = eventData.tierPrices || {};
-  var price = parseFloat(prices[tier]) || 0;
+  var price = parseFloat(prices[t]) || 0;
   $("buyTotal").textContent = price > 0 ? formatMoney(price) : "Free";
-  var names = eventData.tierNames || {};
-  var defaultNames = {black:"Elite",gold:"VIP",silver:"Silver",cyan:"Standard",tier5:"Platinum",tier6:"Diamond"};
-  $("buyTierHint").textContent = "You selected: " + (names[tier] || defaultNames[tier] || tier);
 }
 
 function generateTicketId(){
   var rand = Math.random().toString(36).slice(2, 8).toUpperCase();
-  var t = Date.now().toString(36).slice(-4).toUpperCase();
-  return "TKT-" + t + "-" + rand;
+  var tm = Date.now().toString(36).slice(-4).toUpperCase();
+  return "TKT-" + tm + "-" + rand;
 }
 
 function confirmBuy(){
-  if (!eventData) return;
-  if (!currentUser) { showToast("Please sign in first.", "error"); return; }
-
+  if (!eventData || !currentUser) return;
   var tier = $("buyTier").value;
-  var guestName = ($("buyGuestName").value || "").trim();
+  var guest = ($("buyGuestName").value || "").trim();
   var seat = ($("buySeat").value || "").trim().toUpperCase();
-
-  if (!guestName) {
-    showToast("Please enter a guest name.", "error");
-    $("buyGuestName").focus();
-    return;
-  }
+  if (!guest) { showToast("Please enter a guest name.", "error"); $("buyGuestName").focus(); return; }
 
   var btn = $("buyConfirm");
   var orig = btn.innerHTML;
@@ -691,48 +910,32 @@ function confirmBuy(){
   btn.innerHTML = '<span class="spinner"></span> Creating…';
 
   var ticketId = generateTicketId();
-  var prices = eventData.tierPrices || {};
-  var pricePaid = parseFloat(prices[tier]) || 0;
+  var price = parseFloat((eventData.tierPrices || {})[tier]) || 0;
 
-  var ticketData = {
+  var payload = {
     ticketId: ticketId,
     eventId: eventId,
     eventName: eventData.eventName || "",
     tier: tier,
-    guestName: guestName,
+    guestName: guest,
     seat: seat || "",
     status: "valid",
-    pricePaid: pricePaid,
+    pricePaid: price,
     buyerUid: currentUser.uid,
     buyerEmail: currentUser.email || "",
     buyerName: currentUser.displayName || "",
     createdAt: firebase.firestore.FieldValue.serverTimestamp()
   };
 
-  // Create the ticket doc
-  var ticketsRef = db.collection(EVENTS_COLLECTION).doc(eventId).collection("tickets");
-
-  ticketsRef.add(ticketData)
-    .then(function(docRef){
-      // Log scan/create event (best-effort, optional)
-      return db.collection(EVENTS_COLLECTION).doc(eventId).collection("scanLogs").add({
-        action: "created",
-        ticketId: ticketId,
-        byUid: currentUser.uid,
-        byEmail: currentUser.email || "",
-        at: firebase.firestore.FieldValue.serverTimestamp()
-      }).catch(function(){ /* ignore if scanLogs rules block */ })
-      .then(function(){ return docRef; });
-    })
-    .then(function(docRef){
-      showToast("Ticket created successfully!", "success");
+  db.collection(EVENTS).doc(eventId).collection("tickets").add(payload)
+    .then(function(ref){
+      showToast("Ticket created!", "success");
       setTimeout(function(){
-        // Redirect to the ticket card page
-        window.location.href = "view-card.html?event=" + encodeURIComponent(eventId) + "&ticket=" + encodeURIComponent(docRef.id);
+        window.location.href = "view-card.html?event=" + encodeURIComponent(eventId) + "&ticket=" + encodeURIComponent(ref.id);
       }, 700);
     })
     .catch(function(err){
-      console.error("Ticket creation error:", err);
+      console.error("Ticket create error:", err);
       showToast("Could not create ticket: " + err.message, "error", 6000);
       btn.disabled = false;
       btn.innerHTML = orig;
@@ -740,21 +943,19 @@ function confirmBuy(){
     });
 }
 
-/* ================= DELETE ================= */
-function deleteEvent(){
-  if (!eventData) return;
-  if (!canEditOrDelete()) { showToast("You don't have permission to delete this event.", "error"); return; }
-  $("deleteEventName").textContent = eventData.eventName || "this event";
+/* ============ DELETE ============ */
+function openDelete(){
+  if (!canEdit()) { showToast("You don't have permission to delete this event.", "error"); return; }
+  $("deleteEventName").textContent = (eventData && eventData.eventName) || "this event";
   $("deleteModal").classList.add("open");
   document.body.style.overflow = "hidden";
 }
 
-function performDelete(){
-  if (!eventData) return;
+function doDelete(){
   var btn = $("deleteConfirm");
   btn.disabled = true;
   btn.innerHTML = '<span class="spinner"></span> Deleting…';
-  db.collection(EVENTS_COLLECTION).doc(eventId).delete()
+  db.collection(EVENTS).doc(eventId).delete()
     .then(function(){
       $("deleteModal").classList.remove("open");
       document.body.style.overflow = "";
@@ -762,37 +963,34 @@ function performDelete(){
       setTimeout(function(){ window.location.href = "index.html"; }, 900);
     })
     .catch(function(err){
-      console.error(err);
       showToast("Delete failed: " + err.message, "error", 5000);
       btn.disabled = false;
-      btn.innerHTML = icon("trash-2") + " Delete";
+      btn.innerHTML = '<i data-lucide="trash-2"></i> Delete';
       refreshIcons();
     });
 }
 
 function editEvent(){
-  if (!eventData) return;
-  if (!canEditOrDelete()) { showToast("You don't have permission to edit this event.", "error"); return; }
+  if (!canEdit()) { showToast("You don't have permission to edit this event.", "error"); return; }
   window.location.href = "create-event.html?edit=" + encodeURIComponent(eventId);
 }
 
-/* ================= BOOT ================= */
+/* ============ BOOT ============ */
 document.addEventListener("DOMContentLoaded", function(){
   $("year").textContent = new Date().getFullYear();
   refreshIcons();
 
-  eventId = getQueryParam("id");
+  eventId = getParam("id");
   if (!eventId) {
     showError("Missing event ID", "The link is missing an event identifier.");
     return;
   }
 
   auth.onAuthStateChanged(function(user){
-    applyAuthState(user);
-    attachEventListener();
+    applyAuth(user);
+    attachListener();
   });
 
-  // User menu
   $("userMenuBtn").addEventListener("click", function(e){
     e.stopPropagation();
     $("userDropdown").classList.toggle("open");
@@ -802,22 +1000,19 @@ document.addEventListener("DOMContentLoaded", function(){
   $("ddSignOut").addEventListener("click", function(){ auth.signOut().then(function(){ showToast("Signed out","success"); }); });
   $("ddCreateEvent").addEventListener("click", function(){ window.location.href = "create-event.html"; });
 
-  // Buy flow
-  $("getTicketsBtn").addEventListener("click", openBuyModal);
+  $("getTicketsBtn").addEventListener("click", openBuy);
   $("buyTier").addEventListener("change", updateBuyPrice);
   $("buyClose").addEventListener("click", function(){ $("buyModal").classList.remove("open"); document.body.style.overflow = ""; });
   $("buyCancel").addEventListener("click", function(){ $("buyModal").classList.remove("open"); document.body.style.overflow = ""; });
   $("buyModal").addEventListener("click", function(e){ if (e.target === this){ this.classList.remove("open"); document.body.style.overflow = ""; } });
   $("buyConfirm").addEventListener("click", confirmBuy);
 
-  // Delete
-  $("deleteBtn").addEventListener("click", deleteEvent);
+  $("deleteBtn").addEventListener("click", openDelete);
   $("deleteModalClose").addEventListener("click", function(){ $("deleteModal").classList.remove("open"); document.body.style.overflow = ""; });
   $("deleteCancel").addEventListener("click", function(){ $("deleteModal").classList.remove("open"); document.body.style.overflow = ""; });
-  $("deleteConfirm").addEventListener("click", performDelete);
+  $("deleteConfirm").addEventListener("click", doDelete);
   $("deleteModal").addEventListener("click", function(e){ if (e.target === this){ this.classList.remove("open"); document.body.style.overflow = ""; } });
 
-  // Edit
   $("editBtn").addEventListener("click", editEvent);
 });
 })();
