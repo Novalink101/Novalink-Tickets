@@ -9,6 +9,8 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<!-- Google Maps Places API -->
+<script src="https://maps.googleapis.com/maps/api/js?key=AlzaSyDI_C25zBDgfadfvl uAoaVh-VZ7VAzzhX4&libraries=places"></script>
 <style>
 :root{
   --cyan-50:#e6ffff;--cyan-100:#b3ffff;--cyan-400:#00FFFF;--cyan-500:#00E5E5;--cyan-600:#00CCCC;--cyan-700:#009999;
@@ -612,6 +614,14 @@ body.staff-seat-mode .fs-seat:hover{outline:2px solid #fff;outline-offset:2px;tr
 #coverPreviewImg{display:block;width:100%;height:190px;object-fit:cover;}
 #coverRemoveBtn{position:absolute;top:10px;right:10px;background:rgba(220,38,38,.92);color:#fff;border:none;border-radius:8px;padding:6px 12px;font-weight:800;font-size:11px;cursor:pointer;box-shadow:0 4px 12px rgba(0,0,0,.2);}
 #coverRemoveBtn:hover{background:#b91c1c;}
+
+/* ============= LOCATION SEARCH ============= */
+.location-search-wrapper{position:relative}
+.location-search-wrapper input{padding-right:36px}
+.location-search-wrapper .search-icon{position:absolute;right:12px;top:50%;transform:translateY(-50%);color:var(--text-muted);pointer-events:none;width:16px;height:16px}
+.location-selected-badge{display:inline-flex;align-items:center;gap:6px;margin-top:8px;padding:6px 12px;background:var(--cyan-50);border:1px solid var(--cyan-400);border-radius:8px;font-size:12px;font-weight:700;color:var(--cyan-700);word-break:break-word;max-width:100%}
+.location-selected-badge .clear-loc{cursor:pointer;color:var(--text-muted);font-weight:900;font-size:14px;line-height:1;padding:0 2px}
+.location-selected-badge .clear-loc:hover{color:#dc2626}
 </style>
 </head>
 <body>
@@ -673,25 +683,23 @@ body.staff-seat-mode .fs-seat:hover{outline:2px solid #fff;outline-offset:2px;tr
           <div class="section-divider"><span>Organiser Details</span></div>
           <div class="form-group"><label for="hostName">Host Name</label><input type="text" id="hostName" placeholder="e.g., John Doe" required /></div>
           <div class="form-group"><label for="hostEmail">Host Email</label><input type="email" id="hostEmail" placeholder="e.g., john@example.com" required /></div>
-          <div class="form-row">
-            <div class="form-group">
-              <label for="city">City</label>
-              <select id="city" required>
-                <option value="">Select a city / area…</option>
-                <option>Johannesburg</option><option>Sandton</option><option>Randburg</option><option>Roodepoort</option><option>Soweto</option>
-                <option>Midrand</option><option>Fourways</option><option>Bryanston</option><option>Rosebank</option><option>Bedfordview</option>
-                <option>Edenvale</option><option>Kempton Park</option><option>Benoni</option><option>Boksburg</option><option>Brakpan</option>
-                <option>Springs</option><option>Germiston</option><option>Alberton</option><option>Vereeniging</option><option>Vanderbijlpark</option>
-                <option>Meyerton</option><option>Heidelberg</option><option>Nigel</option><option>Bronkhorstspruit</option><option>Cullinan</option>
-                <option>Centurion</option><option>Pretoria</option><option>Tshwane</option><option>Akasia</option><option>Mamelodi</option>
-                <option>Atteridgeville</option><option>Soshanguve</option><option>Krugersdorp</option><option>Mogale City</option><option>Randfontein</option>
-                <option>Carletonville</option><option>Westonaria</option><option>Lenasia</option><option>Ennerdale</option><option>Orange Farm</option>
-                <option>Tembisa</option><option>Ivory Park</option><option>Diepsloot</option><option>Alexandra</option><option>Daveyton</option>
-                <option>Duduza</option><option>Tsakane</option><option>Sebokeng</option><option>Sharpeville</option><option>Boipatong</option>
-                <option>Evaton</option><option>Bophelong</option><option>Katlehong</option><option>Thokoza</option><option>Vosloorus</option>
-                <option>Zonkizizwe</option><option>Palm Ridge</option><option>Eden Park</option><option>Other (Gauteng)</option><option>Outside Gauteng</option>
-              </select>
+          
+          <!-- REPLACED: City + Venue Address with Location Search -->
+          <div class="form-group">
+            <label for="locationSearch">Location / Venue</label>
+            <div class="location-search-wrapper">
+              <input type="text" id="locationSearch" placeholder="Search for a venue, city, or address..." autocomplete="off" />
+              <i data-lucide="search" class="search-icon"></i>
             </div>
+            <div id="locationSelectedBadge" class="location-selected-badge" style="display:none;">
+              <i data-lucide="map-pin" style="width:14px;height:14px;"></i>
+              <span id="locationText"></span>
+              <span class="clear-loc" id="clearLocationBtn" title="Clear location">&times;</span>
+            </div>
+            <p class="form-hint">Start typing to search for a venue or address using Google Maps.</p>
+          </div>
+
+          <div class="form-row">
             <div class="form-group">
               <label for="eventType">Event Type</label>
               <select id="eventType">
@@ -711,6 +719,10 @@ body.staff-seat-mode .fs-seat:hover{outline:2px solid #fff;outline-offset:2px;tr
               </select>
               <p class="form-hint recommend" id="eventTypeHint">Choose an event type to see a recommended price.</p>
             </div>
+            <div class="form-group">
+              <label for="startTime">Start Time</label>
+              <input type="time" id="startTime" required />
+            </div>
           </div>
           <div class="form-row">
             <div class="form-group" id="basePriceGroup">
@@ -722,15 +734,13 @@ body.staff-seat-mode .fs-seat:hover{outline:2px solid #fff;outline-offset:2px;tr
               <p class="form-hint">Numbers only. Values under R30 supported. Enter 0 for free events.</p>
             </div>
             <div class="form-group">
-              <label for="startTime">Start Time</label>
-              <input type="time" id="startTime" required />
+              <label for="startDate">Start Date</label>
+              <input type="date" id="startDate" required />
             </div>
           </div>
-          <div class="form-group"><label for="startDate">Start Date</label><input type="date" id="startDate" required /></div>
 
           <div class="section-divider"><span>Event Details</span></div>
           <div class="form-group"><label for="eventName">Event Name</label><input type="text" id="eventName" placeholder="e.g., Neon Nights Live" required /></div>
-          <div class="form-group"><label for="venueAddress">Venue Name &amp; Address</label><input type="text" id="venueAddress" placeholder="e.g., Grand Amphitheatre, 123 Main Rd" required /></div>
 
           <!-- ============= COVER IMAGE ============= -->
           <div class="section-divider"><span>Cover Image</span></div>
@@ -1648,6 +1658,10 @@ var dragStartX = 0, dragStartY = 0;
 var dragSectionStartX = 0, dragSectionStartY = 0;
 var insertTool = null;
 
+/* ============= LOCATION STATE ============= */
+var selectedLocation = { address: "", lat: null, lng: null, placeId: "", city: "" };
+var locationAutocomplete = null;
+
 var TIER_KEYS = ["black", "gold", "silver", "cyan", "tier5", "tier6"];
 var TIER_DEFAULTS = { black: "#1a202c", gold: "#ecc94b", silver: "#cbd5e1", cyan: "#00FFFF", tier5: "#a855f7", tier6: "#f472b6" };
 var TIER_DEFAULT_NAMES = { black: "Elite", gold: "VIP", silver: "Silver", cyan: "Standard", tier5: "Platinum", tier6: "Diamond" };
@@ -1739,6 +1753,96 @@ function showToast(msg, type, ms) {
   requestAnimationFrame(function(){ t.classList.add("show"); });
   clearTimeout(showToast._t);
   showToast._t = setTimeout(function(){ t.classList.remove("show"); }, ms);
+}
+
+/* ============= GOOGLE PLACES AUTOCOMPLETE ============= */
+function initLocationAutocomplete() {
+  var input = $("locationSearch");
+  if (!input) return;
+
+  if (!window.google || !google.maps || !google.maps.places) {
+    console.warn("Google Places API not loaded. Location search unavailable.");
+    input.placeholder = "Location search unavailable (API key required)";
+    return;
+  }
+
+  locationAutocomplete = new google.maps.places.Autocomplete(input, {
+    types: ["geocode", "establishment"],
+    componentRestrictions: { country: "za" },
+    fields: ["address_components", "formatted_address", "geometry", "name", "place_id"]
+  });
+
+  locationAutocomplete.addListener("place_changed", function() {
+    var place = locationAutocomplete.getPlace();
+    if (!place.geometry) {
+      showToast("No details available for that location.", "error");
+      return;
+    }
+
+    var address = place.formatted_address || place.name || input.value;
+    var city = "";
+
+    if (place.address_components) {
+      for (var i = 0; i < place.address_components.length; i++) {
+        var comp = place.address_components[i];
+        if (comp.types.indexOf("locality") !== -1) {
+          city = comp.long_name;
+          break;
+        }
+        if (!city && comp.types.indexOf("administrative_area_level_2") !== -1) {
+          city = comp.long_name;
+        }
+        if (!city && comp.types.indexOf("administrative_area_level_1") !== -1) {
+          city = comp.long_name;
+        }
+      }
+    }
+
+    selectedLocation = {
+      address: address,
+      lat: place.geometry.location.lat(),
+      lng: place.geometry.location.lng(),
+      placeId: place.place_id || "",
+      city: city
+    };
+
+    input.value = address;
+    showLocationBadge(address);
+    showToast("Location selected", "success", 1800);
+
+    updateAllTicketPreviews();
+  });
+
+  input.addEventListener("keydown", function(e) {
+    if (e.key === "Enter") {
+      e.preventDefault();
+    }
+  });
+
+  setTimeout(function() {
+    var pac = document.querySelector(".pac-container");
+    if (pac) {
+      pac.style.zIndex = "10000";
+    }
+  }, 500);
+}
+
+function showLocationBadge(text) {
+  var badge = $("locationSelectedBadge");
+  var txt = $("locationText");
+  if (badge && txt) {
+    txt.textContent = text;
+    badge.style.display = "inline-flex";
+  }
+}
+
+function clearLocation() {
+  var input = $("locationSearch");
+  var badge = $("locationSelectedBadge");
+  if (input) input.value = "";
+  if (badge) badge.style.display = "none";
+  selectedLocation = { address: "", lat: null, lng: null, placeId: "", city: "" };
+  updateAllTicketPreviews();
 }
 
 document.addEventListener("DOMContentLoaded", function(){
@@ -2096,10 +2200,10 @@ document.addEventListener("DOMContentLoaded", function(){
   }
   function updateAllTicketPreviews() {
     var eventName = $("eventName").value || "EVENT NAME";
-    var dateVenue = ($("startDate").value || "DATE") + " · " + ($("venueAddress").value || "VENUE");
+    var dateVenue = ($("startDate").value || "DATE") + " · " + (selectedLocation.address || "VENUE");
     var guestName = $("guestName").value || "GUEST NAME";
     var seatCode = (window.NovalinkRoutingEngine && NovalinkRoutingEngine.buildSeatCode) ? NovalinkRoutingEngine.buildSeatCode($("seatBlock").value, $("seatRow").value, $("seatNum").value) : "";
-    var venue = $("venueAddress").value || "VENUE";
+    var venue = selectedLocation.address || "VENUE";
     [1,2,3].forEach(function(i){
       var sfx = (i === 1) ? "" : String(i);
       var en = $("prevEventName" + sfx); if (en) en.textContent = eventName;
@@ -3413,7 +3517,7 @@ document.addEventListener("DOMContentLoaded", function(){
   }
   function exportJson() {
     var name = $("eventName").value || "Untitled Event"; var costVal = readCost();
-    var payload = Object.assign({ eventName: name, hostName: $("hostName").value, hostEmail: $("hostEmail").value, city: $("city").value, eventType: $("eventType").value, cost: costVal, costFormatted: formatCurrency(costVal), startDate: $("startDate").value, startTime: $("startTime").value, venueAddress: $("venueAddress").value, exportedAt: new Date().toISOString() }, buildVenuePayload());
+    var payload = Object.assign({ eventName: name, hostName: $("hostName").value, hostEmail: $("hostEmail").value, city: selectedLocation.city, location: selectedLocation, eventType: $("eventType").value, cost: costVal, costFormatted: formatCurrency(costVal), startDate: $("startDate").value, startTime: $("startTime").value, venueAddress: selectedLocation.address, exportedAt: new Date().toISOString() }, buildVenuePayload());
     downloadFile(JSON.stringify(payload, null, 2), name.toLowerCase().replace(/[^a-z0-9]+/g,"-") + "-venue.json", "application/json");
     showToast("Venue exported as JSON", "success");
   }
@@ -3512,13 +3616,14 @@ document.addEventListener("DOMContentLoaded", function(){
       heroImage: coverSrc,
       hostName: $("hostName").value.trim(),
       hostEmail: $("hostEmail").value.trim(),
-      city: $("city").value,
+      city: selectedLocation.city,
+      location: selectedLocation,
       eventType: $("eventType").value,
       cost: costVal,
       costFormatted: formatCurrency(costVal),
       startDate: $("startDate").value,
       startTime: $("startTime").value,
-      venueAddress: $("venueAddress").value.trim(),
+      venueAddress: selectedLocation.address,
       tierColor: tierColor,
       revenue: {
         gross: gross, fee: fee, net: net,
@@ -3569,11 +3674,9 @@ document.addEventListener("DOMContentLoaded", function(){
     var requiredFields = [
       { id: "hostName", msg: "Host name is required" },
       { id: "hostEmail", msg: "Host email is required" },
-      { id: "city", msg: "Please choose a city" },
       { id: "startTime", msg: "Start time is required" },
       { id: "startDate", msg: "Start date is required" },
-      { id: "eventName", msg: "Event name is required" },
-      { id: "venueAddress", msg: "Venue name and address is required" }
+      { id: "eventName", msg: "Event name is required" }
     ];
     for (var i = 0; i < requiredFields.length; i++) {
       var f = $(requiredFields[i].id);
@@ -3583,6 +3686,13 @@ document.addEventListener("DOMContentLoaded", function(){
         setTimeout(function(){ f.focus(); }, 350);
         return;
       }
+    }
+
+    if (!selectedLocation.address) {
+      showToast("Please select a venue or location from the search results.", "error", 4000);
+      goToStep(1);
+      setTimeout(function(){ $("locationSearch").focus(); }, 350);
+      return;
     }
 
     if (costInput && $("basePriceGroup") && $("basePriceGroup").style.display !== "none") {
@@ -4004,7 +4114,7 @@ document.addEventListener("DOMContentLoaded", function(){
     handleSaveEvent();
   });
 
-  ["eventName","startDate","venueAddress","guestName","seatBlock","seatRow","seatNum"].forEach(function(id) { $(id).addEventListener("input", updateAllTicketPreviews); });
+  ["eventName","startDate","guestName","seatBlock","seatRow","seatNum"].forEach(function(id) { $(id).addEventListener("input", updateAllTicketPreviews); });
   ["tierColor"].forEach(function(id) { $(id).addEventListener("change", updateAllTicketPreviews); });
   ["seatBlock","seatRow"].forEach(function(id) { $(id).addEventListener("input", function() { this.value = this.value.toUpperCase().replace(/[^A-Z]/g,"").slice(0,1); }); });
 
@@ -4047,6 +4157,13 @@ document.addEventListener("DOMContentLoaded", function(){
   setupPointDrag(); setupSectionDrag(); setupControlsPanel();
   setupRotateHandle(); setupShapeRotateHandle(); setupStageDrag(); setupInsertTools();
   updateInsertToolUI(); applyPlanFeatures(); applySeatViewMode(); applyStaffSeatMode(); updateCornerFitHint();
+
+  // Initialize location autocomplete
+  initLocationAutocomplete();
+
+  // Clear location button
+  var clearLocBtn = $("clearLocationBtn");
+  if (clearLocBtn) clearLocBtn.addEventListener("click", clearLocation);
 
   goToStep(1);
 });
