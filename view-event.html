@@ -1,0 +1,673 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#0a0f14" />
+<title>Event · Novalink</title>
+<script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<style>
+:root{--cy:#00FFFF;--cy2:#00CCCC;--cy3:#009999;--cyf:#e6ffff;--bg:#fff;--bg2:#f6f8fb;--sf:#fff;--sf2:#f1f4f8;--bd:#e4e9f0;--bd2:#d3dbe5;--tx:#0a0f14;--tx2:#2b3644;--mut:#6b7787;--rd:14px;--font:'Inter',system-ui,-apple-system,sans-serif;--dg:#dc2626;--dgf:#fef2f2;--sv:#059669;--svf:#ecfdf5;--nv:#1e2f4d;--ease:cubic-bezier(0.25,0.8,0.25,1)}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--tx);line-height:1.6;min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
+.container{max-width:1180px;margin:0 auto;padding:0 24px;width:100%}
+h1,h2,h3{line-height:1.15;font-weight:700}
+h1{font-size:clamp(2rem,4.5vw,3.2rem)}
+h2{font-size:1.75rem;margin-bottom:8px}
+a{color:inherit;text-decoration:none}
+button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation}
+.logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none;margin-left:12px}
+.logo .mark{width:34px;height:42px;flex-shrink:0}
+.logo .wm{font-weight:800;font-size:1.1rem;color:var(--nv)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:12px;font-weight:600;font-size:14px;border:1px solid transparent;cursor:pointer;transition:all 0.2s var(--ease);white-space:nowrap;font-family:inherit;text-decoration:none}
+.btn svg,.btn i{width:17px;height:17px}
+.btn-accent{background:linear-gradient(135deg,var(--cy),var(--cy2));color:#04161c}
+.btn-accent:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,255,255,0.35)}
+.btn-ghost{background:transparent;color:var(--tx2);border:1px solid var(--bd2)}
+.btn-ghost:hover{background:var(--sf2);border-color:var(--cy);color:var(--cy3)}
+.btn-danger{background:var(--dg);color:#fff}
+.btn-danger:hover{background:#b91c1c;transform:translateY(-2px)}
+.btn-block{width:100%}
+.btn-lg{padding:15px 26px;font-size:15px}
+.btn:disabled{opacity:0.55;cursor:not-allowed;transform:none!important}
+.site-header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,0.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--bd);padding:12px 0}
+.header-inner{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.hdr-actions{display:flex;gap:8px;align-items:center;position:relative}
+.user-btn{display:none;align-items:center;gap:8px;padding:5px 12px 5px 5px;background:var(--sf2);border:1px solid var(--bd);border-radius:99px;font-family:inherit}
+.user-btn .av{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--cy),var(--cy2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;color:#04161c}
+.user-btn .nm{font-size:13px;font-weight:600}
+.user-btn .badge{background:#fef3c7;color:#92400e;font-size:10px;font-weight:800;padding:2px 8px;border-radius:99px}
+.dd{position:absolute;top:calc(100% + 8px);right:0;background:var(--sf);border:1px solid var(--bd);border-radius:14px;box-shadow:0 20px 60px rgba(10,15,20,0.15);min-width:250px;padding:8px;display:none;z-index:60}
+.dd.open{display:block}
+.dd-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:9px;font-size:13.5px;font-weight:500;color:var(--tx2);border:none;background:transparent;width:100%;font-family:inherit;text-align:left}
+.dd-item:hover{background:var(--sf2);color:var(--tx)}
+.dd-item i{width:16px;height:16px;color:var(--mut)}
+.page{flex:1;padding:32px 0 64px}
+.ls{text-align:center;padding:80px 20px;color:var(--mut)}
+.ls i{width:32px;height:32px;margin:0 auto 12px;color:var(--cy3);animation:sp 1.2s linear infinite;display:block}
+@keyframes sp{to{transform:rotate(360deg)}}
+.es{text-align:center;padding:60px 24px;max-width:480px;margin:0 auto}
+.es .ic{width:64px;height:64px;border-radius:50%;background:var(--dgf);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;color:var(--dg)}
+.es .ic i{width:28px;height:28px}
+.es h2{margin-bottom:8px}
+.es p{color:var(--mut);margin-bottom:22px}
+.hero{position:relative;border-radius:20px;overflow:hidden;min-height:320px;background:linear-gradient(135deg,#00FFFF,#00A3C4);display:flex;align-items:flex-end;padding:32px;color:#fff;margin-bottom:32px}
+@media (min-width:768px){.hero{min-height:420px;padding:48px}}
+.hero-bg{position:absolute;inset:0;background-size:cover;background-position:center;z-index:0}
+.hero::before{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(10,15,20,0.85) 0%,rgba(10,15,20,0.35) 55%,rgba(10,15,20,0.15) 100%);z-index:1}
+.hero-c{position:relative;z-index:2;width:100%;max-width:760px}
+.badges{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.badge{background:rgba(255,255,255,0.18);border:1px solid rgba(255,255,255,0.35);color:#fff;font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;padding:5px 11px;border-radius:99px;backdrop-filter:blur(8px)}
+.badge.own{background:#00FFFF;color:#04161c;border-color:#00FFFF}
+.hero-title{font-size:clamp(1.75rem,4vw,2.9rem);font-weight:800;line-height:1.08;margin-bottom:14px;text-shadow:0 3px 20px rgba(0,0,0,0.35)}
+.hero-meta{display:flex;gap:20px;flex-wrap:wrap;margin-top:12px}
+.hero-mi{display:inline-flex;align-items:center;gap:7px;font-size:14px;font-weight:600;color:rgba(255,255,255,0.92)}
+.hero-mi i{width:16px;height:16px;color:#67e8f9}
+.layout{display:grid;grid-template-columns:1fr;gap:32px}
+@media (min-width:960px){.layout{grid-template-columns:minmax(0,1.6fr) minmax(0,1fr)}}
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rd);padding:24px;box-shadow:0 6px 20px rgba(10,15,20,0.04)}
+.card+.card{margin-top:20px}
+.sl{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:0.08em;color:var(--cy3);margin-bottom:10px}
+.dl{list-style:none;padding:0;display:flex;flex-direction:column;gap:12px}
+.dl li{display:flex;gap:12px;align-items:flex-start;font-size:14px;color:var(--tx2)}
+.dl li i{width:18px;height:18px;color:var(--cy3);flex-shrink:0;margin-top:2px}
+.dl li strong{display:block;font-size:11.5px;font-weight:800;text-transform:uppercase;color:var(--mut);margin-bottom:2px}
+.tiers{display:flex;flex-direction:column;gap:12px}
+.tier{display:flex;align-items:center;gap:14px;padding:14px;border:1px solid var(--bd);border-radius:12px;background:var(--sf)}
+.tsw{width:22px;height:22px;border-radius:6px;flex-shrink:0;border:1px solid rgba(0,0,0,0.1)}
+.ti{flex:1;min-width:0}
+.tn{font-weight:800;font-size:14.5px}
+.tseats{font-size:11.5px;color:var(--mut);font-weight:600}
+.tp{font-weight:800;font-size:16px;color:var(--cy3);font-family:ui-monospace,monospace}
+.stack{display:flex;flex-direction:column;gap:10px;position:sticky;top:80px}
+.psum{background:linear-gradient(135deg,#0a0f14,#1a2129);color:#fff;border-radius:var(--rd);padding:20px;margin-bottom:14px}
+.psum .lbl{font-size:11px;font-weight:800;text-transform:uppercase;color:#67e8f9;margin-bottom:6px}
+.psum .val{font-size:24px;font-weight:800;color:#fff}
+.psum .sub{font-size:12px;color:rgba(255,255,255,0.65);margin-top:4px}
+.host{display:flex;align-items:center;gap:12px;padding:14px;background:var(--bg2);border-radius:12px;border:1px solid var(--bd)}
+.hav{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--cy),var(--cy2));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#04161c;flex-shrink:0}
+.hn{font-weight:800;font-size:14px}
+.hl{font-size:11.5px;color:var(--mut);font-weight:600}
+.own-actions{display:flex;flex-direction:column;gap:8px;margin-top:16px;padding-top:16px;border-top:1px dashed var(--bd)}
+.mo{position:fixed;inset:0;background:rgba(10,15,20,0.6);backdrop-filter:blur(8px);display:none;align-items:flex-start;justify-content:center;z-index:100;padding:24px 20px;overflow-y:auto}
+.mo.open{display:flex}
+.modal{background:var(--sf);border:1px solid var(--bd);border-radius:18px;max-width:520px;width:100%;padding:30px 26px;position:relative;margin:auto}
+.mc{position:absolute;top:14px;right:14px;background:var(--sf2);border:1px solid var(--bd);color:var(--tx2);padding:6px;border-radius:10px;display:flex;align-items:center;justify-content:center}
+.mc:hover{background:var(--dgf);color:var(--dg)}
+.modal h3{margin-bottom:6px;font-size:1.35rem}
+.modal .msub{color:var(--mut);font-size:14px;margin-bottom:22px}
+.fg{margin-bottom:16px}
+.fg label{display:block;font-size:12px;font-weight:700;color:var(--tx2);margin-bottom:6px;text-transform:uppercase}
+.fg input,.fg select{width:100%;padding:12px 14px;background:var(--bg2);border:1px solid var(--bd2);border-radius:10px;color:var(--tx);font-size:14.5px;font-family:inherit}
+.fg input:focus,.fg select:focus{outline:none;border-color:var(--cy);background:#fff;box-shadow:0 0 0 3px rgba(0,255,255,0.15)}
+.fg select{appearance:none;padding-right:36px;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7787' stroke-width='3'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:12px;cursor:pointer}
+.fh{font-size:11.5px;color:var(--mut);margin-top:6px;font-style:italic}
+.pc{background:var(--cyf);border:1px solid var(--cy);border-radius:12px;padding:14px 16px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center}
+.pc .lbl{font-size:11px;font-weight:800;text-transform:uppercase;color:var(--cy3)}
+.pc .val{font-size:22px;font-weight:900;color:var(--cy3);font-family:ui-monospace,monospace}
+.modal .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+.modal .actions .btn{flex:1;min-width:120px}
+.info-b{background:var(--svf);border:1px solid #a7f3d0;color:#065f46;border-radius:12px;padding:12px 14px;font-size:12.5px;font-weight:700;display:flex;align-items:flex-start;gap:8px;margin-bottom:18px;line-height:1.5}
+.info-b i{width:16px;height:16px;flex-shrink:0;margin-top:2px}
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(120%);background:#0a0f14;color:#fff;padding:12px 18px;border-radius:12px;font-size:13.5px;z-index:200;transition:transform 0.4s ease,opacity 0.3s ease;display:flex;align-items:center;gap:10px;pointer-events:none;opacity:0;max-width:calc(100vw - 40px)}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.success{background:#065f46}
+.toast.error{background:#991b1b}
+.spinner{width:18px;height:18px;border:2px solid rgba(255,255,255,0.35);border-top-color:#fff;border-radius:50%;animation:sp 0.7s linear infinite;display:inline-block}
+.footer{background:#0a0f14;color:#c9d2dd;padding:32px 0 22px;margin-top:auto;font-size:13px}
+.fb{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;color:#6b7787;font-size:12px}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a href="index.html" class="logo">
+      <svg class="mark" viewBox="0 0 60 74"><path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/><path fill="#00FFFF" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/></svg>
+      <span class="wm">NOVALINK</span>
+    </a>
+    <div class="hdr-actions">
+      <a href="index.html" class="btn btn-ghost" style="font-size:13px;padding:8px 12px;"><i data-lucide="arrow-left"></i> Home</a>
+      <button id="userMenuBtn" class="user-btn">
+        <span class="av" id="userAvatar">?</span>
+        <span class="nm" id="userName">User</span>
+        <span class="badge" id="adminBadge" style="display:none">Admin</span>
+      </button>
+      <div class="dd" id="userDropdown">
+        <button class="dd-item" id="ddSignOut"><i data-lucide="log-out"></i> Sign out</button>
+        <button class="dd-item" id="ddCreateEvent"><i data-lucide="plus-circle"></i> Create an event</button>
+      </div>
+    </div>
+  </div>
+</header>
+
+<main class="page">
+  <div class="container">
+
+    <div id="loadingState" class="ls">
+      <i data-lucide="loader-2"></i>
+      <p>Loading event…</p>
+    </div>
+
+    <div id="errorState" class="es" style="display:none">
+      <div class="ic"><i data-lucide="alert-circle"></i></div>
+      <h2 id="errorTitle">Event not found</h2>
+      <p id="errorMsg">This event may have been deleted or the link is broken.</p>
+      <a href="index.html" class="btn btn-accent"><i data-lucide="arrow-left"></i> Back to home</a>
+    </div>
+
+    <div id="eventContent" style="display:none">
+      <section class="hero">
+        <div class="hero-bg" id="eventHeroBg"></div>
+        <div class="hero-c">
+          <div class="badges" id="eventBadges"></div>
+          <h1 class="hero-title" id="eventTitle">Event Name</h1>
+          <div class="hero-meta">
+            <span class="hero-mi"><i data-lucide="calendar"></i> <span id="eventDate">Date</span></span>
+            <span class="hero-mi"><i data-lucide="map-pin"></i> <span id="eventCity">City</span></span>
+            <span class="hero-mi" id="eventSeatsMeta" style="display:none"><i data-lucide="users"></i> <span id="eventSeats">0 seats</span></span>
+          </div>
+        </div>
+      </section>
+
+      <div class="layout">
+        <div>
+          <div class="card">
+            <div class="sl">Event details</div>
+            <ul class="dl">
+              <li><i data-lucide="calendar-check"></i> <div><strong>Date & time</strong><span id="detailDateTime">—</span></div></li>
+              <li><i data-lucide="map-pin"></i> <div><strong>Venue</strong><span id="detailVenue">—</span></div></li>
+              <li><i data-lucide="building"></i> <div><strong>City</strong><span id="detailCity">—</span></div></li>
+              <li><i data-lucide="tag"></i> <div><strong>Event type</strong><span id="detailType">—</span></div></li>
+            </ul>
+          </div>
+          <div class="card">
+            <div class="sl">Ticket tiers</div>
+            <div class="tiers" id="tierList">
+              <p style="color:var(--mut);font-size:13.5px;">Loading…</p>
+            </div>
+          </div>
+        </div>
+        <div>
+          <div class="stack">
+            <div class="psum">
+              <div class="lbl">From</div>
+              <div class="val" id="priceFrom">Free</div>
+              <div class="sub" id="priceSub">Cheapest ticket tier</div>
+            </div>
+            <button class="btn btn-accent btn-lg btn-block" id="getTicketsBtn"><i data-lucide="ticket"></i> Get tickets</button>
+            <div class="card" style="margin-top:6px;padding:16px;">
+              <div class="sl" style="margin-bottom:10px;">Hosted by</div>
+              <div class="host">
+                <div class="hav" id="hostAvatar">?</div>
+                <div style="min-width:0;flex:1;">
+                  <div class="hn" id="hostName">Host</div>
+                  <div class="hl" id="hostEmail">—</div>
+                </div>
+              </div>
+            </div>
+            <div class="own-actions" id="ownerActions" style="display:none">
+              <div class="sl" style="margin:0 0 4px;">Owner controls</div>
+              <button class="btn btn-ghost" id="editBtn"><i data-lucide="edit-3"></i> Edit event</button>
+              <button class="btn btn-danger" id="deleteBtn"><i data-lucide="trash-2"></i> Delete event</button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <div class="fb">
+      <span>&copy; <span id="year"></span> Novalink. All rights reserved.</span>
+      <span>Johannesburg, South Africa</span>
+    </div>
+  </div>
+</footer>
+
+<div class="mo" id="buyModal">
+  <div class="modal">
+    <button class="mc" id="buyClose"><i data-lucide="x"></i></button>
+    <h3>Get your ticket</h3>
+    <p class="msub">Pick a tier and enter your name.</p>
+    <div class="info-b"><i data-lucide="info"></i><span>Free test mode — no payment required.</span></div>
+    <div class="fg">
+      <label for="buyTier">Ticket tier</label>
+      <select id="buyTier"></select>
+    </div>
+    <div class="fg">
+      <label for="buyGuestName">Guest name</label>
+      <input type="text" id="buyGuestName" placeholder="e.g., Jane Smith" maxlength="60" />
+    </div>
+    <div class="fg">
+      <label for="buySeat">Seat (optional)</label>
+      <input type="text" id="buySeat" placeholder="e.g., A-12" maxlength="10" />
+    </div>
+    <div class="pc">
+      <span class="lbl">Total</span>
+      <span class="val" id="buyTotal">Free</span>
+    </div>
+    <div class="actions">
+      <button class="btn btn-ghost" id="buyCancel">Cancel</button>
+      <button class="btn btn-accent" id="buyConfirm"><i data-lucide="check"></i> Confirm ticket</button>
+    </div>
+  </div>
+</div>
+
+<div class="mo" id="deleteModal">
+  <div class="modal">
+    <button class="mc" id="deleteModalClose"><i data-lucide="x"></i></button>
+    <h3>Delete this event?</h3>
+    <p class="msub">This will permanently remove <strong id="deleteEventName">this event</strong> and cannot be undone.</p>
+    <div class="actions">
+      <button class="btn btn-ghost" id="deleteCancel">Cancel</button>
+      <button class="btn btn-danger" id="deleteConfirm"><i data-lucide="trash-2"></i> Delete</button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+
+var firebaseConfig = {
+  apiKey: "AIzaSyDSnns131jOlBXAqKo6qy7lTW4Rij-1oWU",
+  authDomain: "novalink-864cf.firebaseapp.com",
+  projectId: "novalink-864cf",
+  storageBucket: "novalink-864cf.firebasestorage.app",
+  messagingSenderId: "602780280140",
+  appId: "1:602780280140:web:5d9ff2351e5a7d5e66dbe9"
+};
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+var db = firebase.firestore();
+var auth = firebase.auth();
+var EVENTS = "events";
+var ADMINS = ["nylnathan340@gmail.com"];
+
+var currentUser = null;
+var isAdmin = false;
+var eventData = null;
+var eventId = null;
+var unsub = null;
+
+function $(id){ return document.getElementById(id); }
+function refreshIcons(){ if(window.lucide) lucide.createIcons(); }
+function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+function initialsFrom(name,email){
+  if(name && name.trim()){ var p = name.trim().split(/\s+/); if(p.length>=2) return (p[0][0]+p[1][0]).toUpperCase(); return p[0].slice(0,2).toUpperCase(); }
+  if(email) return email.slice(0,2).toUpperCase();
+  return "??";
+}
+
+function showToast(msg,type,ms){
+  type = type || "info"; ms = ms || 3000;
+  var t = $("toast");
+  t.className = "toast " + type;
+  var ic = type === "error" ? "alert-circle" : (type === "success" ? "check-circle" : "info");
+  t.innerHTML = '<i data-lucide="'+ic+'"></i><span>'+esc(msg)+'</span>';
+  refreshIcons();
+  requestAnimationFrame(function(){ t.classList.add("show"); });
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(function(){ t.classList.remove("show"); }, ms);
+}
+
+function formatMoney(v){
+  if (typeof v !== "number") v = parseFloat(v) || 0;
+  if (v <= 0) return "Free";
+  return "R " + v.toFixed(2).replace(/\.00$/, "");
+}
+
+function formatDate(dateStr, timeStr){
+  if (!dateStr) return "Date TBA";
+  try {
+    var d = new Date(dateStr + "T" + (timeStr || "00:00"));
+    if (isNaN(d.getTime())) return dateStr + (timeStr ? " · " + timeStr : "");
+    var opts = { weekday: "short", day: "numeric", month: "short", year: "numeric" };
+    var out = d.toLocaleDateString("en-ZA", opts);
+    if (timeStr) out += " · " + timeStr;
+    return out;
+  } catch(e){ return dateStr; }
+}
+
+function typeLabel(t){
+  if (!t) return "Event";
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
+
+function getParam(n){
+  try { return new URLSearchParams(window.location.search).get(n); }
+  catch(e){ return null; }
+}
+
+function applyAuth(user){
+  currentUser = user;
+  isAdmin = !!(user && ADMINS.map(function(e){return e.toLowerCase();}).indexOf(String(user.email).toLowerCase()) !== -1);
+  if (user){
+    var display = user.displayName || user.email.split("@")[0];
+    $("userMenuBtn").style.display = "inline-flex";
+    $("userName").textContent = display;
+    $("userAvatar").textContent = initialsFrom(user.displayName, user.email);
+    $("adminBadge").style.display = isAdmin ? "inline-block" : "none";
+  } else {
+    $("userMenuBtn").style.display = "none";
+    $("adminBadge").style.display = "none";
+  }
+  if (eventData) renderOwnerControls();
+}
+
+function canEdit(){
+  if (!eventData || !currentUser) return false;
+  if (isAdmin) return true;
+  return eventData.ownerUid && eventData.ownerUid === currentUser.uid;
+}
+
+function renderOwnerControls(){
+  $("ownerActions").style.display = canEdit() ? "flex" : "none";
+}
+
+function renderEvent(data){
+  eventData = data;
+
+  var bg = $("eventHeroBg");
+  if (data.heroImage) {
+    bg.style.backgroundImage = "url('" + esc(data.heroImage) + "')";
+    bg.style.backgroundSize = "cover";
+    bg.style.backgroundPosition = "center";
+  } else if (data.coverImage) {
+    bg.style.backgroundImage = "url('" + esc(data.coverImage) + "')";
+    bg.style.backgroundSize = "cover";
+    bg.style.backgroundPosition = "center";
+  } else {
+    bg.style.background = "linear-gradient(135deg, #00FFFF 0%, #00A3C4 100%)";
+  }
+
+  var badges = ['<span class="badge">' + esc(typeLabel(data.eventType)) + '</span>'];
+  if (canEdit()) badges.push('<span class="badge own">Your event</span>');
+  $("eventBadges").innerHTML = badges.join("");
+
+  $("eventTitle").textContent = data.eventName || "Untitled Event";
+  $("eventDate").textContent = formatDate(data.startDate, data.startTime);
+  $("eventCity").textContent = data.city || data.venueAddress || "Venue";
+  var seats = data.totalAttendees || (data.venue && data.venue.totalAttendees) || 0;
+  if (seats > 0){ $("eventSeatsMeta").style.display = "inline-flex"; $("eventSeats").textContent = seats + " seats"; }
+  else { $("eventSeatsMeta").style.display = "none"; }
+
+  $("detailDateTime").textContent = formatDate(data.startDate, data.startTime);
+  $("detailVenue").textContent = data.venueAddress || "—";
+  $("detailCity").textContent = data.city || "—";
+  $("detailType").textContent = typeLabel(data.eventType);
+
+  renderTiers(data);
+  renderPrice(data);
+
+  var hn = data.hostName || "Host";
+  var he = data.hostEmail || "";
+  $("hostName").textContent = hn;
+  $("hostEmail").textContent = he || "—";
+  $("hostAvatar").textContent = initialsFrom(hn, he);
+
+  renderOwnerControls();
+  refreshIcons();
+}
+
+function renderTiers(data){
+  var list = $("tierList");
+  list.innerHTML = "";
+  var prices = data.tierPrices || {};
+  var names = data.tierNames || {};
+  var colours = data.tierColours || {};
+  var active = data.activeTierCount || 4;
+  var keys = ["black","gold","silver","cyan","tier5","tier6"].slice(0, active);
+  var defaults = {black:"Elite",gold:"VIP",silver:"Silver",cyan:"Standard",tier5:"Platinum",tier6:"Diamond"};
+  var defCols = {black:"#1a202c",gold:"#ecc94b",silver:"#cbd5e1",cyan:"#00FFFF",tier5:"#a855f7",tier6:"#f472b6"};
+  var anyShown = false;
+  keys.forEach(function(t){
+    var price = parseFloat(prices[t]) || 0;
+    var name = names[t] || defaults[t];
+    var colour = colours[t] || defCols[t];
+    if (price === 0) return;
+    anyShown = true;
+    var row = document.createElement("div");
+    row.className = "tier";
+    row.innerHTML =
+      '<div class="tsw" style="background:' + esc(colour) + '"></div>' +
+      '<div class="ti"><div class="tn">' + esc(name) + '</div><div class="tseats">Available</div></div>' +
+      '<div class="tp">' + esc(formatMoney(price)) + '</div>';
+    list.appendChild(row);
+  });
+  if (!anyShown) {
+    keys.forEach(function(t){
+      var name = names[t] || defaults[t];
+      var colour = colours[t] || defCols[t];
+      var row = document.createElement("div");
+      row.className = "tier";
+      row.innerHTML =
+        '<div class="tsw" style="background:' + esc(colour) + '"></div>' +
+        '<div class="ti"><div class="tn">' + esc(name) + '</div><div class="tseats">Free</div></div>' +
+        '<div class="tp">Free</div>';
+      list.appendChild(row);
+    });
+  }
+}
+
+function renderPrice(data){
+  var prices = data.tierPrices || {};
+  var list = [];
+  ["black","gold","silver","cyan","tier5","tier6"].forEach(function(t){
+    var v = parseFloat(prices[t]);
+    if (!isNaN(v) && v > 0) list.push(v);
+  });
+  if (!list.length) {
+    $("priceFrom").textContent = "Free";
+    $("priceSub").textContent = "No ticket price set";
+  } else {
+    var min = Math.min.apply(null, list);
+    $("priceFrom").textContent = formatMoney(min);
+    $("priceSub").textContent = "Cheapest ticket tier";
+  }
+}
+
+function showError(title, msg){
+  $("loadingState").style.display = "none";
+  $("eventContent").style.display = "none";
+  $("errorState").style.display = "block";
+  $("errorTitle").textContent = title;
+  $("errorMsg").textContent = msg;
+  refreshIcons();
+}
+
+function attachListener(){
+  if (unsub) { try { unsub(); } catch(e){} }
+  unsub = db.collection(EVENTS).doc(eventId).onSnapshot(function(snap){
+    if (!snap.exists) {
+      showError("Event not found", "This event may have been deleted or the link is broken.");
+      return;
+    }
+    $("loadingState").style.display = "none";
+    $("errorState").style.display = "none";
+    $("eventContent").style.display = "block";
+    var data = snap.data() || {};
+    data.id = snap.id;
+    renderEvent(data);
+  }, function(err){
+    console.error("Event load error:", err);
+    showError("Could not load event", err.message || "Please try again.");
+  });
+}
+
+/* ===== Buy modal ===== */
+function openBuy(){
+  if (!eventData) return;
+  if (!currentUser) {
+    showToast("Please sign in to get tickets.", "error");
+    setTimeout(function(){ window.location.href = "index.html#signin"; }, 1200);
+    return;
+  }
+  var sel = $("buyTier");
+  sel.innerHTML = "";
+  var active = eventData.activeTierCount || 4;
+  var keys = ["black","gold","silver","cyan","tier5","tier6"].slice(0, active);
+  var names = eventData.tierNames || {};
+  var prices = eventData.tierPrices || {};
+  var defaults = {black:"Elite",gold:"VIP",silver:"Silver",cyan:"Standard",tier5:"Platinum",tier6:"Diamond"};
+  keys.forEach(function(t){
+    var name = names[t] || defaults[t];
+    var price = parseFloat(prices[t]) || 0;
+    var opt = document.createElement("option");
+    opt.value = t;
+    opt.textContent = name + (price > 0 ? " — " + formatMoney(price) : " — Free");
+    sel.appendChild(opt);
+  });
+  $("buyGuestName").value = currentUser.displayName || "";
+  $("buySeat").value = "";
+  updateBuyPrice();
+  $("buyModal").classList.add("open");
+  document.body.style.overflow = "hidden";
+  refreshIcons();
+}
+
+function updateBuyPrice(){
+  if (!eventData) return;
+  var t = $("buyTier").value;
+  var prices = eventData.tierPrices || {};
+  var price = parseFloat(prices[t]) || 0;
+  $("buyTotal").textContent = price > 0 ? formatMoney(price) : "Free";
+}
+
+function generateTicketId(){
+  var rand = Math.random().toString(36).slice(2, 8).toUpperCase();
+  var tm = Date.now().toString(36).slice(-4).toUpperCase();
+  return "TKT-" + tm + "-" + rand;
+}
+
+function confirmBuy(){
+  if (!eventData || !currentUser) return;
+  var tier = $("buyTier").value;
+  var guest = ($("buyGuestName").value || "").trim();
+  var seat = ($("buySeat").value || "").trim().toUpperCase();
+  if (!guest) { showToast("Please enter a guest name.", "error"); $("buyGuestName").focus(); return; }
+
+  var btn = $("buyConfirm");
+  var orig = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Creating…';
+
+  var ticketId = generateTicketId();
+  var price = parseFloat((eventData.tierPrices || {})[tier]) || 0;
+
+  var payload = {
+    ticketId: ticketId,
+    eventId: eventId,
+    eventName: eventData.eventName || "",
+    tier: tier,
+    guestName: guest,
+    seat: seat || "",
+    status: "valid",
+    pricePaid: price,
+    buyerUid: currentUser.uid,
+    buyerEmail: currentUser.email || "",
+    buyerName: currentUser.displayName || "",
+    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  db.collection(EVENTS).doc(eventId).collection("tickets").add(payload)
+    .then(function(ref){
+      showToast("Ticket created!", "success");
+      setTimeout(function(){
+        window.location.href = "view-card.html?event=" + encodeURIComponent(eventId) + "&ticket=" + encodeURIComponent(ref.id);
+      }, 700);
+    })
+    .catch(function(err){
+      console.error("Ticket create error:", err);
+      showToast("Could not create ticket: " + err.message, "error", 6000);
+      btn.disabled = false;
+      btn.innerHTML = orig;
+      refreshIcons();
+    });
+}
+
+/* ===== Delete ===== */
+function openDelete(){
+  if (!canEdit()) { showToast("You don't have permission to delete this event.", "error"); return; }
+  $("deleteEventName").textContent = (eventData && eventData.eventName) || "this event";
+  $("deleteModal").classList.add("open");
+  document.body.style.overflow = "hidden";
+}
+
+function doDelete(){
+  var btn = $("deleteConfirm");
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Deleting…';
+  db.collection(EVENTS).doc(eventId).delete()
+    .then(function(){
+      $("deleteModal").classList.remove("open");
+      document.body.style.overflow = "";
+      showToast("Event deleted", "success");
+      setTimeout(function(){ window.location.href = "index.html"; }, 900);
+    })
+    .catch(function(err){
+      showToast("Delete failed: " + err.message, "error", 5000);
+      btn.disabled = false;
+      btn.innerHTML = '<i data-lucide="trash-2"></i> Delete';
+      refreshIcons();
+    });
+}
+
+function editEvent(){
+  if (!canEdit()) { showToast("You don't have permission to edit this event.", "error"); return; }
+  window.location.href = "create-event.html?edit=" + encodeURIComponent(eventId);
+}
+
+/* ===== Boot ===== */
+document.addEventListener("DOMContentLoaded", function(){
+  $("year").textContent = new Date().getFullYear();
+  refreshIcons();
+
+  eventId = getParam("id");
+  if (!eventId) {
+    showError("Missing event ID", "The link is missing an event identifier.");
+    return;
+  }
+
+  auth.onAuthStateChanged(function(user){
+    applyAuth(user);
+    attachListener();
+  });
+
+  $("userMenuBtn").addEventListener("click", function(e){
+    e.stopPropagation();
+    $("userDropdown").classList.toggle("open");
+  });
+  document.addEventListener("click", function(){ $("userDropdown").classList.remove("open"); });
+
+  $("ddSignOut").addEventListener("click", function(){ auth.signOut().then(function(){ showToast("Signed out","success"); }); });
+  $("ddCreateEvent").addEventListener("click", function(){ window.location.href = "create-event.html"; });
+
+  $("getTicketsBtn").addEventListener("click", openBuy);
+  $("buyTier").addEventListener("change", updateBuyPrice);
+  $("buyClose").addEventListener("click", function(){ $("buyModal").classList.remove("open"); document.body.style.overflow = ""; });
+  $("buyCancel").addEventListener("click", function(){ $("buyModal").classList.remove("open"); document.body.style.overflow = ""; });
+  $("buyModal").addEventListener("click", function(e){ if (e.target === this){ this.classList.remove("open"); document.body.style.overflow = ""; } });
+  $("buyConfirm").addEventListener("click", confirmBuy);
+
+  $("deleteBtn").addEventListener("click", openDelete);
+  $("deleteModalClose").addEventListener("click", function(){ $("deleteModal").classList.remove("open"); document.body.style.overflow = ""; });
+  $("deleteCancel").addEventListener("click", function(){ $("deleteModal").classList.remove("open"); document.body.style.overflow = ""; });
+  $("deleteConfirm").addEventListener("click", doDelete);
+  $("deleteModal").addEventListener("click", function(e){ if (e.target === this){ this.classList.remove("open"); document.body.style.overflow = ""; } });
+
+  $("editBtn").addEventListener("click", editEvent);
+});
+})();
+</script>
+</body>
+  </html>
