@@ -10,14 +10,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 
-<!-- ============= GOOGLE MAPS BOOTSTRAP (Demo Key) ============= -->
-<script>
-(function(g){var h,a,k,p="The Google Maps JavaScript API",c="google",l="importLibrary",q="__ib__",m=document,b=window;b=b[c]||(b[c]={});var d=b.maps||(b.maps={}),r=new Set,e=new URLSearchParams,u=()=>h||(h=new Promise(async(f,n)=>{await (a=m.createElement("script"));e.set("libraries",[...r]+"");for(k in g)e.set(k.replace(/[A-Z]/g,t=>"_"+t[0].toLowerCase()),g[k]);e.set("callback",c+".maps."+q);a.src="https://maps."+c+"apis.com/maps/api/js?"+e;d[q]=f;a.onerror=()=>h=n(Error(p+" could not load."));a.nonce=m.querySelector("script[nonce]")?.nonce||"";m.head.append(a)}));d[l]?console.warn(p+" only loads once. Ignoring:",g):d[l]=(f,...n)=>r.add(f)&&u().then(()=>d[l](f,...n))})({
-  key: "AIzaSyDI_C25zBDgfadfvIuAoaVh-VZ7VAzzhX4",
-  v: "weekly"
-});
-</script>
-
 <style>
 :root{
   --cyan-50:#e6ffff;--cyan-100:#b3ffff;--cyan-400:#00FFFF;--cyan-500:#00E5E5;--cyan-600:#00CCCC;--cyan-700:#009999;
@@ -571,24 +563,30 @@ body.staff-seat-mode .fs-seat:hover{outline:2px solid #fff;outline-offset:2px;tr
 .seat-preview-display.empty{color:var(--text-muted);font-weight:600;font-family:var(--font);font-size:12px;letter-spacing:0;border-color:var(--border-2);border-style:solid;}
 
 /* ============= VENUE ============= */
-#venueSearch{background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7787' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='8'/%3E%3Cline x1='21' y1='21' x2='16.65' y2='16.65'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:14px center;padding-left:42px;}
+.venue-url-row{display:flex;gap:8px;align-items:stretch}
+.venue-url-row input{flex:1;min-width:0}
+.venue-open-btn{display:inline-flex;align-items:center;justify-content:center;width:48px;flex-shrink:0;border-radius:10px;background:var(--bg-2);border:1px solid var(--border-2);color:var(--text-muted);text-decoration:none;transition:all .2s ease;cursor:not-allowed;pointer-events:none}
+.venue-open-btn i{width:18px;height:18px}
+.venue-open-btn.enabled{background:linear-gradient(135deg,var(--cyan-400),var(--cyan-600));border-color:transparent;color:#04161c;cursor:pointer;pointer-events:auto}
+.venue-open-btn.enabled:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(0,255,255,.35)}
+.venue-help-toggle{background:transparent;border:none;color:var(--cyan-700);font-size:12px;font-weight:700;font-family:inherit;cursor:pointer;padding:6px 0;display:inline-flex;align-items:center;gap:6px;margin-top:-6px;margin-bottom:10px}
+.venue-help-toggle i{width:14px;height:14px}
+.venue-help-toggle:hover{text-decoration:underline}
+.venue-help{background:var(--cyan-50);border:1px solid var(--cyan-400);border-radius:10px;padding:14px 18px;margin-bottom:14px;font-size:13px;color:var(--cyan-700);line-height:1.7}
+.venue-help ol{margin:0 0 8px 18px;padding:0}
+.venue-help li{margin-bottom:4px}
+.venue-help a{color:var(--cyan-700);font-weight:700;text-decoration:underline}
+.venue-help p{margin:0;font-size:11.5px;font-style:italic;opacity:.85}
 #venueMapWrap{position:relative;display:none;margin:12px 0 16px;border-radius:12px;overflow:hidden;border:1px solid var(--border);box-shadow:0 6px 20px rgba(10,15,20,.06)}
-#venueMap{width:100%;height:300px;background:#eef2f7}
+#venueMap{width:100%;height:320px;border:0;display:block;background:#eef2f7}
 #venueMapBadge{position:absolute;left:12px;top:12px;background:rgba(10,15,20,.82);color:#00FFFF;border-radius:8px;padding:6px 12px;font-weight:800;font-size:11px;backdrop-filter:blur(6px);max-width:70%;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;z-index:5}
-#venueMapClearBtn{position:absolute;top:12px;right:12px;background:rgba(10,15,20,.82);color:#fff;border:none;border-radius:8px;padding:7px 14px;font-weight:800;font-size:11px;cursor:pointer;backdrop-filter:blur(6px);z-index:5;display:inline-flex;align-items:center;gap:6px}
-#venueMapClearBtn:hover{background:#dc2626}
-#venueStatus{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;font-size:12.5px;font-weight:700;border:1px dashed var(--border-2);background:var(--bg-2);color:var(--text-muted)}
+#venueMapOpenLink{position:absolute;right:12px;top:12px;background:rgba(0,255,255,.95);color:#04161c;border:none;border-radius:8px;padding:7px 14px;font-weight:800;font-size:11px;cursor:pointer;z-index:5;display:inline-flex;align-items:center;gap:6px;text-decoration:none}
+#venueMapOpenLink:hover{background:#fff;box-shadow:0 4px 14px rgba(0,255,255,.5)}
+#venueMapOpenLink i{width:14px;height:14px}
+#venueStatus{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:10px;font-size:12.5px;font-weight:700;border:1px dashed var(--border-2);background:var(--bg-2);color:var(--text-muted);line-height:1.5}
 #venueStatus i{width:14px;height:14px;flex-shrink:0}
 #venueStatus.set{background:var(--cyan-50);border:1px solid var(--cyan-500);border-style:solid;color:var(--cyan-700)}
 #venueStatus.err{background:#fef2f2;border:1px solid #fecaca;color:#dc2626}
-
-/* Google autocomplete theming */
-.pac-container{border-radius:12px!important;border:1px solid var(--border)!important;box-shadow:0 16px 40px rgba(10,15,20,.16)!important;font-family:inherit!important;margin-top:6px!important;padding:5px!important;z-index:3000!important;background:#fff!important;}
-.pac-item{padding:10px 14px!important;border-radius:8px!important;border-top:none!important;font-size:13.5px!important;cursor:pointer!important;color:var(--text-muted)!important;}
-.pac-item:hover,.pac-item-selected{background:var(--cyan-50)!important;}
-.pac-item-query{font-weight:700!important;color:var(--text)!important;font-size:13.5px!important;}
-.pac-matched{color:var(--cyan-700)!important;font-weight:900!important;}
-.pac-icon{display:none!important;}
 
 #coverPreviewWrap{display:none;margin:-8px 0 18px;border-radius:12px;overflow:hidden;border:1px solid var(--border);position:relative;}
 #coverPreviewImg{display:block;width:100%;height:190px;object-fit:cover;}
@@ -634,22 +632,42 @@ body.staff-seat-mode .fs-seat:hover{outline:2px solid #fff;outline-offset:2px;tr
           <div class="form-group"><label for="hostName">Host Name</label><input type="text" id="hostName" placeholder="e.g., John Doe" /></div>
           <div class="form-group"><label for="hostEmail">Host Email</label><input type="email" id="hostEmail" placeholder="e.g., john@example.com" /></div>
 
-          <div class="section-divider"><span>Venue — Search Google Places</span></div>
+          <div class="section-divider"><span>Venue — Paste a Google Maps Link</span></div>
+
           <div class="form-group">
-            <label for="venueSearch">Search venue, address or place</label>
-            <input type="text" id="venueSearch" placeholder="Start typing — e.g. 'Sandton Convention Centre'…" autocomplete="off" />
-            <p class="form-hint">Powered by Google Places. Pick a suggestion to pin it on the map.</p>
+            <label for="venueUrl">Google Maps Link</label>
+            <div class="venue-url-row">
+              <input type="url" id="venueUrl" placeholder="https://maps.app.goo.gl/...  or  https://www.google.com/maps/place/..." autocomplete="off" />
+              <a href="#" id="venueOpenBtn" class="venue-open-btn" target="_blank" rel="noopener" title="Open in Google Maps">
+                <i data-lucide="external-link"></i>
+              </a>
+            </div>
+            <p class="form-hint">Open Google Maps, find your venue, tap <strong>Share → Copy link</strong>, then paste it above.</p>
+          </div>
+
+          <button type="button" class="venue-help-toggle" id="venueHelpToggle">
+            <i data-lucide="help-circle"></i> How do I get the link?
+          </button>
+
+          <div class="venue-help" id="venueHelp" style="display:none;">
+            <ol>
+              <li>Open <a href="https://www.google.com/maps" target="_blank" rel="noopener">Google Maps</a> in a new tab</li>
+              <li>Search for your venue and tap its pin</li>
+              <li>Tap <strong>Share</strong> → <strong>Copy link</strong></li>
+              <li>Come back here and paste it above</li>
+            </ol>
+            <p>We'll automatically show a preview and save the location to your event.</p>
           </div>
 
           <div id="venueStatus">
             <i data-lucide="map-pin"></i>
-            <span id="venueStatusText">No location chosen yet — start typing above.</span>
+            <span id="venueStatusText">Paste a Google Maps link to get started.</span>
           </div>
 
           <div id="venueMapWrap">
             <div id="venueMapBadge">Location</div>
-            <div id="venueMap"></div>
-            <button type="button" id="venueMapClearBtn"><i data-lucide="x" style="width:12px;height:12px;"></i> Change</button>
+            <iframe id="venueMap" allowfullscreen loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+            <a id="venueMapOpenLink" href="#" target="_blank" rel="noopener"><i data-lucide="external-link"></i> Open in Maps</a>
           </div>
 
           <input type="hidden" id="venueName" />
@@ -658,6 +676,7 @@ body.staff-seat-mode .fs-seat:hover{outline:2px solid #fff;outline-offset:2px;tr
           <input type="hidden" id="venueLat" />
           <input type="hidden" id="venueLng" />
           <input type="hidden" id="venuePlaceId" />
+          <input type="hidden" id="venueUrlHidden" />
 
           <div class="form-row">
             <div class="form-group">
@@ -913,7 +932,7 @@ body.staff-seat-mode .fs-seat:hover{outline:2px solid #fff;outline-offset:2px;tr
 
           <div class="section-divider"><span>Canvas Annotations</span></div>
           <div class="annotations-panel">
-            <div class="annotations-title"><span>Shapes, Lines &amp; Markers</span><span class="form-hint" style="margin:0;">Click any item to edit</span></div>
+            <div class="annotations-title"><span>Shapes, Lines &amp; Markers</span></div>
             <div class="annotation-tabs">
               <button type="button" class="annotation-tab active" data-anno="shape">▭ Shapes <span class="tab-count" id="countShapes">0</span></button>
               <button type="button" class="annotation-tab" data-anno="line">／ Lines <span class="tab-count" id="countLines">0</span></button>
@@ -1305,7 +1324,6 @@ var seatViewMode = false, staffSeatMode = false, staffSeats = {};
 var twoPointMode = false, pointA = {x:200,y:480}, pointB = {x:1000,y:480}, arcAmount = 0;
 var seatGapEvery = 0, seatGapSize = 1, seatGapRowSpecific = 'all';
 var isDraggingSection = false, selectedSectionIdx = null, selectedElementId = null;
-var dragStartX = 0, dragStartY = 0, dragSectionStartX = 0, dragSectionStartY = 0, insertTool = null;
 
 var TIER_KEYS = ["black","gold","silver","cyan","tier5","tier6"];
 var TIER_DEFAULTS = { black:"#1a202c", gold:"#ecc94b", silver:"#cbd5e1", cyan:"#00FFFF", tier5:"#a855f7", tier6:"#f472b6" };
@@ -1368,7 +1386,6 @@ function readCost(){ var v=parseFloat($("cost")?$("cost").value:""); if(isNaN(v)
 function formatCurrency(v){ if(!v||v<=0)return "R 0.00"; return "R "+v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,","); }
 function formatCurrencyCompact(v){ if(v===undefined||v===null||isNaN(v))return "R 0.00"; return "R "+Number(v).toFixed(2); }
 
-/* ===== HELPERS ===== */
 function rowLabel(index){ var n=index,label=""; do{ label=String.fromCharCode(65+(n%26))+label; n=Math.floor(n/26)-1; }while(n>=0); return label; }
 function blockLabel(index){ return String.fromCharCode(65+index); }
 function getTierLabel(tier){ return TIER_NAMES[tier] || tier; }
@@ -1378,7 +1395,6 @@ function getActiveTiers(){ return TIER_KEYS.slice(0,activeTierCount); }
 function isTierActive(t){ return getActiveTiers().indexOf(t)!==-1; }
 function snap(v){ return snapToGrid ? Math.round(v/gridSize)*gridSize : v; }
 function clampInt(v,min,max,fallback){ var n=parseInt(v,10); if(isNaN(n))n=fallback; return Math.max(min,Math.min(max,n)); }
-function clampFloat(v,min,max,fallback){ var n=parseFloat(v); if(isNaN(n))n=fallback; return Math.max(min,Math.min(max,n)); }
 function getSectionName(idx){ return sectionNames[idx] || ("Block "+blockLabel(idx)); }
 function setSectionName(idx,name){ if(name && name.trim()) sectionNames[idx]=name.trim(); else delete sectionNames[idx]; }
 function getSectionTierOverride(idx){ var t=sectionTierOverrides[idx]||null; if(t && !isTierActive(t)) t=null; return t; }
@@ -1399,7 +1415,6 @@ function getSectionPos(idx){
   sectionPositions[idx]=pos; return pos;
 }
 function setSectionPos(idx,key,val){ if(!sectionPositions[idx]) getSectionPos(idx); sectionPositions[idx][key]=val; }
-function findElementById(id){ for(var i=0;i<canvasElements.length;i++) if(canvasElements[i].id===id) return canvasElements[i]; return null; }
 function buildRowTierMap(totalRows, sectionIdx){
   var override = (sectionIdx!==undefined) ? getSectionTierOverride(sectionIdx) : null;
   if(override){ var m=[]; for(var i=0;i<totalRows;i++) m.push(override); return m; }
@@ -1441,7 +1456,6 @@ function getCornerTierForRow(cornerIdx,rowIdx,isVertical){
   return linkMap[Math.min(getRowCount(cornerIdx)+rowIdx, linkMap.length-1)];
 }
 
-/* ===== STEP NAV ===== */
 function goToStep(n){
   if(n<1||n>TOTAL_STEPS) return;
   document.querySelectorAll(".step-panel").forEach(function(p){ p.classList.toggle("active", parseInt(p.dataset.stepPanel)===n); });
@@ -1466,7 +1480,6 @@ function markAsSaved(eventId){
   refreshIcons();
 }
 
-/* ===== TIER LOCK ===== */
 function applyTierNameLock(){ var ed=FEATURES.editTierNames; document.querySelectorAll(".tier-name-input").forEach(function(inp){ inp.readOnly=!ed; inp.style.background = ed?"":"var(--surface-2)"; inp.style.cursor = ed?"":"not-allowed"; }); }
 function applyTierColourLock(){ var ed=FEATURES.editTierColors; document.querySelectorAll(".tier-color-input").forEach(function(inp){ inp.disabled=!ed; }); if(!ed){ TIER_KEYS.forEach(function(k){ TIER_COLORS[k]=TIER_DEFAULTS[k]; var el=document.querySelector('.tier-color-input[data-tier="'+k+'"]'); if(el) el.value=TIER_DEFAULTS[k]; }); applyTierColors(); } }
 function resetTierNamesToDefaults(){ TIER_KEYS.forEach(function(k){ TIER_NAMES[k]=TIER_DEFAULT_NAMES[k]; var el=document.querySelector('.tier-name-input[data-tier="'+k+'"]'); if(el) el.value=TIER_DEFAULT_NAMES[k]; }); syncTierNamesEverywhere(); }
@@ -1507,7 +1520,7 @@ function applyPlanFeatures(){
   hideSectionGroup("Tier Colours", !f.editTierColors);
   var tmToggle = $("tableModeToggle"); var tmRow = tmToggle ? tmToggle.closest(".toggle-row") : null;
   if(tmRow) tmRow.style.display = (!f.seatingPlan||!f.rowsMode) ? "none":"";
-  if(tmToggle){ if(!f.rowsMode){ tmToggle.checked=true; tmToggle.disabled=true; } else tmToggle.disabled=false; }
+  if(tmToggle){ if(!f.rowsMode){ tmModeLocked(true); } else { tmModeLocked(false); } }
   var fsBtn = $("openFullscreen"); if(fsBtn) fsBtn.style.display = f.venueLayout?"":"none";
   var spFull = $("viewSeatingPlanFull"); if(spFull) spFull.style.display = f.seatingPlan?"":"none";
   applyTierNameLock(); if(!f.editTierNames) resetTierNamesToDefaults();
@@ -1518,6 +1531,7 @@ function applyPlanFeatures(){
   updatePlanFeatureHint(); updatePlanSnapshot();
   renderSeatingPlan(); updateTableSummary(); updateRevenueCalculator(); renderTierBreakdown();
 }
+function tmModeLocked(locked){ var t=$("tableModeToggle"); if(!t) return; if(locked){ t.checked=true; t.disabled=true; } else { t.disabled=false; } }
 function updateTierCountOptions(){
   var sel = $("tierCount"); if(!sel) return;
   var capacity = calculateCapacity(), allowExtra = capacity > LARGE_VENUE_THRESHOLD;
@@ -1542,7 +1556,6 @@ function updateTierVisibility(){
   var ps = $("tierColor");
   if(ps && !isTierActive(ps.value)){ var fb = active[active.length-1] || "cyan"; ps.value = fb; }
   syncTierNamesEverywhere(); updateRevenueCalculator(); updateTierSummary(); renderSeatingPlan();
-  if($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
   renderTierBreakdown();
 }
 function rebuildTicketTierDropdown(){
@@ -1619,14 +1632,13 @@ function syncTierNamesEverywhere(){
     var l2 = document.querySelector('label[for="tierRows'+tierIdToCap(t)+'"]'); if(l2) l2.textContent = TIER_NAMES[t];
   });
   updateAllTicketPreviews(); renderSeatingPlan();
-  if($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
 }
 function updateAllTicketPreviews(){
   var eventName = $("eventName").value || "EVENT NAME";
-  var dateVenue = ($("startDate").value||"DATE")+" · "+($("venueAddress").value || $("venueName").value || "VENUE");
+  var dateVenue = ($("startDate").value||"DATE")+" · "+($("venueName").value || $("venueAddress").value || "VENUE");
   var guestName = $("guestName").value || "GUEST NAME";
   var seatCode = (window.NovalinkRoutingEngine && NovalinkRoutingEngine.buildSeatCode) ? NovalinkRoutingEngine.buildSeatCode($("seatBlock").value,$("seatRow").value,$("seatNum").value) : "";
-  var venue = $("venueAddress").value || $("venueName").value || "VENUE";
+  var venue = $("venueName").value || $("venueAddress").value || "VENUE";
   [1,2,3].forEach(function(i){
     var s = (i===1)?"":String(i);
     var en=$("prevEventName"+s); if(en) en.textContent = eventName;
@@ -1659,14 +1671,13 @@ function buildLegend(){
   return legend;
 }
 
-/* ===== LEVELS ===== */
 function rebuildLevelsList(){
   var list = $("levelsList"); list.innerHTML = "";
   levels.forEach(function(lv, i){
     var item = document.createElement("div"); item.className = "level-item";
     var sw = document.createElement("div"); sw.className="level-swatch"; sw.style.background = lv.color; item.appendChild(sw);
     var ni = document.createElement("input"); ni.type="text"; ni.className="level-name-input"; ni.value = lv.name;
-    ni.addEventListener("input", function(){ lv.name = ni.value || "Untitled Level"; rebuildLevelSelect(); renderFullscreen(); });
+    ni.addEventListener("input", function(){ lv.name = ni.value || "Untitled Level"; rebuildLevelSelect(); });
     item.appendChild(ni);
     var vl = document.createElement("label"); vl.className="level-visible-toggle";
     var chk = document.createElement("input"); chk.type="checkbox"; chk.checked = lv.visible;
@@ -1703,8 +1714,6 @@ function addLevel(){
   levels.push({ id:id, name:"Level "+levels.length, color:c, visible:true });
   rebuildLevelsList(); rebuildLevelSelect(); renderFullscreen();
 }
-
-/* ===== SECTION TABS ===== */
 function rebuildSectionTabs(){
   var sections = parseInt($("totalLevel1").value)||1;
   if(currentEditingSection >= sections) currentEditingSection = 0;
@@ -1806,7 +1815,6 @@ function addTableRow(){
   rebuildTableRowsEditor(); updateTableRowAggregates();
 }
 
-/* ===== SEATS ===== */
 function shouldGapRow(sIdx, rIdx){ if(seatGapEvery<=0) return false; if(seatGapRowSpecific==='current') return sIdx===currentEditingSection; return true; }
 function appendSeatsWithGaps(seatsWrap, seatCount, tier, sectionIdx, rowIdx, seatClass){
   var doGap = shouldGapRow(sectionIdx, rowIdx);
@@ -1840,7 +1848,6 @@ function toggleStaffSeat(sectionIdx, rowIdx, seatNum, el){
   if($("seatingPlanOverlay").classList.contains("open")) renderSeatingPlanFull();
 }
 
-/* ===== CORNER BLOCKS ===== */
 function buildCornerRow(tier, seatCount, seatClass, alignRight){
   var rowEl = document.createElement("div"); rowEl.className = "fs-corner-row"+(alignRight?" right":"");
   for(var i=0;i<seatCount;i++){ var s=document.createElement("div"); s.className = (seatClass||"fs-seat")+" "+tier; s.textContent = i+1; rowEl.appendChild(s); }
@@ -1900,8 +1907,6 @@ function buildCurvedCornerBlock(idx, cfg, seatClass){
   }
   return wrap;
 }
-
-/* ===== TABLE LAYOUT ===== */
 function tableUnitMetrics(scale){ scale = scale||1; var k = pxPerCm*scale; var cs = Math.max(4, Math.min(60, Math.round(45*k))); var g = Math.max(2, Math.min(20, Math.round(5*k))); var shape = tableConfig.shape; var W,H; if(shape==="circular"||shape==="square"){ W=H=Math.max(20, getTableWidthCm())*k; } else { W=Math.max(20, getTableLengthCm())*k; H=Math.max(20, getTableWidthCm())*k; } return { w:W, h:H, chairSize:cs, gap:g, cellW:W+2*(g+cs), cellH:H+2*(g+cs) }; }
 function buildTableUnit(shape, cfg, scale){
   scale = scale||1; var m = tableUnitMetrics(scale), cs=m.chairSize, g=m.gap, W=m.w, H=m.h;
@@ -1958,7 +1963,6 @@ function tableValidationMessages(){
   else if(shape==="square"){ if(w<TABLE_STD.squareMin) msgs.push({level:'warn',text:'Square table side is '+w+' cm — standard is 90–102 cm.'}); }
   else { if(w<TABLE_STD.widthMin) msgs.push({level:'warn',text:'Table width is '+w+' cm — standard is 90–102 cm.'}); if(len<TABLE_STD.lengthMin) msgs.push({level:'warn',text:'Table length is '+len+' cm — 120 cm minimum.'}); }
   if(getSpacingCm()<TABLE_STD.spacingMin) msgs.push({level:'error',text:'Table spacing is only '+getSpacingCm()+' cm — below 61–76 cm recommended.'});
-  else if(getSpacingCm()>TABLE_STD.spacingMax) msgs.push({level:'info',text:'Table spacing is '+getSpacingCm()+' cm.'});
   return msgs;
 }
 function updateTableValidation(){
@@ -1974,7 +1978,6 @@ function updateTableValidation(){
   });
 }
 
-/* ===== ANNOTATIONS ===== */
 function elementTypeLabel(item){ if(item.type==="shape") return item.shapeKind==="circle"?"Circle":(item.shapeKind==="square"?"Square":"Rectangle"); if(item.type==="line") return "Line"; if(item.type==="marker") return item.markerKind.charAt(0).toUpperCase()+item.markerKind.slice(1); return "Element"; }
 function elementBadgeClass(item){ if(item.type==="line") return "line"; if(item.type==="marker") return item.markerKind||"exit"; return ""; }
 function elementDisplayName(item){ if(item.type==="shape") return item.label||elementTypeLabel(item); if(item.type==="line") return item.label||("Line "+item.id); if(item.type==="marker") return item.label||"Marker"; return "Element"; }
@@ -1990,7 +1993,6 @@ function rebuildAnnotationList(){
     del.innerHTML = '<i data-lucide="trash-2" style="width:14px;height:14px;"></i>';
     del.addEventListener("click", function(e){ e.stopPropagation(); canvasElements = canvasElements.filter(function(x){return x.id!==item.id;}); if(expandedElementId===item.id) expandedElementId=null; rebuildAnnotationList(); renderFullscreen(); });
     header.appendChild(del);
-    header.addEventListener("click", function(){ expandedElementId = expandedElementId===item.id?null:item.id; rebuildAnnotationList(); });
     wrap.appendChild(header);
     list.appendChild(wrap);
   });
@@ -2031,7 +2033,6 @@ function addMarkerElement(){
   rebuildAnnotationList(); renderFullscreen(); showToast("Marker added", "success");
 }
 
-/* ===== RENDER PLAN ===== */
 function renderStandardLayout(container, sections){
   var stageName = ($("stageName").value||"STAGE").trim().toUpperCase();
   for(var b=0;b<sections;b++){
@@ -2113,7 +2114,6 @@ function renderSeatingPlanFull(){
   refreshIcons();
 }
 
-/* ===== FULLSCREEN ===== */
 function buildFSSection(sectionIdx){
   var pos = getSectionPos(sectionIdx), lv = levels.find(function(x){return x.id===pos.levelId;});
   var stageName = ($("stageName").value||"STAGE").trim().toUpperCase();
@@ -2166,7 +2166,7 @@ function renderFullscreen(){
   canvas.querySelectorAll(".fs-element").forEach(function(el){ el.remove(); });
   canvas.style.width = canvasWidth+"px"; canvas.style.height = canvasHeight+"px";
   canvas.style.setProperty("--grid-size", gridSize+"px");
-  canvas.className = "fs-canvas"+(showGrid?" show-grid":"")+(twoPointMode?" two-point-mode":"")+(insertTool?" insert-mode":"");
+  canvas.className = "fs-canvas"+(showGrid?" show-grid":"")+(twoPointMode?" two-point-mode":"");
   var stageName = ($("stageName").value||"STAGE").trim().toUpperCase();
   var sm = $("fsStageMarker"); if(sm){ sm.textContent = stageName; sm.style.left = stage.x+"px"; sm.style.top = stage.y+"px"; sm.style.width = stage.width+"px"; sm.style.height = stage.height+"px"; }
   $("fsStageName").textContent = stageName;
@@ -2178,7 +2178,6 @@ function renderFullscreen(){
   refreshIcons();
 }
 
-/* ===== BUILD PAYLOAD ===== */
 function buildSectionsData(){
   var sections = [], count = parseInt($("totalLevel1").value)||0;
   var wCm = getTableWidthCm(), lCm = getTableLengthCm(), spCm = getSpacingCm();
@@ -2208,7 +2207,7 @@ function buildSectionsData(){
         rowsData.push({ row:rowLabel(r), seats:seats });
       }
       base.mode = "rows"; base.rowCount = rowCount; base.rows = rowsData;
-      base.seatGapEvery = seatGapEvery; base.seatGapSize = seatGapSize; base.seatGapScope = seatGapRowSpecific;
+      base.seatGapEvery = seatGapEvery; base.seatGapSize = seatGapSize;
       sections.push(base);
     }
   }
@@ -2252,103 +2251,162 @@ $("coverImageFile").addEventListener("change", function(){
 });
 $("coverRemoveBtn").addEventListener("click", function(){ $("coverImageUrl").value=""; $("coverImageFile").value=""; coverDataUrl=""; showCoverPreview(""); });
 
-/* ===== GOOGLE PLACES VENUE SEARCH ===== */
-var map = null, marker = null, venuePicked = null;
-
+/* ===== VENUE — Paste Google Maps URL ===== */
 function setVenueStatus(state, text){
   var el = $("venueStatus"); el.classList.remove("set","err");
   if(state) el.classList.add(state);
   $("venueStatusText").innerHTML = text;
 }
-function pickCity(components){
-  if(!components) return "";
-  var priority = ["locality","postal_town","administrative_area_level_2","administrative_area_level_1"];
-  for(var i=0;i<priority.length;i++){
-    for(var j=0;j<components.length;j++){
-      if(components[j].types && components[j].types.indexOf(priority[i])!==-1){
-        return components[j].long_name;
-      }
-    }
+
+function parseGoogleMapsUrl(url){
+  var out = { lat:null, lng:null, name:"", query:"", valid:false };
+  if(!url || typeof url !== "string") return out;
+  url = url.trim();
+  if(!/^https?:\/\//i.test(url)) return out;
+
+  // Must be a Google Maps family URL
+  var isGoogleMaps = /google\.[a-z.]+\/maps/i.test(url)
+    || /maps\.app\.goo\.gl/i.test(url)
+    || /^https?:\/\/goo\.gl\/maps/i.test(url)
+    || /google\.[a-z.]+\/travel/i.test(url)
+    || /google\.[a-z.]+\/local/i.test(url);
+  if(!isGoogleMaps) return out;
+
+  out.valid = true;
+
+  // Pattern 1: /@lat,lng
+  var m = url.match(/@(-?\d+\.\d+),(-?\d+\.\d+)/);
+  if(m){ out.lat = parseFloat(m[1]); out.lng = parseFloat(m[2]); }
+
+  // Pattern 2: !3dLAT!4dLNG — usually more precise
+  var m2 = url.match(/!3d(-?\d+\.\d+)!4d(-?\d+\.\d+)/);
+  if(m2){ out.lat = parseFloat(m2[1]); out.lng = parseFloat(m2[2]); }
+
+  // Pattern 3: /place/Name/
+  var m3 = url.match(/\/place\/([^\/@?]+)/);
+  if(m3){ out.name = decodeURIComponent(m3[1].replace(/\+/g, " ")); }
+
+  // Pattern 4: ?q=Query  or /search/Query
+  var m4 = url.match(/[?&]q=([^&]+)/) || url.match(/\/search\/([^\/?]+)/);
+  if(m4 && !out.name){ out.query = decodeURIComponent(m4[1].replace(/\+/g, " ")); }
+
+  // Also handle /maps?q=lat,lng (rare but exists)
+  if(!out.lat && out.query){
+    var m5 = out.query.match(/^(-?\d+\.\d+),\s*(-?\d+\.\d+)$/);
+    if(m5){ out.lat = parseFloat(m5[1]); out.lng = parseFloat(m5[2]); }
   }
+
+  return out;
+}
+
+function buildEmbedUrlFromVenue(parsed){
+  if(parsed.lat !== null && parsed.lng !== null){
+    return "https://maps.google.com/maps?q=" + parsed.lat + "," + parsed.lng + "&z=16&output=embed";
+  }
+  var q = parsed.name || parsed.query || "";
+  if(q) return "https://maps.google.com/maps?q=" + encodeURIComponent(q) + "&z=16&output=embed";
   return "";
 }
-function applyPickedVenue(picked){
-  venuePicked = picked;
-  $("venueName").value = picked.name || "";
-  $("venueAddress").value = picked.address || "";
-  $("city").value = picked.city || "";
-  $("venueLat").value = picked.lat;
-  $("venueLng").value = picked.lng;
-  $("venuePlaceId").value = picked.placeId || "";
 
-  $("venueMapWrap").style.display = "block";
-  $("venueMapBadge").textContent = picked.name || "Location";
+function applyVenueUrl(url){
+  var parsed = parseGoogleMapsUrl(url);
 
-  var loc = { lat: picked.lat, lng: picked.lng };
-  if(!map){
-    map = new google.maps.Map($("venueMap"), {
-      center: loc, zoom: 16,
-      mapTypeControl: false, streetViewControl: false, fullscreenControl: false
-    });
-  } else {
-    map.setCenter(loc);
-    map.setZoom(16);
-  }
-  if(marker) marker.setMap(null);
-  marker = new google.maps.Marker({ position: loc, map: map, animation: google.maps.Animation.DROP });
-
-  var nice = (picked.name ? '<strong>'+esc(picked.name)+'</strong> · ' : '') + esc(picked.address || '');
-  setVenueStatus("set", nice);
-  updateAllTicketPreviews();
-  showToast("Venue selected ✓", "success", 1800);
-}
-function clearVenue(){
-  venuePicked = null;
-  ["venueName","venueAddress","city","venueLat","venueLng","venuePlaceId"].forEach(function(id){ $(id).value=""; });
-  $("venueMapWrap").style.display = "none";
-  if(marker){ marker.setMap(null); marker = null; }
-  $("venueSearch").value = "";
-  setVenueStatus("", "No location chosen yet — start typing above.");
-  updateAllTicketPreviews();
-}
-$("venueMapClearBtn").addEventListener("click", clearVenue);
-
-async function initVenueSearch(){
-  try {
-    await google.maps.importLibrary("places");
-    await google.maps.importLibrary("maps");
-  } catch (e) {
-    console.error("Google Maps failed to load:", e);
-    setVenueStatus("err", "Could not load Google Maps. Check that the API key is valid.");
+  if(!parsed.valid){
+    if(!url){
+      clearVenue();
+    } else {
+      setVenueStatus("err", "That doesn't look like a Google Maps link. Copy it again from the <strong>Share</strong> menu in Google Maps.");
+      $("venueMapWrap").style.display = "none";
+      $("venueMap").src = "";
+      $("venueOpenBtn").href = "#";
+      $("venueOpenBtn").classList.remove("enabled");
+    }
     return;
   }
 
-  var input = $("venueSearch");
-  var autocomplete = new google.maps.places.Autocomplete(input, {
-    fields: ["place_id","name","formatted_address","geometry","address_components"],
-    componentRestrictions: { country: ["za"] }
-  });
+  var name = parsed.name || parsed.query || "";
+  var hasCoords = (parsed.lat !== null && parsed.lng !== null);
+  var coordsStr = hasCoords ? (parsed.lat + "," + parsed.lng) : "";
 
-  autocomplete.addListener("place_changed", function(){
-    var place = autocomplete.getPlace();
-    if(!place || !place.geometry){
-      showToast("No location details returned — try another suggestion.", "error", 3500);
-      return;
-    }
-    var name = place.name || "";
-    var addr = place.formatted_address || "";
-    if(!name || name === addr) name = "";
-    applyPickedVenue({
-      name: name,
-      address: addr,
-      city: pickCity(place.address_components),
-      lat: place.geometry.location.lat(),
-      lng: place.geometry.location.lng(),
-      placeId: place.place_id || ""
-    });
-  });
+  // Enable open-in-maps button
+  $("venueOpenBtn").href = url;
+  $("venueOpenBtn").classList.add("enabled");
+  $("venueMapOpenLink").href = url;
+
+  // If nothing useful parsed (shortened goo.gl URL that we can't expand client-side)
+  if(!hasCoords && !name){
+    $("venueName").value = "";
+    $("venueAddress").value = url;
+    $("city").value = "";
+    $("venueLat").value = "";
+    $("venueLng").value = "";
+    $("venuePlaceId").value = "";
+    $("venueUrlHidden").value = url;
+    $("venueMapWrap").style.display = "none";
+    $("venueMap").src = "";
+    setVenueStatus("set", '<strong>Link saved.</strong> Tap the <strong>↗</strong> button to open it in Google Maps. <br><span style="opacity:.7">Tip: for the inline map preview, use the full desktop URL (it contains the coordinates).</span>');
+    updateAllTicketPreviews();
+    showToast("Maps link saved ✓", "success", 1800);
+    return;
+  }
+
+  // Build embed URL
+  var embedUrl = buildEmbedUrlFromVenue(parsed);
+
+  // Show map
+  $("venueMapWrap").style.display = "block";
+  $("venueMapBadge").textContent = name || "Pinned location";
+  $("venueMap").src = embedUrl;
+
+  // Save data
+  $("venueName").value = name;
+  $("venueAddress").value = name || coordsStr || url;
+  $("city").value = "";
+  $("venueLat").value = hasCoords ? parsed.lat : "";
+  $("venueLng").value = hasCoords ? parsed.lng : "";
+  $("venuePlaceId").value = "";
+  $("venueUrlHidden").value = url;
+
+  // Status
+  var status = "";
+  if(name) status = "<strong>" + esc(name) + "</strong>";
+  else status = "Coordinates: " + parsed.lat.toFixed(5) + ", " + parsed.lng.toFixed(5);
+  setVenueStatus("set", status);
+
+  updateAllTicketPreviews();
+  showToast("Venue link saved ✓", "success", 1800);
 }
-initVenueSearch();
+
+function clearVenue(){
+  ["venueName","venueAddress","city","venueLat","venueLng","venuePlaceId","venueUrlHidden"].forEach(function(id){ var el=$(id); if(el) el.value=""; });
+  $("venueMapWrap").style.display = "none";
+  $("venueMap").src = "";
+  $("venueUrl").value = "";
+  $("venueOpenBtn").href = "#";
+  $("venueOpenBtn").classList.remove("enabled");
+  $("venueMapOpenLink").href = "#";
+  setVenueStatus("", "Paste a Google Maps link to get started.");
+  updateAllTicketPreviews();
+}
+
+// Wire up
+$("venueUrl").addEventListener("input", function(){
+  var v = this.value.trim();
+  clearTimeout(window._nvVenueTimer);
+  if(!v){ clearVenue(); return; }
+  window._nvVenueTimer = setTimeout(function(){ applyVenueUrl(v); }, 450);
+});
+
+$("venueUrl").addEventListener("paste", function(){
+  var self = this;
+  setTimeout(function(){ applyVenueUrl(self.value.trim()); }, 60);
+});
+
+$("venueHelpToggle").addEventListener("click", function(){
+  var h = $("venueHelp");
+  h.style.display = h.style.display === "none" ? "block" : "none";
+  refreshIcons();
+});
 
 /* ===== EVENT TYPE ===== */
 $("eventType").addEventListener("change", function(){
@@ -2391,9 +2449,9 @@ function buildEventPayload(eventId){
     venueName: $("venueName").value,
     venueAddress: $("venueAddress").value,
     city: $("city").value,
+    venueUrl: $("venueUrlHidden").value,
     venueLat: parseFloat($("venueLat").value)||null,
     venueLng: parseFloat($("venueLng").value)||null,
-    venuePlaceId: $("venuePlaceId").value,
     lat: parseFloat($("venueLat").value)||null,
     lng: parseFloat($("venueLng").value)||null,
     tierColor: tierColor,
@@ -2414,7 +2472,7 @@ function handleSaveEvent(){
     ["startDate","Start date is required"],
     ["startTime","Start time is required"],
     ["eventName","Event name is required"],
-    ["venueAddress","Please search and pick a venue on the map"]
+    ["venueUrl","Please paste a Google Maps link for your venue"]
   ];
   for(var i=0;i<required.length;i++){
     var f = $(required[i][0]);
@@ -2571,7 +2629,6 @@ document.querySelectorAll(".annotation-tab").forEach(function(btn){
 $("addShapeBtn").addEventListener("click", addShapeElement);
 $("addLineBtn").addEventListener("click", addLineElement);
 $("addExitBtn").addEventListener("click", addMarkerElement);
-$("markerKind").addEventListener("change", function(){ $("exitLabelInput").value = "MARKER"; });
 $("totalLevel1").addEventListener("input", function(){
   var v = Math.max(1, Math.min(26, parseInt(this.value)||1)); this.value = v;
   rebuildSectionTabs(); refreshSectionInputs(); rebuildRowOverrides(); rebuildTableRowsEditor();
@@ -2641,7 +2698,6 @@ $("clearAllOverrides").addEventListener("click", function(){ if(!confirm("Clear 
 
 $("submitBtn").addEventListener("click", function(e){ e.preventDefault(); handleSaveEvent(); });
 ["eventName","startDate","startTime"].forEach(function(id){ $(id).addEventListener("input", updateAllTicketPreviews); });
-["venueAddress","venueName"].forEach(function(id){ $(id).addEventListener("input", updateAllTicketPreviews); });
 
 /* ===== BOOT ===== */
 document.addEventListener("DOMContentLoaded", function(){
@@ -2660,4 +2716,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-              </html>
+                                                                                  </html>
