@@ -630,7 +630,7 @@ body.staff-seat-mode .fs-seat:hover{outline:2px solid #fff;outline-offset:2px;tr
           <div class="form-group">
             <label for="locationSearch">Location / Venue</label>
             <div class="location-search-wrapper">
-              <input type="text" id="locationSearch" placeholder="Type venue name or address, then press Enter" autocomplete="off" />
+              <input type="text" id="locationSearch" placeholder="Paste a Google Maps link, or type the venue address" autocomplete="off" />
               <i data-lucide="search" class="search-icon"></i>
             </div>
             <div id="locationSelectedBadge" class="location-selected-badge" style="display:none;">
@@ -638,7 +638,7 @@ body.staff-seat-mode .fs-seat:hover{outline:2px solid #fff;outline-offset:2px;tr
               <span id="locationText"></span>
               <span class="clear-loc" id="clearLocationBtn" title="Clear location">&times;</span>
             </div>
-            <p class="form-hint">Type the venue name or address, then press Enter to confirm.</p>
+            <p class="form-hint">Paste a Google Maps link, or type the venue name and address. It saves as you type — no confirmation needed.</p>
           </div>
 
           <div class="form-row">
@@ -1479,7 +1479,6 @@ body.staff-seat-mode .fs-seat:hover{outline:2px solid #fff;outline-offset:2px;tr
 
 function $(id){ return document.getElementById(id); }
 
-/* ============= FIREBASE ============= */
 var SAVE_FLAG_KEY = "novalink_last_saved_event_id";
 
 var firebaseConfig = {
@@ -1498,7 +1497,6 @@ var EVENTS_COLLECTION = "events";
 window._nvCurrentUser = null;
 auth.onAuthStateChanged(function(u){ window._nvCurrentUser = u; });
 
-/* ============= ROUTING ENGINE (with fallbacks) ============= */
 var RE = window.NovalinkRoutingEngine || {};
 function reBuildSeatCode(b, r, s){
   if (typeof RE.buildSeatCode === "function") return RE.buildSeatCode(b, r, s);
@@ -1517,7 +1515,6 @@ function reBuildTicketRef(eventId, ticketId){
   return "NL-" + e + "-" + t;
 }
 
-/* ============= STEP STATE ============= */
 var TOTAL_STEPS = 5;
 var STEP_NAMES = {1: "Event Details", 2: "Pricing Plan", 3: "Tiers", 4: "Seating Plan", 5: "Revenue"};
 
@@ -1544,7 +1541,6 @@ function goToStep(n) {
   if (n === 5) { updateRevenueCalculator(); renderTierBreakdown(); }
 }
 
-/* ============= SAVE STATE ============= */
 var isSaved = false;
 var savedEventId = null;
 
@@ -1567,7 +1563,6 @@ function markAsSaved(eventId) {
   try { sessionStorage.setItem(SAVE_FLAG_KEY, eventId); } catch(e) {}
 }
 
-/* ============= CORE STATE ============= */
 var canvasWidth = 1200;
 var canvasHeight = 800;
 var gridSize = 50;
@@ -1611,8 +1606,7 @@ var dragStartX = 0, dragStartY = 0;
 var dragSectionStartX = 0, dragSectionStartY = 0;
 var insertTool = null;
 
-/* ============= LOCATION STATE ============= */
-var selectedLocation = { address: "", lat: null, lng: null, placeId: "", city: "" };
+var selectedLocation = { address: "", lat: null, lng: null, placeId: "", city: "", link: "" };
 
 var TIER_KEYS = (RE.TIER_KEYS || ["black", "gold", "silver", "cyan", "tier5", "tier6"]).slice();
 var TIER_DEFAULTS = Object.assign({ black: "#1a202c", gold: "#ecc94b", silver: "#cbd5e1", cyan: "#00FFFF", tier5: "#a855f7", tier6: "#f472b6" }, RE.TIER_DEFAULTS || {});
@@ -1653,7 +1647,6 @@ var TABLE_STD = {
 };
 var levelColors = ["#00FFFF", "#facc15", "#a78bfa", "#fb7185", "#34d399", "#60a5fa", "#f97316", "#e879f9"];
 
-/* ============= COLOR UTILS ============= */
 function hexToRgbObj(hex){
   var c = String(hex || "").replace("#","");
   if (c.length === 3) c = c[0]+c[0]+c[1]+c[1]+c[2]+c[2];
@@ -1710,36 +1703,56 @@ function showToast(msg, type, ms) {
   showToast._t = setTimeout(function(){ t.classList.remove("show"); }, ms);
 }
 
-/* ============= LOCATION (manual entry, no Google Maps) ============= */
+/* ============= LOCATION (paste-a-link, no Google, no Enter needed) ============= */
+function shortenUrlForDisplay(val) {
+  val = String(val || "").trim();
+  if (!/^https?:\/\//i.test(val)) return val;
+  try {
+    var u = new URL(val);
+    var host = u.hostname.replace(/^www\./, "");
+    // Try to extract a readable place name from Google Maps URLs.
+    var m = /\/maps\/place\/([^/@]+)/i.exec(u.pathname);
+    if (m && m[1]) return decodeURIComponent(m[1].replace(/\+/g, " "));
+    var q = u.searchParams.get("q");
+    if (q) return decodeURIComponent(q.replace(/\+/g, " "));
+    return host + (u.pathname !== "/" ? u.pathname : "");
+  } catch (e) {
+    return val;
+  }
+}
+
 function initLocationAutocomplete() {
   var input = $("locationSearch");
   if (!input) return;
 
-  input.placeholder = "Type venue name or address, then press Enter";
+  input.placeholder = "Paste a Google Maps link, or type the venue address";
 
   function commit(val) {
     val = String(val || "").trim();
-    if (!val) return;
-    selectedLocation = { address: val, lat: null, lng: null, placeId: "", city: "" };
-    showLocationBadge(val);
+    if (!val) {
+      selectedLocation = { address: "", lat: null, lng: null, placeId: "", city: "", link: "" };
+      var b0 = $("locationSelectedBadge"); if (b0) b0.style.display = "none";
+      updateAllTicketPreviews();
+      return;
+    }
+    var isLink = /^https?:\/\//i.test(val);
+    var display = isLink ? shortenUrlForDisplay(val) : val;
+    selectedLocation = {
+      address: display || val,
+      raw: val,
+      link: isLink ? val : "",
+      lat: null, lng: null, placeId: "",
+      city: ""
+    };
+    showLocationBadge(selectedLocation.address);
     updateAllTicketPreviews();
   }
 
-  input.addEventListener("keydown", function(e) {
-    if (e.key !== "Enter") return;
-    e.preventDefault();
-    var val = input.value.trim();
-    if (!val) return;
-    commit(val);
-    showToast("Location set", "success", 1500);
+  input.addEventListener("input", function() { commit(input.value); });
+  input.addEventListener("paste", function() {
+    setTimeout(function(){ commit(input.value); }, 0);
   });
-
-  input.addEventListener("blur", function() {
-    var val = input.value.trim();
-    if (!val) return;
-    if (selectedLocation.address === val) return;
-    commit(val);
-  });
+  input.addEventListener("change", function() { commit(input.value); });
 }
 
 function showLocationBadge(text) {
@@ -1756,7 +1769,7 @@ function clearLocation() {
   var badge = $("locationSelectedBadge");
   if (input) input.value = "";
   if (badge) badge.style.display = "none";
-  selectedLocation = { address: "", lat: null, lng: null, placeId: "", city: "" };
+  selectedLocation = { address: "", lat: null, lng: null, placeId: "", city: "", link: "" };
   updateAllTicketPreviews();
 }
 
@@ -3465,7 +3478,6 @@ document.addEventListener("DOMContentLoaded", function(){
     showToast("Venue exported as CSV", "success");
   }
 
-  /* ============= COVER IMAGE ============= */
   var coverDataUrl = "";
   var coverUrlEl  = $("coverImageUrl");
   var coverFileEl = $("coverImageFile");
@@ -3515,7 +3527,6 @@ document.addEventListener("DOMContentLoaded", function(){
     });
   }
 
-  /* ============= SAVE EVENT ============= */
   function buildEventPayload() {
     var costVal = readCost();
     var counts = getTierSeatCounts(); var active = getActiveTiers();
@@ -3539,6 +3550,7 @@ document.addEventListener("DOMContentLoaded", function(){
       startDate: $("startDate").value,
       startTime: $("startTime").value,
       venueAddress: selectedLocation.address,
+      venueLink: selectedLocation.link || "",
       tierColor: tierColor,
       revenue: {
         gross: gross, fee: fee, net: net,
@@ -3574,7 +3586,6 @@ document.addEventListener("DOMContentLoaded", function(){
       });
   }
 
-  /* costInput declared early to avoid TDZ on click */
   var costInput = $("cost");
 
   function handleSaveEvent() {
@@ -3607,7 +3618,7 @@ document.addEventListener("DOMContentLoaded", function(){
     }
 
     if (!selectedLocation.address) {
-      showToast("Please enter a venue or location, then press Enter to confirm.", "error", 4200);
+      showToast("Please paste a Google Maps link or type the venue address.", "error", 4200);
       goToStep(1);
       setTimeout(function(){ $("locationSearch").focus(); }, 350);
       return;
@@ -3728,7 +3739,6 @@ document.addEventListener("DOMContentLoaded", function(){
     if ($("seatingPlanOverlay").classList.contains("open")) renderSeatingPlanFull();
   }
 
-  /* ============= EVENT WIRING ============= */
   document.querySelectorAll(".step-tab").forEach(function(tab) {
     tab.addEventListener("click", function() { goToStep(parseInt(this.dataset.step)); });
   });
