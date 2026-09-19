@@ -83,7 +83,6 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .toggle-slider:before{position:absolute;content:"";height:18px;width:18px;left:3px;bottom:3px;background:white;transition:.3s;border-radius:50%}
 .toggle-switch input:checked + .toggle-slider{background:var(--cyan-500)}
 .toggle-switch input:checked + .toggle-slider:before{transform:translateX(20px)}
-/* NEW: chair mode info block */
 .chair-mode-info{font-size:11.5px;color:var(--text-muted);margin:0 0 14px;line-height:1.55;padding:10px 12px;background:var(--cyan-50);border:1px solid var(--cyan-100);border-radius:8px;word-break:break-word;}
 .chair-mode-info strong{color:var(--cyan-700);font-style:normal;font-weight:800;}
 .chair-mode-info em{font-style:normal;font-family:ui-monospace,monospace;background:#fff;border:1px solid var(--cyan-100);border-radius:4px;padding:0 4px;color:var(--cyan-700);font-weight:700;}
@@ -484,7 +483,7 @@ body.staff-seat-mode .fs-seat:hover{outline:2px solid #fff;outline-offset:2px;tr
 .tbl-shape.cyan{background:var(--tier-cyan-light);color:var(--tier-cyan-text-light);border-color:var(--tier-cyan);}
 .tbl-shape.tier5{background:var(--tier-tier5);color:var(--tier-tier5-text);border-color:var(--tier-tier5);}
 .tbl-shape.tier6{background:var(--tier-tier6-light);color:var(--tier-tier6-text-light);border-color:var(--tier-tier6);}
-.tbl-chair{position:absolute;display:flex;align-items:center;justify-content:center;font-family:ui-monospace,monospace;font-weight:900;color:#04161c;}
+.tbl-chair{position:absolute;}
 .tbl-chair.round{border-radius:50%;}
 .tbl-chair.black{background:var(--tier-black);}
 .tbl-chair.gold{background:var(--tier-gold);}
@@ -565,8 +564,8 @@ body.staff-seat-mode .fs-seat:hover{outline:2px solid #fff;outline-offset:2px;tr
 .venue-preset-hint{display:inline-flex;align-items:center;gap:6px;margin-top:6px;padding:5px 10px;background:var(--cyan-50);border:1px solid var(--cyan-400);border-radius:8px;font-size:11.5px;font-weight:700;color:var(--cyan-700);word-break:break-word;max-width:100%}
 .venue-preset-hint i{width:13px;height:13px;flex-shrink:0}
 </style>
-  </head>
-  <body>
+</head>
+<body>
 <header class="site-header">
   <div class="container header-inner">
     <a href="index.html" class="novalink-logo">
@@ -1135,7 +1134,6 @@ body.staff-seat-mode .fs-seat:hover{outline:2px solid #fff;outline-offset:2px;tr
               <div class="form-group"><label for="tableCount">Default Tables per Row</label><input type="number" id="tableCount" min="1" max="50" value="4" /></div>
             </div>
 
-            <!-- NEW: Number each chair toggle -->
             <div class="toggle-row" style="margin-top:2px;">
               <span class="toggle-label">Number each chair</span>
               <label class="toggle-switch"><input type="checkbox" id="numberChairsToggle" checked /><span class="toggle-slider"></span></label>
@@ -1493,7 +1491,7 @@ body.staff-seat-mode .fs-seat:hover{outline:2px solid #fff;outline-offset:2px;tr
 </div>
 
 <div class="toast" id="toast"></div>
-    <script src="routing-engine.js"></script>
+                        <script src="routing-engine.js"></script>
 <script>
 (function(){
 'use strict';
@@ -1558,12 +1556,22 @@ function goToStep(n) {
   if (pctEl) pctEl.textContent = pct + "%";
   window.scrollTo({ top: 0, behavior: "smooth" });
   if (n === 2) updatePlanSnapshot();
-  if (n === 4) renderSeatingPlan();
+  if (n === 4) {
+    /* NEW: mark that the host visited the seating plan step */
+    step4Visited = true;
+    renderSeatingPlan();
+    setTimeout(function(){
+      showToast("Arrange your seating plan, then continue to Revenue.", "info", 3600);
+    }, 400);
+  }
   if (n === 5) { updateRevenueCalculator(); renderTierBreakdown(); }
 }
 
 var isSaved = false;
 var savedEventId = null;
+/* NEW: set true the first time the host lands on Step 4.
+   Used to gate saving when the plan requires a seating layout. */
+var step4Visited = false;
 
 function markAsSaved(eventId) {
   isSaved = true;
@@ -1605,7 +1613,7 @@ var sectionPositions = {};
 var currentEditingSection = 0;
 var tableMode = false;
 
-/* NEW: chair numbering toggle. ON = per-chair sale, OFF = per-table sale. */
+/* Chair numbering toggle: ON = per-chair sale, OFF = per-table sale */
 var numberChairs = true;
 
 var sectionTableRows = {};
@@ -1672,10 +1680,10 @@ var activeTierCount = DEFAULT_TIERS;
 var currentPlan = { id: "standard", fee: 7, limit: 500 };
 
 var PLAN_FEATURES = {
-  basic:    { seatingPlan:false, rowsMode:false, tableMode:false, venueLayout:false, annotations:false, levels:false, editTierColors:false, editTierNames:false, maxTiers:1, lockTiers:true },
-  standard: { seatingPlan:true,  rowsMode:false, tableMode:true,  venueLayout:false, annotations:false, levels:false, editTierColors:true,  editTierNames:true,  maxTiers:4, lockTiers:false },
-  premium:  { seatingPlan:true,  rowsMode:true,  tableMode:true,  venueLayout:true,  annotations:true,  levels:true,  editTierColors:true,  editTierNames:true,  maxTiers:6, lockTiers:false },
-  enterprise:{seatingPlan:true,  rowsMode:true,  tableMode:true,  venueLayout:true,  annotations:true,  levels:true,  editTierColors:true,  editTierNames:true,  maxTiers:6, lockTiers:false }
+  basic:     { seatingPlan:false, rowsMode:false, tableMode:false, venueLayout:false, annotations:false, levels:false, editTierColors:false, editTierNames:false, maxTiers:1, lockTiers:true  },
+  standard:  { seatingPlan:true,  rowsMode:false, tableMode:true,  venueLayout:false, annotations:false, levels:false, editTierColors:true,  editTierNames:true,  maxTiers:4, lockTiers:false },
+  premium:   { seatingPlan:true,  rowsMode:true,  tableMode:true,  venueLayout:true,  annotations:true,  levels:true,  editTierColors:true,  editTierNames:true,  maxTiers:6, lockTiers:false },
+  enterprise:{ seatingPlan:true,  rowsMode:true,  tableMode:true,  venueLayout:true,  annotations:true,  levels:true,  editTierColors:true,  editTierNames:true,  maxTiers:6, lockTiers:false }
 };
 var FEATURES = PLAN_FEATURES.standard;
 function getPlanFeatures(planId){ return PLAN_FEATURES[planId] || PLAN_FEATURES.standard; }
@@ -1711,7 +1719,6 @@ function contrastTextOn(hex){ return relativeLuminance(hex) > 0.5 ? "#0a0f14" : 
 
 function tierIdToCap(t){ return t.charAt(0).toUpperCase() + t.slice(1); }
 
-/* Basic plan = single cyan tier. Others = however many were selected. */
 function getActiveTiers(){
   if (FEATURES && FEATURES.lockTiers) return ["cyan"];
   return TIER_KEYS.slice(0, activeTierCount);
@@ -1831,7 +1838,7 @@ function showToast(msg, type, ms) {
   showToast._t = setTimeout(function(){ t.classList.remove("show"); }, ms);
 }
 
-/* ===== NEW: chair-mode info text updater ===== */
+/* Chair-mode info text updater */
 function updateChairModeInfo(){
   var info = $("chairModeInfo");
   var chk  = $("numberChairsToggle");
@@ -1848,13 +1855,12 @@ function updateChairModeInfo(){
   }
 }
 
-/* ===== NEW: whether the current event sells per chair ===== */
 function isSellingPerChair(){
   return !tableMode || numberChairs;
 }
 
 /* Part 3 ends here — Part 4 begins with the DOMContentLoaded handler. */
-document.addEventListener("DOMContentLoaded", function(){
+  document.addEventListener("DOMContentLoaded", function(){
   if(window.lucide) lucide.createIcons();
 
   function rowLabel(index) { var n = index, label = ""; do { label = String.fromCharCode(65 + (n % 26)) + label; n = Math.floor(n / 26) - 1; } while (n >= 0); return label; }
@@ -2014,11 +2020,7 @@ document.addEventListener("DOMContentLoaded", function(){
     return map;
   }
 
-  /* ===== CAPACITY =====
-     Rows mode: blocks × rows × seats (per-chair).
-     Tables mode + numberChairs ON:  tables × chairsPerTable.
-     Tables mode + numberChairs OFF: tables (whole-table sale).
-  */
+  /* CAPACITY: rows × seats, or tables × chairs, or tables alone (per-table sale) */
   function calculateCapacity() {
     var sections = parseInt($("totalLevel1").value) || 0; var total = 0;
     if (FEATURES && !FEATURES.seatingPlan) { $("totalCapacity").value = 0; return 0; }
@@ -2103,7 +2105,6 @@ document.addEventListener("DOMContentLoaded", function(){
     applyTierNameLock(); if (!f.editTierNames) resetTierNamesToDefaults();
     applyTierColourLock();
 
-    /* Basic plan → exactly one Standard (cyan) tier */
     if (f.lockTiers) {
       activeTierCount = 1;
       var tsel = $("tierCount");
@@ -2184,11 +2185,6 @@ document.addEventListener("DOMContentLoaded", function(){
     if (active.indexOf(prev) !== -1) sel.value = prev; else sel.value = "";
   }
 
-  /* ===== PER-TIER SEAT COUNTS =====
-     Basic plan (no seating): all tiers = 0.
-     Tables + numberChairs: chairsPerTable per table.
-     Tables + !numberChairs: 1 ticket per table.
-  */
   function getTierSeatCounts() {
     var counts = {}; TIER_KEYS.forEach(function(t){ counts[t] = 0; });
     var sections = parseInt($("totalLevel1").value) || 0;
@@ -2561,10 +2557,6 @@ document.addEventListener("DOMContentLoaded", function(){
     }
     return { chairs: chairs, w: W, h: H, chairSize: chairSize, cellW: m.cellW, cellH: m.cellH };
   }
-  /* ===== TABLE ROWS GROUP =====
-     Renders chairs around each table. When numberChairs=true the chairs show
-     their number; when false, plain dots (open seating).
-  */
   function buildTableRowsGroup(rows, shape, cfg, tier, scale) {
     scale = scale || 1; if (!rows || !rows.length) rows = [{ count: 1 }];
     var unit = buildTableUnit(shape, cfg, scale);
@@ -2888,7 +2880,7 @@ document.addEventListener("DOMContentLoaded", function(){
   }
 
 /* Part 4 ends here — Part 5 begins with renderSeatingPlan(). */
-                            function renderSeatingPlan() {
+    function renderSeatingPlan() {
     var container = $("seatingPlanPreview"); if (!container) return;
     if (!FEATURES.seatingPlan) { container.innerHTML = '<div class="seating-plan-title">Seating plans are not available on the Basic plan</div>'; return; }
     container.innerHTML = "";
@@ -3532,9 +3524,6 @@ document.addEventListener("DOMContentLoaded", function(){
     updateRotateHandle(); updateShapeRotateHandle(); if(window.lucide) lucide.createIcons();
   }
 
-  /* ===== FIX: Basic plan builds NO seating sections. ===== */
-  /* ===== CHAIR MODE: In table mode, save per-chair entries when numberChairs
-     is ON, or a single per-table entry when OFF. ===== */
   function buildSectionsData() {
     if (FEATURES && !FEATURES.seatingPlan) return [];
     var sections = []; var count = parseInt($("totalLevel1").value) || 0;
@@ -3561,12 +3550,10 @@ document.addEventListener("DOMContentLoaded", function(){
               tier: tier
             };
             if (numberChairs) {
-              /* Per-chair sale: capacity is the number of chairs. */
               tbl.chairs = cpt;
               tbl.bookable = cpt;
               tbl.mode = "chairs";
             } else {
-              /* Per-table sale: one ticket for the whole table. */
               tbl.seatsPerTable = cpt;
               tbl.bookable = 1;
               tbl.mode = "table";
@@ -3599,8 +3586,6 @@ document.addEventListener("DOMContentLoaded", function(){
     return sections;
   }
 
-  /* ===== FIX: Basic plan writes seatingMode: null and no seating payload.
-     Also stamps numberChairs so view-event.html knows how to allocate. ===== */
   function buildVenuePayload() {
     var wCm = getTableWidthCm(), lCm = getTableLengthCm(), spCm = getSpacingCm();
     var hasSeating = FEATURES && FEATURES.seatingPlan;
@@ -3784,6 +3769,16 @@ document.addEventListener("DOMContentLoaded", function(){
       setTimeout(function(){ window.location.href = "index.html#signin"; }, 1200);
       return;
     }
+
+    /* NEW: If the chosen plan has a seating plan, make sure the host visited Step 4 first. */
+    var planId = currentPlan.id;
+    var planNeedsSeating = (planId === "standard" || planId === "premium" || planId === "enterprise");
+    if (planNeedsSeating && !step4Visited) {
+      showToast("Please review the Seating Plan before saving. Arrange your blocks, then click Next: Revenue.", "error", 6500);
+      goToStep(4);
+      return;
+    }
+
     var requiredFields = [
       { id: "hostName", msg: "Host name is required" },
       { id: "hostEmail", msg: "Host email is required" },
@@ -3800,6 +3795,7 @@ document.addEventListener("DOMContentLoaded", function(){
         return;
       }
     }
+
     if (!$("venueName").value.trim()) {
       showToast("Please enter the venue name.", "error", 4200);
       goToStep(1); setTimeout(function(){ $("venueName").focus(); }, 350); return;
@@ -3901,7 +3897,6 @@ document.addEventListener("DOMContentLoaded", function(){
     $("rowOverridesBlock").style.display = tableMode ? "none" : "";
     $("rowTierGroup").style.display = tableMode ? "none" : "";
     autoLayoutAxis = tableMode ? "vertical" : "horizontal";
-    /* NEW: keep chair-mode info + state in sync with toggle */
     var chk = $("numberChairsToggle"); if (chk) { numberChairs = chk.checked; }
     updateChairModeInfo();
     applyShapeUI(); updateTableSummary(); refreshSectionInputs();
@@ -3928,7 +3923,6 @@ document.addEventListener("DOMContentLoaded", function(){
     if ($("seatingPlanOverlay").classList.contains("open")) renderSeatingPlanFull();
   }
 
-  /* ===== STEP NAV ===== */
   document.querySelectorAll(".step-tab").forEach(function(tab) {
     tab.addEventListener("click", function() { goToStep(parseInt(this.dataset.step)); });
   });
@@ -3939,7 +3933,6 @@ document.addEventListener("DOMContentLoaded", function(){
     btn.addEventListener("click", function() { goToStep(parseInt(this.dataset.prev)); });
   });
 
-  /* ===== TICKET FLIP ===== */
   ["flipTicketBtn","flipTicketBtn2","flipTicketBtn3"].forEach(function(id) {
     var btn = $(id); if (!btn) return;
     btn.addEventListener("click", function() {
@@ -3953,7 +3946,6 @@ document.addEventListener("DOMContentLoaded", function(){
     el.addEventListener("click", function(e) { if (e.target.closest("button, input, select, a")) return; setTicketFlipped(!this.classList.contains("flipped")); });
   });
 
-  /* ===== PLAN SELECTION ===== */
   document.querySelectorAll('input[name="plan"]').forEach(function(radio){
     radio.addEventListener("change", function(){
       currentPlan = { id: this.value, fee: parseFloat(this.dataset.fee) || 7, limit: parseInt(this.dataset.limit) || 500 };
@@ -3961,7 +3953,6 @@ document.addEventListener("DOMContentLoaded", function(){
     });
   });
 
-  /* ===== EVENT TYPE ===== */
   $("eventType").addEventListener("change", function(){
     var opt = this.options[this.selectedIndex]; var min = parseFloat(opt.dataset.min) || 0; var max = parseFloat(opt.dataset.max) || 0;
     var hint = $("eventTypeHint");
@@ -3978,7 +3969,6 @@ document.addEventListener("DOMContentLoaded", function(){
     updateRevenueCalculator(); renderTierBreakdown();
   }
 
-  /* ===== TIER COUNT ===== */
   $("tierCount").addEventListener("change", function(){
     if (FEATURES && FEATURES.lockTiers) {
       activeTierCount = 1;
@@ -3995,7 +3985,6 @@ document.addEventListener("DOMContentLoaded", function(){
     activeTierCount = v; this.value = String(v); updateTierVisibility();
   });
 
-  /* ===== TIER NAME / PRICE INPUTS ===== */
   document.querySelectorAll(".tier-name-input").forEach(function(inp){
     inp.addEventListener("input", function(){
       if (!FEATURES.editTierNames) { this.value = TIER_NAMES[this.dataset.tier] || TIER_DEFAULT_NAMES[this.dataset.tier]; return; }
@@ -4029,7 +4018,6 @@ document.addEventListener("DOMContentLoaded", function(){
   var sgs = $("seatGapSize"); if (sgs) sgs.addEventListener("input", function() { seatGapSize = Math.max(0.2, Math.min(3, parseFloat(this.value) || 1)); updateSeatGapBadge(); renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
   var sgr = $("seatGapRowSpecific"); if (sgr) sgr.addEventListener("change", function() { seatGapRowSpecific = this.value; updateSeatGapBadge(); renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
 
-  /* ===== CANVAS / STAGE ===== */
   $("canvasWidth").addEventListener("change", function() { canvasWidth = Math.max(400, Math.min(20000, parseInt(this.value)||1200)); this.value = canvasWidth; updateScaleHints(); updateTableValidation(); renderFullscreen(); });
   $("canvasHeight").addEventListener("change", function() { canvasHeight = Math.max(400, Math.min(20000, parseInt(this.value)||800)); this.value = canvasHeight; updateScaleHints(); updateTableValidation(); renderFullscreen(); });
   $("gridSize").addEventListener("change", function() { gridSize = Math.max(10, Math.min(200, parseInt(this.value)||50)); this.value = gridSize; updateScaleHints(); renderFullscreen(); });
@@ -4039,10 +4027,8 @@ document.addEventListener("DOMContentLoaded", function(){
   ["stageX","stageY","stageW","stageH","stageName"].forEach(function(id){ $(id).addEventListener("input", readStageInputs); });
   $("addLevelBtn").addEventListener("click", addLevel);
 
-  /* ===== TABLE MODE + CHAIR TOGGLE ===== */
   $("tableModeToggle").addEventListener("change", function(){ if (!FEATURES.rowsMode) { this.checked = true; return; } applyTableModeUI(); });
 
-  /* NEW: the chair numbering toggle */
   (function wireChairToggle(){
     var chk = $("numberChairsToggle");
     if (!chk) return;
@@ -4072,7 +4058,6 @@ document.addEventListener("DOMContentLoaded", function(){
   $("tableCount").addEventListener("change", function() { var v = Math.max(1, Math.min(50, parseInt(this.value) || 4)); this.value = v; updateTableSummary(); updateTierCountOptions(); updateRevenueCalculator(); });
   $("addTableRowBtn").addEventListener("click", addTableRow);
 
-  /* ===== ANNOTATIONS ===== */
   document.querySelectorAll(".annotation-tab").forEach(function(btn) {
     btn.addEventListener("click", function() {
       document.querySelectorAll(".annotation-tab").forEach(function(b){ b.classList.remove("active"); });
@@ -4097,7 +4082,6 @@ document.addEventListener("DOMContentLoaded", function(){
   ["lineX1","lineY1","lineX2","lineY2"].forEach(function(id) { $(id).addEventListener("input", updateLineFormDerived); });
   $("markerKind").addEventListener("change", function() { var mt = MARKER_TYPES[this.value] || MARKER_TYPES.exit; $("exitLabelInput").value = mt.defaultLabel; });
 
-  /* ===== SEAT FINDER ===== */
   $("seatFinderSection").addEventListener("change", function() { updateSeatFinderRowOptions(); updateSeatFinderSeatMax(); clearSeatHighlight(true); });
   $("seatFinderRow").addEventListener("change", function() { updateSeatFinderSeatMax(); clearSeatHighlight(true); });
   $("seatFinderSeat").addEventListener("input", function() { clearSeatHighlight(true); });
@@ -4105,7 +4089,6 @@ document.addEventListener("DOMContentLoaded", function(){
   $("seatFinderFindBtn").addEventListener("click", findAndHighlightSeat);
   $("seatFinderClearBtn").addEventListener("click", function() { clearSeatHighlight(false); });
 
-  /* ===== BLOCK / SECTION INPUTS ===== */
   $("totalLevel1").addEventListener("input", function() {
     var v = parseInt(this.value) || 1; v = Math.max(1, Math.min(26, v));
     rebuildSectionTabs(); refreshSectionInputs(); rebuildRowOverrides(); rebuildTableRowsEditor();
@@ -4152,7 +4135,6 @@ document.addEventListener("DOMContentLoaded", function(){
   });
   ["sectionKindSelect","cornerLinkSection"].forEach(function(id) { var el = $(id); if (!el) return; el.addEventListener("change", updateCornerFitHint); });
 
-  /* ===== SEAT VIEW / STAFF MODE ===== */
   ["toggleSeatView","fsToggleSeatView","spToggleSeatView"].forEach(function(id) {
     var btn = $(id); if (!btn) return;
     btn.addEventListener("click", function() {
@@ -4169,7 +4151,6 @@ document.addEventListener("DOMContentLoaded", function(){
     });
   });
 
-  /* ===== ROW / TIER / POSITION INPUTS ===== */
   $("sectionRowsInput").addEventListener("input", function() {
     if (tableMode) return;
     var v = parseInt(this.value); if (isNaN(v)) return;
@@ -4186,7 +4167,6 @@ document.addEventListener("DOMContentLoaded", function(){
   $("sectionRotationInput").addEventListener("input", function() { setSectionPos(currentEditingSection, "rotation", parseInt(this.value)||0); renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
   $("sectionScaleInput").addEventListener("input", function() { var v = parseFloat(this.value) || 1; setSectionPos(currentEditingSection, "scale", v); $("sectionScaleBadge").textContent = v.toFixed(2) + "×"; renderSeatingPlan(); if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen(); });
 
-  /* ===== FULLSCREEN VENUE ===== */
   $("openFullscreen").addEventListener("click", function() {
     if (!FEATURES.venueLayout) { showToast("The venue layout editor is available on Premium and Enterprise plans.", "error", 4200); return; }
     $("fullscreenOverlay").classList.add("open"); document.body.style.overflow = "hidden"; renderFullscreen();
@@ -4237,7 +4217,6 @@ document.addEventListener("DOMContentLoaded", function(){
     renderSeatingPlan(); renderFullscreen(); refreshSectionInputs(); showToast("Positions reset", "success");
   });
 
-  /* ===== FULLSCREEN SEATING PLAN ===== */
   $("viewSeatingPlanFull").addEventListener("click", function() {
     if (!FEATURES.seatingPlan) { showToast("Seating plans are not available on the Basic plan.", "error", 4200); return; }
     $("seatingPlanOverlay").classList.add("open"); document.body.style.overflow = "hidden"; lastFoundSeat = null; renderSeatingPlanFull();
@@ -4245,7 +4224,6 @@ document.addEventListener("DOMContentLoaded", function(){
   });
   $("closeSeatingPlanFull").addEventListener("click", function() { $("seatingPlanOverlay").classList.remove("open"); document.body.style.overflow = ""; });
 
-  /* ===== CLEAR ALL ===== */
   $("clearAllOverrides").addEventListener("click", function() {
     if (!confirm("Clear all block overrides, canvas elements, and reset positions?")) return;
     sectionRowOverrides = {}; sectionRowCounts = {}; sectionNames = {};
@@ -4266,7 +4244,6 @@ document.addEventListener("DOMContentLoaded", function(){
     if ($("fullscreenOverlay").classList.contains("open")) renderFullscreen();
   });
 
-  /* ===== EXPORT / SAVE ===== */
   $("exportJsonBtn").addEventListener("click", exportJson);
   $("exportCsvBtn").addEventListener("click", exportCsv);
 
@@ -4279,7 +4256,6 @@ document.addEventListener("DOMContentLoaded", function(){
   ["tierColor"].forEach(function(id) { $(id).addEventListener("change", updateAllTicketPreviews); });
   ["seatBlock","seatRow"].forEach(function(id) { $(id).addEventListener("input", function() { this.value = this.value.toUpperCase().replace(/[^A-Z]/g,"").slice(0,1); }); });
 
-  /* ===== VENUE FIELDS ===== */
   ["venueName", "venueCity", "venueAddress"].forEach(function(id){
     var el = $(id);
     if (!el) return;
@@ -4333,7 +4309,6 @@ document.addEventListener("DOMContentLoaded", function(){
   $("tableOptionsPanel").style.display = "none";
   $("fsSectionSpacing").value = sectionSpacingPx;
 
-  /* Read the toggle state on load */
   (function initChairToggle(){
     var chk = $("numberChairsToggle");
     if (chk) numberChairs = !!chk.checked;
