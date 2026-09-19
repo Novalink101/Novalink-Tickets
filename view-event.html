@@ -287,13 +287,18 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
   <div class="modal">
     <button class="mc" id="buyClose"><i data-lucide="x"></i></button>
     <h3>Get your ticket</h3>
-    <p class="msub">Pick a tier and enter your name.</p>
+    <p class="msub" id="buySubtitle">Pick a tier and enter your name.</p>
     <div class="info-b"><i data-lucide="info"></i><span>Free test mode — no payment required.</span></div>
     <div class="fg"><label for="buyTier">Ticket tier</label><select id="buyTier"></select></div>
     <div class="fg"><label for="buyGuestName">Guest name</label><input type="text" id="buyGuestName" placeholder="e.g., Jane Smith" maxlength="60" /></div>
+    <div class="fg">
+      <label for="buyQty" id="buyQtyLabel">Number of tickets</label>
+      <input type="number" id="buyQty" min="1" max="10" value="1" step="1" />
+      <p class="fh" id="buyQtyHint">Max 10 per purchase.</p>
+    </div>
     <div class="info-b" id="buySeatNote" style="margin-bottom:0;background:#eff6ff;border-color:#bfdbfe;color:#1e3a8a;">
       <i data-lucide="armchair"></i>
-      <span>Your seat will be <strong>automatically assigned</strong> from the next available seat in your chosen tier.</span>
+      <span id="buySeatNoteText">Your seat will be <strong>automatically assigned</strong> from the next available seat in your chosen tier.</span>
     </div>
     <div class="pc" style="margin-top:18px;"><span class="lbl">Total</span><span class="val" id="buyTotal">Free</span></div>
     <div class="actions">
@@ -386,7 +391,6 @@ function typeLabel(t){
   return t.charAt(0).toUpperCase() + t.slice(1);
 }
 
-/* ===== Plan / tier / seating helpers ===== */
 function planIdOf(data){
   if (!data) return "";
   if (data.plan && data.plan.id) return String(data.plan.id);
@@ -395,7 +399,6 @@ function planIdOf(data){
   return "";
 }
 
-/* Basic plan = one blue tier. Others = however many were configured. */
 function activeTierKeys(data){
   if (planIdOf(data) === "basic") return ["cyan"];
   var n = parseInt(data && data.activeTierCount, 10);
@@ -404,7 +407,6 @@ function activeTierKeys(data){
   return ["black","gold","silver","cyan","tier5","tier6"].slice(0, n);
 }
 
-/* True only when the event actually has a seat layout saved. */
 function eventHasSeatingPlan(data){
   if (!data) return false;
   if (planIdOf(data) === "basic") return false;
@@ -413,6 +415,18 @@ function eventHasSeatingPlan(data){
   var sections = data.sections || [];
   if (!sections.length) return false;
   return !!(data.seatingMode || sections[0].mode);
+}
+
+function eventSellsPerChair(data){
+  if (!data) return true;
+  if (data.numberChairs === false) return false;
+  return true;
+}
+
+function isPerTableSale(data){
+  if (!data) return false;
+  if (data.seatingMode !== "tables") return false;
+  return !eventSellsPerChair(data);
 }
 
 function getParam(n){
@@ -471,9 +485,12 @@ function renderEvent(data){
   $("eventDate").textContent = formatDate(data.startDate, data.startTime);
   $("eventCity").textContent = data.city || data.venueAddress || "Venue";
 
-  /* FIX: only show the seats chip when there really is a seating plan. */
   var seats = data.totalAttendees || (data.venue && data.venue.totalAttendees) || 0;
-  if (seats > 0 && eventHasSeatingPlan(data)){ $("eventSeatsMeta").style.display = "inline-flex"; $("eventSeats").textContent = seats + " seats"; }
+  if (seats > 0 && eventHasSeatingPlan(data)){
+    var chipLabel = isPerTableSale(data) ? (seats + (seats === 1 ? " table" : " tables")) : (seats + " seats");
+    $("eventSeatsMeta").style.display = "inline-flex";
+    $("eventSeats").textContent = chipLabel;
+  }
   else { $("eventSeatsMeta").style.display = "none"; }
 
   $("detailDateTime").textContent = formatDate(data.startDate, data.startTime);
@@ -503,7 +520,12 @@ function renderTiers(data){
   var colours = data.tierColours || {};
   var keys = activeTierKeys(data);
   var hasPlan = eventHasSeatingPlan(data);
-  var seatLabel = hasPlan ? "Available" : "General admission";
+  var perTable = isPerTableSale(data);
+
+  var seatLabel = !hasPlan ? "General admission"
+                : perTable ? "Per table"
+                : (data.seatingMode === "tables" ? "Per chair" : "Available");
+
   var defaults = {black:"Elite",gold:"VIP",silver:"Silver",cyan:"Standard",tier5:"Platinum",tier6:"Diamond"};
   var defCols = {black:"#1a202c",gold:"#ecc94b",silver:"#cbd5e1",cyan:"#00FFFF",tier5:"#a855f7",tier6:"#f472b6"};
   var anyShown = false;
@@ -518,7 +540,7 @@ function renderTiers(data){
     row.innerHTML =
       '<div class="tsw" style="background:' + esc(colour) + '"></div>' +
       '<div class="ti"><div class="tn">' + esc(name) + '</div><div class="tseats">' + esc(seatLabel) + '</div></div>' +
-      '<div class="tp">' + esc(formatMoney(price)) + '</div>';
+      '<div class="tp">' + esc(formatMoney(price)) + (perTable ? ' <span style="font-size:11px;color:var(--mut);font-family:inherit;">/table</span>' : '') + '</div>';
     list.appendChild(row);
   });
   if (!anyShown) {
@@ -549,7 +571,7 @@ function renderPrice(data){
   } else {
     var min = Math.min.apply(null, list);
     $("priceFrom").textContent = formatMoney(min);
-    $("priceSub").textContent = "Cheapest ticket tier";
+    $("priceSub").textContent = isPerTableSale(data) ? "Cheapest table tier" : "Cheapest ticket tier";
   }
 }
 
@@ -580,7 +602,6 @@ function rowLabelFn(index){
 function renderSeatingPlan(data){
   var section = $("seatingSection");
 
-  /* FIX: short-circuit when there is no seat layout saved. */
   if (!eventHasSeatingPlan(data)){
     section.classList.remove("visible");
     return;
@@ -601,8 +622,15 @@ function renderSeatingPlan(data){
   canvas.style.backgroundSize = gridSz + " " + gridSz;
 
   var summary = $("spSummary");
-  var mode = data.seatingMode === "tables" ? "Tables & chairs" : "Rows & seats";
-  summary.textContent = mode + " · " + sections.length + " block" + (sections.length === 1 ? "" : "s") + " · " + (data.totalAttendees || 0) + " seats total";
+  var mode = "";
+  if (data.seatingMode === "tables") {
+    mode = isPerTableSale(data) ? "Tables (open seating)" : "Tables & numbered chairs";
+  } else {
+    mode = "Rows & seats";
+  }
+  var unit = isPerTableSale(data) ? "table" : "seat";
+  var totalUnits = data.totalAttendees || 0;
+  summary.textContent = mode + " · " + sections.length + " block" + (sections.length === 1 ? "" : "s") + " · " + totalUnits + " " + unit + (totalUnits === 1 ? "" : "s") + " total";
 
   var stageEl = document.createElement("div");
   stageEl.className = "sp-stage";
@@ -783,8 +811,6 @@ function renderSeatingPlan(data){
       }
       blk.appendChild(wrap);
     } else if (sec.mode === "tables" && sec.tables){
-      var tw = (sec.tableWidthCm || 150);
-      var tl = (sec.tableLengthCm || tw);
       var tblW = 40, tblH = 40;
       var gap = 8;
       var wrap = document.createElement("div");
@@ -876,21 +902,14 @@ function attachListener(){
 }
 
 /* ============ SEAT ALLOCATOR ============ */
-/*
-  Walks the event's sections in order (Block A → B → C…),
-  then rows in order (Row A → B → C…),
-  then seats in order (1 → 2 → 3…).
-  Skips seats whose tier doesn't match the buyer's chosen tier.
-  Skips seats already in takenSeats.
-  Returns "<BLOCK>-<ROW>-<SEAT>" or "" if the tier is full.
-*/
 function findNextAvailableSeat(tier, takenSeats) {
   takenSeats = takenSeats || [];
   var sections = (eventData && eventData.sections) || [];
+  var perChair = eventSellsPerChair(eventData);
 
   for (var s = 0; s < sections.length; s++) {
     var sec = sections[s];
-    var blockLetter = String.fromCharCode(65 + s); // A, B, C, D…
+    var blockLetter = String.fromCharCode(65 + s);
 
     if (sec.mode === "rows" && sec.rows) {
       for (var r = 0; r < sec.rows.length; r++) {
@@ -923,8 +942,18 @@ function findNextAvailableSeat(tier, takenSeats) {
       for (var t = 0; t < sec.tables.length; t++) {
         var tbl = sec.tables[t];
         if (tbl.tier !== tier) continue;
-        var codeT = blockLetter + "-T" + (t + 1);
-        if (takenSeats.indexOf(codeT) === -1) return codeT;
+        var tblNum = tbl.table || (t + 1);
+
+        if (perChair) {
+          var cpt = tbl.chairs || tbl.bookable || 1;
+          for (var ci = 1; ci <= cpt; ci++) {
+            var codeChair = blockLetter + "-T" + tblNum + "-C" + ci;
+            if (takenSeats.indexOf(codeChair) === -1) return codeChair;
+          }
+        } else {
+          var codeTbl = blockLetter + "-T" + tblNum;
+          if (takenSeats.indexOf(codeTbl) === -1) return codeTbl;
+        }
       }
     }
   }
@@ -945,18 +974,65 @@ function openBuy(){
   var names = eventData.tierNames || {};
   var prices = eventData.tierPrices || {};
   var defaults = {black:"Elite",gold:"VIP",silver:"Silver",cyan:"Standard",tier5:"Platinum",tier6:"Diamond"};
+  var perTable = isPerTableSale(eventData);
   keys.forEach(function(t){
     var name = names[t] || defaults[t];
     var price = parseFloat(prices[t]) || 0;
     var opt = document.createElement("option");
     opt.value = t;
-    opt.textContent = name + (price > 0 ? " — " + formatMoney(price) : " — Free");
+    var suffix = perTable ? " — " + formatMoney(price) + " / table" : (price > 0 ? " — " + formatMoney(price) : " — Free");
+    opt.textContent = name + suffix;
     sel.appendChild(opt);
   });
 
-  /* FIX: hide the seat-assignment note when there is no seating plan. */
-  var seatNote = $("buySeatNote");
-  if (seatNote) seatNote.style.display = eventHasSeatingPlan(eventData) ? "" : "none";
+  var sub = $("buySubtitle");
+  if (sub) {
+    sub.textContent = perTable
+      ? "Pick a tier and how many tables."
+      : "Pick a tier and enter your name.";
+  }
+
+  /* Quantity picker — reset and label per mode */
+  var qtyInput = $("buyQty");
+  var qtyLabel = $("buyQtyLabel");
+  var qtyHint = $("buyQtyHint");
+  if (qtyInput) qtyInput.value = "1";
+  if (qtyLabel) {
+    if (perTable) qtyLabel.textContent = "Number of tables";
+    else if (eventData.seatingMode === "tables") qtyLabel.textContent = "Number of chairs";
+    else if (eventHasSeatingPlan(eventData)) qtyLabel.textContent = "Number of tickets";
+    else qtyLabel.textContent = "Number of tickets";
+  }
+  if (qtyHint) {
+    if (perTable) {
+      var per = (eventData.tableConfig && eventData.tableConfig.chairsPerTable) || 0;
+      qtyHint.textContent = per > 0
+        ? "Each table admits up to " + per + " guests. Max 10 per purchase."
+        : "Each table admits all its guests. Max 10 per purchase.";
+    } else if (eventHasSeatingPlan(eventData)) {
+      qtyHint.textContent = "Each ticket gets its own seat. Max 10 per purchase.";
+    } else {
+      qtyHint.textContent = "General admission — no assigned seats. Max 10 per purchase.";
+    }
+  }
+
+  /* Seat note text */
+  var note = $("buySeatNote");
+  var noteText = $("buySeatNoteText");
+  if (note && noteText) {
+    if (!eventHasSeatingPlan(eventData)) {
+      note.style.display = "none";
+    } else {
+      note.style.display = "";
+      if (perTable) {
+        noteText.innerHTML = 'You are booking <strong>whole tables</strong>. Each ticket admits up to <strong>' + ((eventData.tableConfig && eventData.tableConfig.chairsPerTable) || "the number of") + ' guests</strong>.';
+      } else if (eventData.seatingMode === "tables") {
+        noteText.innerHTML = 'Each chair will be <strong>automatically assigned</strong> at the next available table in your tier.';
+      } else {
+        noteText.innerHTML = 'Each seat will be <strong>automatically assigned</strong> from the next available seats in your chosen tier.';
+      }
+    }
+  }
 
   $("buyGuestName").value = currentUser.displayName || "";
   updateBuyPrice();
@@ -970,7 +1046,11 @@ function updateBuyPrice(){
   var t = $("buyTier").value;
   var prices = eventData.tierPrices || {};
   var price = parseFloat(prices[t]) || 0;
-  $("buyTotal").textContent = price > 0 ? formatMoney(price) : "Free";
+  var qty = parseInt($("buyQty") ? $("buyQty").value : 1, 10);
+  if (isNaN(qty) || qty < 1) qty = 1;
+  if (qty > 10) qty = 10;
+  var total = price * qty;
+  $("buyTotal").textContent = total > 0 ? formatMoney(total) : "Free";
 }
 
 function generateTicketId(){
@@ -979,19 +1059,27 @@ function generateTicketId(){
   return "TKT-" + tm + "-" + rand;
 }
 
-/* ============ BUY / CONFIRM WITH ATOMIC SEAT ALLOCATION ============ */
-/* FIX: when the event has no seating plan, skip seat allocation entirely. */
+/* ============ CONFIRM BUY (multi-ticket) ============ */
 function confirmBuy(){
   if (!eventData || !currentUser) return;
   var tier = $("buyTier").value;
   var guest = ($("buyGuestName").value || "").trim();
+  var qty = parseInt($("buyQty") ? $("buyQty").value : 1, 10);
+  if (isNaN(qty) || qty < 1) qty = 1;
+  if (qty > 10) qty = 10;
+
   if (!guest) { showToast("Please enter a guest name.", "error"); $("buyGuestName").focus(); return; }
 
   var btn = $("buyConfirm");
   var orig = btn.innerHTML;
   btn.disabled = true;
   var needsSeat = eventHasSeatingPlan(eventData);
-  btn.innerHTML = '<span class="spinner"></span> ' + (needsSeat ? 'Allocating seat…' : 'Creating ticket…');
+  var perTable = isPerTableSale(eventData);
+  var doingLabel = !needsSeat
+    ? "Creating tickets…"
+    : (perTable ? "Booking " + qty + " table" + (qty === 1 ? "" : "s") + "…"
+                : "Allocating " + qty + " seat" + (qty === 1 ? "" : "s") + "…");
+  btn.innerHTML = '<span class="spinner"></span> ' + doingLabel;
 
   var tierName = (eventData.tierNames && eventData.tierNames[tier]) || tier;
   var price = parseFloat((eventData.tierPrices || {})[tier]) || 0;
@@ -1004,44 +1092,64 @@ function confirmBuy(){
         throw new Error("This event no longer exists.");
       }
       var liveData = eventDoc.data() || {};
-      var assignedSeat = "";
+      var takenSeats = Array.isArray(liveData.takenSeats) ? liveData.takenSeats.slice() : [];
+      var assignedSeats = [];
+      var ticketRefs = [];
 
-      if (needsSeat) {
-        var takenSeats = Array.isArray(liveData.takenSeats) ? liveData.takenSeats.slice() : [];
-        assignedSeat = findNextAvailableSeat(tier, takenSeats);
-        if (!assignedSeat) {
-          throw new Error("No more seats available in the " + tierName + " tier.");
+      for (var i = 0; i < qty; i++) {
+        var assignedSeat = "";
+        if (needsSeat) {
+          assignedSeat = findNextAvailableSeat(tier, takenSeats);
+          if (!assignedSeat) {
+            throw new Error(perTable
+              ? "Only " + i + " table" + (i === 1 ? "" : "s") + " available in the " + tierName + " tier."
+              : "Only " + i + " seat" + (i === 1 ? "" : "s") + " available in the " + tierName + " tier.");
+          }
+          takenSeats.push(assignedSeat);
         }
-        takenSeats.push(assignedSeat);
+        assignedSeats.push(assignedSeat);
+
+        var ticketId = generateTicketId();
+        var ticketRef = ticketsCol.doc();
+        ticketRefs.push(ticketRef);
+        transaction.set(ticketRef, {
+          ticketId: ticketId,
+          eventId: eventId,
+          eventName: eventData.eventName || "",
+          tier: tier,
+          guestName: guest,
+          seat: assignedSeat,
+          status: "valid",
+          pricePaid: price,
+          buyerUid: currentUser.uid,
+          buyerEmail: currentUser.email || "",
+          buyerName: currentUser.displayName || "",
+          createdAt: firebase.firestore.FieldValue.serverTimestamp()
+        });
+      }
+
+      if (needsSeat && assignedSeats.length) {
         transaction.update(eventRef, { takenSeats: takenSeats });
       }
 
-      var ticketId = generateTicketId();
-      var ticketRef = ticketsCol.doc();
-      var payload = {
-        ticketId: ticketId,
-        eventId: eventId,
-        eventName: eventData.eventName || "",
-        tier: tier,
-        guestName: guest,
-        seat: assignedSeat,
-        status: "valid",
-        pricePaid: price,
-        buyerUid: currentUser.uid,
-        buyerEmail: currentUser.email || "",
-        buyerName: currentUser.displayName || "",
-        createdAt: firebase.firestore.FieldValue.serverTimestamp()
-      };
-      transaction.set(ticketRef, payload);
-
-      return { ticketRef: ticketRef, seat: assignedSeat };
+      return { ticketRefs: ticketRefs, seats: assignedSeats };
     });
   })
   .then(function(result){
-    showToast(result.seat ? ("Seat " + result.seat + " allocated!") : "Ticket confirmed!", "success");
+    var msg;
+    if (!needsSeat) {
+      msg = qty === 1 ? "Ticket confirmed!" : qty + " tickets confirmed!";
+    } else if (perTable) {
+      msg = qty === 1 ? ("Table " + result.seats[0] + " booked!") : (qty + " tables booked!");
+    } else {
+      msg = qty === 1 ? ("Seat " + result.seats[0] + " allocated!") : (qty + " seats allocated!");
+    }
+    showToast(msg, "success");
     setTimeout(function(){
-      window.location.href = "view-card.html?event=" + encodeURIComponent(eventId)
-                            + "&ticket=" + encodeURIComponent(result.ticketRef.id);
+      var dest = qty === 1
+        ? "view-card.html?event=" + encodeURIComponent(eventId) + "&ticket=" + encodeURIComponent(result.ticketRefs[0].id)
+        : "my-cards.html";
+      window.location.href = dest;
     }, 700);
   })
   .catch(function(err){
@@ -1112,6 +1220,16 @@ document.addEventListener("DOMContentLoaded", function(){
 
   $("getTicketsBtn").addEventListener("click", openBuy);
   $("buyTier").addEventListener("change", updateBuyPrice);
+  if ($("buyQty")) {
+    $("buyQty").addEventListener("input", updateBuyPrice);
+    $("buyQty").addEventListener("change", function(){
+      var v = parseInt(this.value, 10);
+      if (isNaN(v) || v < 1) v = 1;
+      if (v > 10) v = 10;
+      this.value = v;
+      updateBuyPrice();
+    });
+  }
   $("buyClose").addEventListener("click", function(){ $("buyModal").classList.remove("open"); document.body.style.overflow = ""; });
   $("buyCancel").addEventListener("click", function(){ $("buyModal").classList.remove("open"); document.body.style.overflow = ""; });
   $("buyModal").addEventListener("click", function(e){ if (e.target === this){ this.classList.remove("open"); document.body.style.overflow = ""; } });
