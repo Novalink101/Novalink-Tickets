@@ -92,8 +92,6 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .hn{font-weight:800;font-size:14px}
 .hl{font-size:11.5px;color:var(--mut);font-weight:600}
 .own-actions{display:flex;flex-direction:column;gap:8px;margin-top:16px;padding-top:16px;border-top:1px dashed var(--bd)}
-
-/* SEATING PLAN */
 .sp-section{margin-top:40px;padding-top:32px;border-top:1px dashed var(--bd);display:none}
 .sp-section.visible{display:block}
 .sp-head{display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:12px;margin-bottom:18px}
@@ -132,8 +130,6 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .sp-lgsw{width:14px;height:14px;border-radius:4px;flex-shrink:0;border:1px solid rgba(0,0,0,0.1)}
 .sp-lgsw.staff{background:#dc2626}
 .sp-empty{text-align:center;color:var(--mut);font-size:13.5px;padding:24px}
-
-/* MODALS */
 .mo{position:fixed;inset:0;background:rgba(10,15,20,0.6);backdrop-filter:blur(8px);display:none;align-items:flex-start;justify-content:center;z-index:100;padding:24px 20px;overflow-y:auto}
 .mo.open{display:flex}
 .modal{background:var(--sf);border:1px solid var(--bd);border-radius:18px;max-width:520px;width:100%;padding:30px 26px;position:relative;margin:auto}
@@ -295,7 +291,7 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
     <div class="info-b"><i data-lucide="info"></i><span>Free test mode — no payment required.</span></div>
     <div class="fg"><label for="buyTier">Ticket tier</label><select id="buyTier"></select></div>
     <div class="fg"><label for="buyGuestName">Guest name</label><input type="text" id="buyGuestName" placeholder="e.g., Jane Smith" maxlength="60" /></div>
-    <div class="info-b" style="margin-bottom:0;background:#eff6ff;border-color:#bfdbfe;color:#1e3a8a;">
+    <div class="info-b" id="buySeatNote" style="margin-bottom:0;background:#eff6ff;border-color:#bfdbfe;color:#1e3a8a;">
       <i data-lucide="armchair"></i>
       <span>Your seat will be <strong>automatically assigned</strong> from the next available seat in your chosen tier.</span>
     </div>
@@ -390,6 +386,35 @@ function typeLabel(t){
   return t.charAt(0).toUpperCase() + t.slice(1);
 }
 
+/* ===== Plan / tier / seating helpers ===== */
+function planIdOf(data){
+  if (!data) return "";
+  if (data.plan && data.plan.id) return String(data.plan.id);
+  if (data.revenue && data.revenue.planId) return String(data.revenue.planId);
+  if (data.planId) return String(data.planId);
+  return "";
+}
+
+/* Basic plan = one blue tier. Others = however many were configured. */
+function activeTierKeys(data){
+  if (planIdOf(data) === "basic") return ["cyan"];
+  var n = parseInt(data && data.activeTierCount, 10);
+  if (!isFinite(n) || n < 1) n = 4;
+  if (n > 6) n = 6;
+  return ["black","gold","silver","cyan","tier5","tier6"].slice(0, n);
+}
+
+/* True only when the event actually has a seat layout saved. */
+function eventHasSeatingPlan(data){
+  if (!data) return false;
+  if (planIdOf(data) === "basic") return false;
+  if (data.features && data.features.seatingPlan === false) return false;
+  if (planIdOf(data) === "standard" && data.seatingMode === null) return false;
+  var sections = data.sections || [];
+  if (!sections.length) return false;
+  return !!(data.seatingMode || sections[0].mode);
+}
+
 function getParam(n){
   try { return new URLSearchParams(window.location.search).get(n); }
   catch(e){ return null; }
@@ -445,8 +470,10 @@ function renderEvent(data){
   $("eventTitle").textContent = data.eventName || "Untitled Event";
   $("eventDate").textContent = formatDate(data.startDate, data.startTime);
   $("eventCity").textContent = data.city || data.venueAddress || "Venue";
+
+  /* FIX: only show the seats chip when there really is a seating plan. */
   var seats = data.totalAttendees || (data.venue && data.venue.totalAttendees) || 0;
-  if (seats > 0){ $("eventSeatsMeta").style.display = "inline-flex"; $("eventSeats").textContent = seats + " seats"; }
+  if (seats > 0 && eventHasSeatingPlan(data)){ $("eventSeatsMeta").style.display = "inline-flex"; $("eventSeats").textContent = seats + " seats"; }
   else { $("eventSeatsMeta").style.display = "none"; }
 
   $("detailDateTime").textContent = formatDate(data.startDate, data.startTime);
@@ -474,8 +501,9 @@ function renderTiers(data){
   var prices = data.tierPrices || {};
   var names = data.tierNames || {};
   var colours = data.tierColours || {};
-  var active = data.activeTierCount || 4;
-  var keys = ["black","gold","silver","cyan","tier5","tier6"].slice(0, active);
+  var keys = activeTierKeys(data);
+  var hasPlan = eventHasSeatingPlan(data);
+  var seatLabel = hasPlan ? "Available" : "General admission";
   var defaults = {black:"Elite",gold:"VIP",silver:"Silver",cyan:"Standard",tier5:"Platinum",tier6:"Diamond"};
   var defCols = {black:"#1a202c",gold:"#ecc94b",silver:"#cbd5e1",cyan:"#00FFFF",tier5:"#a855f7",tier6:"#f472b6"};
   var anyShown = false;
@@ -489,7 +517,7 @@ function renderTiers(data){
     row.className = "tier";
     row.innerHTML =
       '<div class="tsw" style="background:' + esc(colour) + '"></div>' +
-      '<div class="ti"><div class="tn">' + esc(name) + '</div><div class="tseats">Available</div></div>' +
+      '<div class="ti"><div class="tn">' + esc(name) + '</div><div class="tseats">' + esc(seatLabel) + '</div></div>' +
       '<div class="tp">' + esc(formatMoney(price)) + '</div>';
     list.appendChild(row);
   });
@@ -511,7 +539,7 @@ function renderTiers(data){
 function renderPrice(data){
   var prices = data.tierPrices || {};
   var list = [];
-  ["black","gold","silver","cyan","tier5","tier6"].forEach(function(t){
+  activeTierKeys(data).forEach(function(t){
     var v = parseFloat(prices[t]);
     if (!isNaN(v) && v > 0) list.push(v);
   });
@@ -550,16 +578,16 @@ function rowLabelFn(index){
 }
 
 function renderSeatingPlan(data){
-  var sections = data.sections || [];
-  var hasSeatData = sections.length > 0 && (data.seatingMode || sections[0].mode);
   var section = $("seatingSection");
 
-  if (!hasSeatData){
+  /* FIX: short-circuit when there is no seat layout saved. */
+  if (!eventHasSeatingPlan(data)){
     section.classList.remove("visible");
     return;
   }
   section.classList.add("visible");
 
+  var sections = data.sections || [];
   var canvasW = data.canvasWidth || 1200;
   var canvasH = data.canvasHeight || 800;
   var stage = data.stage || { x: 500, y: 60, width: 200, height: 60, name: "STAGE" };
@@ -791,8 +819,7 @@ function renderSeatingPlan(data){
 
   var legend = $("spLegend");
   legend.innerHTML = "";
-  var active = data.activeTierCount || 4;
-  var keys = ["black","gold","silver","cyan","tier5","tier6"].slice(0, active);
+  var keys = activeTierKeys(data);
   var defaultNames = {black:"Elite",gold:"VIP",silver:"Silver",cyan:"Standard",tier5:"Platinum",tier6:"Diamond"};
   keys.forEach(function(t){
     var name = (data.tierNames && data.tierNames[t]) || defaultNames[t];
@@ -914,8 +941,7 @@ function openBuy(){
   }
   var sel = $("buyTier");
   sel.innerHTML = "";
-  var active = eventData.activeTierCount || 4;
-  var keys = ["black","gold","silver","cyan","tier5","tier6"].slice(0, active);
+  var keys = activeTierKeys(eventData);
   var names = eventData.tierNames || {};
   var prices = eventData.tierPrices || {};
   var defaults = {black:"Elite",gold:"VIP",silver:"Silver",cyan:"Standard",tier5:"Platinum",tier6:"Diamond"};
@@ -927,6 +953,11 @@ function openBuy(){
     opt.textContent = name + (price > 0 ? " — " + formatMoney(price) : " — Free");
     sel.appendChild(opt);
   });
+
+  /* FIX: hide the seat-assignment note when there is no seating plan. */
+  var seatNote = $("buySeatNote");
+  if (seatNote) seatNote.style.display = eventHasSeatingPlan(eventData) ? "" : "none";
+
   $("buyGuestName").value = currentUser.displayName || "";
   updateBuyPrice();
   $("buyModal").classList.add("open");
@@ -949,6 +980,7 @@ function generateTicketId(){
 }
 
 /* ============ BUY / CONFIRM WITH ATOMIC SEAT ALLOCATION ============ */
+/* FIX: when the event has no seating plan, skip seat allocation entirely. */
 function confirmBuy(){
   if (!eventData || !currentUser) return;
   var tier = $("buyTier").value;
@@ -958,7 +990,8 @@ function confirmBuy(){
   var btn = $("buyConfirm");
   var orig = btn.innerHTML;
   btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Allocating seat…';
+  var needsSeat = eventHasSeatingPlan(eventData);
+  btn.innerHTML = '<span class="spinner"></span> ' + (needsSeat ? 'Allocating seat…' : 'Creating ticket…');
 
   var tierName = (eventData.tierNames && eventData.tierNames[tier]) || tier;
   var price = parseFloat((eventData.tierPrices || {})[tier]) || 0;
@@ -971,15 +1004,17 @@ function confirmBuy(){
         throw new Error("This event no longer exists.");
       }
       var liveData = eventDoc.data() || {};
-      var takenSeats = Array.isArray(liveData.takenSeats) ? liveData.takenSeats.slice() : [];
+      var assignedSeat = "";
 
-      var assignedSeat = findNextAvailableSeat(tier, takenSeats);
-      if (!assignedSeat) {
-        throw new Error("No more seats available in the " + tierName + " tier.");
+      if (needsSeat) {
+        var takenSeats = Array.isArray(liveData.takenSeats) ? liveData.takenSeats.slice() : [];
+        assignedSeat = findNextAvailableSeat(tier, takenSeats);
+        if (!assignedSeat) {
+          throw new Error("No more seats available in the " + tierName + " tier.");
+        }
+        takenSeats.push(assignedSeat);
+        transaction.update(eventRef, { takenSeats: takenSeats });
       }
-
-      takenSeats.push(assignedSeat);
-      transaction.update(eventRef, { takenSeats: takenSeats });
 
       var ticketId = generateTicketId();
       var ticketRef = ticketsCol.doc();
@@ -1003,7 +1038,7 @@ function confirmBuy(){
     });
   })
   .then(function(result){
-    showToast("Seat " + result.seat + " allocated!", "success");
+    showToast(result.seat ? ("Seat " + result.seat + " allocated!") : "Ticket confirmed!", "success");
     setTimeout(function(){
       window.location.href = "view-card.html?event=" + encodeURIComponent(eventId)
                             + "&ticket=" + encodeURIComponent(result.ticketRef.id);
@@ -1093,4 +1128,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-</html>
+  </html>
