@@ -290,12 +290,12 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
     <p class="msub" id="buySubtitle">Pick a tier and enter your name.</p>
     <div class="info-b"><i data-lucide="info"></i><span>Free test mode — no payment required.</span></div>
     <div class="fg"><label for="buyTier">Ticket tier</label><select id="buyTier"></select></div>
-    <div class="fg"><label for="buyGuestName">Guest name</label><input type="text" id="buyGuestName" placeholder="e.g., Jane Smith" maxlength="60" /></div>
     <div class="fg">
       <label for="buyQty" id="buyQtyLabel">Number of tickets</label>
       <input type="number" id="buyQty" min="1" max="10" value="1" step="1" />
       <p class="fh" id="buyQtyHint">Max 10 per purchase.</p>
     </div>
+    <div id="buyGuestsContainer"></div>
     <div class="info-b" id="buySeatNote" style="margin-bottom:0;background:#eff6ff;border-color:#bfdbfe;color:#1e3a8a;">
       <i data-lucide="armchair"></i>
       <span id="buySeatNoteText">Your seat will be <strong>automatically assigned</strong> from the next available seat in your chosen tier.</span>
@@ -961,6 +961,48 @@ function findNextAvailableSeat(tier, takenSeats) {
 }
 
 /* ============ BUY MODAL ============ */
+function buildGuestFields(qty){
+  var container = $("buyGuestsContainer");
+  if (!container) return;
+  if (isNaN(qty) || qty < 1) qty = 1;
+  if (qty > 10) qty = 10;
+
+  /* Preserve any names the user has already typed */
+  var existing = [];
+  container.querySelectorAll(".guest-name-input").forEach(function(inp){
+    existing.push(inp.value);
+  });
+
+  container.innerHTML = "";
+  var buyerName = (currentUser && currentUser.displayName) || "";
+
+  for (var i = 0; i < qty; i++) {
+    var fg = document.createElement("div");
+    fg.className = "fg";
+
+    var label = document.createElement("label");
+    label.setAttribute("for", "buyGuest" + i);
+    label.textContent = qty === 1 ? "Guest name" : ("Guest " + (i + 1) + " name");
+
+    var inp = document.createElement("input");
+    inp.type = "text";
+    inp.id = "buyGuest" + i;
+    inp.className = "guest-name-input";
+    inp.maxLength = 60;
+    inp.placeholder = i === 0 ? "e.g., Jane Smith" : ("Guest " + (i + 1));
+
+    if (existing[i] !== undefined && existing[i] !== "") {
+      inp.value = existing[i];
+    } else if (i === 0 && buyerName) {
+      inp.value = buyerName;
+    }
+
+    fg.appendChild(label);
+    fg.appendChild(inp);
+    container.appendChild(fg);
+  }
+}
+
 function openBuy(){
   if (!eventData) return;
   if (!currentUser) {
@@ -989,10 +1031,9 @@ function openBuy(){
   if (sub) {
     sub.textContent = perTable
       ? "Pick a tier and how many tables."
-      : "Pick a tier and enter your name.";
+      : "Pick a tier and enter guest names.";
   }
 
-  /* Quantity picker — reset and label per mode */
   var qtyInput = $("buyQty");
   var qtyLabel = $("buyQtyLabel");
   var qtyHint = $("buyQtyHint");
@@ -1000,7 +1041,6 @@ function openBuy(){
   if (qtyLabel) {
     if (perTable) qtyLabel.textContent = "Number of tables";
     else if (eventData.seatingMode === "tables") qtyLabel.textContent = "Number of chairs";
-    else if (eventHasSeatingPlan(eventData)) qtyLabel.textContent = "Number of tickets";
     else qtyLabel.textContent = "Number of tickets";
   }
   if (qtyHint) {
@@ -1015,6 +1055,9 @@ function openBuy(){
       qtyHint.textContent = "General admission — no assigned seats. Max 10 per purchase.";
     }
   }
+
+  /* Build one name field per ticket */
+  buildGuestFields(1);
 
   /* Seat note text */
   var note = $("buySeatNote");
@@ -1034,7 +1077,6 @@ function openBuy(){
     }
   }
 
-  $("buyGuestName").value = currentUser.displayName || "";
   updateBuyPrice();
   $("buyModal").classList.add("open");
   document.body.style.overflow = "hidden";
@@ -1059,16 +1101,36 @@ function generateTicketId(){
   return "TKT-" + tm + "-" + rand;
 }
 
-/* ============ CONFIRM BUY (multi-ticket) ============ */
+/* ============ CONFIRM BUY (multi-ticket, multi-name) ============ */
 function confirmBuy(){
   if (!eventData || !currentUser) return;
   var tier = $("buyTier").value;
-  var guest = ($("buyGuestName").value || "").trim();
   var qty = parseInt($("buyQty") ? $("buyQty").value : 1, 10);
   if (isNaN(qty) || qty < 1) qty = 1;
   if (qty > 10) qty = 10;
 
-  if (!guest) { showToast("Please enter a guest name.", "error"); $("buyGuestName").focus(); return; }
+  /* Collect one name per ticket */
+  var guestNames = [];
+  document.querySelectorAll(".guest-name-input").forEach(function(inp){
+    guestNames.push((inp.value || "").trim());
+  });
+
+  if (guestNames.length !== qty) {
+    /* Rebuild in case the qty field and fields are out of sync */
+    buildGuestFields(qty);
+    showToast("Please fill in each guest name.", "error");
+    return;
+  }
+
+  for (var gi = 0; gi < guestNames.length; gi++) {
+    if (!guestNames[gi]) {
+      var msg = qty === 1 ? "Please enter a guest name." : ("Please enter a name for Guest " + (gi + 1) + ".");
+      showToast(msg, "error");
+      var target = document.getElementById("buyGuest" + gi);
+      if (target) target.focus();
+      return;
+    }
+  }
 
   var btn = $("buyConfirm");
   var orig = btn.innerHTML;
@@ -1117,7 +1179,7 @@ function confirmBuy(){
           eventId: eventId,
           eventName: eventData.eventName || "",
           tier: tier,
-          guestName: guest,
+          guestName: guestNames[i],
           seat: assignedSeat,
           status: "valid",
           pricePaid: price,
@@ -1220,16 +1282,25 @@ document.addEventListener("DOMContentLoaded", function(){
 
   $("getTicketsBtn").addEventListener("click", openBuy);
   $("buyTier").addEventListener("change", updateBuyPrice);
+
   if ($("buyQty")) {
-    $("buyQty").addEventListener("input", updateBuyPrice);
+    $("buyQty").addEventListener("input", function(){
+      updateBuyPrice();
+      var v = parseInt(this.value, 10);
+      if (!isNaN(v) && v >= 1 && v <= 10) {
+        buildGuestFields(v);
+      }
+    });
     $("buyQty").addEventListener("change", function(){
       var v = parseInt(this.value, 10);
       if (isNaN(v) || v < 1) v = 1;
       if (v > 10) v = 10;
       this.value = v;
       updateBuyPrice();
+      buildGuestFields(v);
     });
   }
+
   $("buyClose").addEventListener("click", function(){ $("buyModal").classList.remove("open"); document.body.style.overflow = ""; });
   $("buyCancel").addEventListener("click", function(){ $("buyModal").classList.remove("open"); document.body.style.overflow = ""; });
   $("buyModal").addEventListener("click", function(e){ if (e.target === this){ this.classList.remove("open"); document.body.style.overflow = ""; } });
