@@ -564,8 +564,8 @@ body.staff-seat-mode .fs-seat:hover{outline:2px solid #fff;outline-offset:2px;tr
 .venue-preset-hint{display:inline-flex;align-items:center;gap:6px;margin-top:6px;padding:5px 10px;background:var(--cyan-50);border:1px solid var(--cyan-400);border-radius:8px;font-size:11.5px;font-weight:700;color:var(--cyan-700);word-break:break-word;max-width:100%}
 .venue-preset-hint i{width:13px;height:13px;flex-shrink:0}
 </style>
-</head>
-<body>
+  </head>
+  <body>
 <header class="site-header">
   <div class="container header-inner">
     <a href="index.html" class="novalink-logo">
@@ -1491,7 +1491,7 @@ body.staff-seat-mode .fs-seat:hover{outline:2px solid #fff;outline-offset:2px;tr
 </div>
 
 <div class="toast" id="toast"></div>
-                        <script src="routing-engine.js"></script>
+<script src="routing-engine.js"></script>
 <script>
 (function(){
 'use strict';
@@ -1557,7 +1557,7 @@ function goToStep(n) {
   window.scrollTo({ top: 0, behavior: "smooth" });
   if (n === 2) updatePlanSnapshot();
   if (n === 4) {
-    /* NEW: mark that the host visited the seating plan step */
+    /* Mark that the host visited the seating plan step */
     step4Visited = true;
     renderSeatingPlan();
     setTimeout(function(){
@@ -1569,7 +1569,7 @@ function goToStep(n) {
 
 var isSaved = false;
 var savedEventId = null;
-/* NEW: set true the first time the host lands on Step 4.
+/* Set true the first time the host lands on Step 4.
    Used to gate saving when the plan requires a seating layout. */
 var step4Visited = false;
 
@@ -1679,9 +1679,12 @@ var LARGE_VENUE_THRESHOLD = RE.LARGE_VENUE_THRESHOLD || 5000;
 var activeTierCount = DEFAULT_TIERS;
 var currentPlan = { id: "standard", fee: 7, limit: 500 };
 
+/* ===== PLAN FEATURES =====
+   Standard plan now has venueLayout: true (was false).
+   This unlocks the Full Screen venue editor on Standard. */
 var PLAN_FEATURES = {
   basic:     { seatingPlan:false, rowsMode:false, tableMode:false, venueLayout:false, annotations:false, levels:false, editTierColors:false, editTierNames:false, maxTiers:1, lockTiers:true  },
-  standard:  { seatingPlan:true,  rowsMode:false, tableMode:true,  venueLayout:false, annotations:false, levels:false, editTierColors:true,  editTierNames:true,  maxTiers:4, lockTiers:false },
+  standard:  { seatingPlan:true,  rowsMode:false, tableMode:true,  venueLayout:true,  annotations:false, levels:false, editTierColors:true,  editTierNames:true,  maxTiers:4, lockTiers:false },
   premium:   { seatingPlan:true,  rowsMode:true,  tableMode:true,  venueLayout:true,  annotations:true,  levels:true,  editTierColors:true,  editTierNames:true,  maxTiers:6, lockTiers:false },
   enterprise:{ seatingPlan:true,  rowsMode:true,  tableMode:true,  venueLayout:true,  annotations:true,  levels:true,  editTierColors:true,  editTierNames:true,  maxTiers:6, lockTiers:false }
 };
@@ -1860,7 +1863,7 @@ function isSellingPerChair(){
 }
 
 /* Part 3 ends here — Part 4 begins with the DOMContentLoaded handler. */
-  document.addEventListener("DOMContentLoaded", function(){
+ document.addEventListener("DOMContentLoaded", function(){
   if(window.lucide) lucide.createIcons();
 
   function rowLabel(index) { var n = index, label = ""; do { label = String.fromCharCode(65 + (n % 26)) + label; n = Math.floor(n / 26) - 1; } while (n >= 0); return label; }
@@ -2020,7 +2023,6 @@ function isSellingPerChair(){
     return map;
   }
 
-  /* CAPACITY: rows × seats, or tables × chairs, or tables alone (per-table sale) */
   function calculateCapacity() {
     var sections = parseInt($("totalLevel1").value) || 0; var total = 0;
     if (FEATURES && !FEATURES.seatingPlan) { $("totalCapacity").value = 0; return 0; }
@@ -3770,7 +3772,7 @@ function isSellingPerChair(){
       return;
     }
 
-    /* NEW: If the chosen plan has a seating plan, make sure the host visited Step 4 first. */
+    /* If the chosen plan has a seating plan, make sure the host visited Step 4 first. */
     var planId = currentPlan.id;
     var planNeedsSeating = (planId === "standard" || planId === "premium" || planId === "enterprise");
     if (planNeedsSeating && !step4Visited) {
