@@ -297,136 +297,607 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 </div>
 
 <div class="toast" id="toast"></div>
-<body>
+<script src="routing-engine.js"></script>
+<script>
+(function(){
+'use strict';
 
-<header class="site-header">
-  <div class="container header-inner">
-    <a href="index.html" class="logo">
-      <svg class="mark" viewBox="0 0 60 74"><path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/><path fill="#00FFFF" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/></svg>
-      <span class="wm">NOVALINK</span>
-    </a>
-    <div class="hdr-actions">
-      <a href="index.html" class="btn btn-ghost" style="font-size:13px;padding:8px 12px;"><i data-lucide="arrow-left"></i> Home</a>
-      <button id="userMenuBtn" class="user-btn">
-        <span class="av" id="userAvatar">?</span>
-        <span class="nm" id="userName">User</span>
-        <span class="badge" id="adminBadge" style="display:none">Admin</span>
-      </button>
-      <div class="dd" id="userDropdown">
-        <button class="dd-item" id="ddSignOut"><i data-lucide="log-out"></i> Sign out</button>
-        <button class="dd-item" id="ddCreateEvent"><i data-lucide="plus-circle"></i> Create an event</button>
-      </div>
-    </div>
-  </div>
-</header>
+var firebaseConfig = {
+  apiKey: "AIzaSyDSnns131jOlBXAqKo6qy7lTW4Rij-1oWU",
+  authDomain: "novalink-864cf.firebaseapp.com",
+  projectId: "novalink-864cf",
+  storageBucket: "novalink-864cf.firebasestorage.app",
+  messagingSenderId: "602780280140",
+  appId: "1:602780280140:web:5d9ff2351e5a7d5e66dbe9"
+};
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+var db = firebase.firestore();
+var auth = firebase.auth();
+var EVENTS = "events";
+var ADMINS = ["nylnathan340@gmail.com"];
 
-<main class="page">
-  <div class="container">
+var currentUser = null;
+var isAdmin = false;
+var myEvents = [];
+var eventId = null;
+var eventData = null;
+var sessionScans = [];
+var allEventTickets = [];
+var searchDebounce = null;
 
-    <!-- Loading -->
-    <div id="loadingState" class="ls">
-      <i data-lucide="loader-2"></i>
-      <p>Loading scanner…</p>
-    </div>
+var html5QrCode = null;
+var scannerRunning = false;
+var scanning = false;
+var scannerCooldown = null;
 
-    <!-- Error -->
-    <div id="errorState" class="es" style="display:none">
-      <div class="ic"><i data-lucide="alert-circle" id="errorIcon"></i></div>
-      <h2 id="errorTitle">Not available</h2>
-      <p id="errorMsg">Something went wrong.</p>
-      <div class="actions" id="errorActions">
-        <a href="index.html" class="btn btn-accent"><i data-lucide="arrow-left"></i> Back to home</a>
-      </div>
-    </div>
+var RE = window.NovalinkRoutingEngine || {};
 
-    <!-- Sign-in required -->
-    <div id="signinState" class="es" style="display:none">
-      <div class="ic"><i data-lucide="lock"></i></div>
-      <h2>Sign in required</h2>
-      <p>You need to sign in as the event host to use the scanner.</p>
-      <div class="actions">
-        <a href="index.html#signin" class="btn btn-accent"><i data-lucide="log-in"></i> Sign in</a>
-        <a href="index.html" class="btn btn-ghost"><i data-lucide="arrow-left"></i> Home</a>
-      </div>
-    </div>
+function $(id){ return document.getElementById(id); }
+function refreshIcons(){ if(window.lucide) lucide.createIcons(); }
+function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 
-    <!-- Main content -->
-    <div id="scannerContent" style="display:none">
+function initialsFrom(name,email){
+  if(name && name.trim()){ var p = name.trim().split(/\s+/); if(p.length>=2) return (p[0][0]+p[1][0]).toUpperCase(); return p[0].slice(0,2).toUpperCase(); }
+  if(email) return email.slice(0,2).toUpperCase();
+  return "??";
+}
 
-      <div class="page-head">
-        <span class="eyebrow"><i data-lucide="camera"></i> Door scanner</span>
-        <h1>Scan tickets at the door</h1>
-        <p>Point the camera at a guest's QR code, or search tickets by name below.</p>
-      </div>
+function showToast(msg,type,ms){
+  type = type || "info"; ms = ms || 3000;
+  var t = $("toast");
+  t.className = "toast " + type;
+  var ic = type === "error" ? "alert-circle" : (type === "success" ? "check-circle" : "info");
+  t.innerHTML = '<i data-lucide="'+ic+'"></i><span>'+esc(msg)+'</span>';
+  refreshIcons();
+  requestAnimationFrame(function(){ t.classList.add("show"); });
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(function(){ t.classList.remove("show"); }, ms);
+}
 
-      <!-- Event picker -->
-      <div class="picker">
-        <label for="eventSelect">Event</label>
-        <select id="eventSelect">
-          <option value="">Loading your events…</option>
-        </select>
-        <div class="meta" id="eventMeta"></div>
-      </div>
+function buildRef(evId, tId){
+  if (typeof RE.buildTicketRef === "function") return RE.buildTicketRef(evId, tId);
+  function sh(x){
+    var t = String(x||"").replace(/[^A-Za-z0-9]/g,"").toUpperCase();
+    return t.length <= 4 ? t : t.slice(-4);
+  }
+  var e = sh(evId), t = sh(tId);
+  if (!e || !t) return "NL-XXXXXX";
+  return "NL-" + e + "-" + t;
+}
 
-      <!-- Camera (bigger) -->
-      <div class="scanner-wrap" id="scannerWrap" style="display:none">
-        <div id="reader"></div>
-        <div class="scanner-hint">
-          <i data-lucide="scan-line"></i> Align the QR inside the frame
-        </div>
-      </div>
+function applyAuth(user){
+  currentUser = user;
+  isAdmin = !!(user && ADMINS.map(function(e){return e.toLowerCase();}).indexOf(String(user.email).toLowerCase()) !== -1);
+  if (user){
+    var display = user.displayName || user.email.split("@")[0];
+    $("userMenuBtn").style.display = "inline-flex";
+    $("userName").textContent = display;
+    $("userAvatar").textContent = initialsFrom(user.displayName, user.email);
+    $("adminBadge").style.display = isAdmin ? "inline-block" : "none";
+  } else {
+    $("userMenuBtn").style.display = "none";
+    $("adminBadge").style.display = "none";
+  }
+}
 
-      <!-- Search by name -->
-      <div class="search-panel">
-        <div class="label"><i data-lucide="user-search"></i> Search tickets by name</div>
-        <div class="row">
-          <div class="input-wrap">
-            <i data-lucide="search"></i>
-            <input type="text" id="searchNameInput" placeholder="Start typing a guest name…" autocomplete="off" spellcheck="false" />
-            <button type="button" class="clear-btn" id="searchClearBtn" title="Clear"><i data-lucide="x"></i></button>
-          </div>
-          <button class="btn btn-accent" id="searchNameBtn">
-            <i data-lucide="search-check"></i> Search
-          </button>
-        </div>
-        <div class="hint">Type at least 1 character. Matches every ticket in this event whose guest name contains your search.</div>
-        <div class="search-results" id="searchResults">
-          <div class="sr-empty">Type a name to see matching tickets</div>
-        </div>
-      </div>
+function showError(title, msg, icon){
+  $("loadingState").style.display = "none";
+  $("scannerContent").style.display = "none";
+  $("signinState").style.display = "none";
+  $("errorState").style.display = "block";
+  $("errorTitle").textContent = title;
+  $("errorMsg").textContent = msg;
+  $("errorIcon").setAttribute("data-lucide", icon || "alert-circle");
+  refreshIcons();
+}
 
-      <!-- Recent scans -->
-      <div class="recent">
-        <div class="label">
-          <span>Recent scans</span>
-          <span class="count" id="recentCount">0</span>
-        </div>
-        <div class="recent-list" id="recentList">
-          <div class="recent-empty">No scans yet this session</div>
-        </div>
-      </div>
+function showSignin(){
+  $("loadingState").style.display = "none";
+  $("scannerContent").style.display = "none";
+  $("errorState").style.display = "none";
+  $("signinState").style.display = "block";
+  refreshIcons();
+}
 
-    </div>
-  </div>
-</main>
+function showScanner(){
+  $("loadingState").style.display = "none";
+  $("errorState").style.display = "none";
+  $("signinState").style.display = "none";
+  $("scannerContent").style.display = "block";
+  refreshIcons();
+}
 
-<footer class="footer">
-  <div class="container">
-    <div class="fb">
-      <span>&copy; <span id="year"></span> Novalink. All rights reserved.</span>
-      <span>Johannesburg, South Africa</span>
-    </div>
-  </div>
-</footer>
+function loadMyEvents(){
+  var q = db.collection(EVENTS);
+  if (!isAdmin) {
+    q = q.where("ownerUid", "==", currentUser.uid);
+  }
+  return q.get().then(function(snap){
+    myEvents = [];
+    snap.forEach(function(doc){
+      var d = doc.data() || {};
+      d.id = doc.id;
+      myEvents.push(d);
+    });
+    myEvents.sort(function(a, b){
+      return String(b.startDate || "").localeCompare(String(a.startDate || ""));
+    });
+    populateEventDropdown();
+  });
+}
 
-<!-- Result overlay -->
-<div class="result-overlay" id="resultOverlay">
-  <div class="icon" id="resultIcon"><i data-lucide="check"></i></div>
-  <div class="title" id="resultTitle">VALID</div>
-  <div class="guest" id="resultGuest"></div>
-  <div class="seat" id="resultSeat"></div>
-  <div class="msg" id="resultMsg"></div>
-  <div class="progress"><div class="progress-fill" id="resultProgress"></div></div>
-</div>
+function populateEventDropdown(){
+  var sel = $("eventSelect");
+  sel.innerHTML = "";
 
-<div class="toast" id="toast"></div>
+  if (!myEvents.length) {
+    var opt = document.createElement("option");
+    opt.value = "";
+    opt.textContent = "No events found";
+    sel.appendChild(opt);
+    sel.disabled = true;
+    $("eventMeta").textContent = "You don't have any events to scan for.";
+    showScanner();
+    return;
+  }
+
+  var placeholder = document.createElement("option");
+  placeholder.value = "";
+  placeholder.textContent = "— Select an event to scan —";
+  sel.appendChild(placeholder);
+
+  myEvents.forEach(function(ev){
+    var opt = document.createElement("option");
+    opt.value = ev.id;
+    var label = ev.eventName || "Untitled Event";
+    var city = ev.city ? " · " + ev.city : "";
+    var date = ev.startDate ? " · " + ev.startDate : "";
+    opt.textContent = label + city + date;
+    sel.appendChild(opt);
+  });
+
+  showScanner();
+
+  var pre = getParam("event");
+  if (pre && myEvents.some(function(e){ return e.id === pre; })) {
+    sel.value = pre;
+    sel.dispatchEvent(new Event("change"));
+  }
+}
+
+function getParam(n){
+  try { return new URLSearchParams(window.location.search).get(n); }
+  catch(e){ return null; }
+}
+
+function selectEvent(id){
+  if (!id) {
+    stopScanner();
+    $("scannerWrap").style.display = "none";
+    $("eventMeta").textContent = "";
+    eventId = null;
+    eventData = null;
+    allEventTickets = [];
+    clearSearchResults();
+    return;
+  }
+  eventId = id;
+  eventData = myEvents.find(function(e){ return e.id === id; }) || null;
+
+  if (eventData) {
+    var tierCount = eventData.activeTierCount || 4;
+    var seats = eventData.totalAttendees || 0;
+    var planId = (eventData.plan && eventData.plan.id) || "";
+    var seatLine = (planId === "basic" || !eventData.sections || !eventData.sections.length)
+                    ? "General admission"
+                    : (seats ? seats + " seats" : "No seat data");
+    $("eventMeta").textContent = seatLine + " · " + tierCount + " tier" + (tierCount === 1 ? "" : "s");
+  }
+
+  clearSearchResults();
+  startScanner();
+  loadEventTickets();
+}
+
+function loadEventTickets(){
+  allEventTickets = [];
+  if (!eventId) return;
+  db.collection(EVENTS).doc(eventId).collection("tickets").get()
+    .then(function(snap){
+      snap.forEach(function(doc){
+        var t = doc.data() || {};
+        t.id = doc.id;
+        allEventTickets.push(t);
+      });
+      var q = ($("searchNameInput").value || "").trim();
+      if (q) runNameSearch();
+    })
+    .catch(function(err){
+      console.error("Load event tickets error:", err);
+    });
+}
+
+function startScanner(){
+  if (!window.Html5Qrcode) {
+    showToast("QR library failed to load. Use search by name below.", "error", 5000);
+    $("scannerWrap").style.display = "none";
+    return;
+  }
+
+  $("scannerWrap").style.display = "block";
+  refreshIcons();
+
+  if (html5QrCode && scannerRunning) return;
+
+  html5QrCode = new window.Html5Qrcode("reader");
+
+  var config = {
+    fps: 12,
+    qrbox: function(vw, vh) {
+      var m = Math.min(vw, vh);
+      var s = Math.max(220, Math.floor(m * 0.75));
+      return { width: s, height: s };
+    },
+    aspectRatio: 1.0
+  };
+
+  html5QrCode.start(
+    { facingMode: "environment" },
+    config,
+    onQrScan,
+    function(err) { /* silent per-frame errors */ }
+  )
+  .then(function(){
+    scannerRunning = true;
+  })
+  .catch(function(err){
+    console.error("Camera start error:", err);
+    $("scannerWrap").style.display = "none";
+    showToast("Could not start camera: " + (err.message || err.name || err) + " — use search by name below.", "error", 6000);
+  });
+}
+
+function stopScanner(){
+  if (html5QrCode && scannerRunning) {
+    html5QrCode.stop().then(function(){
+      try { html5QrCode.clear(); } catch(e){}
+      scannerRunning = false;
+    }).catch(function(){ scannerRunning = false; });
+  }
+}
+
+function onQrScan(decodedText, decodedResult){
+  if (scanning) return;
+  scanning = true;
+
+  try {
+    if (html5QrCode && scannerRunning) html5QrCode.pause(true);
+  } catch(e){}
+
+  var parsed = null;
+  if (typeof RE.parseQrPayload === "function") {
+    parsed = RE.parseQrPayload(decodedText);
+  }
+  if (!parsed) {
+    try {
+      var obj = JSON.parse(decodedText);
+      if (obj && obj.v === 1 && obj.e && obj.t) {
+        parsed = { eventId: obj.e, ticketId: obj.t };
+      }
+    } catch(e){}
+  }
+
+  if (!parsed) {
+    flashResult("invalid", "UNRECOGNISED", "", "", "The scanned code isn't a valid Novalink ticket.");
+    return;
+  }
+
+  if (parsed.eventId !== eventId) {
+    flashResult("invalid", "WRONG EVENT", "", "", "This ticket is for a different event.");
+    return;
+  }
+
+  verifyTicketById(parsed.ticketId);
+}
+
+/* ===== SEARCH BY NAME ===== */
+function clearSearchResults(){
+  var box = $("searchResults");
+  if (!box) return;
+  box.innerHTML = '<div class="sr-empty">Type a name to see matching tickets</div>';
+}
+
+function updateSearchClearBtn(){
+  var input = $("searchNameInput");
+  var btn = $("searchClearBtn");
+  if (!input || !btn) return;
+  btn.classList.toggle("show", !!input.value.trim());
+}
+
+function runNameSearch(){
+  if (!eventId) {
+    $("searchResults").innerHTML = '<div class="sr-empty">Select an event first to search its tickets</div>';
+    return;
+  }
+  var q = ($("searchNameInput").value || "").trim().toLowerCase();
+  if (!q) { clearSearchResults(); return; }
+
+  var matches = allEventTickets.filter(function(t){
+    var name = String(t.guestName || "").toLowerCase();
+    var email = String(t.buyerEmail || "").toLowerCase();
+    var ref = buildRef(eventId, t.ticketId || t.id).toLowerCase();
+    return name.indexOf(q) !== -1 || email.indexOf(q) !== -1 || ref.indexOf(q) !== -1;
+  });
+
+  var order = { "valid": 0, "checked-in": 1, "checked_in": 1, "used": 1, "cancelled": 2 };
+  matches.sort(function(a, b){
+    var oa = order[a.status] === undefined ? 3 : order[a.status];
+    var ob = order[b.status] === undefined ? 3 : order[b.status];
+    if (oa !== ob) return oa - ob;
+    return String(a.guestName || "").localeCompare(String(b.guestName || ""));
+  });
+
+  renderSearchResults(matches, q);
+}
+
+function renderSearchResults(list, q){
+  var box = $("searchResults");
+  if (!box) return;
+
+  if (!list.length) {
+    box.innerHTML = '<div class="sr-empty">No tickets found matching "' + esc(q) + '"</div>';
+    return;
+  }
+
+  box.innerHTML = "";
+  list.forEach(function(t){
+    var status = t.status || "valid";
+    var badgeLabel = "VALID";
+    var badgeClass = "valid";
+    if (status === "cancelled") { badgeLabel = "CANCELLED"; badgeClass = "cancelled"; }
+    else if (status === "checked-in" || status === "checked_in" || status === "used") { badgeLabel = "USED"; badgeClass = "used"; }
+
+    var tierLabel = (eventData && eventData.tierNames && eventData.tierNames[t.tier]) || t.tier || "";
+    var seatLabel = t.seat ? " · " + t.seat : " · General admission";
+    var refLabel = buildRef(eventId, t.ticketId || t.id);
+
+    var item = document.createElement("button");
+    item.type = "button";
+    item.className = "sr-item";
+    item.innerHTML =
+      '<div class="sr-icon">' + esc(initialsFrom(t.guestName, "")) + '</div>' +
+      '<div class="sr-body">' +
+        '<div class="sr-name">' + esc(t.guestName || "Guest") + '</div>' +
+        '<div class="sr-meta">' + esc(refLabel) + ' · ' + esc(tierLabel) + esc(seatLabel) + '</div>' +
+      '</div>' +
+      '<div class="sr-badge ' + badgeClass + '">' + badgeLabel + '</div>';
+
+    item.addEventListener("click", function(){
+      verifyTicketById(t.id);
+    });
+    box.appendChild(item);
+  });
+
+  refreshIcons();
+}
+
+/* ===== Verify ticket ===== */
+function verifyTicketById(ticketId){
+  if (!eventId || !ticketId) { flashResult("invalid", "INVALID", "", "", "Missing data."); return; }
+
+  var ticketRef = db.collection(EVENTS).doc(eventId).collection("tickets").doc(ticketId);
+
+  db.runTransaction(function(transaction){
+    return transaction.get(ticketRef).then(function(snap){
+      if (!snap.exists) {
+        return { result: "invalid", reason: "not-found" };
+      }
+      var data = snap.data() || {};
+
+      if (data.status === "cancelled") {
+        return { result: "cancelled", ticket: data };
+      }
+      if (data.status === "checked-in" || data.status === "checked_in") {
+        return { result: "used", ticket: data };
+      }
+      if (data.status !== "valid") {
+        return { result: "invalid", reason: "bad-status", ticket: data };
+      }
+
+      transaction.update(ticketRef, {
+        status: "checked-in",
+        checkedInAt: firebase.firestore.FieldValue.serverTimestamp()
+      });
+      return { result: "valid", ticket: data };
+    });
+  })
+  .then(function(res){
+    var t = res.ticket || {};
+    var guest = t.guestName || "Guest";
+    var seat = t.seat || "";
+    var tierName = (eventData && eventData.tierNames && eventData.tierNames[t.tier]) || t.tier || "";
+    var seatLine = seat ? (tierName ? tierName + " · " + seat : seat) : (tierName ? tierName + " · General admission" : "General admission");
+
+    for (var i = 0; i < allEventTickets.length; i++) {
+      if (allEventTickets[i].id === ticketId) {
+        if (res.result === "valid") allEventTickets[i].status = "checked-in";
+        break;
+      }
+    }
+
+    if (res.result === "valid") {
+      flashResult("valid", "ADMIT", guest, seatLine, "Ticket marked as checked-in.");
+      logScan("valid", guest, seat, tierName);
+    } else if (res.result === "used") {
+      var when = t.checkedInAt && t.checkedInAt.toDate ? t.checkedInAt.toDate().toLocaleString("en-ZA") : "";
+      flashResult("used", "ALREADY USED", guest, seatLine, "This ticket was already scanned" + (when ? " at " + when : "") + ".");
+      logScan("used", guest, seat, tierName);
+    } else if (res.result === "cancelled") {
+      flashResult("cancelled", "CANCELLED", guest, seatLine, "This ticket was cancelled by the buyer.");
+      logScan("cancelled", guest, seat, tierName);
+    } else {
+      flashResult("invalid", "INVALID", guest || "", "", "This ticket cannot be used.");
+      logScan("invalid", guest || "Unknown", seat, tierName);
+    }
+  })
+  .catch(function(err){
+    console.error("Verify transaction error:", err);
+    flashResult("invalid", "ERROR", "", "", err.message || "Verification failed.");
+  });
+}
+
+function flashResult(type, title, guest, seat, msg){
+  var ov = $("resultOverlay");
+  ov.className = "result-overlay show " + type;
+  $("resultTitle").textContent = title;
+  $("resultGuest").textContent = guest || "";
+  $("resultSeat").textContent = seat || "";
+  $("resultMsg").textContent = msg || "";
+
+  var iconName = type === "valid" ? "check-circle"
+               : type === "used" ? "alert-triangle"
+               : type === "cancelled" ? "x-circle"
+               : "help-circle";
+  $("resultIcon").innerHTML = '<i data-lucide="' + iconName + '"></i>';
+  refreshIcons();
+
+  var p = $("resultProgress");
+  if (p) {
+    p.style.animation = "none";
+    void p.offsetWidth;
+    p.style.animation = "";
+  }
+
+  clearTimeout(scannerCooldown);
+  scannerCooldown = setTimeout(function(){
+    ov.classList.remove("show");
+    scanning = false;
+    try {
+      if (html5QrCode && scannerRunning && html5QrCode.getState && html5QrCode.getState() === 3) {
+        html5QrCode.resume();
+      } else if (html5QrCode && scannerRunning) {
+        html5QrCode.resume();
+      }
+    } catch(e){
+      stopScanner();
+      setTimeout(startScanner, 200);
+    }
+  }, 2500);
+}
+
+function logScan(type, guest, seat, tier){
+  sessionScans.unshift({
+    type: type,
+    guest: guest,
+    seat: seat,
+    tier: tier,
+    time: new Date().toLocaleTimeString("en-ZA", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
+  });
+  if (sessionScans.length > 50) sessionScans.length = 50;
+  renderRecent();
+}
+
+function renderRecent(){
+  var list = $("recentList");
+  var count = $("recentCount");
+  count.textContent = sessionScans.length;
+
+  if (!sessionScans.length) {
+    list.innerHTML = '<div class="recent-empty">No scans yet this session</div>';
+    return;
+  }
+
+  list.innerHTML = "";
+  sessionScans.forEach(function(s){
+    var item = document.createElement("div");
+    item.className = "recent-item " + s.type;
+
+    var iconName = s.type === "valid" ? "check-circle"
+                 : s.type === "used" ? "alert-triangle"
+                 : s.type === "cancelled" ? "x-circle"
+                 : "help-circle";
+
+    var metaParts = [];
+    if (s.tier) metaParts.push(s.tier);
+    if (s.seat) metaParts.push(s.seat);
+    metaParts.push(s.time);
+    var meta = metaParts.join(" · ");
+
+    item.innerHTML =
+      '<div class="ri-icon"><i data-lucide="' + iconName + '"></i></div>' +
+      '<div class="ri-body">' +
+        '<div class="ri-name">' + esc(s.guest) + '</div>' +
+        '<div class="ri-meta">' + esc(meta) + '</div>' +
+      '</div>';
+    list.appendChild(item);
+  });
+  refreshIcons();
+}
+
+document.addEventListener("DOMContentLoaded", function(){
+  $("year").textContent = new Date().getFullYear();
+  refreshIcons();
+
+  $("userMenuBtn").addEventListener("click", function(e){
+    e.stopPropagation();
+    $("userDropdown").classList.toggle("open");
+  });
+  document.addEventListener("click", function(){ $("userDropdown").classList.remove("open"); });
+  $("ddSignOut").addEventListener("click", function(){ auth.signOut().then(function(){ showToast("Signed out","success"); }); });
+  $("ddCreateEvent").addEventListener("click", function(){ window.location.href = "create-event.html"; });
+
+  $("eventSelect").addEventListener("change", function(){
+    selectEvent(this.value);
+  });
+
+  var searchInput = $("searchNameInput");
+  var searchBtn = $("searchNameBtn");
+  var searchClear = $("searchClearBtn");
+
+  if (searchBtn) {
+    searchBtn.addEventListener("click", function(){
+      if (!eventId) { showToast("Select an event first.", "error"); return; }
+      runNameSearch();
+    });
+  }
+  if (searchInput) {
+    searchInput.addEventListener("input", function(){
+      updateSearchClearBtn();
+      clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(runNameSearch, 180);
+    });
+    searchInput.addEventListener("keydown", function(e){
+      if (e.key === "Enter") { e.preventDefault(); runNameSearch(); }
+      if (e.key === "Escape") { searchInput.value = ""; updateSearchClearBtn(); clearSearchResults(); }
+    });
+  }
+  if (searchClear) {
+    searchClear.addEventListener("click", function(){
+      if (searchInput) searchInput.value = "";
+      updateSearchClearBtn();
+      clearSearchResults();
+      if (searchInput) searchInput.focus();
+    });
+  }
+
+  auth.onAuthStateChanged(function(user){
+    applyAuth(user);
+    if (!user) {
+      showSignin();
+      return;
+    }
+    loadMyEvents()
+      .catch(function(err){
+        console.error("Load events error:", err);
+        showError("Could not load events", err.message || "Try again.", "alert-circle");
+      });
+  });
+
+  window.addEventListener("beforeunload", function(){
+    try { if (html5QrCode) html5QrCode.stop(); } catch(e){}
+  });
+});
+})();
+</script>
+</body>
+</html>
