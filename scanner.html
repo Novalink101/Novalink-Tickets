@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<meta name="theme-color" content="#0a0f14" />
+<meta name="theme-color" content="#f6f8fb" />
 <title>Scanner · Novalink</title>
 <script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
 <script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
@@ -13,7 +13,7 @@
 <style>
 :root{
   --cy:#00FFFF;--cy2:#00CCCC;--cy3:#009999;--cyf:#e6ffff;
-  --sf:#ffffff;--sf2:#f1f4f8;
+  --bg:#f6f8fb;--sf:#ffffff;--sf2:#f1f4f8;
   --bd:#e4e9f0;--bd2:#d3dbe5;
   --tx:#0a0f14;--tx2:#2b3644;--mut:#6b7787;
   --rd:14px;--font:'Inter',system-ui,-apple-system,sans-serif;
@@ -22,105 +22,134 @@
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html,body{-webkit-text-size-adjust:100%}
-body{font-family:var(--font);background:#0a0f14;color:#fff;line-height:1.6;min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased;overflow-x:hidden}
+body{font-family:var(--font);background:var(--bg);color:var(--tx);line-height:1.6;min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased;overflow-x:hidden}
 .container{max-width:900px;margin:0 auto;padding:0 20px;width:100%}
 h1,h2,h3{line-height:1.15;font-weight:700}
 a{color:inherit;text-decoration:none}
 button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation}
 .logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none;margin-left:12px}
 .logo .mark{width:34px;height:42px;flex-shrink:0}
-.logo .wm{font-weight:800;font-size:1.1rem;color:#fff}
+.logo .wm{font-weight:800;font-size:1.1rem;color:var(--nv)}
 
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:12px;font-weight:600;font-size:14px;border:1px solid transparent;cursor:pointer;transition:all 0.2s var(--ease);white-space:nowrap;font-family:inherit;text-decoration:none}
 .btn svg,.btn i{width:17px;height:17px}
 .btn-accent{background:linear-gradient(135deg,var(--cy),var(--cy2));color:#04161c}
 .btn-accent:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,255,255,0.35)}
-.btn-ghost{background:rgba(255,255,255,0.08);color:#fff;border:1px solid rgba(255,255,255,0.15)}
-.btn-ghost:hover{background:rgba(255,255,255,0.15);border-color:var(--cy);color:var(--cy)}
+.btn-ghost{background:transparent;color:var(--tx2);border:1px solid var(--bd2)}
+.btn-ghost:hover{background:var(--sf2);border-color:var(--cy);color:var(--cy3)}
 .btn-danger{background:var(--dg);color:#fff}
 .btn-danger:hover{background:#b91c1c;transform:translateY(-2px)}
 .btn-block{width:100%}
 .btn-lg{padding:15px 26px;font-size:15px}
 .btn:disabled{opacity:0.55;cursor:not-allowed;transform:none!important}
 
-/* Header */
-.site-header{position:sticky;top:0;z-index:50;background:rgba(10,15,20,0.92);backdrop-filter:blur(14px);border-bottom:1px solid rgba(255,255,255,0.08);padding:12px 0}
+/* Header (light) */
+.site-header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,0.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--bd);padding:12px 0}
 .header-inner{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .hdr-actions{display:flex;gap:8px;align-items:center;position:relative}
-.user-btn{display:none;align-items:center;gap:8px;padding:5px 12px 5px 5px;background:rgba(255,255,255,0.08);border:1px solid rgba(255,255,255,0.15);border-radius:99px;font-family:inherit;color:#fff}
+.user-btn{display:none;align-items:center;gap:8px;padding:5px 12px 5px 5px;background:var(--sf2);border:1px solid var(--bd);border-radius:99px;font-family:inherit;color:var(--tx)}
 .user-btn .av{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--cy),var(--cy2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;color:#04161c}
 .user-btn .nm{font-size:13px;font-weight:600}
 .user-btn .badge{background:#fef3c7;color:#92400e;font-size:10px;font-weight:800;padding:2px 8px;border-radius:99px}
-.dd{position:absolute;top:calc(100% + 8px);right:0;background:#1a2129;border:1px solid rgba(255,255,255,0.1);border-radius:14px;box-shadow:0 20px 60px rgba(0,0,0,0.5);min-width:220px;padding:8px;display:none;z-index:60}
+.dd{position:absolute;top:calc(100% + 8px);right:0;background:var(--sf);border:1px solid var(--bd);border-radius:14px;box-shadow:0 20px 60px rgba(10,15,20,0.15);min-width:220px;padding:8px;display:none;z-index:60}
 .dd.open{display:block}
-.dd-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:9px;font-size:13.5px;font-weight:500;color:#c9d2dd;border:none;background:transparent;width:100%;font-family:inherit;text-align:left}
-.dd-item:hover{background:rgba(255,255,255,0.08);color:#fff}
+.dd-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:9px;font-size:13.5px;font-weight:500;color:var(--tx2);border:none;background:transparent;width:100%;font-family:inherit;text-align:left}
+.dd-item:hover{background:var(--sf2);color:var(--tx)}
 .dd-item i{width:16px;height:16px;color:var(--mut)}
 
 /* Page */
 .page{flex:1;padding:24px 0 40px}
 .ls{text-align:center;padding:80px 20px;color:var(--mut)}
-.ls i{width:32px;height:32px;margin:0 auto 12px;color:var(--cy);animation:sp 1.2s linear infinite;display:block}
+.ls i{width:32px;height:32px;margin:0 auto 12px;color:var(--cy3);animation:sp 1.2s linear infinite;display:block}
 @keyframes sp{to{transform:rotate(360deg)}}
 .es{text-align:center;padding:60px 24px;max-width:480px;margin:0 auto}
-.es .ic{width:64px;height:64px;border-radius:50%;background:rgba(220,38,38,0.15);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;color:var(--dg)}
+.es .ic{width:64px;height:64px;border-radius:50%;background:var(--dgf);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;color:var(--dg)}
 .es .ic i{width:28px;height:28px}
-.es h2{margin-bottom:8px;color:#fff}
+.es h2{margin-bottom:8px;color:var(--tx)}
 .es p{color:var(--mut);margin-bottom:22px}
 .es .actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
 
 /* Header text block */
 .page-head{text-align:center;margin-bottom:20px}
-.page-head .eyebrow{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--cy);background:rgba(0,255,255,0.08);border:1px solid var(--cy);padding:5px 12px;border-radius:99px;margin-bottom:12px}
+.page-head .eyebrow{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--cy3);background:var(--cyf);border:1px solid var(--cy);padding:5px 12px;border-radius:99px;margin-bottom:12px}
 .page-head .eyebrow i{width:13px;height:13px}
-.page-head h1{font-size:clamp(1.4rem,3vw,1.8rem);color:#fff;margin-bottom:4px}
+.page-head h1{font-size:clamp(1.4rem,3vw,1.8rem);color:var(--nv);margin-bottom:4px}
 .page-head p{color:var(--mut);font-size:13.5px}
 
-/* Event picker */
-.picker{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:var(--rd);padding:20px;margin-bottom:20px}
-.picker label{display:block;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--cy);margin-bottom:8px}
-.picker select{width:100%;padding:14px 16px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.15);border-radius:10px;color:#fff;font-size:15px;font-family:inherit;appearance:none;padding-right:44px;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%2300FFFF' stroke-width='3'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;background-size:14px;cursor:pointer}
-.picker select:focus{outline:none;border-color:var(--cy)}
+/* Event picker (light) */
+.picker{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rd);padding:20px;margin-bottom:20px;box-shadow:0 4px 16px rgba(10,15,20,0.04)}
+.picker label{display:block;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--cy3);margin-bottom:8px}
+.picker select{width:100%;padding:14px 16px;background:var(--bg);border:1px solid var(--bd2);border-radius:10px;color:var(--tx);font-size:15px;font-family:inherit;appearance:none;padding-right:44px;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23009999' stroke-width='3'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;background-size:14px;cursor:pointer}
+.picker select:focus{outline:none;border-color:var(--cy);box-shadow:0 0 0 3px rgba(0,255,255,0.15);background-color:#fff}
 .picker .meta{margin-top:10px;font-size:12px;color:var(--mut);text-align:center}
 
-/* Scanner view */
-.scanner-wrap{background:#000;border-radius:var(--rd);overflow:hidden;position:relative;margin-bottom:20px;box-shadow:0 20px 60px rgba(0,0,0,0.5)}
-#reader{width:100%;background:#000}
-#reader video{border-radius:var(--rd)}
-.scanner-hint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.7);color:#fff;font-size:12px;font-weight:700;padding:8px 16px;border-radius:99px;backdrop-filter:blur(8px);pointer-events:none;white-space:nowrap}
+/* Scanner view (BIGGER) */
+.scanner-wrap{background:#0a0f14;border-radius:var(--rd);overflow:hidden;position:relative;margin:0 auto 24px;box-shadow:0 20px 60px rgba(10,15,20,0.25);max-width:760px;width:100%;border:6px solid #0a0f14}
+#reader{width:100%;background:#0a0f14;min-height:480px}
+#reader video{border-radius:calc(var(--rd) - 6px);width:100% !important;height:auto !important;display:block}
+@media (min-width:640px){#reader{min-height:560px}}
+.scanner-hint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.75);color:#fff;font-size:12px;font-weight:700;padding:8px 16px;border-radius:99px;backdrop-filter:blur(8px);pointer-events:none;white-space:nowrap;border:1px solid rgba(255,255,255,0.15)}
 .scanner-hint i{width:12px;height:12px;vertical-align:-2px;margin-right:4px;color:var(--cy)}
 
-/* Manual entry */
-.manual{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:var(--rd);padding:20px;margin-bottom:20px}
-.manual .label{font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--cy);margin-bottom:8px}
+/* Manual entry (light) */
+.manual{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rd);padding:20px;margin-bottom:20px;box-shadow:0 4px 16px rgba(10,15,20,0.04)}
+.manual .label{font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--cy3);margin-bottom:8px}
 .manual .row{display:flex;gap:10px;flex-wrap:wrap}
-.manual input{flex:1;min-width:200px;padding:14px 16px;background:rgba(0,0,0,0.3);border:1px solid rgba(255,255,255,0.15);border-radius:10px;color:#fff;font-size:14px;font-family:ui-monospace,monospace;letter-spacing:1px;text-transform:uppercase}
-.manual input:focus{outline:none;border-color:var(--cy)}
+.manual input{flex:1;min-width:200px;padding:14px 16px;background:var(--bg);border:1px solid var(--bd2);border-radius:10px;color:var(--tx);font-size:14px;font-family:ui-monospace,monospace;letter-spacing:1px;text-transform:uppercase}
+.manual input:focus{outline:none;border-color:var(--cy);box-shadow:0 0 0 3px rgba(0,255,255,0.15);background:#fff}
 .manual button{flex-shrink:0}
 .manual .hint{margin-top:8px;font-size:11px;color:var(--mut);font-style:italic}
 
-/* Recent scans */
-.recent{background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.1);border-radius:var(--rd);padding:20px}
-.recent .label{font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--cy);margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
-.recent .label .count{background:rgba(0,255,255,0.15);color:var(--cy);padding:2px 10px;border-radius:99px;font-size:10px}
+/* NEW: Search by name panel */
+.search-panel{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rd);padding:20px;margin-bottom:20px;box-shadow:0 4px 16px rgba(10,15,20,0.04)}
+.search-panel .label{font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--cy3);margin-bottom:8px;display:flex;align-items:center;gap:8px}
+.search-panel .label i{width:13px;height:13px}
+.search-panel .row{display:flex;gap:10px;flex-wrap:wrap;align-items:stretch}
+.search-panel .input-wrap{flex:1;min-width:220px;position:relative;display:flex;align-items:center}
+.search-panel .input-wrap > i{position:absolute;left:14px;width:16px;height:16px;color:var(--mut);pointer-events:none}
+.search-panel input[type="text"]{flex:1;width:100%;padding:14px 16px 14px 42px;background:var(--bg);border:1px solid var(--bd2);border-radius:10px;color:var(--tx);font-size:14px;font-family:inherit}
+.search-panel input[type="text"]:focus{outline:none;border-color:var(--cy);box-shadow:0 0 0 3px rgba(0,255,255,0.15);background:#fff}
+.search-panel .clear-btn{position:absolute;right:10px;background:var(--sf2);border:1px solid var(--bd);color:var(--mut);width:26px;height:26px;border-radius:50%;display:none;align-items:center;justify-content:center;cursor:pointer}
+.search-panel .clear-btn.show{display:inline-flex}
+.search-panel .clear-btn:hover{background:var(--dgf);color:var(--dg);border-color:#fecaca}
+.search-panel .clear-btn i{width:14px;height:14px}
+.search-panel .hint{margin-top:8px;font-size:11px;color:var(--mut);font-style:italic}
+
+.search-results{margin-top:14px;display:flex;flex-direction:column;gap:8px;max-height:420px;overflow-y:auto}
+.search-results .sr-empty{color:var(--mut);font-size:12.5px;font-style:italic;text-align:center;padding:16px 8px;border:1px dashed var(--bd2);border-radius:10px;background:var(--bg)}
+.search-results .sr-item{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg);border:1px solid var(--bd);border-radius:10px;cursor:pointer;transition:all 0.15s ease;text-align:left;width:100%;font-family:inherit;color:var(--tx)}
+.search-results .sr-item:hover{border-color:var(--cy);background:#fff;transform:translateX(3px);box-shadow:0 4px 12px rgba(0,255,255,0.12)}
+.search-results .sr-icon{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--cy),var(--cy2));color:#04161c;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;flex-shrink:0;letter-spacing:-0.5px}
+.search-results .sr-body{flex:1;min-width:0}
+.search-results .sr-name{font-size:13.5px;font-weight:800;color:var(--tx);word-break:break-word}
+.search-results .sr-meta{font-size:11.5px;color:var(--mut);margin-top:2px;font-family:ui-monospace,monospace;word-break:break-all}
+.search-results .sr-badge{font-size:9.5px;font-weight:900;padding:3px 8px;border-radius:5px;text-transform:uppercase;letter-spacing:0.4px;flex-shrink:0}
+.search-results .sr-badge.valid{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}
+.search-results .sr-badge.used{background:#fffbeb;color:#92400e;border:1px solid #fde68a}
+.search-results .sr-badge.cancelled{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
+
+/* Recent scans (light) */
+.recent{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rd);padding:20px;box-shadow:0 4px 16px rgba(10,15,20,0.04)}
+.recent .label{font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--cy3);margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
+.recent .label .count{background:var(--cyf);color:var(--cy3);padding:2px 10px;border-radius:99px;font-size:10px;border:1px solid var(--cy)}
 .recent-list{display:flex;flex-direction:column;gap:8px;max-height:360px;overflow-y:auto}
-.recent-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;background:rgba(0,0,0,0.25);border:1px solid rgba(255,255,255,0.06)}
+.recent-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;background:var(--bg);border:1px solid var(--bd)}
 .recent-item.valid{border-left:4px solid #10b981}
 .recent-item.used{border-left:4px solid #f59e0b}
 .recent-item.cancelled{border-left:4px solid #dc2626}
 .recent-item.invalid{border-left:4px solid #6b7787}
 .recent-item .ri-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.recent-item.valid .ri-icon{background:rgba(16,185,129,0.2);color:#10b981}
-.recent-item.used .ri-icon{background:rgba(245,158,11,0.2);color:#f59e0b}
-.recent-item.cancelled .ri-icon{background:rgba(220,38,38,0.2);color:#dc2626}
-.recent-item.invalid .ri-icon{background:rgba(107,119,135,0.2);color:#6b7787}
+.recent-item.valid .ri-icon{background:rgba(16,185,129,0.15);color:#10b981}
+.recent-item.used .ri-icon{background:rgba(245,158,11,0.15);color:#f59e0b}
+.recent-item.cancelled .ri-icon{background:rgba(220,38,38,0.15);color:#dc2626}
+.recent-item.invalid .ri-icon{background:rgba(107,119,135,0.15);color:#6b7787}
 .recent-item .ri-icon i{width:16px;height:16px}
 .recent-item .ri-body{flex:1;min-width:0}
-.recent-item .ri-name{font-size:13.5px;font-weight:700;color:#fff;word-break:break-word}
+.recent-item .ri-name{font-size:13.5px;font-weight:700;color:var(--tx);word-break:break-word}
 .recent-item .ri-meta{font-size:11px;color:var(--mut);margin-top:2px;font-family:ui-monospace,monospace;word-break:break-all}
 .recent-empty{text-align:center;color:var(--mut);font-size:12.5px;padding:20px 10px;font-style:italic}
 
-/* Full-screen result overlay */
+/* Result overlay (unchanged - works on any bg) */
 .result-overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:40px 20px;z-index:9999;-webkit-user-select:none;user-select:none}
 .result-overlay.show{display:flex;animation:flashIn 0.15s ease}
 @keyframes flashIn{from{opacity:0}to{opacity:1}}
@@ -139,22 +168,24 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 @keyframes countdown{from{width:100%}to{width:0%}}
 
 /* Toast */
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120%);background:#1a2129;color:#fff;padding:12px 18px;border-radius:12px;font-size:13.5px;z-index:10000;transition:transform 0.4s var(--ease),opacity 0.3s ease;display:flex;align-items:center;gap:10px;pointer-events:none;opacity:0;max-width:calc(100vw - 40px);border:1px solid rgba(255,255,255,0.1)}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120%);background:#0a0f14;color:#fff;padding:12px 18px;border-radius:12px;font-size:13.5px;z-index:10000;transition:transform 0.4s var(--ease),opacity 0.3s ease;display:flex;align-items:center;gap:10px;pointer-events:none;opacity:0;max-width:calc(100vw - 40px);border:1px solid rgba(255,255,255,0.1)}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 .toast.success{background:#065f46}
 .toast.error{background:#991b1b}
 
-/* Footer */
-.footer{background:#0a0f14;color:#6b7787;padding:24px 0 20px;margin-top:auto;font-size:12px;border-top:1px solid rgba(255,255,255,0.06)}
+/* Footer (light) */
+.footer{background:#fff;color:var(--mut);padding:24px 0 20px;margin-top:auto;font-size:12px;border-top:1px solid var(--bd)}
 .fb{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
 
 @media (max-width:520px){
   .manual input{min-width:0;width:100%}
   .manual button{width:100%}
+  .search-panel .row{flex-direction:column}
+  #reader{min-height:360px}
 }
 </style>
-  </head>
-  <body>
+</head>
+<body>
 
 <header class="site-header">
   <div class="container header-inner">
@@ -213,7 +244,7 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
       <div class="page-head">
         <span class="eyebrow"><i data-lucide="camera"></i> Door scanner</span>
         <h1>Scan tickets at the door</h1>
-        <p>Point the camera at a guest's QR code. The screen flashes green to admit, red to reject.</p>
+        <p>Point the camera at a guest's QR code, or search tickets by name below.</p>
       </div>
 
       <!-- Event picker -->
@@ -225,7 +256,7 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
         <div class="meta" id="eventMeta"></div>
       </div>
 
-      <!-- Camera -->
+      <!-- Camera (BIGGER) -->
       <div class="scanner-wrap" id="scannerWrap" style="display:none">
         <div id="reader"></div>
         <div class="scanner-hint">
@@ -243,6 +274,25 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
           </button>
         </div>
         <div class="hint">Type the ticket reference (as shown on the guest's ticket) and press Verify.</div>
+      </div>
+
+      <!-- Search by name (NEW) -->
+      <div class="search-panel">
+        <div class="label"><i data-lucide="user-search"></i> Search tickets by name</div>
+        <div class="row">
+          <div class="input-wrap">
+            <i data-lucide="search"></i>
+            <input type="text" id="searchNameInput" placeholder="Start typing a guest name…" autocomplete="off" spellcheck="false" />
+            <button type="button" class="clear-btn" id="searchClearBtn" title="Clear"><i data-lucide="x"></i></button>
+          </div>
+          <button class="btn btn-accent" id="searchNameBtn">
+            <i data-lucide="search-check"></i> Search
+          </button>
+        </div>
+        <div class="hint">Type at least 1 character. Matches every ticket in this event whose guest name contains your search.</div>
+        <div class="search-results" id="searchResults">
+          <div class="sr-empty">Type a name to see matching tickets</div>
+        </div>
       </div>
 
       <!-- Recent scans -->
@@ -305,10 +355,12 @@ var myEvents = [];
 var eventId = null;
 var eventData = null;
 var sessionScans = [];
+var allEventTickets = [];      /* cached tickets for the selected event, used by name search */
+var searchDebounce = null;
 
 var html5QrCode = null;
 var scannerRunning = false;
-var scanning = false; // true while overlay is showing
+var scanning = false;
 var scannerCooldown = null;
 
 var RE = window.NovalinkRoutingEngine || {};
@@ -403,7 +455,6 @@ function loadMyEvents(){
       d.id = doc.id;
       myEvents.push(d);
     });
-    // Sort by startDate descending
     myEvents.sort(function(a, b){
       return String(b.startDate || "").localeCompare(String(a.startDate || ""));
     });
@@ -443,7 +494,6 @@ function populateEventDropdown(){
 
   showScanner();
 
-  // Auto-select if URL had ?event=xxx
   var pre = getParam("event");
   if (pre && myEvents.some(function(e){ return e.id === pre; })) {
     sel.value = pre;
@@ -456,7 +506,7 @@ function getParam(n){
   catch(e){ return null; }
 }
 
-/* ===== Event selection → start camera ===== */
+/* ===== Event selection → start camera + load tickets for name search ===== */
 function selectEvent(id){
   if (!id) {
     stopScanner();
@@ -464,6 +514,8 @@ function selectEvent(id){
     $("eventMeta").textContent = "";
     eventId = null;
     eventData = null;
+    allEventTickets = [];
+    clearSearchResults();
     return;
   }
   eventId = id;
@@ -472,16 +524,42 @@ function selectEvent(id){
   if (eventData) {
     var tierCount = eventData.activeTierCount || 4;
     var seats = eventData.totalAttendees || 0;
-    $("eventMeta").textContent = (seats ? seats + " seats" : "No seating plan") + " · " + tierCount + " tiers";
+    var planId = (eventData.plan && eventData.plan.id) || "";
+    var seatLine = (planId === "basic" || !eventData.sections || !eventData.sections.length)
+                    ? "General admission"
+                    : (seats ? seats + " seats" : "No seat data");
+    $("eventMeta").textContent = seatLine + " · " + tierCount + " tier" + (tierCount === 1 ? "" : "s");
   }
 
+  clearSearchResults();
   startScanner();
+  loadEventTickets();
+}
+
+/* ===== Load all tickets for the selected event (used by name search) ===== */
+function loadEventTickets(){
+  allEventTickets = [];
+  if (!eventId) return;
+  db.collection(EVENTS).doc(eventId).collection("tickets").get()
+    .then(function(snap){
+      snap.forEach(function(doc){
+        var t = doc.data() || {};
+        t.id = doc.id;
+        allEventTickets.push(t);
+      });
+      /* If a search is already typed, re-run it against the fresh data */
+      var q = ($("searchNameInput").value || "").trim();
+      if (q) runNameSearch();
+    })
+    .catch(function(err){
+      console.error("Load event tickets error:", err);
+    });
 }
 
 /* ===== Camera scanner ===== */
 function startScanner(){
   if (!window.Html5Qrcode) {
-    showToast("QR library failed to load. Use manual entry.", "error", 5000);
+    showToast("QR library failed to load. Use manual entry or search by name.", "error", 5000);
     $("scannerWrap").style.display = "none";
     return;
   }
@@ -489,10 +567,7 @@ function startScanner(){
   $("scannerWrap").style.display = "block";
   refreshIcons();
 
-  if (html5QrCode && scannerRunning) {
-    // Already running, just show wrap
-    return;
-  }
+  if (html5QrCode && scannerRunning) return;
 
   html5QrCode = new window.Html5Qrcode("reader");
 
@@ -500,7 +575,7 @@ function startScanner(){
     fps: 12,
     qrbox: function(vw, vh) {
       var m = Math.min(vw, vh);
-      var s = Math.max(180, Math.floor(m * 0.7));
+      var s = Math.max(220, Math.floor(m * 0.75));
       return { width: s, height: s };
     },
     aspectRatio: 1.0
@@ -518,7 +593,7 @@ function startScanner(){
   .catch(function(err){
     console.error("Camera start error:", err);
     $("scannerWrap").style.display = "none";
-    showToast("Could not start camera: " + (err.message || err.name || err) + " — use manual entry below.", "error", 6000);
+    showToast("Could not start camera: " + (err.message || err.name || err) + " — use manual entry or search by name below.", "error", 6000);
   });
 }
 
@@ -533,10 +608,9 @@ function stopScanner(){
 
 /* ===== QR scan handler ===== */
 function onQrScan(decodedText, decodedResult){
-  if (scanning) return; // already processing
+  if (scanning) return;
   scanning = true;
 
-  // Pause camera so we don't scan twice
   try {
     if (html5QrCode && scannerRunning) html5QrCode.pause(true);
   } catch(e){}
@@ -555,12 +629,10 @@ function onQrScan(decodedText, decodedResult){
   }
 
   if (!parsed) {
-    // Try treating the text as a raw reference (fallback)
     handleRawReference(decodedText);
     return;
   }
 
-  // Verify the scanned ticket belongs to the currently selected event
   if (parsed.eventId !== eventId) {
     flashResult("invalid", "WRONG EVENT", "", "", "This ticket is for a different event.");
     return;
@@ -575,7 +647,6 @@ function handleManualEntry(){
   if (!input) { showToast("Enter a ticket reference.", "error"); return; }
   if (!eventId) { showToast("Select an event first.", "error"); return; }
 
-  // Search the selected event's tickets for one matching the input
   db.collection(EVENTS).doc(eventId).collection("tickets").get()
     .then(function(snap){
       var match = null;
@@ -603,7 +674,6 @@ function handleManualEntry(){
 }
 
 function handleRawReference(text){
-  // If someone scans a barcode showing the ref string
   var clean = String(text || "").trim().toUpperCase();
   if (/^NL-/.test(clean)) {
     $("manualRef").value = clean;
@@ -611,6 +681,88 @@ function handleRawReference(text){
   } else {
     flashResult("invalid", "UNRECOGNISED", "", "", "The scanned code isn't a valid Novalink ticket.");
   }
+}
+
+/* ============ NEW: SEARCH BY NAME ============ */
+function clearSearchResults(){
+  var box = $("searchResults");
+  if (!box) return;
+  box.innerHTML = '<div class="sr-empty">Type a name to see matching tickets</div>';
+}
+
+function updateSearchClearBtn(){
+  var input = $("searchNameInput");
+  var btn = $("searchClearBtn");
+  if (!input || !btn) return;
+  btn.classList.toggle("show", !!input.value.trim());
+}
+
+function runNameSearch(){
+  if (!eventId) {
+    $("searchResults").innerHTML = '<div class="sr-empty">Select an event first to search its tickets</div>';
+    return;
+  }
+  var q = ($("searchNameInput").value || "").trim().toLowerCase();
+  if (!q) { clearSearchResults(); return; }
+
+  var matches = allEventTickets.filter(function(t){
+    var name = String(t.guestName || "").toLowerCase();
+    var email = String(t.buyerEmail || "").toLowerCase();
+    var ref = buildRef(eventId, t.id).toLowerCase();
+    return name.indexOf(q) !== -1 || email.indexOf(q) !== -1 || ref.indexOf(q) !== -1;
+  });
+
+  /* Sort: valid first, then used, then cancelled; secondary by guest name */
+  var order = { "valid": 0, "checked-in": 1, "checked_in": 1, "used": 1, "cancelled": 2 };
+  matches.sort(function(a, b){
+    var oa = order[a.status] === undefined ? 3 : order[a.status];
+    var ob = order[b.status] === undefined ? 3 : order[b.status];
+    if (oa !== ob) return oa - ob;
+    return String(a.guestName || "").localeCompare(String(b.guestName || ""));
+  });
+
+  renderSearchResults(matches, q);
+}
+
+function renderSearchResults(list, q){
+  var box = $("searchResults");
+  if (!box) return;
+
+  if (!list.length) {
+    box.innerHTML = '<div class="sr-empty">No tickets found matching "' + esc(q) + '"</div>';
+    return;
+  }
+
+  box.innerHTML = "";
+  list.forEach(function(t){
+    var status = t.status || "valid";
+    var badgeLabel = "VALID";
+    var badgeClass = "valid";
+    if (status === "cancelled") { badgeLabel = "CANCELLED"; badgeClass = "cancelled"; }
+    else if (status === "checked-in" || status === "checked_in" || status === "used") { badgeLabel = "USED"; badgeClass = "used"; }
+
+    var tierLabel = (eventData && eventData.tierNames && eventData.tierNames[t.tier]) || t.tier || "";
+    var seatLabel = t.seat ? " · " + t.seat : " · General admission";
+    var refLabel = buildRef(eventId, t.id);
+
+    var item = document.createElement("button");
+    item.type = "button";
+    item.className = "sr-item";
+    item.innerHTML =
+      '<div class="sr-icon">' + esc(initialsFrom(t.guestName, "")) + '</div>' +
+      '<div class="sr-body">' +
+        '<div class="sr-name">' + esc(t.guestName || "Guest") + '</div>' +
+        '<div class="sr-meta">' + esc(refLabel) + ' · ' + esc(tierLabel) + esc(seatLabel) + '</div>' +
+      '</div>' +
+      '<div class="sr-badge ' + badgeClass + '">' + badgeLabel + '</div>';
+
+    item.addEventListener("click", function(){
+      verifyTicketById(t.id);
+    });
+    box.appendChild(item);
+  });
+
+  refreshIcons();
 }
 
 /* ===== Verify ticket with transaction ===== */
@@ -636,7 +788,6 @@ function verifyTicketById(ticketId){
         return { result: "invalid", reason: "bad-status", ticket: data };
       }
 
-      // Mark as checked-in
       transaction.update(ticketRef, {
         status: "checked-in",
         checkedInAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -649,7 +800,15 @@ function verifyTicketById(ticketId){
     var guest = t.guestName || "Guest";
     var seat = t.seat || "";
     var tierName = (eventData && eventData.tierNames && eventData.tierNames[t.tier]) || t.tier || "";
-    var seatLine = seat ? (tierName ? tierName + " · " + seat : seat) : "";
+    var seatLine = seat ? (tierName ? tierName + " · " + seat : seat) : (tierName ? tierName + " · General admission" : "General admission");
+
+    /* Update our local cache so a subsequent search reflects the new status */
+    for (var i = 0; i < allEventTickets.length; i++) {
+      if (allEventTickets[i].id === t.id || allEventTickets[i].ticketId === t.ticketId) {
+        allEventTickets[i].status = (res.result === "valid") ? "checked-in" : allEventTickets[i].status;
+        break;
+      }
+    }
 
     if (res.result === "valid") {
       flashResult("valid", "ADMIT", guest, seatLine, "Ticket marked as checked-in.");
@@ -681,7 +840,6 @@ function flashResult(type, title, guest, seat, msg){
   $("resultSeat").textContent = seat || "";
   $("resultMsg").textContent = msg || "";
 
-  // Icon per type
   var iconName = type === "valid" ? "check-circle"
                : type === "used" ? "alert-triangle"
                : type === "cancelled" ? "x-circle"
@@ -689,7 +847,6 @@ function flashResult(type, title, guest, seat, msg){
   $("resultIcon").innerHTML = '<i data-lucide="' + iconName + '"></i>';
   refreshIcons();
 
-  // Reset the progress bar animation
   var p = $("resultProgress");
   if (p) {
     p.style.animation = "none";
@@ -697,24 +854,20 @@ function flashResult(type, title, guest, seat, msg){
     p.style.animation = "";
   }
 
-  // Auto-hide after 2.5s
   clearTimeout(scannerCooldown);
   scannerCooldown = setTimeout(function(){
     ov.classList.remove("show");
     scanning = false;
-    // Resume camera
     try {
-      if (html5QrCode && scannerRunning && html5QrCode.getState && html5QrCode.getState() === 3 /* PAUSED */) {
+      if (html5QrCode && scannerRunning && html5QrCode.getState && html5QrCode.getState() === 3) {
         html5QrCode.resume();
       } else if (html5QrCode && scannerRunning) {
         html5QrCode.resume();
       }
     } catch(e){
-      // If resume fails, restart
       stopScanner();
       setTimeout(startScanner, 200);
     }
-    // Clear the manual input for next entry
     $("manualRef").value = "";
   }, 2500);
 }
@@ -774,7 +927,7 @@ document.addEventListener("DOMContentLoaded", function(){
   $("year").textContent = new Date().getFullYear();
   refreshIcons();
 
-  // Header menu
+  /* Header menu */
   $("userMenuBtn").addEventListener("click", function(e){
     e.stopPropagation();
     $("userDropdown").classList.toggle("open");
@@ -783,18 +936,49 @@ document.addEventListener("DOMContentLoaded", function(){
   $("ddSignOut").addEventListener("click", function(){ auth.signOut().then(function(){ showToast("Signed out","success"); }); });
   $("ddCreateEvent").addEventListener("click", function(){ window.location.href = "create-event.html"; });
 
-  // Event picker
+  /* Event picker */
   $("eventSelect").addEventListener("change", function(){
     selectEvent(this.value);
   });
 
-  // Manual entry
+  /* Manual entry */
   $("manualBtn").addEventListener("click", handleManualEntry);
   $("manualRef").addEventListener("keydown", function(e){
     if (e.key === "Enter") { e.preventDefault(); handleManualEntry(); }
   });
 
-  // Auth boot
+  /* NEW: Search by name wiring */
+  var searchInput = $("searchNameInput");
+  var searchBtn = $("searchNameBtn");
+  var searchClear = $("searchClearBtn");
+
+  if (searchBtn) {
+    searchBtn.addEventListener("click", function(){
+      if (!eventId) { showToast("Select an event first.", "error"); return; }
+      runNameSearch();
+    });
+  }
+  if (searchInput) {
+    searchInput.addEventListener("input", function(){
+      updateSearchClearBtn();
+      clearTimeout(searchDebounce);
+      searchDebounce = setTimeout(runNameSearch, 180);
+    });
+    searchInput.addEventListener("keydown", function(e){
+      if (e.key === "Enter") { e.preventDefault(); runNameSearch(); }
+      if (e.key === "Escape") { searchInput.value = ""; updateSearchClearBtn(); clearSearchResults(); }
+    });
+  }
+  if (searchClear) {
+    searchClear.addEventListener("click", function(){
+      if (searchInput) searchInput.value = "";
+      updateSearchClearBtn();
+      clearSearchResults();
+      if (searchInput) searchInput.focus();
+    });
+  }
+
+  /* Auth boot */
   auth.onAuthStateChanged(function(user){
     applyAuth(user);
     if (!user) {
@@ -808,7 +992,7 @@ document.addEventListener("DOMContentLoaded", function(){
       });
   });
 
-  // Cleanup camera when leaving
+  /* Cleanup camera when leaving */
   window.addEventListener("beforeunload", function(){
     try { if (html5QrCode) html5QrCode.stop(); } catch(e){}
   });
