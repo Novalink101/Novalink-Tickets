@@ -530,9 +530,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .promo-help{font-size:10.5px;color:var(--text-muted);font-style:italic;margin-top:8px;line-height:1.5;}
 </style>
 </head>
-<!-- ═══════════════════════════════════════════════════════════════
-     ═══ PART 1 OF 5 ENDS HERE (HEAD + CSS) ═══
-     ═══════════════════════════════════════════════════════════════ -->
+<!-- ═══ PART 1 OF 5 ENDS HERE ═══ -->
   <body>
 <header class="site-header">
   <div class="container header-inner">
@@ -778,10 +776,8 @@ h1,h2,h3{line-height:1.15;font-weight:700}
         </div>
       </div>
     </section>
-<!-- ═══════════════════════════════════════════════════════════════
-     ═══ PART 2 OF 5 ENDS HERE (HEADER + STEP 1) ═══
-     ═══════════════════════════════════════════════════════════════ -->
-        <section class="step-panel" data-step-panel="2">
+<!-- ═══ PART 2 OF 5 ENDS HERE ═══ -->
+      <section class="step-panel" data-step-panel="2">
       <div class="studio-layout">
         <div class="form-card">
           <div class="form-header">
@@ -1243,9 +1239,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
         </div>
       </div>
     </section>
-<!-- ═══════════════════════════════════════════════════════════════
-     ═══ PART 3 OF 5 ENDS HERE (STEPS 2, 3, 4) ═══
-     ═══════════════════════════════════════════════════════════════ -->
+<!-- ═══ PART 3 OF 5 ENDS HERE ═══ -->
         <section class="step-panel" data-step-panel="5">
       <div class="studio-layout">
         <div class="form-card">
@@ -1369,14 +1363,8 @@ h1,h2,h3{line-height:1.15;font-weight:700}
   </div>
 </main>
 
-<!-- ═══════════════════════════════════════════════════════════════
-     TOAST NOTIFICATION
-     ═══════════════════════════════════════════════════════════════ -->
 <div class="toast" id="toast"></div>
 
-<!-- ═══════════════════════════════════════════════════════════════
-     FULLSCREEN VENUE EDITOR OVERLAY
-     ═══════════════════════════════════════════════════════════════ -->
 <div class="fullscreen-overlay" id="fullscreenOverlay">
   <div class="fs-header">
     <h2>VENUE EDITOR · <span id="fsStageName">STAGE</span></h2>
@@ -1446,9 +1434,6 @@ h1,h2,h3{line-height:1.15;font-weight:700}
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════════════════════════════
-     SEATING PLAN FULL-VIEW OVERLAY
-     ═══════════════════════════════════════════════════════════════ -->
 <div class="sp-fullscreen" id="seatingPlanOverlay">
   <div class="sp-header">
     <h2>SEATING PLAN · <span id="spModeLabel">ROWS</span></h2>
@@ -1475,9 +1460,7 @@ h1,h2,h3{line-height:1.15;font-weight:700}
     <div class="sp-inner" id="seatingPlanFullInner"></div>
   </div>
 </div>
-<!-- ═══════════════════════════════════════════════════════════════
-     ═══ PART 4 OF 5 ENDS HERE (STEP 5 + OVERLAYS) ═══
-     ═══════════════════════════════════════════════════════════════ -->
+<!-- ═══ PART 4 OF 5 ENDS HERE ═══ -->
     <script>
 (function(){
 'use strict';
@@ -1497,6 +1480,12 @@ if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 var db   = firebase.firestore();
 var auth = firebase.auth();
 var EVENTS_COLLECTION = "events";
+
+/* ══════════════════════════════════════════════════════════════
+   EDIT MODE DETECTION
+   ══════════════════════════════════════════════════════════════ */
+var EDIT_EVENT_ID = (new URLSearchParams(window.location.search)).get("id") || null;
+var IS_EDIT_MODE  = !!EDIT_EVENT_ID;
 
 window._nvCurrentUser = null;
 auth.onAuthStateChanged(function(u){ window._nvCurrentUser = u; });
@@ -1765,6 +1754,260 @@ function updateChairModeInfo(){
 }
 function isSellingPerChair(){ return !tableMode || numberChairs; }
 
+/* ══════════════════════════════════════════════════════════════
+   EDIT MODE — Load an existing event into the form
+   ══════════════════════════════════════════════════════════════ */
+function loadEventForEdit(eventId, showCoverPreviewFn){
+  return db.collection(EVENTS_COLLECTION).doc(eventId).get().then(function(snap){
+    if (!snap.exists) {
+      showToast("That event no longer exists — starting a new one instead.", "error", 4200);
+      return;
+    }
+    var d = snap.data();
+    var setVal = function(id, v){ var el = $(id); if (el && v !== undefined && v !== null) el.value = v; };
+
+    /* ── STEP 1 ── */
+    setVal("hostName",         d.hostName);
+    setVal("hostEmail",        d.hostEmail);
+    setVal("venueName",        d.venueName || (d.location && d.location.venueName));
+    setVal("venueCity",        d.city || (d.location && d.location.city));
+    setVal("venueAddress",     d.venueAddress || (d.location && d.location.address));
+    setVal("eventType",        d.eventType);
+    setVal("startTime",        d.startTime);
+    setVal("cost",             (d.cost !== undefined && d.cost !== null) ? Number(d.cost).toFixed(2) : "");
+    setVal("startDate",        d.startDate);
+    setVal("eventName",        d.eventName);
+    setVal("eventTagline",     d.eventTagline);
+    setVal("eventDescription", d.eventDescription);
+    setVal("ageRestriction",   d.ageRestriction || "all");
+    setVal("refundPolicy",     d.refundPolicy   || "24h");
+
+    if (d.coverImage) {
+      if (d.coverImage.indexOf("data:") === 0) {
+        coverDataUrl = d.coverImage;
+      } else {
+        setVal("coverImageUrl", d.coverImage);
+      }
+      if (typeof showCoverPreviewFn === "function") showCoverPreviewFn(d.coverImage);
+    }
+
+    selectedLocation = {
+      venueName: d.venueName || (d.location && d.location.venueName) || "",
+      city:      d.city      || (d.location && d.location.city)      || "",
+      address:   d.venueAddress || (d.location && d.location.address) || ""
+    };
+    updateAllTicketPreviews();
+    updateVenuePresetHint();
+    var descEl = $("eventDescription");
+    if (descEl) descEl.dispatchEvent(new Event("input"));
+
+    /* ── STEP 2: plan ── */
+    if (d.plan && d.plan.id) {
+      var planRadio = document.querySelector('input[name="plan"][value="' + d.plan.id + '"]');
+      if (planRadio) {
+        planRadio.checked = true;
+        currentPlan = { id: d.plan.id, fee: d.plan.fee || 7, limit: d.plan.limit || 500 };
+        document.querySelectorAll(".plan-card").forEach(function(card){
+          var r = card.querySelector("input[type=radio]");
+          card.classList.toggle("selected", r && r.checked);
+        });
+      }
+    }
+
+    /* ── STEP 3: tiers ── */
+    if (d.tierNames) {
+      TIER_KEYS.forEach(function(k){
+        if (d.tierNames[k]) {
+          TIER_NAMES[k] = d.tierNames[k];
+          var inp = document.querySelector('.tier-name-input[data-tier="'+k+'"]');
+          if (inp) inp.value = d.tierNames[k];
+        }
+      });
+    }
+    if (d.tierColours) {
+      TIER_KEYS.forEach(function(k){
+        if (d.tierColours[k]) {
+          TIER_COLORS[k] = d.tierColours[k];
+          var inp = document.querySelector('.tier-color-input[data-tier="'+k+'"]');
+          if (inp) inp.value = d.tierColours[k];
+        }
+      });
+    }
+    if (d.tierPrices) {
+      TIER_KEYS.forEach(function(k){
+        if (d.tierPrices[k] !== undefined) {
+          TIER_PRICES[k] = d.tierPrices[k];
+          var inp = document.querySelector('.tier-price-input[data-tier="'+k+'"]');
+          if (inp) inp.value = Number(d.tierPrices[k]).toFixed(2);
+        }
+      });
+    }
+    if (d.activeTierCount) {
+      activeTierCount = d.activeTierCount;
+      var tc = $("tierCount"); if (tc) tc.value = String(d.activeTierCount);
+    }
+    if (d.tierColor) { var tsel = $("tierColor"); if (tsel) tsel.value = d.tierColor; }
+    applyTierColors();
+
+    /* ── STEP 4: venue / seating ── */
+    if (typeof d.canvasWidth === "number")  { canvasWidth  = d.canvasWidth;  var el; el=$("canvasWidth");  if(el) el.value = canvasWidth;  }
+    if (typeof d.canvasHeight === "number") { canvasHeight = d.canvasHeight; var el; el=$("canvasHeight"); if(el) el.value = canvasHeight; }
+    if (typeof d.gridSize === "number")     { gridSize     = d.gridSize;     var el; el=$("gridSize");     if(el) el.value = gridSize;     }
+    if (typeof d.snapToGrid === "boolean")  { snapToGrid   = d.snapToGrid;   var el; el=$("snapToggle");   if(el) el.checked = snapToGrid; }
+    if (typeof d.pxPerCm === "number")      { pxPerCm      = d.pxPerCm;      var el; el=$("pxPerCm");      if(el) el.value = pxPerCm;      }
+    if (typeof d.autoLayoutEnabled === "boolean") {
+      autoLayoutEnabled = d.autoLayoutEnabled;
+      var ab = $("fsToggleAuto"); if (ab) ab.classList.toggle("active", autoLayoutEnabled);
+    }
+    if (d.autoLayoutAxis) {
+      autoLayoutAxis = d.autoLayoutAxis;
+      var ax = $("fsToggleAxis");
+      if (ax) ax.textContent = autoLayoutAxis === "vertical" ? "↕ Vertical" : "↔ Horizontal";
+    }
+    if (typeof d.sectionSpacingPx === "number") { sectionSpacingPx = d.sectionSpacingPx; var sp=$("fsSectionSpacing"); if(sp) sp.value = sectionSpacingPx; }
+    if (typeof d.twoPointMode === "boolean")    { twoPointMode = d.twoPointMode; var tp=$("fsToggleTwoPoint"); if(tp) tp.classList.toggle("active", twoPointMode); }
+    if (d.pointA) pointA = d.pointA;
+    if (d.pointB) pointB = d.pointB;
+    if (typeof d.arcAmount === "number")        { arcAmount = d.arcAmount; var aa=$("fsArcAmount"); if(aa) aa.value = arcAmount; }
+    if (typeof d.seatGapEvery === "number")     { seatGapEvery = d.seatGapEvery; var sg=$("seatGapEvery"); if(sg) sg.value = seatGapEvery; }
+    if (typeof d.seatGapSize === "number")      { seatGapSize  = d.seatGapSize;  var ss=$("seatGapSize");  if(ss) ss.value = seatGapSize;  }
+    if (d.seatGapScope) { seatGapRowSpecific = d.seatGapScope; var sr=$("seatGapRowSpecific"); if(sr) sr.value = seatGapRowSpecific; }
+    updateSeatGapBadge();
+
+    if (d.stage) {
+      stage = Object.assign({}, d.stage);
+      var sx=$("stageX"), sy=$("stageY"), sw=$("stageW"), sh=$("stageH"), sn=$("stageName");
+      if (sx) sx.value = stage.x;
+      if (sy) sy.value = stage.y;
+      if (sw) sw.value = stage.width;
+      if (sh) sh.value = stage.height;
+      if (sn) sn.value = stage.name || "STAGE";
+    }
+
+    if (d.levels && d.levels.length) {
+      levels = d.levels.slice();
+      nextLevelId = Math.max.apply(null, levels.map(function(l){ return l.id; })) + 1;
+    }
+
+    if (d.allowManualSeatPick !== undefined) {
+      allowManualSeatPick = !!d.allowManualSeatPick;
+      var ap = $("allowManualSeatPick"); if (ap) ap.checked = allowManualSeatPick;
+    }
+
+    if (d.holds && d.holds.length) {
+      holds = d.holds.map(function(h){
+        return { id: h.id, name: h.name, color: h.color, seats: (h.seats || []).slice() };
+      });
+      nextHoldId = Math.max.apply(null, holds.map(function(h){
+        return parseInt((h.id||"").replace("hold-",""), 10) || 1;
+      })) + 1;
+      activeHoldId = holds[0] ? holds[0].id : null;
+    }
+
+    if (d.tableConfig) {
+      tableConfig = Object.assign(tableConfig, d.tableConfig);
+      var ts=$("tableShape");    if(ts)  ts.value  = tableConfig.shape;
+      var ca=$("chairsAround");  if(ca)  ca.value  = tableConfig.chairsAround;
+      var cp=$("chairsPerSide"); if(cp)  cp.value  = tableConfig.chairsPerSide;
+      var cl=$("chairsLongSide");if(cl)  cl.value  = tableConfig.chairsLongSide;
+      var cs=$("chairsShortSide");if(cs) cs.value  = tableConfig.chairsShortSide;
+      var tw=$("tableWidth");    if(tw)  tw.value  = getTableWidthCm();
+      var th=$("tableHeight");   if(th)  th.value  = tableConfig.rectLengthCm;
+      var tsp=$("tableSpacing"); if(tsp) tsp.value = tableConfig.spacingCm;
+    }
+    if (typeof d.numberChairs === "boolean") {
+      numberChairs = d.numberChairs;
+      var nc = $("numberChairsToggle"); if (nc) nc.checked = numberChairs;
+    }
+    if (d.canvasElements && d.canvasElements.length) {
+      canvasElements = d.canvasElements.map(function(e){ return Object.assign({}, e); });
+      nextCanvasElementId = Math.max.apply(null, canvasElements.map(function(e){ return e.id; })) + 1;
+    }
+
+    if (d.sections && d.sections.length) {
+      var l1 = $("totalLevel1"); if (l1) l1.value = d.sections.length;
+      sectionNames = {}; sectionTierOverrides = {}; sectionRowCounts = {}; sectionRowOverrides = {};
+      sectionPositions = {}; sectionTableRows = {}; sectionKinds = {}; cornerConfigs = {};
+
+      d.sections.forEach(function(sec, idx){
+        if (sec.name)         sectionNames[idx]         = sec.name;
+        if (sec.tierOverride) sectionTierOverrides[idx] = sec.tierOverride;
+        sectionPositions[idx] = {
+          x:        sec.x || 0,
+          y:        sec.y || 0,
+          scale:    sec.scale    || 1,
+          rotation: sec.rotation || 0,
+          levelId:  (sec.levelId !== undefined) ? sec.levelId : (levels[0] ? levels[0].id : 0)
+        };
+        if (sec.mode === "rows" && sec.rowCount) {
+          sectionRowCounts[idx] = sec.rowCount;
+        } else if (sec.mode === "tables") {
+          sectionTableRows[idx] = (sec.tableRows || []).map(function(c){ return { count: c }; });
+        } else if (sec.mode === "corner" && sec.corner) {
+          cornerConfigs[idx] = sec.corner;
+        }
+      });
+    }
+
+    if (d.seatingMode === "tables") {
+      tableMode = true;
+      var tm = $("tableModeToggle"); if (tm) tm.checked = true;
+    } else if (d.seatingMode === "rows") {
+      tableMode = false;
+      var tm2 = $("tableModeToggle"); if (tm2) tm2.checked = false;
+    }
+
+    /* ── STEP 5: promo codes ── */
+    if (d.promoCodes && d.promoCodes.length) {
+      promoCodes = d.promoCodes.map(function(p){ return Object.assign({}, p); });
+    }
+
+    /* ── Rebuild derived views ── */
+    applyTableModeUI();
+    rebuildSectionTabs();
+    refreshSectionInputs();
+    rebuildRowOverrides();
+    rebuildTableRowsEditor();
+    rebuildAnnotationList();
+    rebuildHoldSelect();
+    rebuildLevelsList();
+    rebuildLevelSelect();
+    updateTierCountOptions();
+    updateTierVisibility();
+    updateTableSummary();
+    calculateCapacity();
+    updateRevenueCalculator();
+    renderTierBreakdown();
+    renderPromoList();
+    updateLayoutSummary();
+    updateScaleHints();
+    updateTableValidation();
+    renderSeatingPlan();
+    updateAllTicketPreviews();
+
+    /* ── Flip UI to edit mode ── */
+    document.title = "Edit Event - Novalink Studio";
+    var s1h = document.querySelector('.step-panel[data-step-panel="1"] .form-header h1');
+    var s1p = document.querySelector('.step-panel[data-step-panel="1"] .form-header p');
+    if (s1h) s1h.textContent = "Edit Event Details";
+    if (s1p) s1p.textContent = "Update the fields below, then click Update Event to save your changes.";
+    var sb = $("submitBtn");
+    if (sb) {
+      sb.innerHTML = '<i data-lucide="save"></i> Update Event';
+      if (window.lucide) lucide.createIcons();
+    }
+    var note = $("saveStateNote");
+    if (note) { note.className = "save-state-note"; note.innerHTML = ""; }
+    isSaved = false;
+    savedEventId = EDIT_EVENT_ID;
+
+    showToast("Event loaded for editing.", "success", 2600);
+  }).catch(function(err){
+    console.error("loadEventForEdit error:", err);
+    showToast("Could not load event: " + err.message, "error", 5000);
+  });
+}
+
 document.addEventListener("DOMContentLoaded", function(){
   if(window.lucide) lucide.createIcons();
 
@@ -1784,7 +2027,7 @@ document.addEventListener("DOMContentLoaded", function(){
       renderSeatingPlan(); updateTableSummary(); updateLayoutSummary();
       setTimeout(function(){ renderSeatingPlan(); updateTableSummary(); updateLayoutSummary(); },60);
       setTimeout(function(){ renderSeatingPlan(); updateTableSummary(); updateLayoutSummary(); },250);
-      setTimeout(function(){ showToast("Set the venue, then choose a layout mode.","info",3200); },400);
+      if(!IS_EDIT_MODE) setTimeout(function(){ showToast("Set the venue, then choose a layout mode.","info",3200); },400);
     }
     if(n===5){ updateRevenueCalculator(); renderTierBreakdown(); renderPromoList(); }
   }
@@ -1804,10 +2047,15 @@ document.addEventListener("DOMContentLoaded", function(){
   function markAsSaved(eventId){
     isSaved=true; savedEventId=eventId;
     var btn=$("submitBtn");
-    if(btn){ btn.disabled=true; btn.classList.add("btn-saved"); btn.innerHTML='<i data-lucide="check-circle"></i> Event Saved ✓'; }
+    if(btn){ btn.disabled=true; btn.classList.add("btn-saved"); btn.innerHTML='<i data-lucide="check-circle"></i> ' + (IS_EDIT_MODE ? 'Updated ✓' : 'Event Saved ✓'); }
     if(window.lucide) lucide.createIcons();
     var note=$("saveStateNote");
-    if(note){ note.className="save-state-note visible ok"; note.innerHTML='<i data-lucide="check-circle"></i><span>Event saved successfully. Reference: <code>'+String(eventId)+'</code>. It now appears in the Featured Events list on the home page.</span>'; }
+    if(note){
+      note.className="save-state-note visible ok";
+      note.innerHTML='<i data-lucide="check-circle"></i><span>'+(IS_EDIT_MODE
+        ? 'Event updated successfully. Reference: <code>'+String(eventId)+'</code>.'
+        : 'Event saved successfully. Reference: <code>'+String(eventId)+'</code>. It now appears in the Featured Events list on the home page.')+'</span>';
+    }
     if(window.lucide) lucide.createIcons();
     try{ sessionStorage.setItem(SAVE_FLAG_KEY,eventId); }catch(e){}
   }
@@ -1823,10 +2071,7 @@ document.addEventListener("DOMContentLoaded", function(){
   /* PROMO CODES */
   function renderPromoList(){
     var list=$("promoList"); if(!list) return;
-    if(!promoCodes.length){
-      list.innerHTML='<div class="promo-empty">No promo codes yet. Add one below.</div>';
-      return;
-    }
+    if(!promoCodes.length){ list.innerHTML='<div class="promo-empty">No promo codes yet. Add one below.</div>'; return; }
     list.innerHTML="";
     promoCodes.forEach(function(p){
       var row=document.createElement("div");
@@ -2074,6 +2319,7 @@ document.addEventListener("DOMContentLoaded", function(){
   }
   function updatePlanSnapshot(){
     var el1=$("revPlanName"); if(el1) el1.textContent=currentPlan.id.charAt(0).toUpperCase()+currentPlan.id.slice(1)+" · "+currentPlan.fee+"%";
+    var el1b=$("revPlanName2"); if(el1b) el1b.textContent=currentPlan.id.charAt(0).toUpperCase()+currentPlan.id.slice(1)+" · "+currentPlan.fee+"%";
     var el2=$("revFeePct"); if(el2) el2.textContent=currentPlan.fee+"%";
     var limit=currentPlan.limit, limitLabel=limit>=999999?"Unlimited":limit;
     var planLimitEl=$("planLimitOut"); if(planLimitEl) planLimitEl.textContent=limitLabel;
@@ -3121,7 +3367,7 @@ document.addEventListener("DOMContentLoaded", function(){
     var wCm=getTableWidthCm(), lCm=getTableLengthCm(), spCm=getSpacingCm();
     for(var s=0;s<count;s++){
       var pos=getSectionPos(s), lv=levels.find(function(x){ return x.id===pos.levelId; });
-      var base={name:getSectionName(s),level:lv?lv.name:null,x:pos.x,y:pos.y,scale:pos.scale,rotation:pos.rotation,tierOverride:getSectionTierOverride(s)};
+      var base={name:getSectionName(s),level:lv?lv.name:null,x:pos.x,y:pos.y,scale:pos.scale,rotation:pos.rotation,tierOverride:getSectionTierOverride(s),levelId:pos.levelId};
       if(isCornerSection(s)){ var cc=getCornerConfig(s); base.mode="corner"; base.corner={kind:getSectionKind(s),hSeats:cc.hSeats,vSeats:cc.vSeats,vRows:cc.vRows,hRows:getRowCount(s),style:cc.style||"curved",totalSeats:cornerSeatCount(s)}; sections.push(base); continue; }
       if(tableMode){
         var rows=getSectionTableRows(s), tier=getSectionTierOverride(s)||(getActiveTiers()[getActiveTiers().length-1]||"cyan"), cpt=chairsPerTable();
@@ -3225,9 +3471,16 @@ document.addEventListener("DOMContentLoaded", function(){
     payload.ownerUid=user.uid;
     payload.ownerEmail=user.email||"";
     payload.ownerName=user.displayName||(user.email?user.email.split("@")[0]:"");
-    var ref=db.collection(EVENTS_COLLECTION).doc();
-    payload.id=ref.id;
-    payload.createdAt=firebase.firestore.FieldValue.serverTimestamp();
+    var ref;
+    if (IS_EDIT_MODE) {
+      ref = db.collection(EVENTS_COLLECTION).doc(EDIT_EVENT_ID);
+      payload.id = EDIT_EVENT_ID;
+      payload.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+    } else {
+      ref = db.collection(EVENTS_COLLECTION).doc();
+      payload.id = ref.id;
+      payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+    }
     ref.set(payload).then(function(){ onDone({ok:true,id:ref.id}); }).catch(function(err){ console.error("Firestore save error:",err); onDone({ok:false,error:err.message}); });
   }
   var costInput=$("cost");
@@ -3236,7 +3489,7 @@ document.addEventListener("DOMContentLoaded", function(){
     if(!(window._nvCurrentUser||auth.currentUser)){ showToast("Please sign in before saving an event. Redirecting…","error",4000); setTimeout(function(){ window.location.href="index.html#signin"; },1200); return; }
     var planId=currentPlan.id;
     var planNeedsSeating=(planId==="standard"||planId==="premium"||planId==="enterprise");
-    if(planNeedsSeating&&!step4Visited){ showToast("Please review the Seating Plan before saving.","error",6500); goToStep(4); return; }
+    if(planNeedsSeating&&!step4Visited&&!IS_EDIT_MODE){ showToast("Please review the Seating Plan before saving.","error",6500); goToStep(4); return; }
     var req=[{id:"hostName",msg:"Host name is required"},{id:"hostEmail",msg:"Host email is required"},{id:"startTime",msg:"Start time is required"},{id:"startDate",msg:"Start date is required"},{id:"eventName",msg:"Event name is required"}];
     for(var i=0;i<req.length;i++){ var f=$(req[i].id); if(f&&!String(f.value||"").trim()){ showToast(req[i].msg,"error",3500); goToStep(1); setTimeout(function(){ f.focus(); },350); return; } }
     if(!$("venueName").value.trim()){ showToast("Please enter the venue name.","error",4200); goToStep(1); setTimeout(function(){ $("venueName").focus(); },350); return; }
@@ -3251,8 +3504,8 @@ document.addEventListener("DOMContentLoaded", function(){
     persistEvent(payload,function(res){
       if(!res.ok){ btn.disabled=false; btn.innerHTML=orig; if(window.lucide) lucide.createIcons(); showToast("Save failed: "+res.error,"error",6000); return; }
       markAsSaved(res.id);
-      showToast("Event saved! It now appears for everyone on the home page.","success",4500);
-      setTimeout(function(){ if(confirm("Event saved. View it on the home page now?")) window.location.href="index.html"; },900);
+      showToast(IS_EDIT_MODE?"Event updated successfully!":"Event saved! It now appears for everyone on the home page.","success",4500);
+      setTimeout(function(){ if(confirm(IS_EDIT_MODE?"Event updated. Return to the events list?":"Event saved. View it on the home page now?")) window.location.href="index.html"; },900);
     });
   }
 
@@ -3448,6 +3701,7 @@ document.addEventListener("DOMContentLoaded", function(){
   updateInsertToolUI(); applyPlanFeatures(); applySeatViewMode(); applyStaffSeatMode(); updateCornerFitHint();
 
   (function applyNeatDefault(){
+    if (IS_EDIT_MODE) return;
     var hasTyped=($("eventName")&&$("eventName").value.trim())||($("hostName")&&$("hostName").value.trim());
     if(hasTyped) return;
     $("totalLevel1").value=3;
@@ -3458,6 +3712,11 @@ document.addEventListener("DOMContentLoaded", function(){
     rebuildSectionTabs(); refreshSectionInputs(); rebuildRowOverrides(); rebuildTableRowsEditor();
     calculateCapacity(); updateTableSummary(); updateLayoutSummary(); renderSeatingPlan();
   })();
+
+  /* If URL has ?id=…, load existing event for editing */
+  if (IS_EDIT_MODE) {
+    loadEventForEdit(EDIT_EVENT_ID, showCoverPreview);
+  }
 
   goToStep(1);
   goToSubstep(1,true);
@@ -3474,6 +3733,4 @@ document.addEventListener("DOMContentLoaded", function(){
 </script>
 </body>
 </html>
-<!-- ═══════════════════════════════════════════════════════════════
-     ═══ PART 5 OF 5 ENDS HERE — END OF FILE ═══
-     ═══════════════════════════════════════════════════════════════ -->
+<!-- ═══ PART 5 OF 5 ENDS HERE — END OF FILE ═══ -->
