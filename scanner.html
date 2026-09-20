@@ -76,10 +76,14 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .picker{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rd);padding:20px;margin-bottom:20px;box-shadow:0 4px 16px rgba(10,15,20,0.04)}
 .picker-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
 .picker label{display:block;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--cy3)}
+.sound-controls{display:inline-flex;gap:6px;align-items:center}
 .sound-toggle{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:99px;border:1px solid var(--bd2);background:var(--sf2);color:var(--tx2);font-size:11.5px;font-weight:800;font-family:inherit;cursor:pointer;transition:all 0.15s ease}
 .sound-toggle:hover{border-color:var(--cy);color:var(--cy3)}
 .sound-toggle i{width:13px;height:13px}
 .sound-toggle.muted{background:var(--dgf);border-color:#fecaca;color:var(--dg)}
+.sound-test{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;padding:0;border-radius:50%;border:1px solid var(--cy);background:var(--cyf);color:var(--cy3);font-family:inherit;cursor:pointer;transition:all 0.15s ease}
+.sound-test:hover{background:var(--cy);color:#04161c}
+.sound-test i{width:14px;height:14px}
 .picker select{width:100%;padding:14px 16px;background:var(--bg);border:1px solid var(--bd2);border-radius:10px;color:var(--tx);font-size:15px;font-family:inherit;appearance:none;padding-right:44px;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23009999' stroke-width='3'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;background-size:14px;cursor:pointer}
 .picker select:focus{outline:none;border-color:var(--cy);box-shadow:0 0 0 3px rgba(0,255,255,0.15);background-color:#fff}
 .picker .meta{margin-top:10px;font-size:12px;color:var(--mut);text-align:center}
@@ -230,9 +234,14 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
       <div class="picker">
         <div class="picker-head">
           <label for="eventSelect">Event</label>
-          <button type="button" class="sound-toggle" id="soundToggle" title="Toggle scan sounds">
-            <i data-lucide="volume-2"></i><span>Sound on</span>
-          </button>
+          <div class="sound-controls">
+            <button type="button" class="sound-test" id="soundTestBtn" title="Test sound">
+              <i data-lucide="volume-1"></i>
+            </button>
+            <button type="button" class="sound-toggle" id="soundToggle" title="Toggle scan sounds">
+              <i data-lucide="volume-2"></i><span>Sound on</span>
+            </button>
+          </div>
         </div>
         <select id="eventSelect">
           <option value="">Loading your events…</option>
@@ -332,15 +341,136 @@ var scanning = false;
 var scannerCooldown = null;
 
 /* ══════════════════════════════════════════════════════════════
-   AUDIO ENGINE
-   Uses Web Audio API to synthesize verification sounds
-   (no external files). Works on iOS too once unlocked.
+   AUDIO ENGINE  (bulletproof version)
+   — Eager context creation
+   — Resume on EVERY user gesture
+   — Linear ramps only (exponential ramps fail silently)
+   — Higher gain so it's unmistakable
+   — Console logging for debugging
    ══════════════════════════════════════════════════════════════ */
 var audioCtx = null;
+var audioUnlocked = false;
 var soundEnabled = true;
 try {
   if (localStorage.getItem("novalink_scanner_sound") === "off") soundEnabled = false;
 } catch(e){}
+
+function getAudioCtx(){
+  try {
+    if (!audioCtx) {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) { console.warn("[Sound] Web Audio not supported on this browser."); return null; }
+      audioCtx = new AC();
+      console.log("[Sound] AudioContext created. State:", audioCtx.state);
+    }
+    if (audioCtx.state === "suspended") {
+      audioCtx.resume().then(function(){
+        audioUnlocked = true;
+        console.log("[Sound] AudioContext resumed.");
+      }).catch(function(err){
+        console.warn("[Sound] Resume failed:", err);
+      });
+    } else {
+      audioUnlocked = true;
+    }
+  } catch(e){
+    console.error("[Sound] Init error:", e);
+    return null;
+  }
+  return audioCtx;
+}
+
+/* Try to unlock on any user gesture (needed for iOS) */
+function tryUnlockAudio(){
+  var ctx = getAudioCtx();
+  if (ctx && ctx.state === "running") {
+    audioUnlocked = true;
+  }
+}
+
+/* Simple beep with linear ramps only — bulletproof */
+function beep(freq, delay, duration, volume, wave){
+  var ctx = getAudioCtx();
+  if (!ctx) return;
+  try {
+    var t = ctx.currentTime + (delay || 0);
+    var osc = ctx.createOscillator();
+    var gain = ctx.createGain();
+    osc.type = wave || "sine";
+    osc.frequency.setValueAtTime(freq, t);
+    /* Attack */
+    gain.gain.setValueAtTime(0.0001, t);
+    gain.gain.linearRampToValueAtTime(volume || 0.5, t + 0.008);
+    /* Sustain + Decay */
+    gain.gain.linearRampToValueAtTime(0.0001, t + duration);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(t);
+    osc.stop(t + duration + 0.03);
+  } catch(e){
+    console.error("[Sound] Beep error:", e);
+  }
+}
+
+function playScanSound(type){
+  if (!soundEnabled) return;
+  if (!audioUnlocked) tryUnlockAudio();
+
+  if (type === "valid") {
+    /* Rising happy "dee-DEET" */
+    beep(880,  0.00, 0.12, 0.6, "sine");
+    beep(1320, 0.12, 0.22, 0.6, "sine");
+  }
+  else if (type === "used") {
+    /* Harsh triple buzzer */
+    beep(180, 0.00, 0.22, 0.7, "square");
+    beep(180, 0.30, 0.22, 0.7, "square");
+    beep(180, 0.60, 0.22, 0.7, "square");
+  }
+  else if (type === "cancelled") {
+    /* Descending "bee-boo" */
+    beep(500, 0.00, 0.18, 0.55, "sine");
+    beep(320, 0.20, 0.28, 0.55, "sine");
+  }
+  else {
+    /* Invalid — single low buzz */
+    beep(220, 0.00, 0.45, 0.6, "square");
+  }
+}
+
+function updateSoundToggle(){
+  var btn = $("soundToggle");
+  if (!btn) return;
+  if (soundEnabled) {
+    btn.classList.remove("muted");
+    btn.innerHTML = '<i data-lucide="volume-2"></i><span>Sound on</span>';
+  } else {
+    btn.classList.add("muted");
+    btn.innerHTML = '<i data-lucide="volume-x"></i><span>Sound off</span>';
+  }
+  refreshIcons();
+}
+
+function toggleSound(){
+  soundEnabled = !soundEnabled;
+  try { localStorage.setItem("novalink_scanner_sound", soundEnabled ? "on" : "off"); } catch(e){}
+  updateSoundToggle();
+  if (soundEnabled) {
+    tryUnlockAudio();
+    setTimeout(function(){ playScanSound("valid"); }, 50);
+  }
+  showToast(soundEnabled ? "Sound on" : "Sound off", "success", 1500);
+}
+
+function testSound(){
+  tryUnlockAudio();
+  if (!soundEnabled) {
+    showToast("Turn sound on first.", "error", 2000);
+    return;
+  }
+  setTimeout(function(){ playScanSound("valid"); }, 50);
+}
+/* ── END AUDIO ───────────────────────────────────────────── */
 
 var RE = window.NovalinkRoutingEngine || {};
 
@@ -365,97 +495,6 @@ function showToast(msg,type,ms){
   clearTimeout(showToast._t);
   showToast._t = setTimeout(function(){ t.classList.remove("show"); }, ms);
 }
-
-/* ── AUDIO ───────────────────────────────────────────────── */
-function initAudio(){
-  try {
-    if (!audioCtx) {
-      var AC = window.AudioContext || window.webkitAudioContext;
-      if (!AC) return null;
-      audioCtx = new AC();
-    }
-    if (audioCtx.state === "suspended") {
-      audioCtx.resume();
-    }
-  } catch(e){ return null; }
-  return audioCtx;
-}
-
-function beep(freq, startOffset, duration, volume, type){
-  var ctx = audioCtx;
-  if (!ctx) return;
-  var t = ctx.currentTime + startOffset;
-  var osc = ctx.createOscillator();
-  var gain = ctx.createGain();
-  osc.type = type || "square";
-  osc.frequency.setValueAtTime(freq, t);
-  gain.gain.setValueAtTime(0, t);
-  gain.gain.linearRampToValueAtTime(volume || 0.3, t + 0.008);
-  gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
-  osc.connect(gain);
-  gain.connect(ctx.destination);
-  osc.start(t);
-  osc.stop(t + duration + 0.05);
-}
-
-function playScanSound(type){
-  if (!soundEnabled) return;
-  var ctx = initAudio();
-  if (!ctx) return;
-
-  if (type === "valid") {
-    /* Rising happy "dee-DEET" — like a scanner accept */
-    beep(880,  0.00, 0.10, 0.35, "square");
-    beep(1320, 0.10, 0.18, 0.35, "square");
-  }
-  else if (type === "used") {
-    /* Harsh triple buzzer "BZZT BZZT BZZT" — alarm */
-    beep(180, 0.00, 0.20, 0.45, "sawtooth");
-    beep(180, 0.28, 0.20, 0.45, "sawtooth");
-    beep(180, 0.56, 0.20, 0.45, "sawtooth");
-  }
-  else if (type === "cancelled") {
-    /* Descending sad "bee-boo" */
-    beep(500, 0.00, 0.15, 0.35, "square");
-    beep(300, 0.18, 0.25, 0.35, "square");
-  }
-  else {
-    /* Invalid — single low dull buzz */
-    beep(220, 0.00, 0.40, 0.40, "square");
-  }
-}
-
-function unlockAudio(){
-  var ctx = initAudio();
-  if (ctx && ctx.state === "suspended") {
-    ctx.resume().catch(function(){});
-  }
-}
-
-function updateSoundToggle(){
-  var btn = $("soundToggle");
-  if (!btn) return;
-  if (soundEnabled) {
-    btn.classList.remove("muted");
-    btn.innerHTML = '<i data-lucide="volume-2"></i><span>Sound on</span>';
-  } else {
-    btn.classList.add("muted");
-    btn.innerHTML = '<i data-lucide="volume-x"></i><span>Sound off</span>';
-  }
-  refreshIcons();
-}
-
-function toggleSound(){
-  soundEnabled = !soundEnabled;
-  try { localStorage.setItem("novalink_scanner_sound", soundEnabled ? "on" : "off"); } catch(e){}
-  updateSoundToggle();
-  if (soundEnabled) {
-    unlockAudio();
-    playScanSound("valid");
-  }
-  showToast(soundEnabled ? "Sound on" : "Sound off", "success", 1500);
-}
-/* ── END AUDIO ───────────────────────────────────────────── */
 
 function buildRef(evId, tId){
   if (typeof RE.buildTicketRef === "function") return RE.buildTicketRef(evId, tId);
@@ -960,14 +999,18 @@ document.addEventListener("DOMContentLoaded", function(){
   $("year").textContent = new Date().getFullYear();
   refreshIcons();
 
-  updateSoundToggle();
+  /* ── Create the AudioContext eagerly, then resume on every interaction ── */
+  getAudioCtx();
 
-  /* Unlock audio on first user gesture (important for iOS) */
-  ["touchstart", "mousedown", "keydown", "click"].forEach(function(evt){
-    document.addEventListener(evt, unlockAudio, { passive: true });
+  ["pointerdown", "touchstart", "mousedown", "keydown", "click"].forEach(function(evt){
+    document.addEventListener(evt, tryUnlockAudio, { passive: true, capture: true });
+    window.addEventListener(evt, tryUnlockAudio, { passive: true, capture: true });
   });
 
+  updateSoundToggle();
+
   $("soundToggle").addEventListener("click", toggleSound);
+  $("soundTestBtn").addEventListener("click", testSound);
 
   $("userMenuBtn").addEventListener("click", function(e){
     e.stopPropagation();
@@ -1031,4 +1074,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-            </html>
+</html>
