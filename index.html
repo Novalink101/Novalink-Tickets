@@ -315,7 +315,7 @@ h3{font-size:1.2rem}
 .promo-logo .logo-text{font-size:1.25rem;font-weight:800;letter-spacing:2px;color:var(--navy);margin-top:14px}
 .promo-logo .logo-text span{color:#718096;font-weight:400}
 @keyframes float { 0%, 100% { transform: rotate(-45deg) translateY(0); } 50% { transform: rotate(-45deg) translateY(-5px); } }
-.promo-headline{font-size:clamp(1.8rem,4vw,2.5rem);font-weight:900;color:var(--navy);text-transform:uppercase;letter-spacing:1px;margin-bottom:32px}
+  .promo-headline{font-size:clamp(1.8rem,4vw,2.5rem);font-weight:900;color:var(--navy);text-transform:uppercase;letter-spacing:1px;margin-bottom:32px}
 .cards-stack{position:relative;width:100%;max-width:420px;height:420px;margin-bottom:24px}
 .ticket-card{position:absolute;width:260px;height:160px;border-radius:12px;padding:16px;text-align:left;box-shadow:0 10px 25px rgba(0,0,0,0.15);display:flex;flex-direction:column;justify-content:space-between;transition:transform 0.4s var(--ease-smooth), box-shadow 0.4s ease}
 .ticket-card:hover{transform:scale(1.05) translateY(-10px) !important;box-shadow:0 20px 40px rgba(0,0,0,0.25);z-index:10 !important}
@@ -393,6 +393,7 @@ h3{font-size:1.2rem}
           <div class="email" id="ddEmail">-</div>
           <span class="admin-badge" id="ddAdminBadge" style="display:none">Admin</span>
         </div>
+        <button class="user-dropdown-item" id="ddDashboard"><i data-lucide="layout-dashboard"></i> Dashboard</button>
         <button class="user-dropdown-item" id="ddMyEvents"><i data-lucide="calendar"></i> My events</button>
         <button class="user-dropdown-item" id="ddCreateEvent"><i data-lucide="plus-circle"></i> Create an event</button>
         <button class="user-dropdown-item" id="ddMyCards"><i data-lucide="ticket"></i> My cards</button>
@@ -435,7 +436,6 @@ h3{font-size:1.2rem}
     <button class="carousel-dot" data-slide="3" aria-label="Slide 4"></button>
   </div>
 </section>
-
 <section id="explore" class="section alt" style="padding-bottom:24px">
   <div class="container">
 
@@ -702,9 +702,8 @@ h3{font-size:1.2rem}
     </div>
 
   </div>
-</section>
-
-<footer class="site-footer">
+                                                                  </section>
+                                                                  <footer class="site-footer">
   <div class="container">
     <div class="footer-grid">
       <div>
@@ -726,6 +725,7 @@ h3{font-size:1.2rem}
         <a href="create-event.html">Create an event</a>
         <a href="create-trip.html">Create a trip</a>
         <a href="my-cards.html">My cards</a>
+        <a href="dashboard.html">Organizer dashboard</a>
       </div>
       <div class="footer-col">
         <h4>Support</h4>
@@ -807,15 +807,11 @@ h3{font-size:1.2rem}
 
 <div class="toast" id="toast"></div>
 <script>
-(function(){
+  (function(){
 'use strict';
 
 /* ============================================================
    NOVALINK — Firebase-backed index.html
-   - Events stored in Firestore "events" collection
-   - Visible to everyone (public read)
-   - Only creator (ownerUid) or admin can delete
-   - Accounts via Firebase Auth (email/password + Google)
    ============================================================ */
 
 /* ===== FIREBASE CONFIG ===== */
@@ -832,7 +828,7 @@ var db   = firebase.firestore();
 var auth = firebase.auth();
 var EVENTS_COLLECTION = "events";
 
-/* ===== ADMIN EMAIL (must match Firestore rules) ===== */
+/* ===== ADMIN EMAIL ===== */
 var ADMIN_EMAILS = ["nylnathan340@gmail.com"];
 
 /* ===== STATE ===== */
@@ -1012,7 +1008,6 @@ function renderFeaturedEvents(events){
     container.appendChild(card);
   });
 
-  // Bind delete buttons
   container.querySelectorAll(".event-card-delete").forEach(function(btn){
     btn.addEventListener("click", function(ev){
       ev.stopPropagation();
@@ -1137,6 +1132,7 @@ $("ddSignOut").addEventListener("click", function(){
   auth.signOut().then(function(){ showToast("Signed out", "success"); });
 });
 
+$("ddDashboard").addEventListener("click", function(){ window.location.href = "dashboard.html"; });
 $("ddMyEvents").addEventListener("click", function(){ window.location.href = "events.html"; });
 $("ddCreateEvent").addEventListener("click", function(){ window.location.href = "create-event.html"; });
 $("ddMyCards").addEventListener("click", function(){ window.location.href = "my-cards.html"; });
