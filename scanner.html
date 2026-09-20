@@ -190,13 +190,11 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 <main class="page">
   <div class="container">
 
-    <!-- Loading -->
     <div id="loadingState" class="ls">
       <i data-lucide="loader-2"></i>
       <p>Loading scanner…</p>
     </div>
 
-    <!-- Error -->
     <div id="errorState" class="es" style="display:none">
       <div class="ic"><i data-lucide="alert-circle" id="errorIcon"></i></div>
       <h2 id="errorTitle">Not available</h2>
@@ -206,7 +204,6 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
       </div>
     </div>
 
-    <!-- Sign-in required -->
     <div id="signinState" class="es" style="display:none">
       <div class="ic"><i data-lucide="lock"></i></div>
       <h2>Sign in required</h2>
@@ -217,7 +214,6 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
       </div>
     </div>
 
-    <!-- Main content -->
     <div id="scannerContent" style="display:none">
 
       <div class="page-head">
@@ -226,7 +222,6 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
         <p>Point the camera at a guest's QR code, or search tickets by name below.</p>
       </div>
 
-      <!-- Event picker -->
       <div class="picker">
         <label for="eventSelect">Event</label>
         <select id="eventSelect">
@@ -235,7 +230,6 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
         <div class="meta" id="eventMeta"></div>
       </div>
 
-      <!-- Camera (bigger) -->
       <div class="scanner-wrap" id="scannerWrap" style="display:none">
         <div id="reader"></div>
         <div class="scanner-hint">
@@ -243,7 +237,6 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
         </div>
       </div>
 
-      <!-- Search by name -->
       <div class="search-panel">
         <div class="label"><i data-lucide="user-search"></i> Search tickets by name</div>
         <div class="row">
@@ -262,7 +255,6 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
         </div>
       </div>
 
-      <!-- Recent scans -->
       <div class="recent">
         <div class="label">
           <span>Recent scans</span>
@@ -286,7 +278,6 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
   </div>
 </footer>
 
-<!-- Result overlay -->
 <div class="result-overlay" id="resultOverlay">
   <div class="icon" id="resultIcon"><i data-lucide="check"></i></div>
   <div class="title" id="resultTitle">VALID</div>
@@ -746,9 +737,29 @@ function verifyTicketById(ticketId){
   });
 }
 
+/* ══════════════════════════════════════════════════════════════
+   ★ NEW: VIBRATION HELPER
+   Uses navigator.vibrate (Android + most mobile browsers).
+   iOS Safari doesn't support it — silently does nothing there.
+   ══════════════════════════════════════════════════════════════ */
+function buzz(pattern){
+  try {
+    if (navigator && typeof navigator.vibrate === "function") {
+      navigator.vibrate(pattern);
+    }
+  } catch(e){ /* ignore */ }
+}
+
 function flashResult(type, title, guest, seat, msg){
   var ov = $("resultOverlay");
   ov.className = "result-overlay show " + type;
+
+  /* ★ NEW: buzz differently for each result type */
+  if (type === "used")           buzz([300, 120, 300, 120, 300]); // ALREADY USED — triple error buzz
+  else if (type === "valid")     buzz([80, 40, 80]);              // ADMIT — short happy buzz
+  else if (type === "cancelled") buzz([400, 150, 400]);           // CANCELLED — double buzz
+  else                           buzz([500]);                     // INVALID — single long buzz
+
   $("resultTitle").textContent = title;
   $("resultGuest").textContent = guest || "";
   $("resultSeat").textContent = seat || "";
