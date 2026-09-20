@@ -74,7 +74,12 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .page-head p{color:var(--mut);font-size:13.5px}
 
 .picker{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rd);padding:20px;margin-bottom:20px;box-shadow:0 4px 16px rgba(10,15,20,0.04)}
-.picker label{display:block;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--cy3);margin-bottom:8px}
+.picker-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
+.picker label{display:block;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--cy3)}
+.sound-toggle{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:99px;border:1px solid var(--bd2);background:var(--sf2);color:var(--tx2);font-size:11.5px;font-weight:800;font-family:inherit;cursor:pointer;transition:all 0.15s ease}
+.sound-toggle:hover{border-color:var(--cy);color:var(--cy3)}
+.sound-toggle i{width:13px;height:13px}
+.sound-toggle.muted{background:var(--dgf);border-color:#fecaca;color:var(--dg)}
 .picker select{width:100%;padding:14px 16px;background:var(--bg);border:1px solid var(--bd2);border-radius:10px;color:var(--tx);font-size:15px;font-family:inherit;appearance:none;padding-right:44px;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23009999' stroke-width='3'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;background-size:14px;cursor:pointer}
 .picker select:focus{outline:none;border-color:var(--cy);box-shadow:0 0 0 3px rgba(0,255,255,0.15);background-color:#fff}
 .picker .meta{margin-top:10px;font-size:12px;color:var(--mut);text-align:center}
@@ -223,7 +228,12 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
       </div>
 
       <div class="picker">
-        <label for="eventSelect">Event</label>
+        <div class="picker-head">
+          <label for="eventSelect">Event</label>
+          <button type="button" class="sound-toggle" id="soundToggle" title="Toggle scan sounds">
+            <i data-lucide="volume-2"></i><span>Sound on</span>
+          </button>
+        </div>
         <select id="eventSelect">
           <option value="">Loading your events…</option>
         </select>
@@ -321,6 +331,17 @@ var scannerRunning = false;
 var scanning = false;
 var scannerCooldown = null;
 
+/* ══════════════════════════════════════════════════════════════
+   AUDIO ENGINE
+   Uses Web Audio API to synthesize verification sounds
+   (no external files). Works on iOS too once unlocked.
+   ══════════════════════════════════════════════════════════════ */
+var audioCtx = null;
+var soundEnabled = true;
+try {
+  if (localStorage.getItem("novalink_scanner_sound") === "off") soundEnabled = false;
+} catch(e){}
+
 var RE = window.NovalinkRoutingEngine || {};
 
 function $(id){ return document.getElementById(id); }
@@ -344,6 +365,97 @@ function showToast(msg,type,ms){
   clearTimeout(showToast._t);
   showToast._t = setTimeout(function(){ t.classList.remove("show"); }, ms);
 }
+
+/* ── AUDIO ───────────────────────────────────────────────── */
+function initAudio(){
+  try {
+    if (!audioCtx) {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      audioCtx = new AC();
+    }
+    if (audioCtx.state === "suspended") {
+      audioCtx.resume();
+    }
+  } catch(e){ return null; }
+  return audioCtx;
+}
+
+function beep(freq, startOffset, duration, volume, type){
+  var ctx = audioCtx;
+  if (!ctx) return;
+  var t = ctx.currentTime + startOffset;
+  var osc = ctx.createOscillator();
+  var gain = ctx.createGain();
+  osc.type = type || "square";
+  osc.frequency.setValueAtTime(freq, t);
+  gain.gain.setValueAtTime(0, t);
+  gain.gain.linearRampToValueAtTime(volume || 0.3, t + 0.008);
+  gain.gain.exponentialRampToValueAtTime(0.0001, t + duration);
+  osc.connect(gain);
+  gain.connect(ctx.destination);
+  osc.start(t);
+  osc.stop(t + duration + 0.05);
+}
+
+function playScanSound(type){
+  if (!soundEnabled) return;
+  var ctx = initAudio();
+  if (!ctx) return;
+
+  if (type === "valid") {
+    /* Rising happy "dee-DEET" — like a scanner accept */
+    beep(880,  0.00, 0.10, 0.35, "square");
+    beep(1320, 0.10, 0.18, 0.35, "square");
+  }
+  else if (type === "used") {
+    /* Harsh triple buzzer "BZZT BZZT BZZT" — alarm */
+    beep(180, 0.00, 0.20, 0.45, "sawtooth");
+    beep(180, 0.28, 0.20, 0.45, "sawtooth");
+    beep(180, 0.56, 0.20, 0.45, "sawtooth");
+  }
+  else if (type === "cancelled") {
+    /* Descending sad "bee-boo" */
+    beep(500, 0.00, 0.15, 0.35, "square");
+    beep(300, 0.18, 0.25, 0.35, "square");
+  }
+  else {
+    /* Invalid — single low dull buzz */
+    beep(220, 0.00, 0.40, 0.40, "square");
+  }
+}
+
+function unlockAudio(){
+  var ctx = initAudio();
+  if (ctx && ctx.state === "suspended") {
+    ctx.resume().catch(function(){});
+  }
+}
+
+function updateSoundToggle(){
+  var btn = $("soundToggle");
+  if (!btn) return;
+  if (soundEnabled) {
+    btn.classList.remove("muted");
+    btn.innerHTML = '<i data-lucide="volume-2"></i><span>Sound on</span>';
+  } else {
+    btn.classList.add("muted");
+    btn.innerHTML = '<i data-lucide="volume-x"></i><span>Sound off</span>';
+  }
+  refreshIcons();
+}
+
+function toggleSound(){
+  soundEnabled = !soundEnabled;
+  try { localStorage.setItem("novalink_scanner_sound", soundEnabled ? "on" : "off"); } catch(e){}
+  updateSoundToggle();
+  if (soundEnabled) {
+    unlockAudio();
+    playScanSound("valid");
+  }
+  showToast(soundEnabled ? "Sound on" : "Sound off", "success", 1500);
+}
+/* ── END AUDIO ───────────────────────────────────────────── */
 
 function buildRef(evId, tId){
   if (typeof RE.buildTicketRef === "function") return RE.buildTicketRef(evId, tId);
@@ -737,11 +849,7 @@ function verifyTicketById(ticketId){
   });
 }
 
-/* ══════════════════════════════════════════════════════════════
-   ★ NEW: VIBRATION HELPER
-   Uses navigator.vibrate (Android + most mobile browsers).
-   iOS Safari doesn't support it — silently does nothing there.
-   ══════════════════════════════════════════════════════════════ */
+/* ── VIBRATION HELPER ────────────────────────────────────── */
 function buzz(pattern){
   try {
     if (navigator && typeof navigator.vibrate === "function") {
@@ -754,11 +862,14 @@ function flashResult(type, title, guest, seat, msg){
   var ov = $("resultOverlay");
   ov.className = "result-overlay show " + type;
 
-  /* ★ NEW: buzz differently for each result type */
-  if (type === "used")           buzz([300, 120, 300, 120, 300]); // ALREADY USED — triple error buzz
-  else if (type === "valid")     buzz([80, 40, 80]);              // ADMIT — short happy buzz
-  else if (type === "cancelled") buzz([400, 150, 400]);           // CANCELLED — double buzz
-  else                           buzz([500]);                     // INVALID — single long buzz
+  /* Play verification sound */
+  playScanSound(type);
+
+  /* Vibration per result type */
+  if (type === "used")           buzz([300, 120, 300, 120, 300]);
+  else if (type === "valid")     buzz([80, 40, 80]);
+  else if (type === "cancelled") buzz([400, 150, 400]);
+  else                           buzz([500]);
 
   $("resultTitle").textContent = title;
   $("resultGuest").textContent = guest || "";
@@ -849,6 +960,15 @@ document.addEventListener("DOMContentLoaded", function(){
   $("year").textContent = new Date().getFullYear();
   refreshIcons();
 
+  updateSoundToggle();
+
+  /* Unlock audio on first user gesture (important for iOS) */
+  ["touchstart", "mousedown", "keydown", "click"].forEach(function(evt){
+    document.addEventListener(evt, unlockAudio, { passive: true });
+  });
+
+  $("soundToggle").addEventListener("click", toggleSound);
+
   $("userMenuBtn").addEventListener("click", function(e){
     e.stopPropagation();
     $("userDropdown").classList.toggle("open");
@@ -911,4 +1031,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-</html>
+            </html>
