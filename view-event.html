@@ -600,7 +600,6 @@ function rowLabelFn(index){
   return label;
 }
 
-/* Build chairs array for a table */
 function chairsForTable(shape, W, H, cfg, chairSize, chairGap){
   var chairs = [];
   if (shape === "circular") {
@@ -625,7 +624,6 @@ function chairsForTable(shape, W, H, cfg, chairSize, chairGap){
       counter++; chairs.push({ x:  off, y: y2, num: counter });
     }
   } else {
-    /* rectangular */
     var nl = Math.max(1, cfg.chairsLongSide || 4);
     var ns = Math.max(1, cfg.chairsShortSide || 1);
     var offY = H / 2 + chairGap + chairSize / 2;
@@ -781,14 +779,12 @@ function renderSeatingPlan(data){
         blk.appendChild(rowEl);
       });
     } else if (sec.mode === "tables" && sec.tables){
-      /* ---- FULL TABLE + CHAIRS RENDERER ---- */
       var shape = sec.tableShape || tblCfg.shape || "circular";
       var wCm = sec.tableWidthCm || tblCfg.widthCm || 150;
       var lCm = sec.tableLengthCm || tblCfg.lengthCm || wCm;
       var spCm = sec.tableSpacingCm || tblCfg.spacingCm || 65;
       var perChair = eventSellsPerChair(data);
 
-      /* Compact scale so everything fits nicely on the page */
       var k = 0.45;
       var chairSize = 14;
       var chairGap = 3;
@@ -1101,7 +1097,6 @@ function buildGuestFields(qty){
   }
 }
 
-/* Recalculate max, update input, cap the current value, refresh hint */
 function syncQtyLimits(tier){
   var qtyInput = $("buyQty");
   var hint = $("buyQtyHint");
@@ -1358,9 +1353,11 @@ function doDelete(){
     });
 }
 
+/* ============ EDIT ============ */
+/* ★ CHANGED: create-event.html now reads ?id= instead of ?edit= */
 function editEvent(){
   if (!canEdit()) { showToast("You don't have permission to edit this event.", "error"); return; }
-  window.location.href = "create-event.html?edit=" + encodeURIComponent(eventId);
+  window.location.href = "create-event.html?id=" + encodeURIComponent(eventId);
 }
 
 /* ============ BOOT ============ */
