@@ -1,1 +1,321 @@
 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#0a0f14" />
+<title>Payment Failed · Novalink</title>
+<script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<style>
+:root{
+  --cy:#00FFFF;--cy2:#00CCCC;--cy3:#009999;--cyf:#e6ffff;
+  --bg:#f6f8fb;--sf:#ffffff;--sf2:#f1f4f8;
+  --bd:#e4e9f0;--bd2:#d3dbe5;
+  --tx:#0a0f14;--tx2:#2b3644;--mut:#6b7787;
+  --rd:14px;--font:'Inter',system-ui,-apple-system,sans-serif;
+  --dg:#dc2626;--dgf:#fef2f2;--sv:#059669;--svf:#ecfdf5;--nv:#1e2f4d;
+  --ease:cubic-bezier(0.25,0.8,0.25,1);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--tx);line-height:1.6;min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
+.container{max-width:680px;margin:0 auto;padding:0 24px;width:100%}
+h1,h2,h3{line-height:1.15;font-weight:700}
+a{color:inherit;text-decoration:none}
+button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation}
+.logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none;margin-left:12px}
+.logo .mark{width:34px;height:42px;flex-shrink:0}
+.logo .wm{font-weight:800;font-size:1.1rem;color:var(--nv)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:12px;font-weight:600;font-size:14px;border:1px solid transparent;cursor:pointer;transition:all 0.2s var(--ease);white-space:nowrap;font-family:inherit;text-decoration:none}
+.btn svg,.btn i{width:17px;height:17px}
+.btn-accent{background:linear-gradient(135deg,var(--cy),var(--cy2));color:#04161c}
+.btn-accent:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,255,255,0.35)}
+.btn-ghost{background:transparent;color:var(--tx2);border:1px solid var(--bd2)}
+.btn-ghost:hover{background:var(--sf2);border-color:var(--cy);color:var(--cy3)}
+.btn-block{width:100%}
+.btn-lg{padding:15px 26px;font-size:15px}
+.btn:disabled{opacity:0.55;cursor:not-allowed;transform:none!important}
+.site-header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,0.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--bd);padding:12px 0}
+.header-inner{display:flex;align-items:center;justify-content:space-between;gap:12px}
+.page{flex:1;padding:48px 0 64px;display:flex;align-items:center}
+.state{text-align:center;width:100%;max-width:560px;margin:0 auto;padding:40px 26px;background:var(--sf);border:1px solid var(--bd);border-radius:18px;box-shadow:0 20px 60px rgba(10,15,20,0.06)}
+.state .icon{width:96px;height:96px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 24px;background:var(--dgf);border:2px solid #fecaca;color:var(--dg)}
+.state .icon i{width:44px;height:44px}
+@keyframes sp{to{transform:rotate(360deg)}}
+.state h1{font-size:clamp(1.5rem,3.5vw,2rem);color:var(--dg);margin-bottom:10px}
+.state .sub{color:var(--mut);font-size:14.5px;margin-bottom:22px;line-height:1.6}
+.state .sub strong{color:var(--tx2);font-weight:700}
+.state .sub code{background:var(--sf2);border:1px solid var(--bd);border-radius:5px;padding:2px 8px;font-family:ui-monospace,monospace;font-size:12.5px;color:var(--cy3);word-break:break-all}
+.details{background:var(--sf2);border:1px solid var(--bd);border-radius:12px;padding:16px 18px;margin-bottom:22px;text-align:left}
+.details .row{display:flex;justify-content:space-between;gap:12px;padding:8px 0;font-size:13.5px;border-bottom:1px solid var(--bd)}
+.details .row:last-child{border-bottom:none}
+.details .row .lbl{color:var(--mut);font-weight:700;text-transform:uppercase;font-size:10.5px;letter-spacing:0.06em;flex-shrink:0;padding-top:2px}
+.details .row .val{color:var(--tx);font-weight:700;text-align:right;word-break:break-word;min-width:0}
+.details .row .val.mono{font-family:ui-monospace,monospace;font-size:12.5px;color:var(--cy3)}
+.reasons{list-style:none;padding:0;margin:0 0 22px;text-align:left;background:var(--sf2);border:1px solid var(--bd);border-radius:12px;padding:14px 18px}
+.reasons li{display:flex;gap:10px;align-items:flex-start;padding:6px 0;font-size:13px;color:var(--tx2);line-height:1.5}
+.reasons li i{width:15px;height:15px;color:var(--dg);flex-shrink:0;margin-top:3px}
+.reasons li strong{color:var(--tx);font-weight:700}
+.state .actions{display:flex;flex-direction:column;gap:10px;margin-top:8px}
+.state .actions .btn{width:100%}
+.help-note{margin-top:22px;padding-top:20px;border-top:1px dashed var(--bd);font-size:12.5px;color:var(--mut);line-height:1.6}
+.help-note a{color:var(--cy3);font-weight:700;text-decoration:underline}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120%);background:#0a0f14;color:#fff;padding:12px 18px;border-radius:12px;font-size:13.5px;z-index:200;transition:transform 0.4s var(--ease),opacity 0.3s ease;display:flex;align-items:center;gap:10px;pointer-events:none;opacity:0;max-width:calc(100vw - 40px)}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.success{background:#065f46}
+.toast.error{background:#991b1b}
+.footer{background:#0a0f14;color:#c9d2dd;padding:28px 0 20px;margin-top:auto;font-size:13px}
+.fb{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;color:#6b7787;font-size:12px}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a href="index.html" class="logo">
+      <svg class="mark" viewBox="0 0 60 74"><path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/><path fill="#00FFFF" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/></svg>
+      <span class="wm">NOVALINK</span>
+    </a>
+    <a href="index.html" class="btn btn-ghost" style="font-size:13px;padding:8px 12px;"><i data-lucide="home"></i> Home</a>
+  </div>
+</header>
+
+<main class="page">
+  <div class="container">
+
+    <div class="state">
+      <div class="icon"><i data-lucide="x-circle"></i></div>
+      <h1 id="failedTitle">Payment not completed</h1>
+      <p class="sub" id="failedSub">
+        Your payment was cancelled or did not go through. <strong>You have not been charged.</strong>
+        You can try again or pick a different payment method.
+      </p>
+
+      <div class="details" id="failedDetails" style="display:none;">
+        <div class="row"><span class="lbl">Event</span><span class="val" id="failedEvent">—</span></div>
+        <div class="row"><span class="lbl">Tier</span><span class="val" id="failedTier">—</span></div>
+        <div class="row"><span class="lbl">Quantity</span><span class="val" id="failedQty">—</span></div>
+        <div class="row" id="failedRefRow" style="display:none;"><span class="lbl">Reference</span><span class="val mono" id="failedRef">—</span></div>
+      </div>
+
+      <ul class="reasons" id="reasonsList">
+        <li><i data-lucide="info"></i><div>You cancelled the payment on the Yoco page.</div></li>
+        <li><i data-lucide="info"></i><div>Your card was <strong>declined</strong> by the bank — try a different card.</div></li>
+        <li><i data-lucide="info"></i><div>Your bank requires <strong>3D Secure</strong> verification that wasn't completed.</div></li>
+        <li><i data-lucide="info"></i><div>Your session timed out before the payment was finalised.</div></li>
+      </ul>
+
+      <div class="actions">
+        <a href="#" id="tryAgainBtn" class="btn btn-accent btn-lg">
+          <i data-lucide="refresh-cw"></i> Try again
+        </a>
+        <a href="#" id="backToEventBtn" class="btn btn-ghost">
+          <i data-lucide="arrow-left"></i> Back to event
+        </a>
+        <a href="my-cards.html" class="btn btn-ghost">
+          <i data-lucide="layout-grid"></i> Check my cards
+        </a>
+      </div>
+
+      <p class="help-note">
+        <strong>Already see a charge on your bank statement?</strong> It's likely just a
+        hold that will clear within 3–5 business days. If it doesn't, email
+        <a href="mailto:customerservicesnovalink@gmail.com">customerservicesnovalink@gmail.com</a>
+        and we'll sort it out.
+      </p>
+    </div>
+
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <div class="fb">
+      <span>&copy; <span id="year"></span> Novalink. All rights reserved.</span>
+      <span>Johannesburg, South Africa</span>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ══════════════════════════════════════════════════════════════
+   FIREBASE (read-only — no writes on this page)
+   ══════════════════════════════════════════════════════════════ */
+var firebaseConfig = {
+  apiKey: "AIzaSyDSnns131jOlBXAqKo6qy7lTW4Rij-1oWU",
+  authDomain: "novalink-864cf.firebaseapp.com",
+  projectId: "novalink-864cf",
+  storageBucket: "novalink-864cf.firebasestorage.app",
+  messagingSenderId: "602780280140",
+  appId: "1:602780280140:web:5d9ff2351e5a7d5e66dbe9"
+};
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+var db = firebase.firestore();
+var EVENTS = "events";
+
+/* ══════════════════════════════════════════════════════════════
+   HELPERS
+   ══════════════════════════════════════════════════════════════ */
+function $(id){ return document.getElementById(id); }
+function refreshIcons(){ if(window.lucide) lucide.createIcons(); }
+function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+function getParam(n){
+  try { return new URLSearchParams(window.location.search).get(n); }
+  catch(e){ return null; }
+}
+
+function showToast(msg, type, ms){
+  type = type || "info"; ms = ms || 3000;
+  var t = $("toast");
+  t.className = "toast " + type;
+  var ic = type === "error" ? "alert-circle" : (type === "success" ? "check-circle" : "info");
+  t.innerHTML = '<i data-lucide="' + ic + '"></i><span>' + esc(msg) + '</span>';
+  refreshIcons();
+  requestAnimationFrame(function(){ t.classList.add("show"); });
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(function(){ t.classList.remove("show"); }, ms);
+}
+
+function tierNameOf(ev, tierKey){
+  if (ev && ev.tierNames && ev.tierNames[tierKey]) return ev.tierNames[tierKey];
+  var N = { black:"Elite", gold:"VIP", silver:"Silver", cyan:"Standard", tier5:"Platinum", tier6:"Diamond" };
+  return N[tierKey] || tierKey || "Standard";
+}
+
+function buildTicketRef(eventId, ticketId){
+  var RE = window.NovalinkRoutingEngine;
+  if (RE && typeof RE.buildTicketRef === "function") return RE.buildTicketRef(eventId, ticketId);
+  function sh(x){ var t = String(x||"").replace(/[^A-Za-z0-9]/g,"").toUpperCase(); return t.length <= 4 ? t : t.slice(-4); }
+  var e = sh(eventId), t = sh(ticketId);
+  if (!e || !t) return "NL-XXXXXX";
+  return "NL-" + e + "-" + t;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   READ PENDING CART (if user came straight from view-event)
+   ══════════════════════════════════════════════════════════════ */
+function readPending(){
+  try {
+    var raw = sessionStorage.getItem("novalink_pending_payment");
+    if (!raw) return null;
+    var obj = JSON.parse(raw);
+    if (!obj || !obj.eventId) return null;
+    return obj;
+  } catch(e){ return null; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   BUILD RETURN LINKS
+   ══════════════════════════════════════════════════════════════ */
+function wireReturnLinks(eventId){
+  var evId = eventId || (readPending() && readPending().eventId) || "";
+
+  var tryAgainBtn = $("tryAgainBtn");
+  var backBtn = $("backToEventBtn");
+
+  if (evId) {
+    /* Try again → straight back to the event page.
+       User re-picks tier, applies promo again, and re-launches checkout. */
+    tryAgainBtn.setAttribute("href", "view-event.html?id=" + encodeURIComponent(evId));
+    backBtn.setAttribute("href", "view-event.html?id=" + encodeURIComponent(evId));
+  } else {
+    /* No event ID — send them to browse */
+    tryAgainBtn.setAttribute("href", "events.html");
+    backBtn.setAttribute("href", "events.html");
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   LOAD EVENT META FOR DISPLAY (non-blocking)
+   ══════════════════════════════════════════════════════════════ */
+function loadEventMeta(eventId){
+  if (!eventId) return Promise.resolve(null);
+  return db.collection(EVENTS).doc(eventId).get().then(function(snap){
+    if (!snap.exists) return null;
+    var d = snap.data() || {};
+    d.id = snap.id;
+    return d;
+  }).catch(function(err){
+    console.warn("Could not load event:", err);
+    return null;
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   BOOT
+   ══════════════════════════════════════════════════════════════ */
+document.addEventListener("DOMContentLoaded", function(){
+  $("year").textContent = new Date().getFullYear();
+  refreshIcons();
+
+  var urlEventId = getParam("event");
+  var reason = getParam("reason");      /* e.g. "cancelled", "declined", "timeout" */
+  var ref = getParam("ref");            /* optional payment reference */
+
+  /* ── Custom headline based on reason ── */
+  if (reason === "cancelled") {
+    $("failedTitle").textContent = "Payment cancelled";
+    $("failedSub").innerHTML = "You cancelled the payment on the checkout page. <strong>You have not been charged.</strong> You can try again whenever you're ready.";
+  } else if (reason === "declined") {
+    $("failedTitle").textContent = "Payment declined";
+    $("failedSub").innerHTML = "Your bank declined the payment. <strong>You have not been charged.</strong> Try a different card, or contact your bank if the problem persists.";
+  } else if (reason === "timeout") {
+    $("failedTitle").textContent = "Session timed out";
+    $("failedSub").innerHTML = "The checkout session timed out before the payment was confirmed. <strong>You have not been charged.</strong> Please try again.";
+  }
+
+  /* ── Show pending cart details ── */
+  var pending = readPending();
+  var eventIdToUse = urlEventId || (pending && pending.eventId) || "";
+
+  wireReturnLinks(eventIdToUse);
+
+  if (pending && pending.eventId) {
+    loadEventMeta(pending.eventId).then(function(ev){
+      var detailBox = $("failedDetails");
+      if (!detailBox) return;
+      detailBox.style.display = "block";
+      $("failedEvent").textContent = (ev && ev.eventName) || "Your event";
+      $("failedTier").textContent = tierNameOf(ev, pending.tier);
+      $("failedQty").textContent = pending.qty + (pending.qty === 1 ? " ticket" : " tickets");
+      if (ref) {
+        $("failedRefRow").style.display = "flex";
+        $("failedRef").textContent = ref;
+      }
+    });
+  }
+
+  /* ── If they were redirected to failureUrl with ?event= only ── */
+  if (urlEventId && (!pending || pending.eventId !== urlEventId)) {
+    loadEventMeta(urlEventId).then(function(ev){
+      if (!ev) return;
+      var detailBox = $("failedDetails");
+      if (!detailBox) return;
+      detailBox.style.display = "block";
+      $("failedEvent").textContent = ev.eventName || "Event";
+      $("failedTier").textContent = "—";
+      $("failedQty").textContent = "—";
+    });
+  }
+
+  /* ── Cleanup: clear any stale pending cart, since this attempt failed ── */
+  try { sessionStorage.removeItem("novalink_pending_payment"); } catch(e){}
+
+  /* Friendly toast so the user knows they landed here safely */
+  setTimeout(function(){
+    showToast("You have not been charged.", "info", 4000);
+  }, 400);
+});
+})();
+</script>
+</body>
+  </html>
