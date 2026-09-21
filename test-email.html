@@ -1,0 +1,43 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>EmailJS Test</title>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+</head>
+<body style="font-family:Arial;padding:40px;max-width:600px;margin:auto">
+<h1>EmailJS Direct Test</h1>
+<p id="status">Testing…</p>
+<button onclick="runTest()" style="padding:15px 30px;font-size:18px;cursor:pointer">Send Test Email</button>
+<pre id="output" style="background:#f1f4f8;padding:20px;margin-top:20px;border-radius:10px"></pre>
+
+<script>
+function runTest(){
+  document.getElementById('output').textContent = 'Starting…';
+  
+  emailjs.init({ publicKey: "bmHeI_nQwa4UY6mR4" });
+  
+  emailjs.send("service_prn9hay", "template_5pt25ol", {
+    to_email: "nylnathan340@gmail.com",
+    event_name: "TEST EVENT",
+    event_date: "Today",
+    event_time: "18:00",
+    event_venue: "Test Venue",
+    guest_name: "Test Guest",
+    tier_name: "Standard",
+    seat: "A-1",
+    ticket_ref: "NL-TEST-001",
+    ticket_url: "https://google.com"
+  })
+  .then(function(r){
+    document.getElementById('output').textContent = 
+      "✅ SUCCESS!\n\nStatus: " + r.status + "\nText: " + r.text + 
+      "\n\nCheck your Gmail — email should arrive in 10 seconds.";
+  })
+  .catch(function(e){
+    document.getElementById('output').textContent = 
+      "❌ FAILED\n\n" + JSON.stringify(e, null, 2);
+  });
+}
+</script>
+</body>
+</html>
