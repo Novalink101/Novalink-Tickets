@@ -9,6 +9,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
 :root{--cy:#00FFFF;--cy2:#00CCCC;--cy3:#009999;--cyf:#e6ffff;--bg:#fff;--bg2:#f6f8fb;--sf:#fff;--sf2:#f1f4f8;--bd:#e4e9f0;--bd2:#d3dbe5;--tx:#0a0f14;--tx2:#2b3644;--mut:#6b7787;--rd:14px;--font:'Inter',system-ui,-apple-system,sans-serif;--dg:#dc2626;--dgf:#fef2f2;--sv:#059669;--svf:#ecfdf5;--nv:#1e2f4d;--ease:cubic-bezier(0.25,0.8,0.25,1)}
@@ -163,6 +164,8 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .modal .actions .btn{flex:1;min-width:120px}
 .info-b{background:var(--svf);border:1px solid #a7f3d0;color:#065f46;border-radius:12px;padding:12px 14px;font-size:12.5px;font-weight:700;display:flex;align-items:flex-start;gap:8px;margin-bottom:18px;line-height:1.5}
 .info-b i{width:16px;height:16px;flex-shrink:0;margin-top:2px}
+.info-b.secure{background:#eff6ff;border-color:#bfdbfe;color:#1e3a8a}
+.info-b.secure i{color:#1d4ed8}
 .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(120%);background:#0a0f14;color:#fff;padding:12px 18px;border-radius:12px;font-size:13.5px;z-index:200;transition:transform 0.4s ease,opacity 0.3s ease;display:flex;align-items:center;gap:10px;pointer-events:none;opacity:0;max-width:calc(100vw - 40px)}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 .toast.success{background:#065f46}
@@ -301,7 +304,14 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
     <button class="mc" id="buyClose"><i data-lucide="x"></i></button>
     <h3>Get your ticket</h3>
     <p class="msub" id="buySubtitle">Pick a tier and enter guest names.</p>
-    <div class="info-b"><i data-lucide="info"></i><span>Free test mode — no payment required.</span></div>
+    <div class="info-b secure" id="buySecureNote">
+      <i data-lucide="shield-check"></i>
+      <span>You'll be redirected to a secure payment page to complete your purchase.</span>
+    </div>
+    <div class="info-b" id="buyFreeNote" style="display:none;">
+      <i data-lucide="info"></i>
+      <span>Free event — no payment required.</span>
+    </div>
     <div class="fg"><label for="buyTier">Ticket tier</label><select id="buyTier"></select></div>
     <div class="fg">
       <label for="buyQty" id="buyQtyLabel">Number of tickets</label>
@@ -333,7 +343,7 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
     <p class="fh" id="buyDiscountNote" style="display:none;margin-top:6px;text-align:right;font-style:normal;color:var(--cy3);font-weight:700;"></p>
     <div class="actions">
       <button class="btn btn-ghost" id="buyCancel">Cancel</button>
-      <button class="btn btn-accent" id="buyConfirm"><i data-lucide="check"></i> Confirm ticket</button>
+      <button class="btn btn-accent" id="buyConfirm"><i data-lucide="lock"></i> Pay &amp; get ticket</button>
     </div>
   </div>
 </div>
@@ -367,6 +377,7 @@ var firebaseConfig = {
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 var db = firebase.firestore();
 var auth = firebase.auth();
+var functions = firebase.functions();
 var EVENTS = "events";
 var ADMINS = ["nylnathan340@gmail.com"];
 var MAX_PER_PURCHASE = 12;
@@ -1311,6 +1322,19 @@ function openBuy(){
   syncQtyLimits(sel.value);
   buildGuestFields(1);
 
+  /* ── Toggle free vs paid notes ── */
+  var isFreeEvent = !hasAnyPaidTier();
+  var secureNote = $("buySecureNote");
+  var freeNote = $("buyFreeNote");
+  var confirmBtn = $("buyConfirm");
+  if (secureNote) secureNote.style.display = isFreeEvent ? "none" : "";
+  if (freeNote) freeNote.style.display = isFreeEvent ? "" : "none";
+  if (confirmBtn) {
+    confirmBtn.innerHTML = isFreeEvent
+      ? '<i data-lucide="check"></i> Confirm ticket'
+      : '<i data-lucide="lock"></i> Pay &amp; get ticket';
+  }
+
   var note = $("buySeatNote");
   var noteText = $("buySeatNoteText");
   if (note && noteText) {
@@ -1332,6 +1356,16 @@ function openBuy(){
   $("buyModal").classList.add("open");
   document.body.style.overflow = "hidden";
   refreshIcons();
+}
+
+function hasAnyPaidTier(){
+  if (!eventData) return false;
+  var prices = eventData.tierPrices || {};
+  var keys = activeTierKeys(eventData);
+  for (var i = 0; i < keys.length; i++){
+    if ((parseFloat(prices[keys[i]]) || 0) > 0) return true;
+  }
+  return false;
 }
 
 function updateBuyPrice(){
@@ -1422,40 +1456,10 @@ function buildTicketEmailParams(ticketId, tier, guestName, seat){
   };
 }
 
-/* ============ CONFIRM BUY ============ */
-function confirmBuy(){
-  if (!eventData || !currentUser) return;
-  var tier = $("buyTier").value;
-  var tierName = (eventData.tierNames && eventData.tierNames[tier]) || tier;
-  var qty = parseInt($("buyQty") ? $("buyQty").value : 1, 10);
-  if (isNaN(qty) || qty < 1) qty = 1;
-  if (qty > MAX_PER_PURCHASE) qty = MAX_PER_PURCHASE;
-
-  var tierMax = computeTierMaxQty(tier);
-  if (qty > tierMax) {
-    showToast("Only " + tierMax + " available in the " + tierName + " tier.", "error", 4500);
-    return;
-  }
-
-  var guestNames = [];
-  document.querySelectorAll(".guest-name-input").forEach(function(inp){
-    guestNames.push((inp.value || "").trim());
-  });
-  if (guestNames.length !== qty) {
-    buildGuestFields(qty);
-    showToast("Please fill in each guest name.", "error");
-    return;
-  }
-  for (var gi = 0; gi < guestNames.length; gi++) {
-    if (!guestNames[gi]) {
-      var msg = qty === 1 ? "Please enter a guest name." : ("Please enter a name for Guest " + (gi + 1) + ".");
-      showToast(msg, "error");
-      var target = document.getElementById("buyGuest" + gi);
-      if (target) target.focus();
-      return;
-    }
-  }
-
+/* ══════════════════════════════════════════════════════════════
+   FREE TICKET (no payment)
+   ══════════════════════════════════════════════════════════════ */
+function createFreeTicket(tier, tierName, qty, guestNames){
   var btn = $("buyConfirm");
   var orig = btn.innerHTML;
   btn.disabled = true;
@@ -1466,10 +1470,8 @@ function confirmBuy(){
                 : "Allocating " + qty + " seat" + (qty === 1 ? "" : "s") + "…");
   btn.innerHTML = '<span class="spinner"></span> ' + doingLabel;
 
-  var basePrice = parseFloat((eventData.tierPrices || {})[tier]) || 0;
   var eventRef = db.collection(EVENTS).doc(eventId);
   var ticketsCol = eventRef.collection("tickets");
-  var requestedPromoCode = appliedPromo ? normaliseCode(appliedPromo.code) : null;
 
   db.runTransaction(function(transaction){
     return transaction.get(eventRef).then(function(eventDoc){
@@ -1478,28 +1480,6 @@ function confirmBuy(){
       var takenSeats = Array.isArray(liveData.takenSeats) ? liveData.takenSeats.slice() : [];
       var assignedSeats = [];
       var ticketRefs = [];
-
-      /* Re-validate promo against LIVE event doc (race-safe) */
-      var livePromoList = Array.isArray(liveData.promoCodes) ? liveData.promoCodes : [];
-      var livePromo = null;
-      if (requestedPromoCode){
-        livePromo = findPromoInList(requestedPromoCode, livePromoList);
-        if (!livePromo) throw new Error("Promo '" + requestedPromoCode + "' is no longer available for this event.");
-        if (isPromoExpired(livePromo)) throw new Error("Promo '" + requestedPromoCode + "' has just expired. Please re-try without it.");
-        if (isPromoExhausted(livePromo)) throw new Error("Promo '" + requestedPromoCode + "' has reached its limit. Please re-try without it.");
-      }
-      var liveDiscountPer = livePromo ? promoDiscountPerTicket(livePromo, basePrice) : 0;
-      var liveEffective = Math.max(0, basePrice - liveDiscountPer);
-
-      var updatedPromoList = null;
-      if (livePromo){
-        updatedPromoList = livePromoList.map(function(p){
-          if (normaliseCode(p.code) === requestedPromoCode){
-            return Object.assign({}, p, { uses: (parseInt(p.uses, 10) || 0) + 1 });
-          }
-          return p;
-        });
-      }
 
       for (var i = 0; i < qty; i++){
         var assignedSeat = "";
@@ -1517,7 +1497,7 @@ function confirmBuy(){
         var ticketId = generateTicketId();
         var ticketRef = ticketsCol.doc();
         ticketRefs.push(ticketRef);
-        var ticketDoc = {
+        transaction.set(ticketRef, {
           ticketId: ticketId,
           eventId: eventId,
           eventName: eventData.eventName || "",
@@ -1525,30 +1505,22 @@ function confirmBuy(){
           guestName: guestNames[i],
           seat: assignedSeat,
           status: "valid",
-          pricePaid: liveEffective,
+          pricePaid: 0,
           buyerUid: currentUser.uid,
           buyerEmail: currentUser.email || "",
           buyerName: currentUser.displayName || "",
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        };
-        if (livePromo){
-          ticketDoc.promoCode = requestedPromoCode;
-          ticketDoc.discountPerTicket = liveDiscountPer;
-          ticketDoc.originalPrice = basePrice;
-        }
-        transaction.set(ticketRef, ticketDoc);
+        });
       }
 
       var eventUpdate = {};
       if (needsSeat && assignedSeats.length) eventUpdate.takenSeats = takenSeats;
-      if (updatedPromoList) eventUpdate.promoCodes = updatedPromoList;
       if (Object.keys(eventUpdate).length) transaction.update(eventRef, eventUpdate);
 
       return { ticketRefs: ticketRefs, seats: assignedSeats };
     });
   })
   .then(function(result){
-    /* ═══ Send confirmation email via EmailJS ═══ */
     try {
       var firstRef = result.ticketRefs[0];
       var emailParams = buildTicketEmailParams(
@@ -1579,8 +1551,103 @@ function confirmBuy(){
     }, 700);
   })
   .catch(function(err){
-    console.error("Ticket transaction error:", err);
+    console.error("Free ticket transaction error:", err);
     showToast(err.message || "Could not create ticket. Please try again.", "error", 6000);
+    btn.disabled = false;
+    btn.innerHTML = orig;
+    refreshIcons();
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   CONFIRM BUY — routes to free or paid flow
+   ══════════════════════════════════════════════════════════════ */
+function confirmBuy(){
+  if (!eventData || !currentUser) return;
+  var tier = $("buyTier").value;
+  var tierName = (eventData.tierNames && eventData.tierNames[tier]) || tier;
+  var qty = parseInt($("buyQty") ? $("buyQty").value : 1, 10);
+  if (isNaN(qty) || qty < 1) qty = 1;
+  if (qty > MAX_PER_PURCHASE) qty = MAX_PER_PURCHASE;
+
+  var tierMax = computeTierMaxQty(tier);
+  if (qty > tierMax) {
+    showToast("Only " + tierMax + " available in the " + tierName + " tier.", "error", 4500);
+    return;
+  }
+
+  /* ── Collect guest names ── */
+  var guestNames = [];
+  document.querySelectorAll(".guest-name-input").forEach(function(inp){
+    guestNames.push((inp.value || "").trim());
+  });
+  if (guestNames.length !== qty) {
+    buildGuestFields(qty);
+    showToast("Please fill in each guest name.", "error");
+    return;
+  }
+  for (var gi = 0; gi < guestNames.length; gi++) {
+    if (!guestNames[gi]) {
+      var msg = qty === 1 ? "Please enter a guest name." : ("Please enter a name for Guest " + (gi + 1) + ".");
+      showToast(msg, "error");
+      var target = document.getElementById("buyGuest" + gi);
+      if (target) target.focus();
+      return;
+    }
+  }
+
+  /* ── Branch: free event vs paid event ── */
+  var basePrice = parseFloat((eventData.tierPrices || {})[tier]) || 0;
+
+  if (basePrice <= 0) {
+    /* FREE — write tickets directly */
+    createFreeTicket(tier, tierName, qty, guestNames);
+    return;
+  }
+
+  /* PAID — call Cloud Function to create Yoco checkout */
+  var btn = $("buyConfirm");
+  var orig = btn.innerHTML;
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Starting secure payment…';
+
+  var requestedPromoCode = appliedPromo ? normaliseCode(appliedPromo.code) : null;
+
+  var basePath = window.location.pathname.replace(/view-event\.html.*$/, "");
+  if (!basePath.endsWith("/")) basePath += "/";
+  var origin = window.location.origin + basePath;
+
+  var createPayment = functions.httpsCallable("createPayment");
+
+  createPayment({
+    eventId: eventId,
+    tier: tier,
+    qty: qty,
+    guestNames: guestNames,
+    promoCode: requestedPromoCode,
+    successUrl: origin + "payment-success.html?event=" + encodeURIComponent(eventId),
+    cancelUrl:  origin + "view-event.html?id=" + encodeURIComponent(eventId) + "&payment=cancelled"
+  })
+  .then(function(result){
+    if (!result || !result.data || !result.data.checkoutUrl) {
+      throw new Error("Payment session could not be created.");
+    }
+    try {
+      sessionStorage.setItem("novalink_pending_payment", JSON.stringify({
+        eventId: eventId,
+        tier: tier,
+        qty: qty,
+        guestNames: guestNames,
+        promoCode: requestedPromoCode,
+        startedAt: Date.now()
+      }));
+    } catch(e){}
+
+    window.location.href = result.data.checkoutUrl;
+  })
+  .catch(function(err){
+    console.error("createPayment error:", err);
+    showToast(err.message || "Could not start payment. Please try again.", "error", 6000);
     btn.disabled = false;
     btn.innerHTML = orig;
     refreshIcons();
@@ -1627,6 +1694,14 @@ document.addEventListener("DOMContentLoaded", function(){
 
   eventId = getParam("id");
   if (!eventId) { showError("Missing event ID", "The link is missing an event identifier."); return; }
+
+  /* Handle return from payment gateway */
+  var paymentParam = getParam("payment");
+  if (paymentParam === "cancelled") {
+    setTimeout(function(){
+      showToast("Payment cancelled. Your ticket was not purchased.", "info", 5000);
+    }, 500);
+  }
 
   auth.onAuthStateChanged(function(user){
     applyAuth(user);
@@ -1701,4 +1776,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-</html>
+  </html>
