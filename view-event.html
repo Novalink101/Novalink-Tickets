@@ -9,7 +9,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-functions-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
 :root{--cy:#00FFFF;--cy2:#00CCCC;--cy3:#009999;--cyf:#e6ffff;--bg:#fff;--bg2:#f6f8fb;--sf:#fff;--sf2:#f1f4f8;--bd:#e4e9f0;--bd2:#d3dbe5;--tx:#0a0f14;--tx2:#2b3644;--mut:#6b7787;--rd:14px;--font:'Inter',system-ui,-apple-system,sans-serif;--dg:#dc2626;--dgf:#fef2f2;--sv:#059669;--svf:#ecfdf5;--nv:#1e2f4d;--ease:cubic-bezier(0.25,0.8,0.25,1)}
@@ -377,13 +376,17 @@ var firebaseConfig = {
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 var db = firebase.firestore();
 var auth = firebase.auth();
-var functions = firebase.functions();
 var EVENTS = "events";
 var ADMINS = ["nylnathan340@gmail.com"];
 var MAX_PER_PURCHASE = 12;
 
 /* ══════════════════════════════════════════════════════════════
-   EMAILJS — sends email confirmations after ticket purchases
+   VAL TOWN BACKEND URL — replace this if you redeploy
+   ══════════════════════════════════════════════════════════════ */
+var BACKEND_URL = "https://nathannyl--856b743eb5f911f18c001607ee4eb77e.web.val.run";
+
+/* ══════════════════════════════════════════════════════════════
+   EMAILJS — used only for free ticket confirmations
    ══════════════════════════════════════════════════════════════ */
 var EMAILJS_PUBLIC_KEY  = "bmHeI_nQwa4UY6mR4";
 var EMAILJS_SERVICE_ID  = "service_prn9hay";
@@ -514,7 +517,6 @@ function renderOwnerControls(){
   $("ownerActions").style.display = canEdit() ? "flex" : "none";
 }
 
-/* ============ MAIN RENDER ============ */
 function renderEvent(data){
   eventData = data;
 
@@ -978,7 +980,6 @@ function hexA(hex, alpha){
   return "rgba(" + r + "," + g + "," + b + "," + alpha + ")";
 }
 
-/* ============ LOAD ============ */
 function showError(title, msg){
   $("loadingState").style.display = "none";
   $("eventContent").style.display = "none";
@@ -1004,7 +1005,6 @@ function attachListener(){
   });
 }
 
-/* ============ CAPACITY: max qty for a tier ============ */
 function computeTierMaxQty(tier){
   if (!eventData) return MAX_PER_PURCHASE;
   if (!eventHasSeatingPlan(eventData)) return MAX_PER_PURCHASE;
@@ -1053,62 +1053,6 @@ function computeTierMaxQty(tier){
   return max;
 }
 
-/* ============ SEAT ALLOCATOR ============ */
-function findNextAvailableSeat(tier, takenSeats){
-  takenSeats = takenSeats || [];
-  var sections = (eventData && eventData.sections) || [];
-  var perChair = eventSellsPerChair(eventData);
-
-  for (var s = 0; s < sections.length; s++){
-    var sec = sections[s];
-    var blockLetter = String.fromCharCode(65 + s);
-    if (sec.mode === "rows" && sec.rows){
-      for (var r = 0; r < sec.rows.length; r++){
-        var row = sec.rows[r];
-        var rowLetter = row.row || String.fromCharCode(65 + r);
-        for (var i = 0; i < (row.seats || []).length; i++){
-          var seat = row.seats[i];
-          if (seat.tier !== tier) continue;
-          var code = blockLetter + "-" + rowLetter + "-" + seat.seat;
-          if (takenSeats.indexOf(code) === -1) return code;
-        }
-      }
-    } else if (sec.mode === "corner" && sec.corner){
-      var c = sec.corner;
-      for (var rh = 0; rh < (c.hRows || 0); rh++){
-        for (var sh = 1; sh <= (c.hSeats || 0); sh++){
-          var cH = blockLetter + "-H" + (rh + 1) + "-" + sh;
-          if (takenSeats.indexOf(cH) === -1) return cH;
-        }
-      }
-      for (var rv = 0; rv < (c.vRows || 0); rv++){
-        for (var sv = 1; sv <= (c.vSeats || 0); sv++){
-          var cV = blockLetter + "-V" + (rv + 1) + "-" + sv;
-          if (takenSeats.indexOf(cV) === -1) return cV;
-        }
-      }
-    } else if (sec.mode === "tables" && sec.tables){
-      for (var t = 0; t < sec.tables.length; t++){
-        var tbl = sec.tables[t];
-        if (tbl.tier !== tier) continue;
-        var tblNum = tbl.table || (t + 1);
-        if (perChair){
-          var cpt = tbl.chairs || tbl.bookable || 1;
-          for (var ci = 1; ci <= cpt; ci++){
-            var cT = blockLetter + "-T" + tblNum + "-C" + ci;
-            if (takenSeats.indexOf(cT) === -1) return cT;
-          }
-        } else {
-          var cT2 = blockLetter + "-T" + tblNum;
-          if (takenSeats.indexOf(cT2) === -1) return cT2;
-        }
-      }
-    }
-  }
-  return "";
-}
-
-/* ============ GUEST FIELDS ============ */
 function buildGuestFields(qty){
   var container = $("buyGuestsContainer");
   if (!container) return;
@@ -1187,13 +1131,10 @@ function syncQtyLimits(tier){
   return max;
 }
 
-/* ══════════════════════════════════════════════════════════════
-   PROMO CODES — apply at checkout
-   ══════════════════════════════════════════════════════════════ */
+/* PROMO HELPERS */
 function normaliseCode(s){
   return String(s || "").trim().toUpperCase().replace(/\s+/g, "");
 }
-
 function findPromoInList(code, list){
   code = normaliseCode(code);
   if (!code || !Array.isArray(list)) return null;
@@ -1202,7 +1143,6 @@ function findPromoInList(code, list){
   }
   return null;
 }
-
 function isPromoExpired(p){
   if (!p || !p.expiry) return false;
   try {
@@ -1210,7 +1150,6 @@ function isPromoExpired(p){
     return String(p.expiry) < today;
   } catch(e){ return false; }
 }
-
 function isPromoExhausted(p){
   if (!p) return false;
   var max = parseInt(p.maxUses, 10) || 0;
@@ -1218,7 +1157,6 @@ function isPromoExhausted(p){
   var used = parseInt(p.uses, 10) || 0;
   return used >= max;
 }
-
 function promoDiscountPerTicket(p, basePrice){
   if (!p) return 0;
   var v = parseFloat(p.value) || 0;
@@ -1227,14 +1165,12 @@ function promoDiscountPerTicket(p, basePrice){
   if (p.type === "fixed") return Math.min(base, v);
   return base * (v / 100);
 }
-
 function promoLabel(p){
   if (!p) return "";
   var v = parseFloat(p.value) || 0;
   if (p.type === "fixed") return "R " + v.toFixed(2) + " off per ticket";
   return v + "% off per ticket";
 }
-
 function setPromoHint(msg, kind){
   var h = $("promoHint");
   if (!h) return;
@@ -1243,7 +1179,6 @@ function setPromoHint(msg, kind){
   h.textContent = msg;
   h.className = "fh promo-hint-" + (kind || "info");
 }
-
 function renderAppliedPromo(){
   var wrap = $("promoApplied");
   if (!wrap) return;
@@ -1255,7 +1190,6 @@ function renderAppliedPromo(){
   var input = $("promoInput"); if (input) input.disabled = true;
   var btn = $("promoApplyBtn"); if (btn) btn.disabled = true;
 }
-
 function applyPromo(){
   if (!eventData) return;
   if (appliedPromo){ showToast("A promo is already applied.", "info"); return; }
@@ -1275,7 +1209,6 @@ function applyPromo(){
   updateBuyPrice();
   showToast("Promo applied: " + promoLabel(match), "success", 2200);
 }
-
 function clearPromo(){
   appliedPromo = null;
   var wrap = $("promoApplied"); if (wrap) wrap.style.display = "none";
@@ -1285,9 +1218,17 @@ function clearPromo(){
   setPromoHint("", "");
   updateBuyPrice();
 }
-/* ── END PROMO HELPERS ───────────────────────────────────────── */
 
-/* ============ BUY MODAL ============ */
+function hasAnyPaidTier(){
+  if (!eventData) return false;
+  var prices = eventData.tierPrices || {};
+  var keys = activeTierKeys(eventData);
+  for (var i = 0; i < keys.length; i++){
+    if ((parseFloat(prices[keys[i]]) || 0) > 0) return true;
+  }
+  return false;
+}
+
 function openBuy(){
   if (!eventData) return;
   if (!currentUser) {
@@ -1322,7 +1263,6 @@ function openBuy(){
   syncQtyLimits(sel.value);
   buildGuestFields(1);
 
-  /* ── Toggle free vs paid notes ── */
   var isFreeEvent = !hasAnyPaidTier();
   var secureNote = $("buySecureNote");
   var freeNote = $("buyFreeNote");
@@ -1356,16 +1296,6 @@ function openBuy(){
   $("buyModal").classList.add("open");
   document.body.style.overflow = "hidden";
   refreshIcons();
-}
-
-function hasAnyPaidTier(){
-  if (!eventData) return false;
-  var prices = eventData.tierPrices || {};
-  var keys = activeTierKeys(eventData);
-  for (var i = 0; i < keys.length; i++){
-    if ((parseFloat(prices[keys[i]]) || 0) > 0) return true;
-  }
-  return false;
 }
 
 function updateBuyPrice(){
@@ -1402,9 +1332,7 @@ function generateTicketId(){
   return "TKT-" + tm + "-" + rand;
 }
 
-/* ══════════════════════════════════════════════════════════════
-   EMAIL CONFIRMATIONS — send Ticket via EmailJS
-   ══════════════════════════════════════════════════════════════ */
+/* EMAIL (free tickets only) */
 function sendTicketEmail(params){
   if (!window.emailjs) { console.warn("[Email] SDK not loaded"); return; }
   emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, params)
@@ -1456,9 +1384,7 @@ function buildTicketEmailParams(ticketId, tier, guestName, seat){
   };
 }
 
-/* ══════════════════════════════════════════════════════════════
-   FREE TICKET (no payment)
-   ══════════════════════════════════════════════════════════════ */
+/* FREE TICKET — still uses Firestore directly */
 function createFreeTicket(tier, tierName, qty, guestNames){
   var btn = $("buyConfirm");
   var orig = btn.innerHTML;
@@ -1484,7 +1410,7 @@ function createFreeTicket(tier, tierName, qty, guestNames){
       for (var i = 0; i < qty; i++){
         var assignedSeat = "";
         if (needsSeat){
-          assignedSeat = findNextAvailableSeat(tier, takenSeats);
+          assignedSeat = findNextAvailableSeatLocal(tier, takenSeats);
           if (!assignedSeat){
             throw new Error(perTable
               ? "Only " + i + " table" + (i === 1 ? "" : "s") + " available in the " + tierName + " tier."
@@ -1559,8 +1485,63 @@ function createFreeTicket(tier, tierName, qty, guestNames){
   });
 }
 
+/* Local seat allocator (for free tickets) */
+function findNextAvailableSeatLocal(tier, takenSeats){
+  takenSeats = takenSeats || [];
+  var sections = (eventData && eventData.sections) || [];
+  var perChair = eventSellsPerChair(eventData);
+
+  for (var s = 0; s < sections.length; s++){
+    var sec = sections[s];
+    var blockLetter = String.fromCharCode(65 + s);
+    if (sec.mode === "rows" && sec.rows){
+      for (var r = 0; r < sec.rows.length; r++){
+        var row = sec.rows[r];
+        var rowLetter = row.row || String.fromCharCode(65 + r);
+        for (var i = 0; i < (row.seats || []).length; i++){
+          var seat = row.seats[i];
+          if (seat.tier !== tier) continue;
+          var code = blockLetter + "-" + rowLetter + "-" + seat.seat;
+          if (takenSeats.indexOf(code) === -1) return code;
+        }
+      }
+    } else if (sec.mode === "corner" && sec.corner){
+      var c = sec.corner;
+      for (var rh = 0; rh < (c.hRows || 0); rh++){
+        for (var sh = 1; sh <= (c.hSeats || 0); sh++){
+          var cH = blockLetter + "-H" + (rh + 1) + "-" + sh;
+          if (takenSeats.indexOf(cH) === -1) return cH;
+        }
+      }
+      for (var rv = 0; rv < (c.vRows || 0); rv++){
+        for (var sv = 1; sv <= (c.vSeats || 0); sv++){
+          var cV = blockLetter + "-V" + (rv + 1) + "-" + sv;
+          if (takenSeats.indexOf(cV) === -1) return cV;
+        }
+      }
+    } else if (sec.mode === "tables" && sec.tables){
+      for (var t = 0; t < sec.tables.length; t++){
+        var tbl = sec.tables[t];
+        if (tbl.tier !== tier) continue;
+        var tblNum = tbl.table || (t + 1);
+        if (perChair){
+          var cpt = tbl.chairs || tbl.bookable || 1;
+          for (var ci = 1; ci <= cpt; ci++){
+            var cT = blockLetter + "-T" + tblNum + "-C" + ci;
+            if (takenSeats.indexOf(cT) === -1) return cT;
+          }
+        } else {
+          var cT2 = blockLetter + "-T" + tblNum;
+          if (takenSeats.indexOf(cT2) === -1) return cT2;
+        }
+      }
+    }
+  }
+  return "";
+}
+
 /* ══════════════════════════════════════════════════════════════
-   CONFIRM BUY — routes to free or paid flow
+   CONFIRM BUY — routes to free OR Val Town paid flow
    ══════════════════════════════════════════════════════════════ */
 function confirmBuy(){
   if (!eventData || !currentUser) return;
@@ -1576,7 +1557,6 @@ function confirmBuy(){
     return;
   }
 
-  /* ── Collect guest names ── */
   var guestNames = [];
   document.querySelectorAll(".guest-name-input").forEach(function(inp){
     guestNames.push((inp.value || "").trim());
@@ -1596,16 +1576,15 @@ function confirmBuy(){
     }
   }
 
-  /* ── Branch: free event vs paid event ── */
   var basePrice = parseFloat((eventData.tierPrices || {})[tier]) || 0;
 
+  /* FREE ticket — direct Firestore write */
   if (basePrice <= 0) {
-    /* FREE — write tickets directly */
     createFreeTicket(tier, tierName, qty, guestNames);
     return;
   }
 
-  /* PAID — call Cloud Function to create Yoco checkout */
+  /* PAID ticket — call Val Town backend */
   var btn = $("buyConfirm");
   var orig = btn.innerHTML;
   btn.disabled = true;
@@ -1617,19 +1596,27 @@ function confirmBuy(){
   if (!basePath.endsWith("/")) basePath += "/";
   var origin = window.location.origin + basePath;
 
-  var createPayment = functions.httpsCallable("createPayment");
-
-  createPayment({
-    eventId: eventId,
-    tier: tier,
-    qty: qty,
-    guestNames: guestNames,
-    promoCode: requestedPromoCode,
-    successUrl: origin + "payment-success.html?event=" + encodeURIComponent(eventId),
-    cancelUrl:  origin + "view-event.html?id=" + encodeURIComponent(eventId) + "&payment=cancelled"
+  fetch(BACKEND_URL + "/create-payment", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      eventId: eventId,
+      tier: tier,
+      qty: qty,
+      guestNames: guestNames,
+      promoCode: requestedPromoCode,
+      successUrl: origin + "payment-success.html?event=" + encodeURIComponent(eventId),
+      cancelUrl:  origin + "payment-failed.html?event=" + encodeURIComponent(eventId) + "&reason=cancelled"
+    })
   })
-  .then(function(result){
-    if (!result || !result.data || !result.data.checkoutUrl) {
+  .then(function(res){
+    return res.json().then(function(data){
+      if (!res.ok) throw new Error(data.error || ("HTTP " + res.status));
+      return data;
+    });
+  })
+  .then(function(data){
+    if (!data || !data.checkoutUrl) {
       throw new Error("Payment session could not be created.");
     }
     try {
@@ -1642,11 +1629,10 @@ function confirmBuy(){
         startedAt: Date.now()
       }));
     } catch(e){}
-
-    window.location.href = result.data.checkoutUrl;
+    window.location.href = data.checkoutUrl;
   })
   .catch(function(err){
-    console.error("createPayment error:", err);
+    console.error("Payment error:", err);
     showToast(err.message || "Could not start payment. Please try again.", "error", 6000);
     btn.disabled = false;
     btn.innerHTML = orig;
@@ -1654,14 +1640,13 @@ function confirmBuy(){
   });
 }
 
-/* ============ DELETE ============ */
+/* DELETE / EDIT */
 function openDelete(){
   if (!canEdit()) { showToast("You don't have permission to delete this event.", "error"); return; }
   $("deleteEventName").textContent = (eventData && eventData.eventName) || "this event";
   $("deleteModal").classList.add("open");
   document.body.style.overflow = "hidden";
 }
-
 function doDelete(){
   var btn = $("deleteConfirm");
   btn.disabled = true;
@@ -1680,14 +1665,12 @@ function doDelete(){
       refreshIcons();
     });
 }
-
-/* ============ EDIT ============ */
 function editEvent(){
   if (!canEdit()) { showToast("You don't have permission to edit this event.", "error"); return; }
   window.location.href = "create-event.html?id=" + encodeURIComponent(eventId);
 }
 
-/* ============ BOOT ============ */
+/* BOOT */
 document.addEventListener("DOMContentLoaded", function(){
   $("year").textContent = new Date().getFullYear();
   refreshIcons();
@@ -1695,7 +1678,6 @@ document.addEventListener("DOMContentLoaded", function(){
   eventId = getParam("id");
   if (!eventId) { showError("Missing event ID", "The link is missing an event identifier."); return; }
 
-  /* Handle return from payment gateway */
   var paymentParam = getParam("payment");
   if (paymentParam === "cancelled") {
     setTimeout(function(){
@@ -1713,7 +1695,6 @@ document.addEventListener("DOMContentLoaded", function(){
     $("userDropdown").classList.toggle("open");
   });
   document.addEventListener("click", function(){ $("userDropdown").classList.remove("open"); });
-
   $("ddSignOut").addEventListener("click", function(){ auth.signOut().then(function(){ showToast("Signed out","success"); }); });
   $("ddCreateEvent").addEventListener("click", function(){ window.location.href = "create-event.html"; });
 
@@ -1731,11 +1712,7 @@ document.addEventListener("DOMContentLoaded", function(){
       var v = parseInt(this.value, 10);
       if (isNaN(v)) v = 1;
       var max = parseInt(this.max, 10) || MAX_PER_PURCHASE;
-      if (v > max){
-        v = max;
-        this.value = String(v);
-        showToast("Only " + max + " available in this tier.", "info", 2600);
-      }
+      if (v > max){ v = max; this.value = String(v); showToast("Only " + max + " available in this tier.", "info", 2600); }
       if (v < 1) { v = 1; this.value = "1"; }
       updateBuyPrice();
       buildGuestFields(v);
