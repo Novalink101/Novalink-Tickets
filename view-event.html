@@ -147,6 +147,18 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .pc{background:var(--cyf);border:1px solid var(--cy);border-radius:12px;padding:14px 16px;margin-bottom:18px;display:flex;justify-content:space-between;align-items:center}
 .pc .lbl{font-size:11px;font-weight:800;text-transform:uppercase;color:var(--cy3)}
 .pc .val{font-size:22px;font-weight:900;color:var(--cy3);font-family:ui-monospace,monospace}
+.promo-row{display:flex;gap:8px;align-items:stretch}
+.promo-row input{flex:1;min-width:0;padding:12px 14px;background:var(--bg2);border:1px solid var(--bd2);border-radius:10px;color:var(--tx);font-size:14.5px;font-family:inherit;text-transform:uppercase;letter-spacing:0.05em;font-weight:700}
+.promo-row input:focus{outline:none;border-color:var(--cy);background:#fff;box-shadow:0 0 0 3px rgba(0,255,255,0.15)}
+.promo-row input:disabled{opacity:0.6;cursor:not-allowed}
+.promo-row .btn{flex:0 0 auto;padding:0 18px}
+.promo-hint-error{color:var(--dg)!important;font-style:normal}
+.promo-hint-info{color:var(--cy3)!important;font-style:normal}
+.promo-applied{display:flex;align-items:center;gap:10px;padding:10px 14px;background:var(--svf);border:1px solid #a7f3d0;border-radius:10px;margin-bottom:16px}
+.promo-applied .pa-code{font-family:ui-monospace,monospace;font-weight:800;font-size:13px;letter-spacing:0.5px;color:#065f46;background:#fff;border:1px solid #a7f3d0;border-radius:6px;padding:3px 9px;flex-shrink:0}
+.promo-applied .pa-desc{flex:1;min-width:0;font-size:12.5px;font-weight:700;color:#065f46}
+.promo-applied .pa-remove{background:transparent;border:none;color:#065f46;font-size:16px;line-height:1;padding:4px 8px;border-radius:6px;cursor:pointer;font-family:inherit;font-weight:800}
+.promo-applied .pa-remove:hover{background:#fff;color:var(--dg)}
 .modal .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
 .modal .actions .btn{flex:1;min-width:120px}
 .info-b{background:var(--svf);border:1px solid #a7f3d0;color:#065f46;border-radius:12px;padding:12px 14px;font-size:12.5px;font-weight:700;display:flex;align-items:flex-start;gap:8px;margin-bottom:18px;line-height:1.5}
@@ -301,7 +313,24 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
       <i data-lucide="armchair"></i>
       <span id="buySeatNoteText">Your seat will be <strong>automatically assigned</strong> from the next available seat in your chosen tier.</span>
     </div>
+
+    <div class="fg" style="margin-top:16px;margin-bottom:12px;">
+      <label for="promoInput">Promo code <span style="text-transform:none;font-weight:500;color:var(--mut);letter-spacing:0;">(optional)</span></label>
+      <div class="promo-row">
+        <input type="text" id="promoInput" placeholder="e.g. EARLYBIRD10" autocomplete="off" spellcheck="false" maxlength="20" />
+        <button type="button" class="btn btn-ghost" id="promoApplyBtn">Apply</button>
+      </div>
+      <p class="fh" id="promoHint" style="display:none;"></p>
+    </div>
+
+    <div class="promo-applied" id="promoApplied" style="display:none;">
+      <span class="pa-code" id="paCode"></span>
+      <span class="pa-desc" id="paDesc"></span>
+      <button type="button" class="pa-remove" id="paRemove" title="Remove promo">✕</button>
+    </div>
+
     <div class="pc" style="margin-top:18px;"><span class="lbl">Total</span><span class="val" id="buyTotal">Free</span></div>
+    <p class="fh" id="buyDiscountNote" style="display:none;margin-top:6px;text-align:right;font-style:normal;color:var(--cy3);font-weight:700;"></p>
     <div class="actions">
       <button class="btn btn-ghost" id="buyCancel">Cancel</button>
       <button class="btn btn-accent" id="buyConfirm"><i data-lucide="check"></i> Confirm ticket</button>
@@ -322,8 +351,7 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 </div>
 
 <div class="toast" id="toast"></div>
-<!-- ═══ PART 1 OF 2 ENDS HERE ═══ -->
-  <script src="routing-engine.js"></script>
+<script src="routing-engine.js"></script>
 <script>
 (function(){
 'use strict';
@@ -359,6 +387,7 @@ var isAdmin = false;
 var eventData = null;
 var eventId = null;
 var unsub = null;
+var appliedPromo = null;
 
 function $(id){ return document.getElementById(id); }
 function refreshIcons(){ if(window.lucide) lucide.createIcons(); }
@@ -1147,6 +1176,106 @@ function syncQtyLimits(tier){
   return max;
 }
 
+/* ══════════════════════════════════════════════════════════════
+   PROMO CODES — apply at checkout
+   ══════════════════════════════════════════════════════════════ */
+function normaliseCode(s){
+  return String(s || "").trim().toUpperCase().replace(/\s+/g, "");
+}
+
+function findPromoInList(code, list){
+  code = normaliseCode(code);
+  if (!code || !Array.isArray(list)) return null;
+  for (var i = 0; i < list.length; i++){
+    if (normaliseCode(list[i].code) === code) return list[i];
+  }
+  return null;
+}
+
+function isPromoExpired(p){
+  if (!p || !p.expiry) return false;
+  try {
+    var today = new Date().toISOString().slice(0, 10);
+    return String(p.expiry) < today;
+  } catch(e){ return false; }
+}
+
+function isPromoExhausted(p){
+  if (!p) return false;
+  var max = parseInt(p.maxUses, 10) || 0;
+  if (max <= 0) return false;
+  var used = parseInt(p.uses, 10) || 0;
+  return used >= max;
+}
+
+function promoDiscountPerTicket(p, basePrice){
+  if (!p) return 0;
+  var v = parseFloat(p.value) || 0;
+  if (v <= 0) return 0;
+  var base = Math.max(0, parseFloat(basePrice) || 0);
+  if (p.type === "fixed") return Math.min(base, v);
+  return base * (v / 100);
+}
+
+function promoLabel(p){
+  if (!p) return "";
+  var v = parseFloat(p.value) || 0;
+  if (p.type === "fixed") return "R " + v.toFixed(2) + " off per ticket";
+  return v + "% off per ticket";
+}
+
+function setPromoHint(msg, kind){
+  var h = $("promoHint");
+  if (!h) return;
+  if (!msg){ h.style.display = "none"; h.textContent = ""; h.className = "fh"; return; }
+  h.style.display = "block";
+  h.textContent = msg;
+  h.className = "fh promo-hint-" + (kind || "info");
+}
+
+function renderAppliedPromo(){
+  var wrap = $("promoApplied");
+  if (!wrap) return;
+  if (!appliedPromo){ wrap.style.display = "none"; return; }
+  var codeEl = $("paCode"), descEl = $("paDesc");
+  if (codeEl) codeEl.textContent = normaliseCode(appliedPromo.code);
+  if (descEl) descEl.textContent = promoLabel(appliedPromo);
+  wrap.style.display = "flex";
+  var input = $("promoInput"); if (input) input.disabled = true;
+  var btn = $("promoApplyBtn"); if (btn) btn.disabled = true;
+}
+
+function applyPromo(){
+  if (!eventData) return;
+  if (appliedPromo){ showToast("A promo is already applied.", "info"); return; }
+  var input = $("promoInput");
+  if (!input) return;
+  var code = normaliseCode(input.value);
+  if (!code){ setPromoHint("Enter a code to apply.", "error"); return; }
+  var list = eventData.promoCodes || [];
+  if (!list.length){ setPromoHint("This event has no promo codes.", "error"); return; }
+  var match = findPromoInList(code, list);
+  if (!match){ setPromoHint("That code isn't valid for this event.", "error"); return; }
+  if (isPromoExpired(match)){ setPromoHint("That code has expired.", "error"); return; }
+  if (isPromoExhausted(match)){ setPromoHint("That code has reached its limit.", "error"); return; }
+  appliedPromo = match;
+  setPromoHint("", "");
+  renderAppliedPromo();
+  updateBuyPrice();
+  showToast("Promo applied: " + promoLabel(match), "success", 2200);
+}
+
+function clearPromo(){
+  appliedPromo = null;
+  var wrap = $("promoApplied"); if (wrap) wrap.style.display = "none";
+  var input = $("promoInput");
+  if (input){ input.disabled = false; input.value = ""; }
+  var btn = $("promoApplyBtn"); if (btn) btn.disabled = false;
+  setPromoHint("", "");
+  updateBuyPrice();
+}
+/* ── END PROMO HELPERS ───────────────────────────────────────── */
+
 /* ============ BUY MODAL ============ */
 function openBuy(){
   if (!eventData) return;
@@ -1199,7 +1328,7 @@ function openBuy(){
     }
   }
 
-  updateBuyPrice();
+  clearPromo();
   $("buyModal").classList.add("open");
   document.body.style.overflow = "hidden";
   refreshIcons();
@@ -1208,12 +1337,29 @@ function openBuy(){
 function updateBuyPrice(){
   if (!eventData) return;
   var t = $("buyTier").value;
-  var price = parseFloat((eventData.tierPrices || {})[t]) || 0;
+  var basePrice = parseFloat((eventData.tierPrices || {})[t]) || 0;
   var qty = parseInt($("buyQty") ? $("buyQty").value : 1, 10);
   if (isNaN(qty) || qty < 1) qty = 1;
   if (qty > MAX_PER_PURCHASE) qty = MAX_PER_PURCHASE;
-  var total = price * qty;
+
+  var discountPer = appliedPromo ? promoDiscountPerTicket(appliedPromo, basePrice) : 0;
+  var effective = Math.max(0, basePrice - discountPer);
+  var total = effective * qty;
+
   $("buyTotal").textContent = total > 0 ? formatMoney(total) : "Free";
+
+  var note = $("buyDiscountNote");
+  if (note){
+    if (appliedPromo && discountPer > 0 && basePrice > 0){
+      var grossLine = formatMoney(basePrice * qty);
+      var saving = formatMoney(discountPer * qty);
+      note.style.display = "block";
+      note.textContent = "Was " + grossLine + " · saving " + saving;
+    } else {
+      note.style.display = "none";
+      note.textContent = "";
+    }
+  }
 }
 
 function generateTicketId(){
@@ -1320,9 +1466,10 @@ function confirmBuy(){
                 : "Allocating " + qty + " seat" + (qty === 1 ? "" : "s") + "…");
   btn.innerHTML = '<span class="spinner"></span> ' + doingLabel;
 
-  var price = parseFloat((eventData.tierPrices || {})[tier]) || 0;
+  var basePrice = parseFloat((eventData.tierPrices || {})[tier]) || 0;
   var eventRef = db.collection(EVENTS).doc(eventId);
   var ticketsCol = eventRef.collection("tickets");
+  var requestedPromoCode = appliedPromo ? normaliseCode(appliedPromo.code) : null;
 
   db.runTransaction(function(transaction){
     return transaction.get(eventRef).then(function(eventDoc){
@@ -1331,6 +1478,28 @@ function confirmBuy(){
       var takenSeats = Array.isArray(liveData.takenSeats) ? liveData.takenSeats.slice() : [];
       var assignedSeats = [];
       var ticketRefs = [];
+
+      /* Re-validate promo against LIVE event doc (race-safe) */
+      var livePromoList = Array.isArray(liveData.promoCodes) ? liveData.promoCodes : [];
+      var livePromo = null;
+      if (requestedPromoCode){
+        livePromo = findPromoInList(requestedPromoCode, livePromoList);
+        if (!livePromo) throw new Error("Promo '" + requestedPromoCode + "' is no longer available for this event.");
+        if (isPromoExpired(livePromo)) throw new Error("Promo '" + requestedPromoCode + "' has just expired. Please re-try without it.");
+        if (isPromoExhausted(livePromo)) throw new Error("Promo '" + requestedPromoCode + "' has reached its limit. Please re-try without it.");
+      }
+      var liveDiscountPer = livePromo ? promoDiscountPerTicket(livePromo, basePrice) : 0;
+      var liveEffective = Math.max(0, basePrice - liveDiscountPer);
+
+      var updatedPromoList = null;
+      if (livePromo){
+        updatedPromoList = livePromoList.map(function(p){
+          if (normaliseCode(p.code) === requestedPromoCode){
+            return Object.assign({}, p, { uses: (parseInt(p.uses, 10) || 0) + 1 });
+          }
+          return p;
+        });
+      }
 
       for (var i = 0; i < qty; i++){
         var assignedSeat = "";
@@ -1348,7 +1517,7 @@ function confirmBuy(){
         var ticketId = generateTicketId();
         var ticketRef = ticketsCol.doc();
         ticketRefs.push(ticketRef);
-        transaction.set(ticketRef, {
+        var ticketDoc = {
           ticketId: ticketId,
           eventId: eventId,
           eventName: eventData.eventName || "",
@@ -1356,17 +1525,24 @@ function confirmBuy(){
           guestName: guestNames[i],
           seat: assignedSeat,
           status: "valid",
-          pricePaid: price,
+          pricePaid: liveEffective,
           buyerUid: currentUser.uid,
           buyerEmail: currentUser.email || "",
           buyerName: currentUser.displayName || "",
           createdAt: firebase.firestore.FieldValue.serverTimestamp()
-        });
+        };
+        if (livePromo){
+          ticketDoc.promoCode = requestedPromoCode;
+          ticketDoc.discountPerTicket = liveDiscountPer;
+          ticketDoc.originalPrice = basePrice;
+        }
+        transaction.set(ticketRef, ticketDoc);
       }
 
-      if (needsSeat && assignedSeats.length){
-        transaction.update(eventRef, { takenSeats: takenSeats });
-      }
+      var eventUpdate = {};
+      if (needsSeat && assignedSeats.length) eventUpdate.takenSeats = takenSeats;
+      if (updatedPromoList) eventUpdate.promoCodes = updatedPromoList;
+      if (Object.keys(eventUpdate).length) transaction.update(eventRef, eventUpdate);
 
       return { ticketRefs: ticketRefs, seats: assignedSeats };
     });
@@ -1505,6 +1681,15 @@ document.addEventListener("DOMContentLoaded", function(){
   $("buyModal").addEventListener("click", function(e){ if (e.target === this){ this.classList.remove("open"); document.body.style.overflow = ""; } });
   $("buyConfirm").addEventListener("click", confirmBuy);
 
+  var promoApplyBtn = $("promoApplyBtn");
+  if (promoApplyBtn) promoApplyBtn.addEventListener("click", applyPromo);
+  var promoInput = $("promoInput");
+  if (promoInput) promoInput.addEventListener("keydown", function(e){
+    if (e.key === "Enter"){ e.preventDefault(); applyPromo(); }
+  });
+  var paRemove = $("paRemove");
+  if (paRemove) paRemove.addEventListener("click", clearPromo);
+
   $("deleteBtn").addEventListener("click", openDelete);
   $("deleteModalClose").addEventListener("click", function(){ $("deleteModal").classList.remove("open"); document.body.style.overflow = ""; });
   $("deleteCancel").addEventListener("click", function(){ $("deleteModal").classList.remove("open"); document.body.style.overflow = ""; });
@@ -1516,4 +1701,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-  </html>
+</html>
