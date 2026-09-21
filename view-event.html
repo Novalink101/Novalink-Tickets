@@ -9,6 +9,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
 :root{--cy:#00FFFF;--cy2:#00CCCC;--cy3:#009999;--cyf:#e6ffff;--bg:#fff;--bg2:#f6f8fb;--sf:#fff;--sf2:#f1f4f8;--bd:#e4e9f0;--bd2:#d3dbe5;--tx:#0a0f14;--tx2:#2b3644;--mut:#6b7787;--rd:14px;--font:'Inter',system-ui,-apple-system,sans-serif;--dg:#dc2626;--dgf:#fef2f2;--sv:#059669;--svf:#ecfdf5;--nv:#1e2f4d;--ease:cubic-bezier(0.25,0.8,0.25,1)}
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
@@ -321,6 +322,7 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 </div>
 
 <div class="toast" id="toast"></div>
+<!-- ═══ PART 1 OF 2 ENDS HERE ═══ -->
 <script src="routing-engine.js"></script>
 <script>
 (function(){
@@ -340,6 +342,17 @@ var auth = firebase.auth();
 var EVENTS = "events";
 var ADMINS = ["nylnathan340@gmail.com"];
 var MAX_PER_PURCHASE = 12;
+
+/* ══════════════════════════════════════════════════════════════
+   EMAILJS — sends email confirmations after ticket purchases
+   ══════════════════════════════════════════════════════════════ */
+var EMAILJS_PUBLIC_KEY  = "bmHeI_nQwa4UY6mR4";
+var EMAILJS_SERVICE_ID  = "service_prn9hay";
+var EMAILJS_TEMPLATE_ID = "template_5pt25ol";
+if (window.emailjs) {
+  try { emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY }); }
+  catch(e){ console.warn("EmailJS init failed:", e); }
+}
 
 var currentUser = null;
 var isAdmin = false;
@@ -1209,6 +1222,61 @@ function generateTicketId(){
   return "TKT-" + tm + "-" + rand;
 }
 
+/* ══════════════════════════════════════════════════════════════
+   EMAIL CONFIRMATIONS — send Ticket via EmailJS
+   ══════════════════════════════════════════════════════════════ */
+function sendTicketEmail(params){
+  if (!window.emailjs) { console.warn("[Email] SDK not loaded"); return; }
+  emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, params)
+    .then(function(res){ console.log("[Email] Sent:", res.status, res.text); })
+    .catch(function(err){ console.error("[Email] Send failed:", err); });
+}
+
+function buildTicketEmailParams(ticketId, tier, guestName, seat){
+  var ev = eventData || {};
+  var tierName = (ev.tierNames && ev.tierNames[tier]) || tier || "Standard";
+  var venue = ev.venueName
+    ? (ev.venueName + (ev.city ? ", " + ev.city : ""))
+    : (ev.venueAddress || ev.city || "Venue");
+
+  var dateLabel = "";
+  try {
+    if (ev.startDate) {
+      var d = new Date(ev.startDate + "T" + (ev.startTime || "00:00"));
+      if (!isNaN(d.getTime())) {
+        dateLabel = d.toLocaleDateString("en-ZA", {
+          weekday: "short", day: "numeric", month: "short", year: "numeric"
+        });
+      }
+    }
+  } catch(e){}
+  if (!dateLabel) dateLabel = ev.startDate || "TBA";
+
+  var ref = (window.NovalinkRoutingEngine && NovalinkRoutingEngine.buildTicketRef)
+    ? NovalinkRoutingEngine.buildTicketRef(eventId, ticketId)
+    : "NL-XXXXXX";
+
+  /* Build ticket URL — supports both root and subfolder hosting (GitHub Pages) */
+  var basePath = window.location.pathname.replace(/view-event\.html.*$/, "");
+  if (!basePath.endsWith("/")) basePath += "/";
+  var ticketUrl = window.location.origin + basePath
+                  + "view-card.html?event=" + encodeURIComponent(eventId)
+                  + "&ticket=" + encodeURIComponent(ticketId);
+
+  return {
+    to_email:    (currentUser && currentUser.email) ? currentUser.email : "",
+    event_name:  ev.eventName || "Untitled Event",
+    event_date:  dateLabel,
+    event_time:  ev.startTime || "",
+    event_venue: venue,
+    guest_name:  guestName || "Guest",
+    tier_name:   tierName,
+    seat:        seat || "General admission",
+    ticket_ref:  ref,
+    ticket_url:  ticketUrl
+  };
+}
+
 /* ============ CONFIRM BUY ============ */
 function confirmBuy(){
   if (!eventData || !currentUser) return;
@@ -1305,6 +1373,24 @@ function confirmBuy(){
     });
   })
   .then(function(result){
+    /* ═══ Send confirmation email via EmailJS ═══ */
+    try {
+      var firstRef = result.ticketRefs[0];
+      var emailParams = buildTicketEmailParams(
+        firstRef.id,
+        tier,
+        guestNames[0],
+        result.seats[0] || ""
+      );
+      if (qty > 1) {
+        emailParams.guest_name = guestNames[0] + " (+" + (qty - 1) + " more)";
+        var basePath2 = window.location.pathname.replace(/view-event\.html.*$/, "");
+        if (!basePath2.endsWith("/")) basePath2 += "/";
+        emailParams.ticket_url = window.location.origin + basePath2 + "my-cards.html";
+      }
+      sendTicketEmail(emailParams);
+    } catch(e){ console.error("[Email] Queue error:", e); }
+
     var msg;
     if (!needsSeat) msg = qty === 1 ? "Ticket confirmed!" : qty + " tickets confirmed!";
     else if (perTable) msg = qty === 1 ? ("Table " + result.seats[0] + " booked!") : (qty + " tables booked!");
@@ -1354,7 +1440,6 @@ function doDelete(){
 }
 
 /* ============ EDIT ============ */
-/* ★ CHANGED: create-event.html now reads ?id= instead of ?edit= */
 function editEvent(){
   if (!canEdit()) { showToast("You don't have permission to edit this event.", "error"); return; }
   window.location.href = "create-event.html?id=" + encodeURIComponent(eventId);
