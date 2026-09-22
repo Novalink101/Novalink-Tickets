@@ -182,6 +182,8 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
 .cover-progress-bar{height:6px;background:var(--surface-2);border-radius:3px;overflow:hidden}
 .cover-progress-bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--cyan),var(--cyan-d));border-radius:3px;transition:width .2s ease;width:0}
 .cover-progress-text{font-size:10.5px;font-weight:700;color:var(--text-muted);text-align:center;margin-top:6px;font-family:var(--mono)}
+.cover-error{background:var(--danger-soft);border:1px solid var(--danger-border);color:#991b1b;font-size:11px;font-weight:700;padding:9px 12px;border-radius:9px;margin-top:10px;line-height:1.5;display:none}
+.cover-error.show{display:block}
 
 /* TOGGLE */
 .toggle-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;background:var(--surface-2);border:1px solid var(--border);border-radius:11px;margin-bottom:13px}
@@ -196,7 +198,7 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
 .toggle-switch input:checked + .toggle-slider:before{transform:translateX(20px)}
 .toggle-switch input:focus-visible + .toggle-slider{box-shadow:0 0 0 3px rgba(34,211,238,.35)}
 
-/* BUILDER LAYOUT */
+/* BUILDER */
 .builder{display:grid;grid-template-columns:290px 1fr 320px;gap:16px;align-items:start}
 @media (max-width:1300px){.builder{grid-template-columns:265px 1fr 290px;gap:14px}}
 @media (max-width:1150px){.builder{grid-template-columns:1fr;gap:14px}}
@@ -455,7 +457,7 @@ table.data td.num{text-align:right;font-family:var(--mono);font-weight:800;white
 
 #toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,18px);background:var(--ink);color:var(--cyan);font-size:13px;font-weight:800;padding:13px 22px;border-radius:var(--radius-pill);box-shadow:0 14px 34px rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:.22s;z-index:200;max-width:90vw;text-align:center;letter-spacing:.01em;display:flex;align-items:center;gap:9px}
 #toast.show{opacity:1;transform:translate(-50%,0)}
-#toast svg{width:15px;height:15px}
+#toast svg{width:15px;height:15px;flex-shrink:0}
 #toast.success{background:#065f46;color:#d1fae5}
 #toast.error{background:#991b1b;color:#fef2f2}
 </style>
@@ -525,7 +527,6 @@ table.data td.num{text-align:right;font-family:var(--mono);font-weight:800;white
           <div class="step-info"><div class="step-title">Fleet</div><div class="step-sub">Cover · vehicles · capacity</div></div>
         </div>
 
-        <!-- COVER UPLOAD PANEL -->
         <div class="panel">
           <div class="panel-title">Trip Cover</div>
 
@@ -552,6 +553,8 @@ table.data td.num{text-align:right;font-family:var(--mono);font-weight:800;white
             <div class="cover-progress-bar"><i id="coverProgressBar"></i></div>
             <div class="cover-progress-text" id="coverProgressText">Uploading… 0%</div>
           </div>
+
+          <div class="cover-error" id="coverError"></div>
 
           <div class="cover-hint">JPG, PNG, WebP or GIF. Max 5 MB. Shown on the home card and the trip detail page.</div>
         </div>
@@ -737,7 +740,6 @@ table.data td.num{text-align:right;font-family:var(--mono);font-weight:800;white
 
 </main>
 
-<!-- AUTH MODAL -->
 <div class="modal-overlay" id="authModal">
   <div class="modal">
     <button class="modal-close" id="authClose" type="button"><i data-lucide="x"></i></button>
@@ -789,9 +791,11 @@ var TRIPS_COLLECTION = "trips";
 var COVER_PATH_PREFIX = "trip-covers";
 var COVER_MAX_BYTES = 5 * 1024 * 1024;
 var COVER_ALLOWED_TYPES = ['image/jpeg','image/png','image/webp','image/gif'];
+var COVER_TIMEOUT_MS = 20000;
 
 var currentUser = null;
 var authMode = "signin";
+var storageDiagnosticLogged = false;
 
 /* ============================================================
    UTILITIES
@@ -830,8 +834,9 @@ function formatBytes(n){
   if(n < 1024*1024) return (n/1024).toFixed(1) + ' KB';
   return (n/(1024*1024)).toFixed(1) + ' MB';
 }
-function toast(msg, type){
+function toast(msg, type, ms){
   type = type || 'info';
+  ms = ms || 3200;
   const el = $('toast');
   const i = type === 'error' ? 'alert-circle' : (type === 'success' ? 'check-circle' : 'info');
   el.className = type;
@@ -839,7 +844,7 @@ function toast(msg, type){
   refreshIcons();
   requestAnimationFrame(() => el.classList.add('show'));
   clearTimeout(toast._t);
-  toast._t = setTimeout(() => el.classList.remove('show'), 3200);
+  toast._t = setTimeout(() => el.classList.remove('show'), ms);
 }
 
 /* ============================================================
@@ -1254,6 +1259,42 @@ function cabinHTML(v, opts){
    ============================================================ */
 let coverUploadTask = null;
 let coverObjectUrl = null;
+let coverTimeoutHandle = null;
+
+function setCoverError(msg){
+  const el = $('coverError');
+  if(!el) return;
+  if(msg){
+    el.textContent = msg;
+    el.classList.add('show');
+  } else {
+    el.textContent = '';
+    el.classList.remove('show');
+  }
+}
+
+function checkStorageSetup(){
+  const opts = firebase.app().options || {};
+  const bucket = opts.storageBucket;
+  const hasStorage = !!(storage && typeof storage.ref === 'function');
+
+  if(!storageDiagnosticLogged){
+    console.log('[Trip Studio] Storage diagnostic:', {
+      hasStorageSdk: hasStorage,
+      storageBucket: bucket || '(missing)',
+      projectId: opts.projectId
+    });
+    storageDiagnosticLogged = true;
+  }
+
+  if(!hasStorage){
+    return { ok: false, reason: 'Storage SDK not loaded. Check that firebase-storage-compat.js is included.' };
+  }
+  if(!bucket){
+    return { ok: false, reason: 'storageBucket is missing from the Firebase config.' };
+  }
+  return { ok: true };
+}
 
 function renderCoverPreview(){
   const preview = $('coverPreview');
@@ -1340,7 +1381,9 @@ function pickFile(){
 async function handleFileSelected(file){
   if(!validateCoverFile(file)) return;
 
-  // Show a local preview immediately
+  setCoverError('');
+
+  // Local instant preview
   if(coverObjectUrl){
     try { URL.revokeObjectURL(coverObjectUrl); } catch(e){}
     coverObjectUrl = null;
@@ -1356,10 +1399,17 @@ async function handleFileSelected(file){
   const removeBtn = $('coverRemove');
   if(removeBtn) removeBtn.disabled = false;
 
-  // Must be signed in to upload to Storage
   if(!currentUser){
+    setCoverError('Sign in to upload a cover.');
     toast('Sign in to upload a cover.', 'error');
-    setTimeout(() => openAuthModal('signin'), 600);
+    setTimeout(() => openAuthModal('signin'), 700);
+    return;
+  }
+
+  const check = checkStorageSetup();
+  if(!check.ok){
+    setCoverError(check.reason);
+    toast('Storage not ready: ' + check.reason, 'error', 6000);
     return;
   }
 
@@ -1367,47 +1417,110 @@ async function handleFileSelected(file){
 }
 
 async function uploadCoverFile(file){
-  // Cancel any in-flight upload
   if(coverUploadTask){
     try { coverUploadTask.cancel(); } catch(e){}
     coverUploadTask = null;
   }
+  if(coverTimeoutHandle){
+    clearTimeout(coverTimeoutHandle);
+    coverTimeoutHandle = null;
+  }
+
+  const bucket = firebase.app().options.storageBucket;
+  console.log('[cover upload] starting', {
+    bucket,
+    uid: currentUser.uid,
+    fileSize: file.size,
+    fileType: file.type,
+    fileName: file.name
+  });
 
   const safeName = (file.name || 'cover')
     .replace(/[^a-zA-Z0-9._-]/g, '_')
     .slice(-60);
   const path = COVER_PATH_PREFIX + '/' + currentUser.uid + '/' + Date.now() + '-' + safeName;
-  const ref  = storage.ref(path);
+
+  let ref;
+  try {
+    ref = storage.ref(path);
+  } catch(err){
+    console.error('[cover upload] ref() failed', err);
+    setCoverError('Storage reference failed: ' + (err.message || err.code || 'unknown'));
+    toast('Could not build storage reference.', 'error');
+    return;
+  }
 
   showCoverProgress(0);
 
-  const task = ref.put(file, {
-    contentType: file.type,
-    cacheControl: 'public, max-age=31536000'
-  });
-  coverUploadTask = task;
+  let task;
+  try {
+    task = ref.put(file, {
+      contentType: file.type,
+      cacheControl: 'public, max-age=31536000'
+    });
+    coverUploadTask = task;
+  } catch(err){
+    console.error('[cover upload] put() failed', err);
+    hideCoverProgress();
+    setCoverError('Upload could not start: ' + (err.message || err.code || 'unknown'));
+    toast('Upload could not start.', 'error');
+    return;
+  }
+
+  let madeProgress = false;
+
+  coverTimeoutHandle = setTimeout(() => {
+    if(!madeProgress){
+      console.warn('[cover upload] stalled at 0% — bucket, rules, or App Check issue');
+      try { task.cancel(); } catch(e){}
+      coverUploadTask = null;
+      hideCoverProgress();
+      const reason = 'Upload stuck at 0%. Check that Firebase Storage is enabled, the bucket name matches, and rules are published. Open the browser console for details.';
+      setCoverError(reason);
+      toast(reason, 'error', 9000);
+    }
+  }, COVER_TIMEOUT_MS);
 
   task.on('state_changed',
     (snap) => {
+      madeProgress = true;
       const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
       showCoverProgress(pct);
     },
     (err) => {
-      console.error('[cover upload]', err);
+      if(coverTimeoutHandle){
+        clearTimeout(coverTimeoutHandle);
+        coverTimeoutHandle = null;
+      }
+      console.error('[cover upload] error', err, 'code:', err && err.code);
       coverUploadTask = null;
       hideCoverProgress();
-      toast('Upload failed: ' + (err.message || 'unknown error'), 'error');
-      // Leave the local preview so the host can retry
+      const code = err && err.code ? ' (' + err.code + ')' : '';
+      const msg = err && err.message ? err.message : 'unknown error';
+      let human = 'Upload failed' + code + ': ' + msg;
+      if(err && err.code === 'storage/unauthorized'){
+        human = 'Upload denied. Publish Storage rules allowing writes to trip-covers/YourUID/.';
+      } else if(err && err.code === 'storage/bucket-not-found'){
+        human = 'Storage bucket not found. Enable Storage in the Firebase Console.';
+      } else if(err && err.code === 'storage/canceled'){
+        human = 'Upload cancelled.';
+      }
+      setCoverError(human);
+      toast(human, 'error', 7000);
     },
     async () => {
+      if(coverTimeoutHandle){
+        clearTimeout(coverTimeoutHandle);
+        coverTimeoutHandle = null;
+      }
       try {
         const url = await task.snapshot.ref.getDownloadURL();
-        // Best-effort: delete the previous cover if it was in our bucket
         const prevPath = state.heroImagePath;
         state.heroImage = url;
         state.heroImagePath = path;
         coverUploadTask = null;
         hideCoverProgress();
+        setCoverError('');
         renderCoverPreview();
         toast('Cover uploaded.', 'success');
         if(prevPath && prevPath !== path){
@@ -1417,6 +1530,7 @@ async function uploadCoverFile(file){
         console.error('[cover url]', err);
         coverUploadTask = null;
         hideCoverProgress();
+        setCoverError('Could not get image URL: ' + (err.message || 'unknown'));
         toast('Could not get image URL.', 'error');
       }
     }
@@ -1424,14 +1538,17 @@ async function uploadCoverFile(file){
 }
 
 function removeCover(){
-  // Cancel in-flight upload
   if(coverUploadTask){
     try { coverUploadTask.cancel(); } catch(e){}
     coverUploadTask = null;
   }
+  if(coverTimeoutHandle){
+    clearTimeout(coverTimeoutHandle);
+    coverTimeoutHandle = null;
+  }
   hideCoverProgress();
+  setCoverError('');
 
-  // Best-effort delete from Storage
   const oldPath = state.heroImagePath;
   if(oldPath && currentUser){
     storage.ref(oldPath).delete().catch(() => { /* ignore */ });
@@ -1457,7 +1574,6 @@ function bindCoverControls(){
     input.addEventListener('change', e => {
       const file = e.target.files && e.target.files[0];
       if(file) handleFileSelected(file);
-      // Reset so picking the same file twice still fires change
       e.target.value = '';
     });
   }
@@ -1468,7 +1584,6 @@ function bindCoverControls(){
       if(e.key === 'Enter' || e.key === ' '){ e.preventDefault(); pickFile(); }
     });
 
-    // Drag and drop
     ['dragenter','dragover'].forEach(evt => {
       preview.addEventListener(evt, e => {
         e.preventDefault();
@@ -2247,7 +2362,6 @@ function bindGlobal(){
     }
   });
 
-  // AUTH
   $('signInBtn').addEventListener('click', () => openAuthModal('signin'));
   $('userChip').addEventListener('click', () => {
     if(!currentUser){ openAuthModal('signin'); return; }
@@ -2342,7 +2456,6 @@ document.addEventListener('DOMContentLoaded', () => {
   bindCoverControls();
   renderCoverPreview();
 
-  // Start with 0 vehicles regardless of new vs. loaded
   state.vehicles = [];
   state.selectedVehicleId = null;
   state.activeTierId = state.tiers[1]?.id || state.tiers[0]?.id || null;
@@ -2350,6 +2463,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
   renderAll();
   refreshIcons();
+
+  // Log storage setup once on boot
+  checkStorageSetup();
 
   auth.onAuthStateChanged(user => {
     applyAuthState(user);
@@ -2378,4 +2494,4 @@ document.addEventListener('DOMContentLoaded', () => {
 })();
 </script>
 </body>
-                                                                                                                                                                                                                                                                                                                                                   </html>
+  </html>
