@@ -165,6 +165,8 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .info-b i{width:16px;height:16px;flex-shrink:0;margin-top:2px}
 .info-b.secure{background:#eff6ff;border-color:#bfdbfe;color:#1e3a8a}
 .info-b.secure i{color:#1d4ed8}
+.info-b.pending{background:#fffbeb;border-color:#fde68a;color:#92400e}
+.info-b.pending i{color:#b45309}
 .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(120%);background:#0a0f14;color:#fff;padding:12px 18px;border-radius:12px;font-size:13.5px;z-index:200;transition:transform 0.4s ease,opacity 0.3s ease;display:flex;align-items:center;gap:10px;pointer-events:none;opacity:0;max-width:calc(100vw - 40px)}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
 .toast.success{background:#065f46}
@@ -311,6 +313,10 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
       <i data-lucide="info"></i>
       <span>Free event — no payment required.</span>
     </div>
+    <div class="info-b pending" id="buyPendingNote" style="display:none;">
+      <i data-lucide="construction"></i>
+      <span>Online payments are being finalised. Email the host to arrange payment — your ticket will be issued manually.</span>
+    </div>
     <div class="fg"><label for="buyTier">Ticket tier</label><select id="buyTier"></select></div>
     <div class="fg">
       <label for="buyQty" id="buyQtyLabel">Number of tickets</label>
@@ -381,7 +387,14 @@ var ADMINS = ["nylnathan340@gmail.com"];
 var MAX_PER_PURCHASE = 12;
 
 /* ══════════════════════════════════════════════════════════════
-   VAL TOWN BACKEND URL — replace this if you redeploy
+   PAYMENT MODE FLAG
+   true  = show "coming soon" for paid events (test/safe mode)
+   false = enable live payment via Val Town backend
+   ══════════════════════════════════════════════════════════════ */
+var PAYMENTS_ENABLED = false;
+
+/* ══════════════════════════════════════════════════════════════
+   VAL TOWN BACKEND URL — used only when PAYMENTS_ENABLED = true
    ══════════════════════════════════════════════════════════════ */
 var BACKEND_URL = "https://nathannyl--856b743eb5f911f18c001607ee4eb77e.web.val.run";
 
@@ -1264,15 +1277,25 @@ function openBuy(){
   buildGuestFields(1);
 
   var isFreeEvent = !hasAnyPaidTier();
+  var isPendingMode = !isFreeEvent && !PAYMENTS_ENABLED;
   var secureNote = $("buySecureNote");
   var freeNote = $("buyFreeNote");
+  var pendingNote = $("buyPendingNote");
   var confirmBtn = $("buyConfirm");
-  if (secureNote) secureNote.style.display = isFreeEvent ? "none" : "";
+  if (secureNote) secureNote.style.display = (!isFreeEvent && PAYMENTS_ENABLED) ? "" : "none";
   if (freeNote) freeNote.style.display = isFreeEvent ? "" : "none";
+  if (pendingNote) pendingNote.style.display = isPendingMode ? "" : "none";
   if (confirmBtn) {
-    confirmBtn.innerHTML = isFreeEvent
-      ? '<i data-lucide="check"></i> Confirm ticket'
-      : '<i data-lucide="lock"></i> Pay &amp; get ticket';
+    if (isFreeEvent) {
+      confirmBtn.innerHTML = '<i data-lucide="check"></i> Confirm ticket';
+      confirmBtn.disabled = false;
+    } else if (isPendingMode) {
+      confirmBtn.innerHTML = '<i data-lucide="mail"></i> Email host to pay';
+      confirmBtn.disabled = false;
+    } else {
+      confirmBtn.innerHTML = '<i data-lucide="lock"></i> Pay &amp; get ticket';
+      confirmBtn.disabled = false;
+    }
   }
 
   var note = $("buySeatNote");
@@ -1384,7 +1407,7 @@ function buildTicketEmailParams(ticketId, tier, guestName, seat){
   };
 }
 
-/* FREE TICKET — still uses Firestore directly */
+/* FREE TICKET — writes to Firestore directly */
 function createFreeTicket(tier, tierName, qty, guestNames){
   var btn = $("buyConfirm");
   var orig = btn.innerHTML;
@@ -1541,7 +1564,7 @@ function findNextAvailableSeatLocal(tier, takenSeats){
 }
 
 /* ══════════════════════════════════════════════════════════════
-   CONFIRM BUY — routes to free OR Val Town paid flow
+   CONFIRM BUY — routes to free OR paid flow
    ══════════════════════════════════════════════════════════════ */
 function confirmBuy(){
   if (!eventData || !currentUser) return;
@@ -1581,6 +1604,27 @@ function confirmBuy(){
   /* FREE ticket — direct Firestore write */
   if (basePrice <= 0) {
     createFreeTicket(tier, tierName, qty, guestNames);
+    return;
+  }
+
+  /* PAID ticket — payments disabled: show mailto instruction */
+  if (!PAYMENTS_ENABLED) {
+    var hostEmail = (eventData.hostEmail || "").trim();
+    var subject = encodeURIComponent("Ticket purchase for " + (eventData.eventName || "event"));
+    var body = encodeURIComponent(
+      "Hi,\n\n" +
+      "I'd like to buy " + qty + " ticket" + (qty === 1 ? "" : "s") + " for " + (eventData.eventName || "your event") + ".\n\n" +
+      "Tier: " + tierName + "\n" +
+      "Total: " + formatMoney(basePrice * qty) + "\n" +
+      "Guest" + (qty === 1 ? ": " : "s: ") + guestNames.join(", ") + "\n\n" +
+      "Please send me a payment link.\n\n" +
+      "Thanks!"
+    );
+    if (hostEmail) {
+      window.location.href = "mailto:" + hostEmail + "?subject=" + subject + "&body=" + body;
+    } else {
+      showToast("This event isn't accepting online payments yet. Please contact the host directly.", "info", 5000);
+    }
     return;
   }
 
