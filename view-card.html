@@ -108,7 +108,9 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .tk-badges{display:flex;gap:6px;flex-wrap:wrap}
 .tk-badge{font-size:9px;font-weight:900;padding:3px 9px;border-radius:6px;text-transform:uppercase;letter-spacing:0.6px;background:var(--tc-badge-bg);color:var(--tc-badge-text)}
 .tk-badge.tier{background:rgba(0,0,0,0.15);color:rgba(0,0,0,0.85);font-weight:900}
+.tk-badge.kind{background:rgba(124,58,237,0.2);color:#6b21a8;font-weight:900}
 .ticket[data-is-dark="1"] .tk-badge.tier{background:rgba(255,255,255,0.15);color:#fff}
+.ticket[data-is-dark="1"] .tk-badge.kind{background:rgba(167,139,250,0.3);color:#e9d5ff}
 .tk-event{position:relative;font-size:clamp(18px,3.2vw,24px);font-weight:900;line-height:1.05;letter-spacing:-0.4px;text-transform:uppercase;word-break:break-word;margin-bottom:4px;max-width:70%}
 .tk-event-meta{position:relative;display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--tc-muted);margin-bottom:14px;word-break:break-word}
 .tk-event-meta i{width:12px;height:12px}
@@ -207,6 +209,8 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
       <div class="dd" id="userDropdown">
         <button class="dd-item" id="ddSignOut"><i data-lucide="log-out"></i> Sign out</button>
         <button class="dd-item" id="ddCreateEvent"><i data-lucide="plus-circle"></i> Create an event</button>
+        <button class="dd-item" id="ddCreateTrip"><i data-lucide="map"></i> Create a trip</button>
+        <button class="dd-item" id="ddMyCards"><i data-lucide="ticket"></i> My cards</button>
       </div>
     </div>
   </div>
@@ -252,6 +256,7 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
           <div class="tk-header">
             <div class="tk-logo">NOVALINK</div>
             <div class="tk-badges">
+              <span class="tk-badge kind" id="ticketKindBadge">EVENT</span>
               <span class="tk-badge" id="ticketStatusBadge">VALID</span>
               <span class="tk-badge tier" id="ticketTierBadge">STANDARD</span>
             </div>
@@ -351,8 +356,15 @@ var firebaseConfig = {
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 var db = firebase.firestore();
 var auth = firebase.auth();
-var EVENTS = "events";
 var ADMINS = ["nylnathan340@gmail.com"];
+
+/* Read ?collection= once and cache */
+var COLLECTION = (function(){
+  try {
+    var c = new URLSearchParams(window.location.search).get("collection");
+    return c === "trips" ? "trips" : "events";
+  } catch(e){ return "events"; }
+})();
 
 var currentUser = null;
 var isAdmin = false;
@@ -395,6 +407,19 @@ function formatDate(dateStr, timeStr){
     if (timeStr) out += " · " + timeStr;
     return out;
   } catch(e){ return dateStr; }
+}
+
+/* Date span for trips (departure → return) */
+function formatParentDate(parent){
+  if (!parent) return "Date TBA";
+  if (parent.startDate) return formatDate(parent.startDate, parent.startTime);
+  var dep = parent.departureDate || parent.serviceDate || "";
+  var ret = parent.returnDate || parent.endDate || "";
+  if (!dep && !ret) return "Date TBA";
+  if (dep && !ret) return formatDate(dep, parent.startTime);
+  if (!dep && ret) return formatDate(ret, parent.startTime);
+  if (dep === ret) return formatDate(dep, parent.startTime);
+  return formatDate(dep, parent.startTime) + " → " + formatDate(ret);
 }
 
 function getParam(n){
@@ -495,21 +520,23 @@ function buildTicketRef(){
 }
 
 /* ===== Pretty seat display =====
-   A-T1-C3  →  Table A1 · Seat 3
-   A-T1     →  Table A1
-   A-A-1    →  Seat A-A-1 (rows mode, unchanged)
-   ""       →  General admission
+   Event table: A-T1-C3  →  Table A1 · Seat 3
+   Trip seat:   S01:04B  →  S01 · Seat 04B
+   Row mode:    A-A-1    →  Seat A-A-1
+   Empty:       General admission
 */
 function prettySeat(raw){
   if (!raw) return { label: "Seat", value: "General admission" };
-  var m = /^([A-Z])-T(\d+)-C(\d+)$/.exec(raw);
-  if (m) return { label: "Table & chair", value: "Table " + m[1] + m[2] + " · Seat " + m[3] };
-  var t = /^([A-Z])-T(\d+)$/.exec(raw);
-  if (t) return { label: "Table", value: "Table " + t[1] + t[2] };
+  var m1 = /^([A-Z])-T(\d+)-C(\d+)$/.exec(raw);
+  if (m1) return { label: "Table & chair", value: "Table " + m1[1] + m1[2] + " · Seat " + m1[3] };
+  var m2 = /^([A-Z])-T(\d+)$/.exec(raw);
+  if (m2) return { label: "Table", value: "Table " + m2[1] + m2[2] };
+  var m3 = /^([A-Z0-9]+):([A-Z0-9\-]+)$/.exec(raw);
+  if (m3) return { label: "Vehicle & seat", value: m3[1] + " · Seat " + m3[2] };
   return { label: "Seat", value: raw };
 }
 
-/* ===== Render ticket ===== */
+/* ===== Render ===== */
 function renderTicket(){
   if (!ticketData || !eventData) return;
 
@@ -518,32 +545,56 @@ function renderTicket(){
 
   applyTicketPalette(tier);
 
+  /* Status */
   var statusLabel = "VALID";
   if (ticketData.status === "cancelled") statusLabel = "CANCELLED";
   else if (ticketData.status === "checked-in" || ticketData.status === "checked_in") statusLabel = "USED";
   $("ticketStatusBadge").textContent = statusLabel;
+
+  /* Kind badge — EVENT or TRIP */
+  $("ticketKindBadge").textContent = COLLECTION === "trips" ? "TRIP" : "EVENT";
+
+  /* Tier badge */
   $("ticketTierBadge").textContent = String(tierName).toUpperCase();
 
   var card = $("ticketCard");
   card.classList.toggle("cancelled", ticketData.status === "cancelled");
 
-  $("ticketEventName").textContent = eventData.eventName || ticketData.eventName || "Untitled Event";
-  $("ticketEventDate").textContent = formatDate(eventData.startDate, eventData.startTime);
+  /* Event / trip title */
+  var title = COLLECTION === "trips"
+    ? (eventData.tripName || eventData.serviceName || eventData.name || ticketData.eventName || "Untitled Trip")
+    : (eventData.eventName || ticketData.eventName || "Untitled Event");
+  $("ticketEventName").textContent = title;
 
-  var venue = eventData.venueName
-    ? (eventData.venueName + (eventData.city ? ", " + eventData.city : ""))
-    : (eventData.venueAddress || eventData.city || "VENUE");
+  /* Date */
+  $("ticketEventDate").textContent = formatParentDate(eventData);
+
+  /* Venue */
+  var venue;
+  if (COLLECTION === "trips") {
+    venue = eventData.destination
+      || (eventData.venueName ? eventData.venueName + (eventData.city ? ", " + eventData.city : "") : "")
+      || eventData.venueAddress
+      || eventData.city
+      || "Destination TBA";
+  } else {
+    venue = eventData.venueName
+      ? (eventData.venueName + (eventData.city ? ", " + eventData.city : ""))
+      : (eventData.venueAddress || eventData.city || "VENUE");
+  }
   $("ticketEventVenue").textContent = venue;
 
+  /* Guest */
   $("ticketGuest").textContent = ticketData.guestName || "Guest";
 
+  /* Seat */
   var seatInfo = prettySeat(ticketData.seat);
   $("ticketSeatLabel").textContent = seatInfo.label;
   $("ticketSeat").textContent = seatInfo.value;
 
+  /* Reference + barcode digits */
   var ref = buildTicketRef();
   $("ticketRef").textContent = ref;
-
   var digits = ref.replace(/[^A-Z0-9]/g, "");
   var groups = [];
   for (var i = 0; i < digits.length && groups.join("").length < 16; i += 4) {
@@ -554,8 +605,19 @@ function renderTicket(){
 
   renderQr();
 
-  $("backToEventBtn").href = "view-event.html?id=" + encodeURIComponent(eventId);
+  /* Back link — points to the right viewer */
+  var backUrl = COLLECTION === "trips"
+    ? "view-trip.html?id=" + encodeURIComponent(eventId)
+    : "view-event.html?id=" + encodeURIComponent(eventId);
+  $("backToEventBtn").href = backUrl;
+  var backLabel = $("backToEventBtn");
+  if (backLabel) {
+    backLabel.innerHTML = COLLECTION === "trips"
+      ? '<i data-lucide="map"></i> Back to trip'
+      : '<i data-lucide="calendar"></i> Back to event';
+  }
 
+  /* Cancel button visibility */
   var cancelBtn = $("cancelTicketBtn");
   var isBuyer = currentUser && ticketData.buyerUid === currentUser.uid;
   var isCancelled = ticketData.status === "cancelled";
@@ -630,7 +692,6 @@ function showError(title, msg, icon){
   $("errorIcon").setAttribute("data-lucide", icon || "alert-circle");
   refreshIcons();
 }
-
 function showSignin(){
   $("loadingState").style.display = "none";
   $("ticketContent").style.display = "none";
@@ -638,7 +699,6 @@ function showSignin(){
   $("signinState").style.display = "block";
   refreshIcons();
 }
-
 function showTicket(){
   $("loadingState").style.display = "none";
   $("errorState").style.display = "none";
@@ -656,7 +716,7 @@ function loadTicketAndEvent(){
   }
 
   if (ticketUnsub) { try { ticketUnsub(); } catch(e){} }
-  ticketUnsub = db.collection(EVENTS).doc(eventId).collection("tickets").doc(ticketId)
+  ticketUnsub = db.collection(COLLECTION).doc(eventId).collection("tickets").doc(ticketId)
     .onSnapshot(function(snap){
       if (!snap.exists) {
         showError("Ticket not found", "This ticket may have been deleted or the link is broken.", "ticket-x");
@@ -664,12 +724,7 @@ function loadTicketAndEvent(){
       }
       ticketData = snap.data() || {};
       ticketData.id = snap.id;
-
-      var isBuyer = ticketData.buyerUid === currentUser.uid;
-      if (!isBuyer && !isAdmin) {
-        ticketData._pendingOwnerCheck = true;
-      }
-
+      ticketData._pendingOwnerCheck = (ticketData.buyerUid !== currentUser.uid && !isAdmin);
       ensureEventLoaded();
     }, function(err){
       console.error("Ticket load error:", err);
@@ -692,9 +747,9 @@ function ensureEventLoaded(){
   }
 
   if (eventUnsub) { try { eventUnsub(); } catch(e){} }
-  eventUnsub = db.collection(EVENTS).doc(eventId).onSnapshot(function(snap){
+  eventUnsub = db.collection(COLLECTION).doc(eventId).onSnapshot(function(snap){
     if (!snap.exists) {
-      showError("Event not found", "The event this ticket belongs to no longer exists.", "alert-circle");
+      showError("Not found", "The ticket's parent record no longer exists.", "alert-circle");
       return;
     }
     eventData = snap.data() || {};
@@ -708,8 +763,8 @@ function ensureEventLoaded(){
     showTicket();
     renderTicket();
   }, function(err){
-    console.error("Event load error:", err);
-    showError("Could not load event", err.message || "Please try again.", "alert-circle");
+    console.error("Parent load error:", err);
+    showError("Could not load", err.message || "Please try again.", "alert-circle");
   });
 }
 
@@ -732,12 +787,10 @@ function openCancelModal(){
   document.body.style.overflow = "hidden";
   refreshIcons();
 }
-
 function closeCancelModal(){
   $("cancelModal").classList.remove("open");
   document.body.style.overflow = "";
 }
-
 function doCancelTicket(){
   if (!ticketData || !eventData) return;
   var isBuyer = currentUser && ticketData.buyerUid === currentUser.uid;
@@ -748,7 +801,7 @@ function doCancelTicket(){
   yesBtn.disabled = true;
   yesBtn.innerHTML = '<span class="spinner"></span> Cancelling…';
 
-  db.collection(EVENTS).doc(eventId).collection("tickets").doc(ticketId)
+  db.collection(COLLECTION).doc(eventId).collection("tickets").doc(ticketId)
     .update({
       status: "cancelled",
       cancelledAt: firebase.firestore.FieldValue.serverTimestamp()
@@ -783,9 +836,9 @@ document.addEventListener("DOMContentLoaded", function(){
   $("ddSignOut").addEventListener("click", function(){
     auth.signOut().then(function(){ showToast("Signed out","success"); });
   });
-  $("ddCreateEvent").addEventListener("click", function(){
-    window.location.href = "create-event.html";
-  });
+  $("ddCreateEvent").addEventListener("click", function(){ window.location.href = "create-event.html"; });
+  $("ddCreateTrip").addEventListener("click",  function(){ window.location.href = "create-trip.html"; });
+  $("ddMyCards").addEventListener("click",     function(){ window.location.href = "my-cards.html"; });
 
   $("cancelTicketBtn").addEventListener("click", openCancelModal);
   $("cancelModalClose").addEventListener("click", closeCancelModal);
@@ -793,6 +846,9 @@ document.addEventListener("DOMContentLoaded", function(){
   $("cancelModalYes").addEventListener("click", doCancelTicket);
   $("cancelModal").addEventListener("click", function(e){
     if (e.target === this) closeCancelModal();
+  });
+  document.addEventListener("keydown", function(e){
+    if (e.key === "Escape" && $("cancelModal").classList.contains("open")) closeCancelModal();
   });
 
   if (!eventId || !ticketId) {
@@ -812,4 +868,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-</html>
+                </html>
