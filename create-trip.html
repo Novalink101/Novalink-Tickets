@@ -4,9 +4,8 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="theme-color" content="#0a0f14" />
-<title>Novalink — Fleet Studio</title>
+<title>Novalink — Trip Studio</title>
 <script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
-<script src="https://unpkg.com/qrcode-generator@1.4.4/qrcode.js"></script>
 <style>
 :root{
   --cyan:#22d3ee;--cyan-d:#06b6d4;--cyan-dd:#0891b2;
@@ -53,9 +52,9 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .hero-in{max-width:1480px;margin:0 auto;padding:0 20px;position:relative;z-index:1}
 .hero-tag{display:inline-flex;align-items:center;gap:9px;border:1px solid rgba(34,211,238,.42);background:rgba(34,211,238,.1);color:var(--cyan);font-size:11px;font-weight:900;letter-spacing:.11em;text-transform:uppercase;padding:8px 15px;border-radius:var(--radius-pill);margin-bottom:20px}
 .hero-tag svg{width:13px;height:13px}
-.hero h1{font-size:clamp(1.85rem,4.4vw,2.9rem);font-weight:900;line-height:1.08;letter-spacing:-.02em;margin-bottom:14px;max-width:640px}
+.hero h1{font-size:clamp(1.85rem,4.4vw,2.9rem);font-weight:900;line-height:1.08;letter-spacing:-.02em;margin-bottom:14px;max-width:680px}
 .hero h1 span{color:var(--cyan)}
-.hero p{color:#94a3b8;font-size:15px;font-weight:500;max-width:560px;line-height:1.6;margin-bottom:26px}
+.hero p{color:#94a3b8;font-size:15px;font-weight:500;max-width:600px;line-height:1.6;margin-bottom:26px}
 .hero-actions{display:flex;gap:12px;flex-wrap:wrap}
 .btn-cyan{background:var(--cyan);color:#04161c;font-weight:900;font-size:14.5px;padding:15px 22px;border-radius:14px;display:inline-flex;align-items:center;justify-content:center;gap:9px;transition:.15s;box-shadow:0 8px 22px rgba(34,211,238,.28)}
 .btn-cyan:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(34,211,238,.4)}
@@ -147,9 +146,7 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
 .tool:hover{border-color:var(--cyan);color:var(--cyan-dd)}
 .tool.active{background:var(--ink);color:#fff;border-color:var(--ink)}
 
-/* ============================================================
-   VEHICLE SHELLS
-   ============================================================ */
+/* VEHICLE SHELLS */
 .vehicle-stage{display:flex;justify-content:center;padding:26px 12px;overflow-x:auto;border-radius:14px;
   background:
     radial-gradient(circle at 50% 30%, rgba(34,211,238,.06), transparent 60%),
@@ -233,12 +230,9 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
 .vshell-sleeper .vshell-body::before{left:4px}
 .vshell-sleeper .vshell-body::after{right:4px}
 
-/* ============================================================
-   SEATS + SEATING LAYOUTS
-   ============================================================ */
+/* SEATS */
 .seat-rows{display:flex;flex-direction:column;padding:4px 0}
 .seat-row{display:flex;justify-content:center;align-items:center}
-
 .seat{
   width:var(--seat-sz,38px);height:var(--seat-sz,38px);
   border-radius:6px 6px 10px 10px;
@@ -247,100 +241,37 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
   color:#4b5563;display:flex;align-items:center;justify-content:center;
   transition:.14s;position:relative;flex-shrink:0;
 }
-/* Forward-facing seat: headrest strip at TOP (against direction of travel) */
 .seat::before{
   content:'';position:absolute;top:-4px;left:16%;right:16%;height:4px;
   background:inherit;border-radius:3px 3px 0 0;
   border:1.5px solid;border-color:inherit;border-bottom:none;
 }
-/* Backward-facing seat: headrest strip at BOTTOM */
 .seat.orient-back{border-radius:10px 10px 6px 6px}
-.seat.orient-back::before{
-  top:auto;bottom:-4px;
-  border-radius:0 0 3px 3px;
-  border-top:none;border-bottom:1.5px solid;border-color:inherit;
-}
+.seat.orient-back::before{top:auto;bottom:-4px;border-radius:0 0 3px 3px;border-top:none;border-bottom:1.5px solid;border-color:inherit}
 
 .seat.pick{cursor:pointer}
 .seat.pick:hover{transform:translateY(-2px) scale(1.06);box-shadow:0 6px 14px rgba(0,0,0,.18);z-index:4}
 .seat.unassigned{background:#fff;border-color:#cbd5e1;color:#64748b;border-style:dashed}
-.seat.selected{outline:3px solid var(--cyan);outline-offset:2px;z-index:5}
-.seat.sold{opacity:.35;cursor:not-allowed;background:repeating-linear-gradient(45deg,#e5e7eb,#e5e7eb 4px,#d1d5db 4px,#d1d5db 8px)}
 .seat.held{background:repeating-linear-gradient(-45deg,#fef9c3,#fef9c3 4px,#fde047 4px,#fde047 8px);border-color:#eab308;color:#713f12}
-.seat:disabled{cursor:not-allowed}
 .seat.dim{opacity:.18}
 .aisle{width:var(--aisle-w,26px);flex-shrink:0;align-self:stretch;margin:0 var(--seat-gap,4px);background:repeating-linear-gradient(to bottom,transparent 0,transparent 4px,#e2e8f0 4px,#e2e8f0 8px);border-radius:2px}
 .vshell-train .aisle,.vshell-metro .aisle{background:repeating-linear-gradient(to bottom,transparent 0,transparent 6px,#cbd5e1 6px,#cbd5e1 10px)}
 
-/* --- Table / Booth layout: horizontal table strips between facing row pairs --- */
-.booth-table{
-  height:9px;margin:5px 30px;border-radius:4px;flex-shrink:0;
-  background:repeating-linear-gradient(90deg,#94a3b8 0,#94a3b8 3px,#cbd5e1 3px,#cbd5e1 6px);
-  border:1px solid #64748b;
-}
+.booth-table{height:9px;margin:5px 30px;border-radius:4px;flex-shrink:0;background:repeating-linear-gradient(90deg,#94a3b8 0,#94a3b8 3px,#cbd5e1 3px,#cbd5e1 6px);border:1px solid #64748b}
 
-/* --- Traditional Compartment layout: boxed cabins --- */
 .compartment-stack{display:flex;flex-direction:column;gap:12px;padding:6px 0;min-width:max-content}
-.compartment{
-  position:relative;
-  border:1.5px dashed var(--shell-edge);
-  border-radius:14px;
-  padding:14px 16px 14px 38px;
-  background:rgba(226,232,240,.32);
-  display:flex;flex-direction:column;align-items:center;gap:6px;
-}
-.compartment-tag{
-  position:absolute;top:-8px;left:14px;
-  font-size:9px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;
-  background:var(--surface);color:var(--text-muted);
-  padding:1px 7px;border-radius:var(--radius-pill);
-  border:1px solid var(--border);
-}
-.compartment-door{
-  position:absolute;left:10px;top:50%;transform:translateY(-50%);
-  display:flex;flex-direction:column;align-items:center;gap:2px;
-  font-size:7.5px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;
-  color:#0369a1;
-}
-.compartment-door::before{
-  content:'';width:4px;height:26px;border-radius:2px;
-  background:repeating-linear-gradient(180deg,#7dd3fc 0,#7dd3fc 4px,transparent 4px,transparent 8px);
-}
-.compartment-table{
-  height:8px;width:68%;border-radius:3px;flex-shrink:0;
-  background:repeating-linear-gradient(90deg,#94a3b8 0,#94a3b8 3px,#cbd5e1 3px,#cbd5e1 6px);
-  border:1px solid #64748b;
-}
+.compartment{position:relative;border:1.5px dashed var(--shell-edge);border-radius:14px;padding:14px 16px 14px 38px;background:rgba(226,232,240,.32);display:flex;flex-direction:column;align-items:center;gap:6px}
+.compartment-tag{position:absolute;top:-8px;left:14px;font-size:9px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;background:var(--surface);color:var(--text-muted);padding:1px 7px;border-radius:var(--radius-pill);border:1px solid var(--border)}
+.compartment-door{position:absolute;left:10px;top:50%;transform:translateY(-50%);display:flex;flex-direction:column;align-items:center;gap:2px;font-size:7.5px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;color:#0369a1}
+.compartment-door::before{content:'';width:4px;height:26px;border-radius:2px;background:repeating-linear-gradient(180deg,#7dd3fc 0,#7dd3fc 4px,transparent 4px,transparent 8px)}
+.compartment-table{height:8px;width:68%;border-radius:3px;flex-shrink:0;background:repeating-linear-gradient(90deg,#94a3b8 0,#94a3b8 3px,#cbd5e1 3px,#cbd5e1 6px);border:1px solid #64748b}
 
-/* --- Longitudinal layout: benches along the walls --- */
 .longitudinal-cabin{display:flex;gap:14px;align-items:stretch;padding:8px 0;min-width:max-content}
-.bench{
-  display:flex;flex-direction:column;gap:3px;
-  padding:12px 8px;
-  background:rgba(226,232,240,.55);
-  border:1.5px solid var(--shell-edge);
-  border-radius:10px;
-  position:relative;
-}
-.bench-label{
-  position:absolute;top:-8px;left:50%;transform:translateX(-50%);
-  font-size:8px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;
-  background:var(--surface);color:var(--text-muted);
-  padding:1px 6px;border-radius:var(--radius-pill);
-  border:1px solid var(--border);white-space:nowrap;
-}
-.bench-open{
-  flex:1;min-width:44px;
-  background:repeating-linear-gradient(0deg,transparent 0,transparent 8px,rgba(148,163,184,.14) 8px,rgba(148,163,184,.14) 10px);
-  border-radius:6px;
-  display:flex;align-items:center;justify-content:center;
-  color:var(--text-faint);font-size:9px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;
-  writing-mode:vertical-rl;
-}
+.bench{display:flex;flex-direction:column;gap:3px;padding:12px 8px;background:rgba(226,232,240,.55);border:1.5px solid var(--shell-edge);border-radius:10px;position:relative}
+.bench-label{position:absolute;top:-8px;left:50%;transform:translateX(-50%);font-size:8px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;background:var(--surface);color:var(--text-muted);padding:1px 6px;border-radius:var(--radius-pill);border:1px solid var(--border);white-space:nowrap}
+.bench-open{flex:1;min-width:44px;background:repeating-linear-gradient(0deg,transparent 0,transparent 8px,rgba(148,163,184,.14) 8px,rgba(148,163,184,.14) 10px);border-radius:6px;display:flex;align-items:center;justify-content:center;color:var(--text-faint);font-size:9px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;writing-mode:vertical-rl}
 
-/* ============================================================
-   TIER / HOLD ITEMS
-   ============================================================ */
+/* TIER / HOLD ITEMS */
 .tier-item,.hold-item{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:11px;background:var(--surface-2);border:1.5px solid transparent;transition:.15s;cursor:pointer;width:100%;text-align:left}
 .tier-item:hover,.hold-item:hover{background:var(--bg)}
 .tier-item.active,.hold-item.active{border-color:var(--cyan);background:#fff;box-shadow:0 0 0 3px rgba(34,211,238,.14)}
@@ -362,8 +293,8 @@ table.data td.num{text-align:right;font-family:var(--mono);font-weight:800;white
 .empty .big{width:38px;height:38px;margin:0 auto 10px;color:var(--text-faint);opacity:.55;display:flex;align-items:center;justify-content:center}
 .empty .big svg{width:38px;height:38px;stroke-width:1.5}
 
-.pricing-layout,.booking-layout{display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start}
-@media (max-width:1100px){.pricing-layout,.booking-layout{grid-template-columns:1fr}}
+.pricing-layout{display:grid;grid-template-columns:1fr 320px;gap:16px;align-items:start}
+@media (max-width:1100px){.pricing-layout{grid-template-columns:1fr}}
 
 .filter-bar{display:flex;gap:9px;flex-wrap:wrap;align-items:center;padding:13px 15px;background:var(--surface);border:1px solid var(--border);border-radius:13px;margin-bottom:14px;box-shadow:0 3px 10px rgba(15,23,42,.04)}
 .filter-bar label{font-size:10.5px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:var(--text-faint)}
@@ -372,35 +303,7 @@ table.data td.num{text-align:right;font-family:var(--mono);font-weight:800;white
 .legend span{display:inline-flex;align-items:center;gap:6px}
 .legend i{width:11px;height:11px;border-radius:4px;display:inline-block}
 
-.cart-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:9px 0;border-bottom:1px dashed var(--border);font-size:12.5px}
-.cart-item:last-child{border-bottom:none}
-.cart-item .seat-code{font-family:var(--mono);font-weight:800;font-size:12.5px}
-.cart-item .seat-tier{font-size:10.5px;color:var(--text-muted);font-weight:600;margin-top:1px}
-.cart-item .seat-price{font-weight:900;font-family:var(--mono);font-size:13px;color:var(--cyan-dd)}
-.cart-total{display:flex;justify-content:space-between;align-items:center;padding:12px 0;margin-top:8px;border-top:2px solid var(--ink);font-weight:900}
-.cart-total .amt{font-size:1.18rem;font-family:var(--mono);color:var(--cyan-dd)}
-
-.scan-input{display:flex;gap:8px;flex-wrap:wrap}
-.scan-input input{flex:1;min-width:180px;padding:13px 15px;background:var(--surface-2);border:1.5px solid var(--border);border-radius:11px;font-family:var(--mono);font-weight:800;font-size:15px;letter-spacing:.05em;text-transform:uppercase}
-.scan-input input:focus{outline:none;border-color:var(--cyan);background:#fff;box-shadow:0 0 0 3px rgba(34,211,238,.15)}
-.scan-result{margin-top:14px;border-radius:13px;padding:16px 18px;border:1.5px solid;display:flex;gap:13px;animation:fadeUp .25s ease}
-.scan-result.ok{background:var(--ok-bg);border-color:var(--ok-bd);color:var(--ok)}
-.scan-result.warn{background:var(--warn-bg);border-color:var(--warn-bd);color:var(--warn)}
-.scan-result.bad{background:var(--bad-bg);border-color:var(--bad-bd);color:var(--bad)}
-.scan-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:16px;flex-shrink:0;background:rgba(255,255,255,.75);border:1.5px solid currentColor}
-.scan-title{font-size:12px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
-.scan-msg{font-size:12.5px;margin-top:3px;opacity:.9;font-weight:500}
-.scan-pnr{font-family:var(--mono);font-size:13px;margin-top:10px;padding:7px 11px;background:rgba(255,255,255,.7);border-radius:7px;display:inline-block;font-weight:900;color:var(--text)}
-.kv-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:9px 18px;margin-top:12px;padding-top:12px;border-top:1px dashed rgba(0,0,0,.12)}
-.kv{display:flex;flex-direction:column;gap:1px;font-size:12.5px}
-.kv span{font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.07em;opacity:.55}
-.kv strong{font-weight:800;color:var(--text)}
-.scan-log{display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;margin-top:13px}
-.log-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 12px;border-radius:9px;background:var(--surface-2);border:1px solid var(--border);font-size:11.5px}
-
-/* ============================================================
-   REVENUE
-   ============================================================ */
+/* REVENUE */
 .rev-mini{background:var(--rev-grad-2);color:#fff;border:none;position:relative;overflow:hidden}
 .rev-mini::after{content:'';position:absolute;right:-40px;top:-40px;width:140px;height:140px;background:radial-gradient(circle,rgba(34,211,238,.22),transparent 70%);pointer-events:none}
 .rev-mini .panel-title{color:rgba(255,255,255,.5);margin-bottom:10px;position:relative;z-index:1}
@@ -425,23 +328,23 @@ table.data td.num{text-align:right;font-family:var(--mono);font-weight:800;white
 @media (max-width:520px){.rev-kpis{grid-template-columns:1fr}}
 .rev-kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;position:relative;overflow:hidden;box-shadow:0 4px 14px rgba(15,23,42,.05)}
 .rev-kpi::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--cyan);border-radius:3px 0 0 3px}
-.rev-kpi.real::before{background:#10b981}
-.rev-kpi.occ::before{background:#f59e0b}
+.rev-kpi.priced::before{background:#10b981}
+.rev-kpi.open::before{background:#f59e0b}
 .rev-kpi.avg::before{background:#8b5cf6}
 .rev-kpi-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
 .rev-kpi-label{font-size:10px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--text-faint)}
 .rev-kpi-ico{width:26px;height:26px;border-radius:8px;background:var(--surface-2);color:var(--text-muted);display:flex;align-items:center;justify-content:center}
 .rev-kpi-ico svg{width:14px;height:14px}
-.rev-kpi.real .rev-kpi-ico{background:#ecfdf5;color:#059669}
-.rev-kpi.occ .rev-kpi-ico{background:#fffbeb;color:#b45309}
+.rev-kpi.priced .rev-kpi-ico{background:#ecfdf5;color:#059669}
+.rev-kpi.open .rev-kpi-ico{background:#fffbeb;color:#b45309}
 .rev-kpi.avg .rev-kpi-ico{background:#f5f3ff;color:#7c3aed}
 .rev-kpi-value{font-size:1.6rem;font-weight:900;font-family:var(--mono);letter-spacing:-.02em;line-height:1.05;color:var(--text);word-break:break-word}
 .rev-kpi-value.sm{font-size:1.35rem}
 .rev-kpi-sub{font-size:11px;font-weight:600;color:var(--text-muted);margin-top:6px}
 .rev-kpi-bar{height:5px;background:var(--surface-2);border-radius:3px;overflow:hidden;margin-top:10px}
 .rev-kpi-bar > i{display:block;height:100%;border-radius:3px;transition:width .4s cubic-bezier(.22,.9,.3,1)}
-.rev-kpi.real .rev-kpi-bar > i{background:#10b981}
-.rev-kpi.occ .rev-kpi-bar > i{background:#f59e0b}
+.rev-kpi.priced .rev-kpi-bar > i{background:#10b981}
+.rev-kpi.open .rev-kpi-bar > i{background:#f59e0b}
 
 .rev-tier-row{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px dashed var(--border)}
 .rev-tier-row:last-child{border-bottom:none}
@@ -454,41 +357,10 @@ table.data td.num{text-align:right;font-family:var(--mono);font-weight:800;white
 .rev-tier-amt small{display:block;font-size:10px;font-weight:700;color:var(--text-muted);margin-top:1px}
 
 .rank-badge{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--ink);color:var(--cyan);font-size:10px;font-weight:900;font-family:var(--mono);flex-shrink:0}
-.occ-cell{display:flex;align-items:center;gap:8px}
-.occ-bar{flex:1;height:5px;background:var(--surface-2);border-radius:3px;overflow:hidden;min-width:50px}
-.occ-bar > i{display:block;height:100%;background:var(--rev-grad);border-radius:3px;transition:width .4s cubic-bezier(.22,.9,.3,1)}
-.occ-pct{font-family:var(--mono);font-weight:900;font-size:11px;color:var(--text-2);min-width:34px;text-align:right}
-
-/* ============================================================
-   TICKET
-   ============================================================ */
-.ticket-card{border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:15px;position:relative;overflow:hidden;border:1px solid rgba(0,0,0,.06);box-shadow:0 14px 32px -10px rgba(0,0,0,.22)}
-.ticket-card.cyan{background:linear-gradient(135deg,#ecfeff,#cffafe);color:#0a0f14}
-.ticket-card.teal{background:linear-gradient(135deg,#ccfbf1,#14b8a6);color:#04211f}
-.ticket-card.gold{background:linear-gradient(135deg,#fef9c3,#ecc94b);color:#0a0f14}
-.ticket-card.maroon{background:linear-gradient(135deg,#6b0016,#800020);color:#fff}
-.ticket-card.black{background:linear-gradient(135deg,#1a202c,#0a0f14);color:#fff}
-.ticket-card.maroon .t-logo,.ticket-card.black .t-logo{color:rgba(255,255,255,.85)}
-.ticket-card.maroon .t-meta,.ticket-card.black .t-meta,
-.ticket-card.maroon .t-sub,.ticket-card.black .t-sub{color:rgba(255,255,255,.68)}
-.ticket-card.maroon .t-ref,.ticket-card.black .t-ref{color:rgba(255,255,255,.6)}
-.t-head{display:flex;justify-content:space-between;align-items:center}
-.t-logo{font-weight:900;font-size:12px;letter-spacing:.15em;color:var(--navy)}
-.t-badges{display:flex;gap:6px}
-.t-badge{font-size:9px;font-weight:900;padding:4px 9px;border-radius:6px;text-transform:uppercase;letter-spacing:.06em;background:rgba(0,0,0,.08);color:#4a5568}
-.ticket-card.maroon .t-badge,.ticket-card.black .t-badge{background:rgba(255,255,255,.18);color:#fff}
-.t-body{display:flex;justify-content:space-between;align-items:flex-end;gap:12px}
-.t-left{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
-.t-title{font-size:16px;font-weight:900;text-transform:uppercase;line-height:1.1;letter-spacing:-.4px;word-break:break-word}
-.t-meta{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.09em;color:rgba(0,0,0,.55)}
-.t-sub{font-size:9.5px;font-weight:800;text-transform:uppercase;letter-spacing:.09em;color:rgba(0,0,0,.55);margin-top:7px}
-.t-guest{font-size:18px;font-weight:900;font-family:var(--mono);letter-spacing:-.02em}
-.t-ref{font-family:var(--mono);font-size:10px;font-weight:800;color:rgba(0,0,0,.5);margin-top:5px;word-break:break-all}
-.t-qr{width:66px;height:66px;background:#fff;border-radius:8px;flex-shrink:0;padding:4px;box-shadow:0 3px 8px rgba(0,0,0,.1);display:flex;align-items:center;justify-content:center}
-.t-qr svg{width:100%;height:100%;display:block}
-.t-bar{background:#fff;border-radius:6px;padding:7px 9px;display:flex;flex-direction:column;align-items:center;gap:3px}
-.t-bar-lines{width:100%;height:22px;background:repeating-linear-gradient(to right,#000 0,#000 2px,#fff 2px,#fff 3px,#000 3px,#000 4px,#fff 4px,#fff 7px,#000 7px,#000 9px,#fff 9px,#fff 11px)}
-.t-bar-num{font-family:var(--mono);font-size:9.5px;font-weight:900;color:#000;letter-spacing:1.8px}
+.coverage-cell{display:flex;align-items:center;gap:8px}
+.coverage-bar{flex:1;height:5px;background:var(--surface-2);border-radius:3px;overflow:hidden;min-width:50px}
+.coverage-bar > i{display:block;height:100%;background:var(--rev-grad);border-radius:3px;transition:width .4s cubic-bezier(.22,.9,.3,1)}
+.coverage-pct{font-family:var(--mono);font-weight:900;font-size:11px;color:var(--text-2);min-width:34px;text-align:right}
 
 ::-webkit-scrollbar{width:10px;height:10px}
 ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:6px;border:2px solid var(--bg)}
@@ -512,21 +384,21 @@ table.data td.num{text-align:right;font-family:var(--mono);font-weight:800;white
     </a>
     <div class="cfg">
       <input id="operatorCode" class="op" value="NL" maxlength="6" spellcheck="false" aria-label="Operator code" />
-      <input id="serviceDate" type="date" aria-label="Service date" />
-      <input id="serviceName" value="Service 01" aria-label="Service name" style="min-width:150px;" />
+      <input id="serviceDate" type="date" aria-label="Trip date" />
+      <input id="serviceName" value="Trip 01" aria-label="Trip name" style="min-width:150px;" />
     </div>
-    <span class="studio-badge">Fleet Studio</span>
+    <span class="studio-badge">Trip Studio</span>
   </div>
 </header>
 
 <section class="hero">
   <div class="hero-in">
-    <span class="hero-tag"><i data-lucide="sparkles"></i>SIGNED FLEET TICKETS</span>
-    <h1>Fleet, <span>ticketed in seconds.</span></h1>
-    <p>Configure each vehicle's cabin, choose a seating layout, assign pricing tiers, and issue tamper-proof tickets. Watch your revenue estimate update live as you build.</p>
+    <span class="hero-tag"><i data-lucide="clipboard-list"></i>TRIP PLANNER</span>
+    <h1>Plan the trip. <span>Price every seat.</span></h1>
+    <p>Build the fleet, pick a seating layout, colour the pricing tiers, and block holds for groups. Your estimated trip revenue updates live as you plan. No bookings — this is the host's side.</p>
     <div class="hero-actions">
       <button class="btn-cyan" id="heroAddVehicle"><i data-lucide="plus-circle"></i> Add a vehicle</button>
-      <button class="btn-cyan" id="heroGoRevenue"><i data-lucide="trending-up"></i> Revenue calculator</button>
+      <button class="btn-cyan" id="heroGoRevenue"><i data-lucide="trending-up"></i> Revenue estimate</button>
     </div>
   </div>
 </section>
@@ -536,10 +408,8 @@ table.data td.num{text-align:right;font-family:var(--mono);font-weight:800;white
     <div class="pills" role="tablist">
       <button class="pill active" data-view="builder" role="tab"><i data-lucide="layout-dashboard"></i><span class="lbl">Fleet Builder</span></button>
       <button class="pill" data-view="pricing" role="tab"><i data-lucide="palette"></i><span class="lbl">Pricing Tiers</span><span class="cnt" id="tierCount">3</span></button>
-      <button class="pill rev-pill" data-view="revenue" role="tab"><i data-lucide="trending-up"></i><span class="lbl">Revenue</span><span class="cnt" id="revPillAmount">R0</span></button>
       <button class="pill" data-view="holds" role="tab"><i data-lucide="lock"></i><span class="lbl">Seat Holds</span><span class="cnt" id="holdCount">0</span></button>
-      <button class="pill" data-view="booking" role="tab"><i data-lucide="ticket"></i><span class="lbl">Booking</span></button>
-      <button class="pill" data-view="conductor" role="tab"><i data-lucide="scan-line"></i><span class="lbl">Conductor</span></button>
+      <button class="pill rev-pill" data-view="revenue" role="tab"><i data-lucide="trending-up"></i><span class="lbl">Revenue</span><span class="cnt" id="revPillAmount">R0</span></button>
     </div>
   </div>
 </nav>
@@ -556,18 +426,18 @@ table.data td.num{text-align:right;font-family:var(--mono);font-weight:800;white
         </div>
 
         <div class="panel rev-mini">
-          <div class="panel-title">Revenue Estimate <span class="live">LIVE</span></div>
+          <div class="panel-title">Trip Estimate <span class="live">LIVE</span></div>
           <div class="rev-mini-hero">
             <div class="rev-mini-label">Potential</div>
             <div class="rev-mini-value" id="miniPotential">R0</div>
-            <div class="rev-mini-bar"><i id="miniOccBar" style="width:0%"></i></div>
+            <div class="rev-mini-bar"><i id="miniCovBar" style="width:0%"></i></div>
             <div class="rev-mini-meta">
-              <span><strong id="miniRealized">R0</strong> booked</span>
-              <span><strong id="miniOcc">0%</strong> sold</span>
+              <span><strong id="miniPriced">0</strong> priced</span>
+              <span><strong id="miniCov">0%</strong> coverage</span>
             </div>
             <div class="rev-mini-row">
               <div class="rev-mini-stat"><span>Seats</span><strong id="miniSeats">0</strong></div>
-              <div class="rev-mini-stat"><span>Avg ticket</span><strong id="miniAvg">R0</strong></div>
+              <div class="rev-mini-stat"><span>Avg seat</span><strong id="miniAvg">R0</strong></div>
             </div>
           </div>
         </div>
@@ -638,76 +508,6 @@ table.data td.num{text-align:right;font-family:var(--mono);font-weight:800;white
     </div>
   </section>
 
-  <!-- REVENUE -->
-  <section class="view" id="view-revenue">
-    <div class="rev-layout">
-      <div class="rev-kpis">
-        <div class="rev-kpi">
-          <div class="rev-kpi-head">
-            <span class="rev-kpi-label">Potential Revenue</span>
-            <span class="rev-kpi-ico"><i data-lucide="sparkles"></i></span>
-          </div>
-          <div class="rev-kpi-value" id="kpiPotential">R0</div>
-          <div class="rev-kpi-sub" id="kpiPotentialSub">0 of 0 seats assigned to a tier</div>
-        </div>
-        <div class="rev-kpi real">
-          <div class="rev-kpi-head">
-            <span class="rev-kpi-label">Realized Revenue</span>
-            <span class="rev-kpi-ico"><i data-lucide="circle-dollar-sign"></i></span>
-          </div>
-          <div class="rev-kpi-value" id="kpiRealized">R0</div>
-          <div class="rev-kpi-sub" id="kpiRealizedSub">0 tickets booked</div>
-          <div class="rev-kpi-bar"><i id="kpiRealizedBar" style="width:0%"></i></div>
-        </div>
-        <div class="rev-kpi occ">
-          <div class="rev-kpi-head">
-            <span class="rev-kpi-label">Occupancy</span>
-            <span class="rev-kpi-ico"><i data-lucide="users"></i></span>
-          </div>
-          <div class="rev-kpi-value" id="kpiOcc">0%</div>
-          <div class="rev-kpi-sub" id="kpiOccSub">0 sold · 0 held · 0 open</div>
-          <div class="rev-kpi-bar"><i id="kpiOccBar" style="width:0%"></i></div>
-        </div>
-        <div class="rev-kpi avg">
-          <div class="rev-kpi-head">
-            <span class="rev-kpi-label">Avg Ticket</span>
-            <span class="rev-kpi-ico"><i data-lucide="calculator"></i></span>
-          </div>
-          <div class="rev-kpi-value sm" id="kpiAvg">R0</div>
-          <div class="rev-kpi-sub" id="kpiAvgSub">Across all sold seats</div>
-        </div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-title">Revenue by Tier <span id="tierRevCount" style="font-family:var(--mono);">0</span></div>
-        <div id="revTierList"></div>
-      </div>
-
-      <div class="panel">
-        <div class="panel-title">Revenue by Vehicle <span id="vehicleRevCount" style="font-family:var(--mono);">0</span></div>
-        <div class="tbl-wrap" style="border-radius:11px;">
-          <table class="data" id="revVehicleTable">
-            <thead>
-              <tr>
-                <th>#</th>
-                <th>Vehicle</th>
-                <th>Layout</th>
-                <th>Seats</th>
-                <th>Assigned</th>
-                <th>Sold</th>
-                <th>Held</th>
-                <th style="text-align:right;">Potential</th>
-                <th style="text-align:right;">Realized</th>
-                <th>Occupancy</th>
-              </tr>
-            </thead>
-            <tbody id="revVehicleBody"></tbody>
-          </table>
-        </div>
-      </div>
-    </div>
-  </section>
-
   <!-- HOLDS -->
   <section class="view" id="view-holds">
     <div class="pricing-layout">
@@ -715,7 +515,7 @@ table.data td.num{text-align:right;font-family:var(--mono);font-weight:800;white
         <div class="canvas-head">
           <div>
             <h2>Seat Holds</h2>
-            <div class="hint">Reserve blocks for groups or partners. Held seats are blocked from public sale.</div>
+            <div class="hint">Reserve blocks for groups or partners. Held seats are flagged on the layout.</div>
           </div>
           <div class="canvas-toolbar">
             <button class="tool" id="holdClearAll">Release all</button>
@@ -737,83 +537,72 @@ table.data td.num{text-align:right;font-family:var(--mono);font-weight:800;white
     </div>
   </section>
 
-  <!-- BOOKING -->
-  <section class="view" id="view-booking">
-    <div class="booking-layout">
-      <div>
-        <div class="filter-bar">
-          <label>Filter</label>
-          <select id="filterTier"><option value="">All tiers</option></select>
-          <select id="filterVehicle"><option value="">All vehicles</option></select>
-          <div class="legend" id="legendBar"></div>
-        </div>
-        <div class="canvas">
-          <div class="canvas-head">
-            <div>
-              <h2 id="bookingTitle">Select a vehicle</h2>
-              <div class="hint">Tap seats to add them to the cart.</div>
-            </div>
+  <!-- REVENUE -->
+  <section class="view" id="view-revenue">
+    <div class="rev-layout">
+      <div class="rev-kpis">
+        <div class="rev-kpi">
+          <div class="rev-kpi-head">
+            <span class="rev-kpi-label">Estimated Trip Revenue</span>
+            <span class="rev-kpi-ico"><i data-lucide="sparkles"></i></span>
           </div>
-          <div id="bookingCanvas"></div>
+          <div class="rev-kpi-value" id="kpiPotential">R0</div>
+          <div class="rev-kpi-sub" id="kpiPotentialSub">0 priced seats across 0 vehicles</div>
+        </div>
+        <div class="rev-kpi priced">
+          <div class="rev-kpi-head">
+            <span class="rev-kpi-label">Priced Seats</span>
+            <span class="rev-kpi-ico"><i data-lucide="tag"></i></span>
+          </div>
+          <div class="rev-kpi-value" id="kpiPriced">0</div>
+          <div class="rev-kpi-sub" id="kpiPricedSub">of 0 total seats</div>
+          <div class="rev-kpi-bar"><i id="kpiPricedBar" style="width:0%"></i></div>
+        </div>
+        <div class="rev-kpi open">
+          <div class="rev-kpi-head">
+            <span class="rev-kpi-label">Unpriced Seats</span>
+            <span class="rev-kpi-ico"><i data-lucide="circle-dashed"></i></span>
+          </div>
+          <div class="rev-kpi-value" id="kpiUnpriced">0</div>
+          <div class="rev-kpi-sub" id="kpiUnpricedSub">need a tier before publishing</div>
+          <div class="rev-kpi-bar"><i id="kpiUnpricedBar" style="width:0%"></i></div>
+        </div>
+        <div class="rev-kpi avg">
+          <div class="rev-kpi-head">
+            <span class="rev-kpi-label">Avg Seat Price</span>
+            <span class="rev-kpi-ico"><i data-lucide="calculator"></i></span>
+          </div>
+          <div class="rev-kpi-value sm" id="kpiAvg">R0</div>
+          <div class="rev-kpi-sub" id="kpiAvgSub">Across priced seats only</div>
         </div>
       </div>
-      <aside class="config">
-        <div class="step-card">
-          <span class="step-num">4</span>
-          <div class="step-info"><div class="step-title">Booking</div><div class="step-sub">Seat · tier · PNR</div></div>
-        </div>
-        <div class="panel">
-          <div class="panel-title">Cart <span id="cartCount" style="font-weight:900;color:var(--cyan-dd);font-family:var(--mono);">0</span></div>
-          <div id="cartItems"><div class="empty" style="padding:16px 0;font-size:12px;">No seats selected.</div></div>
-          <div class="cart-total"><span>Total</span><span class="amt" id="cartTotal">R0</span></div>
-          <button class="btn btn-cyan-solid btn-block" id="bookBtn" disabled style="margin-top:14px;">
-            <i data-lucide="ticket"></i> Confirm Booking
-          </button>
-        </div>
-        <div class="panel" id="ticketPreviewWrap" style="display:none;">
-          <div class="panel-title">Latest Ticket</div>
-          <div id="ticketPreview"></div>
-        </div>
-      </aside>
-    </div>
-  </section>
 
-  <!-- CONDUCTOR -->
-  <section class="view" id="view-conductor">
-    <div class="builder" style="grid-template-columns:1fr 380px;">
-      <div class="canvas">
-        <div class="canvas-head">
-          <div>
-            <h2>Conductor Scanner</h2>
-            <div class="hint">Offline-capable. Checksum verified locally against the synced manifest.</div>
-          </div>
-        </div>
-        <div class="field-row">
-          <div class="field"><label for="scanBus">Assigned Vehicle</label><select id="scanBus"></select></div>
-          <div class="field"><label>Manifest Size</label><input id="scanManifestSize" readonly value="0 tickets" style="font-weight:800;color:var(--cyan-dd);background:var(--surface-2);font-family:var(--mono);" /></div>
-        </div>
-        <div class="scan-input">
-          <input id="scanInput" placeholder="SCAN OR TYPE PNR" autocomplete="off" spellcheck="false" />
-          <button class="btn btn-cyan-solid" id="scanBtn"><i data-lucide="scan-line"></i> Validate</button>
-        </div>
-        <div id="scanResult"></div>
-        <div class="scan-log" id="scanLog"></div>
+      <div class="panel">
+        <div class="panel-title">Revenue by Tier <span id="tierRevCount" style="font-family:var(--mono);">0</span></div>
+        <div id="revTierList"></div>
       </div>
-      <aside class="config">
-        <div class="step-card">
-          <span class="step-num">5</span>
-          <div class="step-info"><div class="step-title">Conductor</div><div class="step-sub">Validate · manifest · log</div></div>
+
+      <div class="panel">
+        <div class="panel-title">Revenue by Vehicle <span id="vehicleRevCount" style="font-family:var(--mono);">0</span></div>
+        <div class="tbl-wrap" style="border-radius:11px;">
+          <table class="data" id="revVehicleTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Vehicle</th>
+                <th>Layout</th>
+                <th>Seats</th>
+                <th>Priced</th>
+                <th>Unpriced</th>
+                <th>Held</th>
+                <th style="text-align:right;">Estimated</th>
+                <th>Coverage</th>
+              </tr>
+            </thead>
+            <tbody id="revVehicleBody"></tbody>
+          </table>
         </div>
-        <div class="panel">
-          <div class="panel-title">Live Manifest <span id="manifestCount" style="font-weight:900;color:var(--cyan-dd);font-family:var(--mono);">0</span></div>
-          <div class="tbl-wrap" style="max-height:520px;overflow-y:auto;">
-            <table class="data" id="manifestTable">
-              <thead><tr><th>PNR</th><th>Vehicle</th><th>Seat</th></tr></thead>
-              <tbody><tr><td colspan="3" class="empty" style="padding:24px;">No tickets booked yet.</td></tr></tbody>
-            </table>
-          </div>
-        </div>
-      </aside>
+      </div>
     </div>
   </section>
 
@@ -830,7 +619,6 @@ const $$ = s => Array.from(document.querySelectorAll(s));
 const esc = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
 const pad2 = n => String(n).padStart(2,'0');
 const uid = () => Math.random().toString(36).slice(2,9);
-const slug = s => String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
 const fmtR = n => 'R' + Math.round(Number(n||0)).toLocaleString('en-ZA');
 const fmtK = n => {
   const v = Math.round(Number(n||0));
@@ -845,46 +633,6 @@ function toast(msg){
 }
 
 /* ============================================================
-   PNR ENGINE
-   ============================================================ */
-const B32 = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
-const PNR = {
-  key:'novalink-demo-shared-secret', keyObj:null,
-  async init(){
-    this.keyObj = null;
-    if(window.crypto?.subtle){
-      try{ this.keyObj = await crypto.subtle.importKey('raw', new TextEncoder().encode(this.key), {name:'HMAC',hash:'SHA-256'}, false, ['sign']); }catch(_){}
-    }
-  },
-  async raw(m){
-    if(this.keyObj){ const b = await crypto.subtle.sign('HMAC', this.keyObj, new TextEncoder().encode(m)); return new Uint8Array(b); }
-    const out = new Uint8Array(32), data = this.key + '\u0000' + m; let h = 0x811c9dc5;
-    for(let r=0;r<32;r++){ for(let i=0;i<data.length;i++){ h^=data.charCodeAt(i); h=Math.imul(h,0x01000193)>>>0; } h = Math.imul(h^r,0x01000193)>>>0; out[r]=h&0xff; }
-    return out;
-  },
-  async check(op,vh,st,tk){
-    const s = await this.raw(`${op}|${vh}|${st}|${tk}`);
-    const bits = ((s[0]<<12)|(s[1]<<4)|(s[2]>>4)) & 0xFFFFF;
-    let out=''; for(let i=0;i<4;i++) out += B32[(bits >>> (15 - i*5)) & 31];
-    return out;
-  },
-  async build(op,vh,st,tk){ return `${op}-${vh}-${st}-${await this.check(op,vh,st,tk)}`; }
-};
-function normalizeScan(s){ return String(s||'').toUpperCase().replace(/[^0-9A-Z]/g,''); }
-function foldCheck(c){ return c.replace(/[IL]/g,'1').replace(/O/g,'0').replace(/U/g,'V'); }
-function parseCandidates(raw){
-  const s = normalizeScan(raw), out = [];
-  for(let op=2;op<=6;op++) for(let b=2;b<=8;b++) for(let se=2;se<=3;se++){
-    if(op+b+se+4 !== s.length) continue;
-    const operator = s.slice(0,op), bus = s.slice(op,op+b), seat = s.slice(op+b,op+b+se);
-    if(!/^[0-9]{2}[A-Z]?$/.test(seat)) continue;
-    const check = foldCheck(s.slice(-4));
-    out.push({ operator, bus, seat, check, canonical: `${operator}-${bus}-${seat}-${check}` });
-  }
-  return out;
-}
-
-/* ============================================================
    STATE
    ============================================================ */
 const state = {
@@ -895,7 +643,7 @@ const state = {
     { id:'t_economy', name:'Economy', color:'#eab308', price:150, fee:10 }
   ],
   holds:[], selectedVehicleId:null, activeTierId:null, activeHoldId:null,
-  cart:[], manifest:new Map(), scanned: new Map(), view:'builder'
+  view:'builder'
 };
 
 const LAYOUT_LABELS = {
@@ -905,6 +653,15 @@ const LAYOUT_LABELS = {
   'airline':      'Airline Style',
   'table':        'Table / Booth',
   'forward-back': 'Forward + Backward'
+};
+
+const LAYOUT_DESC = {
+  'open-plan':    'Rows of seats along a central aisle — standard 2+2 or 2+1 configurations.',
+  'compartment':  'Enclosed cabins with facing benches, table, and door to a side corridor.',
+  'longitudinal': 'Bench seating running along the walls with open standing area in the middle.',
+  'airline':      'Individual seats facing forward — no shared tables between rows.',
+  'table':        'Facing seat pairs with a fixed table between them.',
+  'forward-back': 'Alternating seat orientation aligned with and against the direction of travel.'
 };
 
 const PRESETS = {
@@ -918,6 +675,8 @@ const PRESETS = {
   train:   { name:'Carriage',         type:'train',   rows:12, seatsPerRow:4, aisleAfter:2, layout:'compartment' },
   sleeper: { name:'Sleeper',          type:'sleeper', rows:10, seatsPerRow:2, aisleAfter:1, layout:'compartment' }
 };
+
+const B32 = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 
 function nextVehicleCode(){
   const used = new Set(state.vehicles.map(v => v.code));
@@ -954,7 +713,7 @@ function makeVehicle(presetKey){
     rows: p.rows, seatsPerRow: p.seatsPerRow, aisleAfter: p.aisleAfter,
     nameStyle:'num-letter', startNumber:1,
     seatSize:38, seatGap:4, rowGap:6, aisleWidth:26,
-    tierMap:{}, holdMap:{}, soldSeats:{}
+    tierMap:{}, holdMap:{}
   };
 }
 function seatName(v, row, col){
@@ -977,57 +736,47 @@ function allSeats(v){
 }
 
 /* ============================================================
-   REVENUE CALCULATOR
+   REVENUE ESTIMATOR
    ============================================================ */
 function calcRevenue(){
   const s = {
-    totalSeats: 0, assignedSeats: 0, unassignedSeats: 0,
-    heldSeats: 0, soldSeats: 0,
-    potentialRevenue: 0, realizedRevenue: 0,
-    avgTicket: 0, occupancy: 0, assignmentRate: 0,
+    totalSeats: 0, pricedSeats: 0, unpricedSeats: 0, heldSeats: 0,
+    estimatedRevenue: 0, avgSeatPrice: 0, coverage: 0,
     byTier: {}, byVehicle: []
   };
-  state.tiers.forEach(t => { s.byTier[t.id] = { seats:0, sold:0, potential:0, realized:0 }; });
+  state.tiers.forEach(t => { s.byTier[t.id] = { seats:0, revenue:0 }; });
 
   state.vehicles.forEach(v => {
     const seats = allSeats(v);
-    const vs = { id:v.id, name:v.name, code:v.code, type:v.type, layout:v.layout, total:seats.length,
-                 assigned:0, unassigned:0, held:0, sold:0, potential:0, realized:0, occupancy:0 };
+    const vs = { id:v.id, name:v.name, code:v.code, type:v.type, layout:v.layout,
+                 total:seats.length, priced:0, unpriced:0, held:0, revenue:0, coverage:0 };
     seats.forEach(st => {
       const tierId = v.tierMap[st.name];
       const tier = tierId ? state.tiers.find(t => t.id === tierId) : null;
-      const isSold = !!v.soldSeats[st.name];
       const isHeld = !!v.holdMap[st.name];
       s.totalSeats++;
       if(tierId && tier){
         const unit = (tier.price || 0) + (tier.fee || 0);
-        s.assignedSeats++; vs.assigned++;
-        s.potentialRevenue += unit; vs.potential += unit;
+        s.pricedSeats++; vs.priced++;
+        s.estimatedRevenue += unit; vs.revenue += unit;
         s.byTier[tierId].seats++;
-        s.byTier[tierId].potential += unit;
-        if(isSold){
-          s.soldSeats++; vs.sold++;
-          s.realizedRevenue += unit; vs.realized += unit;
-          s.byTier[tierId].sold++;
-          s.byTier[tierId].realized += unit;
-        }
+        s.byTier[tierId].revenue += unit;
       } else {
-        s.unassignedSeats++; vs.unassigned++;
+        s.unpricedSeats++; vs.unpriced++;
       }
       if(isHeld){ s.heldSeats++; vs.held++; }
     });
-    vs.occupancy = vs.total ? (vs.sold / vs.total) * 100 : 0;
+    vs.coverage = vs.total ? (vs.priced / vs.total) * 100 : 0;
     s.byVehicle.push(vs);
   });
 
-  s.avgTicket = s.soldSeats ? s.realizedRevenue / s.soldSeats : 0;
-  s.occupancy = s.totalSeats ? (s.soldSeats / s.totalSeats) * 100 : 0;
-  s.assignmentRate = s.totalSeats ? (s.assignedSeats / s.totalSeats) * 100 : 0;
+  s.avgSeatPrice = s.pricedSeats ? s.estimatedRevenue / s.pricedSeats : 0;
+  s.coverage = s.totalSeats ? (s.pricedSeats / s.totalSeats) * 100 : 0;
   return s;
 }
 
 /* ============================================================
-   SEAT BUTTON (reused across all layouts)
+   SEAT BUTTON
    ============================================================ */
 function seatButtonHTML(v, row, col, opts, orientation){
   opts = opts || {};
@@ -1036,31 +785,24 @@ function seatButtonHTML(v, row, col, opts, orientation){
   const tierId = v.tierMap[name];
   const tier = state.tiers.find(t => t.id === tierId);
   const isHeld = !!v.holdMap[name];
-  const isSold = !!v.soldSeats[name];
   const visible = !opts.filterTierId || tierId === opts.filterTierId;
-  const inCart = state.cart.some(x => x.vehicleId === v.id && x.seat === name);
+
   const cls = ['seat'];
   if(!tier && !isHeld) cls.push('unassigned');
   if(isHeld) cls.push('held');
-  if(isSold) cls.push('sold');
-  if(inCart) cls.push('selected');
   if(!visible && opts.filterTierId) cls.push('dim');
-  if(opts.mode === 'booking' || opts.mode === 'pricing' || opts.mode === 'holds') cls.push('pick');
+  if(opts.mode === 'pricing' || opts.mode === 'holds') cls.push('pick');
   if(orientation === 'back') cls.push('orient-back');
+
   const bg = tier ? `background:${tier.color};border-color:${tier.color};color:#fff;` : '';
-  const dis = (isSold || (opts.mode==='booking' && isHeld)) ? 'disabled' : '';
-  return `<button class="${cls.join(' ')}" style="${bg}" data-seat="${esc(name)}" data-row="${row}" data-col="${col}" ${dis} title="${esc(name)} · ${esc(tier?.name||'Unassigned')}${isHeld?' · HELD':''}${isSold?' · SOLD':''}">${esc(name)}</button>`;
+  return `<button class="${cls.join(' ')}" style="${bg}" data-seat="${esc(name)}" data-row="${row}" data-col="${col}" title="${esc(name)} · ${esc(tier?.name||'Unassigned')}${isHeld?' · HELD':''}">${esc(name)}</button>`;
 }
 
 /* ============================================================
    SEATING LAYOUT RENDERERS
    ============================================================ */
 function renderGridLayout(v, opts, orientMode){
-  // open-plan · airline · forward-back
-  const orientFor = (r) => {
-    if(orientMode === 'alternate') return r % 2 === 0 ? 'fwd' : 'back';
-    return 'fwd';
-  };
+  const orientFor = (r) => orientMode === 'alternate' ? (r % 2 === 0 ? 'fwd' : 'back') : 'fwd';
   let html = '<div class="seat-rows">';
   for(let r = 0; r < v.rows; r++){
     html += '<div class="seat-row">';
@@ -1072,9 +814,7 @@ function renderGridLayout(v, opts, orientMode){
   }
   return html + '</div>';
 }
-
 function renderTableLayout(v, opts){
-  // Facing pairs with a shared table between every 2 rows
   let html = '<div class="seat-rows">';
   for(let r = 0; r < v.rows; r++){
     const orient = r % 2 === 0 ? 'fwd' : 'back';
@@ -1088,9 +828,7 @@ function renderTableLayout(v, opts){
   }
   return html + '</div>';
 }
-
 function renderCompartmentLayout(v, opts){
-  // Every 2 rows becomes an enclosed cabin with facing benches + table
   const compartments = Math.max(1, Math.ceil(v.rows / 2));
   let html = '<div class="compartment-stack">';
   for(let comp = 0; comp < compartments; comp++){
@@ -1112,9 +850,7 @@ function renderCompartmentLayout(v, opts){
   }
   return html + '</div>';
 }
-
 function renderLongitudinalLayout(v, opts){
-  // Two benches running along the walls with open standing area between
   const total = v.rows * v.seatsPerRow;
   const perSide = Math.ceil(total / 2);
   const cells = [];
@@ -1131,7 +867,6 @@ function renderLongitudinalLayout(v, opts){
     <div class="bench"><span class="bench-label">Bench R</span>${right}</div>
   </div>`;
 }
-
 function seatGridHTML(v, opts){
   const layout = v.layout || 'open-plan';
   switch(layout){
@@ -1237,7 +972,7 @@ function renderVehicleList(){
     const tierColors = state.tiers.filter(t => Object.values(v.tierMap).includes(t.id));
     const swatch = tierColors[0]?.color || '#cbd5e1';
     const rv = revByVeh.get(v.id);
-    const pot = rv ? rv.potential : 0;
+    const pot = rv ? rv.revenue : 0;
     return `<button class="veh-item ${v.id===state.selectedVehicleId?'active':''}" data-vid="${v.id}">
       <span class="sw" style="background:${swatch}"></span>
       <span class="info"><span class="name">${esc(v.name)}</span><span class="meta">${esc(state.operator)}-${esc(v.code)} · ${esc(LAYOUT_LABELS[v.layout]||'')}</span></span>
@@ -1260,12 +995,12 @@ function renderBuilder(){
   $('vehTitle').textContent = v.name;
   $('vehCode').textContent = `${state.operator}-${v.code}`;
   const seats = allSeats(v).length;
-  const assigned = Object.values(v.tierMap).filter(Boolean).length;
-  $('vehHint').textContent = `${v.rows} rows × ${v.seatsPerRow} seats · ${seats} total · ${assigned} tier-assigned · ${LAYOUT_LABELS[v.layout]||''}`;
+  const priced = Object.values(v.tierMap).filter(Boolean).length;
+  $('vehHint').textContent = `${v.rows} rows × ${v.seatsPerRow} seats · ${seats} total · ${priced} priced · ${LAYOUT_LABELS[v.layout]||''}`;
   $('builderCanvas').innerHTML = cabinHTML(v, { mode:'builder' });
 
   const rev = calcRevenue();
-  const rv = rev.byVehicle.find(x => x.id === v.id) || { potential:0, realized:0, occupancy:0, sold:0, held:0, unassigned:0 };
+  const rv = rev.byVehicle.find(x => x.id === v.id) || { revenue:0, coverage:0, priced:0, held:0, unpriced:0 };
   $('builderConfig').innerHTML = `
     <div class="step-card">
       <span class="step-num">1</span>
@@ -1274,15 +1009,15 @@ function renderBuilder(){
     <div class="panel rev-mini">
       <div class="panel-title">This Vehicle <span class="live">LIVE</span></div>
       <div class="rev-mini-hero">
-        <div class="rev-mini-label">Potential</div>
-        <div class="rev-mini-value">${fmtR(rv.potential)}</div>
-        <div class="rev-mini-bar"><i style="width:${rv.occupancy.toFixed(1)}%"></i></div>
+        <div class="rev-mini-label">Estimated</div>
+        <div class="rev-mini-value">${fmtR(rv.revenue)}</div>
+        <div class="rev-mini-bar"><i style="width:${rv.coverage.toFixed(1)}%"></i></div>
         <div class="rev-mini-meta">
-          <span><strong>${fmtR(rv.realized)}</strong> booked</span>
-          <span><strong>${rv.occupancy.toFixed(0)}%</strong> sold</span>
+          <span><strong>${rv.priced}</strong> priced</span>
+          <span><strong>${rv.coverage.toFixed(0)}%</strong> coverage</span>
         </div>
         <div class="rev-mini-row">
-          <div class="rev-mini-stat"><span>Sold</span><strong>${rv.sold}</strong></div>
+          <div class="rev-mini-stat"><span>Unpriced</span><strong>${rv.unpriced}</strong></div>
           <div class="rev-mini-stat"><span>Held</span><strong>${rv.held}</strong></div>
         </div>
       </div>
@@ -1290,7 +1025,7 @@ function renderBuilder(){
     <div class="panel">
       <div class="panel-title">Vehicle Configuration</div>
       <div class="field"><label>Display Name</label><input id="cfg-name" value="${esc(v.name)}" /></div>
-      <div class="field"><label>Vehicle Code (PNR)</label><input id="cfg-code" value="${esc(v.code)}" maxlength="8" spellcheck="false" style="font-family:var(--mono);font-weight:800;letter-spacing:.05em;text-transform:uppercase;" /></div>
+      <div class="field"><label>Vehicle Code</label><input id="cfg-code" value="${esc(v.code)}" maxlength="8" spellcheck="false" style="font-family:var(--mono);font-weight:800;letter-spacing:.05em;text-transform:uppercase;" /></div>
       <div class="field-row">
         <div class="field"><label>Type</label>
           <select id="cfg-type">
@@ -1325,7 +1060,7 @@ function renderBuilder(){
           <option value="table"        ${v.layout==='table'?'selected':''}>Table / Booth</option>
           <option value="forward-back" ${v.layout==='forward-back'?'selected':''}>Forward + Backward</option>
         </select>
-        <div class="hint" style="font-size:10.5px;color:var(--text-muted);font-weight:500;margin-top:5px;text-transform:none;letter-spacing:0;">${LAYOUT_DESC[v.layout]||''}</div>
+        <div style="font-size:10.5px;color:var(--text-muted);font-weight:500;margin-top:5px;text-transform:none;letter-spacing:0;line-height:1.4;">${LAYOUT_DESC[v.layout]||''}</div>
       </div>
       <div class="field-row">
         <div class="field"><label>Rows</label><input id="cfg-rows" type="number" min="1" max="30" value="${v.rows}" /></div>
@@ -1359,15 +1094,6 @@ function renderBuilder(){
     </div>`;
   bindBuilderConfig(v);
 }
-
-const LAYOUT_DESC = {
-  'open-plan':    'Rows of seats along a central aisle — standard 2+2 or 2+1 configurations.',
-  'compartment':  'Enclosed cabins with facing benches, table, and door to a side corridor.',
-  'longitudinal': 'Bench seating running along the walls with open standing area in the middle.',
-  'airline':      'Individual seats facing forward — no shared tables between rows.',
-  'table':        'Facing seat pairs with a fixed table between them.',
-  'forward-back': 'Alternating seat orientation aligned with and against the direction of travel.'
-};
 
 function bindBuilderConfig(v){
   $('cfg-name').addEventListener('input', e => { v.name = e.target.value; renderVehicleList(); });
@@ -1407,7 +1133,7 @@ function bindBuilderConfig(v){
     c.id = uid();
     c.code = nextVehicleCode();
     c.name = nextVehicleName(c.presetKey);
-    c.tierMap = {}; c.holdMap = {}; c.soldSeats = {};
+    c.tierMap = {}; c.holdMap = {};
     state.vehicles.push(c); state.selectedVehicleId = c.id;
     renderBuilder(); renderAllRevenue();
     toast('Vehicle duplicated.');
@@ -1491,102 +1217,6 @@ function renderTierEditor(){
 }
 
 /* ============================================================
-   REVENUE RENDERING
-   ============================================================ */
-function renderRevenueMini(){
-  const r = calcRevenue();
-  const set = (id, val) => { const el = $(id); if(el) el.textContent = val; };
-  set('miniPotential', fmtK(r.potentialRevenue));
-  set('miniRealized', fmtR(r.realizedRevenue));
-  set('miniOcc', r.occupancy.toFixed(0) + '%');
-  set('miniSeats', r.assignedSeats + ' / ' + r.totalSeats);
-  set('miniAvg', fmtR(r.avgTicket));
-  const bar = $('miniOccBar'); if(bar) bar.style.width = Math.min(100, r.occupancy) + '%';
-  const pill = $('revPillAmount'); if(pill) pill.textContent = fmtK(r.potentialRevenue);
-}
-
-function renderRevenueView(){
-  const r = calcRevenue();
-
-  $('kpiPotential').textContent = fmtR(r.potentialRevenue);
-  $('kpiPotentialSub').textContent = `${r.assignedSeats} of ${r.totalSeats} seats assigned to a tier · ${r.assignmentRate.toFixed(0)}%`;
-  $('kpiRealized').textContent = fmtR(r.realizedRevenue);
-  $('kpiRealizedSub').textContent = `${r.soldSeats} tickets booked`;
-  $('kpiRealizedBar').style.width = (r.potentialRevenue ? (r.realizedRevenue / r.potentialRevenue) * 100 : 0).toFixed(1) + '%';
-  $('kpiOcc').textContent = r.occupancy.toFixed(1) + '%';
-  const open = r.totalSeats - r.soldSeats - r.heldSeats;
-  $('kpiOccSub').textContent = `${r.soldSeats} sold · ${r.heldSeats} held · ${open} open`;
-  $('kpiOccBar').style.width = Math.min(100, r.occupancy) + '%';
-  $('kpiAvg').textContent = fmtR(r.avgTicket);
-  $('kpiAvgSub').textContent = r.soldSeats
-    ? `Across ${r.soldSeats} sold seat${r.soldSeats===1?'':'s'}`
-    : 'No sales yet';
-
-  const tierWrap = $('revTierList');
-  const maxTierRev = Math.max(1, ...state.tiers.map(t => (r.byTier[t.id]?.potential || 0)));
-  $('tierRevCount').textContent = state.tiers.length + ' tiers';
-
-  if(!state.tiers.length){
-    tierWrap.innerHTML = '<div class="empty" style="padding:20px 0;font-size:12px;">No tiers configured.</div>';
-  } else {
-    tierWrap.innerHTML = state.tiers.map(t => {
-      const b = r.byTier[t.id] || { seats:0, sold:0, potential:0, realized:0 };
-      const pct = (b.potential / maxTierRev) * 100;
-      const unit = t.price + t.fee;
-      return `<div class="rev-tier-row" style="grid-template-columns:auto 1fr auto;">
-        <span class="rev-tier-sw" style="background:${t.color}"></span>
-        <div>
-          <div class="rev-tier-name">${esc(t.name)}</div>
-          <div class="rev-tier-meta">${fmtR(unit)} / seat · ${b.seats} seat${b.seats===1?'':'s'}</div>
-        </div>
-        <div class="rev-tier-amt">${fmtR(b.potential)}<small>${b.sold} sold · ${fmtR(b.realized)}</small></div>
-        <div class="rev-tier-track" style="grid-column:1 / -1;">
-          <i style="width:${pct}%;background:${t.color}"></i>
-        </div>
-      </div>`;
-    }).join('');
-  }
-
-  renderRevenueVehicleTable(r);
-}
-
-function renderRevenueVehicleTable(r){
-  const tbody = $('revVehicleBody');
-  $('vehicleRevCount').textContent = state.vehicles.length + ' vehicles';
-  const sorted = [...r.byVehicle].sort((a,b) => b.potential - a.potential);
-  if(!sorted.length){
-    tbody.innerHTML = '<tr><td colspan="10" class="empty" style="padding:32px;">No vehicles configured.</td></tr>';
-    return;
-  }
-  tbody.innerHTML = sorted.map((v, i) => `
-    <tr>
-      <td><span class="rank-badge">${i+1}</span></td>
-      <td>
-        <div style="font-weight:800;font-size:12.5px;">${esc(v.name)}</div>
-        <div class="pnr" style="font-size:10.5px;color:var(--text-muted);">${esc(state.operator)}-${esc(v.code)}</div>
-      </td>
-      <td><span style="font-size:11px;font-weight:700;color:var(--text-2);">${esc(LAYOUT_LABELS[v.layout]||'')}</span></td>
-      <td class="num">${v.total}</td>
-      <td class="num">${v.assigned}${v.unassigned ? ` <span style="color:#b45309;font-weight:700;font-size:10.5px;">/${v.unassigned} open</span>` : ''}</td>
-      <td class="num">${v.sold}</td>
-      <td class="num">${v.held}</td>
-      <td class="num" style="color:var(--cyan-dd);font-weight:900;">${fmtR(v.potential)}</td>
-      <td class="num" style="color:#059669;font-weight:900;">${fmtR(v.realized)}</td>
-      <td>
-        <div class="occ-cell">
-          <div class="occ-bar"><i style="width:${v.occupancy.toFixed(1)}%"></i></div>
-          <span class="occ-pct">${v.occupancy.toFixed(0)}%</span>
-        </div>
-      </td>
-    </tr>`).join('');
-}
-
-function renderAllRevenue(){
-  renderRevenueMini();
-  if(state.view === 'revenue') renderRevenueView();
-}
-
-/* ============================================================
    HOLDS
    ============================================================ */
 function renderHolds(){
@@ -1601,7 +1231,6 @@ function renderHolds(){
   bindSeatClicks('holds', v, seatEl => {
     const seat = seatEl.dataset.seat;
     if(!state.activeHoldId){ toast('Pick a hold first.'); return; }
-    if(v.soldSeats[seat]){ toast('Seat is sold.'); return; }
     if(v.holdMap[seat] === state.activeHoldId) delete v.holdMap[seat];
     else v.holdMap[seat] = state.activeHoldId;
     renderHolds(); renderAllRevenue();
@@ -1656,196 +1285,111 @@ function renderHoldEditor(){
 }
 
 /* ============================================================
-   BOOKING
+   REVENUE RENDERING
    ============================================================ */
-function renderBooking(){
-  const ft = $('filterTier'), fv = $('filterVehicle');
-  const pt = ft.value, pv = fv.value;
-  ft.innerHTML = '<option value="">All tiers</option>' + state.tiers.map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('');
-  fv.innerHTML = '<option value="">All vehicles</option>' + state.vehicles.map(v => `<option value="${v.id}">${esc(state.operator)}-${esc(v.code)} · ${esc(v.name)}</option>`).join('');
-  ft.value = pt; fv.value = pv;
-
-  const v = state.vehicles.find(x => x.id === (fv.value || state.selectedVehicleId)) || state.vehicles[0];
-  if(!v){
-    $('bookingCanvas').innerHTML = '<div class="empty"><div class="big"><i data-lucide="ticket"></i></div>No vehicles available.</div>';
-    renderCart(); refreshIcons(); return;
-  }
-  $('bookingTitle').innerHTML = `Booking · <span style="font-family:var(--mono);">${esc(state.operator)}-${esc(v.code)}</span> ${esc(v.name)}`;
-  $('bookingCanvas').innerHTML = cabinHTML(v, { mode:'booking', filterTierId: ft.value });
-  bindSeatClicks('booking', v, seatEl => {
-    const seat = seatEl.dataset.seat;
-    if(seatEl.disabled) return;
-    const idx = state.cart.findIndex(x => x.vehicleId === v.id && x.seat === seat);
-    if(idx >= 0) state.cart.splice(idx, 1);
-    else {
-      const tierId = v.tierMap[seat];
-      if(!tierId){ toast('This seat has no tier assigned.'); return; }
-      state.cart.push({ vehicleId: v.id, vehicleCode: v.code, seat, tierId });
-    }
-    renderBooking();
-  });
-  renderCart(); renderLegend();
+function renderRevenueMini(){
+  const r = calcRevenue();
+  const set = (id, val) => { const el = $(id); if(el) el.textContent = val; };
+  set('miniPotential', fmtK(r.estimatedRevenue));
+  set('miniPriced', r.pricedSeats);
+  set('miniCov', r.coverage.toFixed(0) + '%');
+  set('miniSeats', r.pricedSeats + ' / ' + r.totalSeats);
+  set('miniAvg', fmtR(r.avgSeatPrice));
+  const bar = $('miniCovBar'); if(bar) bar.style.width = Math.min(100, r.coverage) + '%';
+  const pill = $('revPillAmount'); if(pill) pill.textContent = fmtK(r.estimatedRevenue);
 }
 
-function renderLegend(){
-  $('legendBar').innerHTML = state.tiers.map(t => `<span><i style="background:${t.color}"></i>${esc(t.name)}</span>`).join('') +
-    `<span><i style="background:#fef9c3;border:1px solid #eab308;"></i>Held</span>` +
-    `<span><i style="background:repeating-linear-gradient(45deg,#e5e7eb,#e5e7eb 3px,#d1d5db 3px,#d1d5db 6px);"></i>Sold</span>`;
-}
+function renderRevenueView(){
+  const r = calcRevenue();
 
-function renderCart(){
-  const wrap = $('cartItems');
-  if(!state.cart.length) wrap.innerHTML = '<div class="empty" style="padding:16px 0;font-size:12px;">No seats selected.</div>';
-  else wrap.innerHTML = state.cart.map(c => {
-    const t = state.tiers.find(x => x.id === c.tierId);
-    return `<div class="cart-item">
-      <div><div class="seat-code">${esc(state.operator)}-${esc(c.vehicleCode)} · ${esc(c.seat)}</div><div class="seat-tier">${esc(t?.name||'—')}</div></div>
-      <span class="seat-price">${fmtR((t?.price||0)+(t?.fee||0))}</span>
-    </div>`;
-  }).join('');
-  const total = state.cart.reduce((s,c) => { const t = state.tiers.find(x => x.id === c.tierId); return s + (t?.price||0) + (t?.fee||0); }, 0);
-  $('cartTotal').textContent = fmtR(total);
-  $('cartCount').textContent = state.cart.length;
-  $('bookBtn').disabled = !state.cart.length;
-}
+  $('kpiPotential').textContent = fmtR(r.estimatedRevenue);
+  $('kpiPotentialSub').textContent = `${r.pricedSeats} priced seats across ${state.vehicles.length} vehicle${state.vehicles.length===1?'':'s'}`;
 
-async function bookTickets(){
-  if(!state.cart.length) return;
-  const tripKey = `${state.serviceDate}::${slug(state.serviceName)}`;
-  const btn = $('bookBtn'); btn.disabled = true; btn.textContent = 'Booking…';
-  const issued = [];
-  for(const c of state.cart){
-    const v = state.vehicles.find(x => x.id === c.vehicleId);
-    const pnr = await PNR.build(state.operator, v.code, c.seat, tripKey);
-    const t = state.tiers.find(x => x.id === c.tierId);
-    v.soldSeats[c.seat] = { pnr, tierId: c.tierId };
-    state.manifest.set(pnr, { pnr, bus: v.code, busLabel: `${state.operator}-${v.code}`,
-      seat: c.seat, tier: t?.name||'Standard', tierColor: t?.color||'#008080', tripKey, issuedAt: Date.now() });
-    issued.push({ pnr, vehicleCode: v.code, seat: c.seat, tier: t?.name || 'Standard' });
-  }
-  state.cart = [];
-  renderBooking(); renderManifest(); renderAllRevenue(); renderTicketPreview(issued);
-  toast(`Booked ${issued.length} ticket${issued.length>1?'s':''}.`);
-  btn.textContent = 'Confirm Booking';
-  refreshIcons();
-}
+  $('kpiPriced').textContent = r.pricedSeats;
+  $('kpiPricedSub').textContent = `of ${r.totalSeats} total seats · ${r.coverage.toFixed(0)}% coverage`;
+  $('kpiPricedBar').style.width = Math.min(100, r.coverage) + '%';
 
-function renderTicketPreview(issued){
-  if(!issued.length){ $('ticketPreviewWrap').style.display = 'none'; return; }
-  $('ticketPreviewWrap').style.display = 'block';
-  const first = issued[0];
-  const cls = { 'Premium':'maroon', 'Standard':'teal', 'Economy':'gold' }[first.tier] || 'cyan';
-  $('ticketPreview').innerHTML = `
-    <div class="ticket-card ${cls}">
-      <div class="t-head"><div class="t-logo">NOVALINK</div><div class="t-badges"><span class="t-badge">${esc(first.tier.toUpperCase())}</span></div></div>
-      <div class="t-body">
-        <div class="t-left">
-          <div class="t-title">${esc(state.serviceName)}</div>
-          <div class="t-meta">${esc(state.serviceDate)} · ${esc(state.operator)}-${esc(first.vehicleCode)}</div>
-          <div class="t-sub">Seat</div>
-          <div class="t-guest">${esc(first.seat)}</div>
-          <div class="t-ref">${esc(first.pnr)}</div>
+  $('kpiUnpriced').textContent = r.unpricedSeats;
+  $('kpiUnpricedSub').textContent = r.unpricedSeats === 0
+    ? 'every seat has a tier'
+    : 'need a tier before publishing';
+  const unpricedPct = r.totalSeats ? (r.unpricedSeats / r.totalSeats) * 100 : 0;
+  $('kpiUnpricedBar').style.width = Math.min(100, unpricedPct) + '%';
+
+  $('kpiAvg').textContent = fmtR(r.avgSeatPrice);
+  $('kpiAvgSub').textContent = r.pricedSeats
+    ? `Across ${r.pricedSeats} priced seat${r.pricedSeats===1?'':'s'}`
+    : 'No priced seats yet';
+
+  const tierWrap = $('revTierList');
+  const maxTierRev = Math.max(1, ...state.tiers.map(t => (r.byTier[t.id]?.revenue || 0)));
+  $('tierRevCount').textContent = state.tiers.length + ' tiers';
+
+  if(!state.tiers.length){
+    tierWrap.innerHTML = '<div class="empty" style="padding:20px 0;font-size:12px;">No tiers configured.</div>';
+  } else {
+    tierWrap.innerHTML = state.tiers.map(t => {
+      const b = r.byTier[t.id] || { seats:0, revenue:0 };
+      const pct = (b.revenue / maxTierRev) * 100;
+      const unit = t.price + t.fee;
+      return `<div class="rev-tier-row" style="grid-template-columns:auto 1fr auto;">
+        <span class="rev-tier-sw" style="background:${t.color}"></span>
+        <div>
+          <div class="rev-tier-name">${esc(t.name)}</div>
+          <div class="rev-tier-meta">${fmtR(unit)} / seat · ${b.seats} seat${b.seats===1?'':'s'}</div>
         </div>
-        <div class="t-qr" id="ticketQR"></div>
-      </div>
-      <div class="t-bar"><div class="t-bar-lines"></div><div class="t-bar-num">${esc(first.pnr.replace(/-/g,' '))}</div></div>
-    </div>`;
-  drawQR($('ticketQR'), first.pnr);
-}
-
-/* ============================================================
-   CONDUCTOR
-   ============================================================ */
-function renderConductor(){
-  const sel = $('scanBus'), prev = sel.value;
-  sel.innerHTML = state.vehicles.map(v => `<option value="${v.code}">${esc(state.operator)}-${esc(v.code)} · ${esc(v.name)}</option>`).join('');
-  if(prev && state.vehicles.some(v => v.code === prev)) sel.value = prev;
-  $('scanManifestSize').value = `${state.manifest.size} tickets`;
-  renderManifest();
-}
-
-function renderManifest(){
-  const tbody = $('manifestTable').querySelector('tbody');
-  const all = Array.from(state.manifest.values());
-  $('manifestCount').textContent = all.length;
-  if(!all.length){ tbody.innerHTML = '<tr><td colspan="3" class="empty" style="padding:24px;">No tickets yet.</td></tr>'; return; }
-  tbody.innerHTML = all.slice(-100).reverse().map(e => `<tr><td class="pnr">${esc(e.pnr)}</td><td class="pnr">${esc(e.bus)}</td><td class="pnr">${esc(e.seat)}</td></tr>`).join('');
-}
-
-async function validateScan(raw){
-  if(!state.manifest.size){ toast('No tickets booked yet.'); return; }
-  const scanTK = `${state.serviceDate}::${slug(state.serviceName)}`;
-  const bus = $('scanBus').value;
-  const cands = parseCandidates(raw);
-  if(!cands.length) return showScan('bad','INVALID CODE','Checksum failed — forged or mistyped.', String(raw).toUpperCase(), null);
-  let ver = null;
-  for(const c of cands){ const e = await PNR.check(c.operator,c.bus,c.seat,scanTK); if(e === c.check){ ver = c; break; } }
-  if(!ver) return showScan('bad','INVALID CODE','Checksum failed — forged or mistyped.', cands[0].canonical, null);
-  const pnr = ver.canonical;
-  const entry = state.manifest.get(pnr);
-  if(!entry) return showScan('warn','NOT ON MANIFEST','Not in synced manifest — manual override.', pnr, null);
-  if(entry.tripKey !== scanTK) return showScan('bad','WRONG SERVICE','Valid ticket, wrong service.', pnr, entry);
-  if(ver.bus !== bus) return showScan('bad','WRONG VEHICLE','Ticket for a different vehicle.', pnr, entry);
-  const prior = state.scanned.get(pnr);
-  if(prior) return showScan('warn','ALREADY USED',`First scan at ${new Date(prior).toLocaleTimeString()}.`, pnr, entry, prior);
-  state.scanned.set(pnr, Date.now());
-  pushLog({ pnr, tone:'ok', label:'VALID' });
-  return showScan('ok','VALID','Ticket verified. Allow boarding.', pnr, entry);
-}
-
-function showScan(tone, title, msg, pnr, entry, first){
-  const g = tone === 'ok' ? '✓' : tone === 'warn' ? '!' : '✕';
-  const d = [];
-  if(entry){
-    d.push(`<div class="kv"><span>Vehicle</span><strong>${esc(entry.busLabel||entry.bus)}</strong></div>`);
-    d.push(`<div class="kv"><span>Seat</span><strong>${esc(entry.seat)}</strong></div>`);
-    d.push(`<div class="kv"><span>Tier</span><strong>${esc(entry.tier)}</strong></div>`);
+        <div class="rev-tier-amt">${fmtR(b.revenue)}<small>${b.seats} × ${fmtR(unit)}</small></div>
+        <div class="rev-tier-track" style="grid-column:1 / -1;">
+          <i style="width:${pct}%;background:${t.color}"></i>
+        </div>
+      </div>`;
+    }).join('');
   }
-  if(first) d.push(`<div class="kv"><span>First Scan</span><strong>${new Date(first).toLocaleTimeString()}</strong></div>`);
-  $('scanResult').innerHTML = `
-    <div class="scan-result ${tone}">
-      <div class="scan-icon">${g}</div>
-      <div style="flex:1;min-width:0;">
-        <div class="scan-title">${esc(title)}</div>
-        <div class="scan-msg">${esc(msg)}</div>
-        <div class="scan-pnr">${esc(pnr)}</div>
-        ${d.length ? `<div class="kv-grid">${d.join('')}</div>` : ''}
-      </div>
-    </div>`;
-  if(tone === 'ok' || tone === 'warn') pushLog({ pnr, tone, label:title });
-}
-function pushLog({ pnr, tone, label }){
-  const log = $('scanLog');
-  const r = document.createElement('div'); r.className = 'log-row';
-  r.innerHTML = `<span class="pnr">${esc(pnr)}</span><span style="flex:1;"></span>
-    <span style="font-weight:900;color:${tone==='ok'?'var(--ok)':tone==='warn'?'var(--warn)':'var(--bad)'}">${esc(label)}</span>
-    <span style="color:var(--text-muted);font-size:10.5px;font-weight:600;">${new Date().toLocaleTimeString()}</span>`;
-  log.prepend(r);
-  while(log.children.length > 30) log.removeChild(log.lastChild);
+
+  renderRevenueVehicleTable(r);
 }
 
-/* ============================================================
-   QR
-   ============================================================ */
-function drawQR(container, text){
-  container.innerHTML = '';
-  if(typeof window.qrcode === 'function'){
-    try{
-      const qr = qrcode(0,'M'); qr.addData(text); qr.make();
-      container.innerHTML = qr.createSvgTag(3,0);
-      const svg = container.querySelector('svg');
-      if(svg){ svg.removeAttribute('width'); svg.removeAttribute('height'); svg.setAttribute('preserveAspectRatio','xMidYMid meet'); }
-      return;
-    }catch(_){}
+function renderRevenueVehicleTable(r){
+  const tbody = $('revVehicleBody');
+  $('vehicleRevCount').textContent = state.vehicles.length + ' vehicles';
+  const sorted = [...r.byVehicle].sort((a,b) => b.revenue - a.revenue);
+  if(!sorted.length){
+    tbody.innerHTML = '<tr><td colspan="9" class="empty" style="padding:32px;">No vehicles configured.</td></tr>';
+    return;
   }
-  container.innerHTML = `<div style="font-size:9px;font-weight:900;color:#0a0f14;text-align:center;padding:4px;">${esc(text.slice(-6))}</div>`;
+  tbody.innerHTML = sorted.map((v, i) => `
+    <tr>
+      <td><span class="rank-badge">${i+1}</span></td>
+      <td>
+        <div style="font-weight:800;font-size:12.5px;">${esc(v.name)}</div>
+        <div class="pnr" style="font-size:10.5px;color:var(--text-muted);">${esc(state.operator)}-${esc(v.code)}</div>
+      </td>
+      <td><span style="font-size:11px;font-weight:700;color:var(--text-2);">${esc(LAYOUT_LABELS[v.layout]||'')}</span></td>
+      <td class="num">${v.total}</td>
+      <td class="num" style="color:#059669;font-weight:900;">${v.priced}</td>
+      <td class="num">${v.unpriced ? `<span style="color:#b45309;font-weight:900;">${v.unpriced}</span>` : v.unpriced}</td>
+      <td class="num">${v.held}</td>
+      <td class="num" style="color:var(--cyan-dd);font-weight:900;">${fmtR(v.revenue)}</td>
+      <td>
+        <div class="coverage-cell">
+          <div class="coverage-bar"><i style="width:${v.coverage.toFixed(1)}%"></i></div>
+          <span class="coverage-pct">${v.coverage.toFixed(0)}%</span>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+function renderAllRevenue(){
+  renderRevenueMini();
+  if(state.view === 'revenue') renderRevenueView();
 }
 
 /* ============================================================
    BINDINGS
    ============================================================ */
 function bindSeatClicks(viewName, vehicle, handler){
-  const canvas = { builder:'builderCanvas', pricing:'pricingCanvas', holds:'holdsCanvas', booking:'bookingCanvas' }[viewName];
+  const canvas = { pricing:'pricingCanvas', holds:'holdsCanvas' }[viewName];
+  if(!canvas) return;
   document.querySelectorAll(`#${canvas} .seat.pick`).forEach(el => el.addEventListener('click', e => handler(el, e)));
 }
 
@@ -1856,10 +1400,8 @@ function bindGlobal(){
     $$('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + state.view));
     if(state.view === 'builder') renderBuilder();
     if(state.view === 'pricing') renderPricing();
-    if(state.view === 'revenue') renderRevenueView();
     if(state.view === 'holds') renderHolds();
-    if(state.view === 'booking') renderBooking();
-    if(state.view === 'conductor') renderConductor();
+    if(state.view === 'revenue') renderRevenueView();
     refreshIcons();
     window.scrollTo({top:document.querySelector('.tabbar').offsetTop - 80, behavior:'smooth'});
   }));
@@ -1915,14 +1457,6 @@ function bindGlobal(){
     renderHolds(); renderAllRevenue(); toast('All holds released.');
   });
 
-  $('filterTier').addEventListener('change', renderBooking);
-  $('filterVehicle').addEventListener('change', e => { state.selectedVehicleId = e.target.value || null; renderBooking(); });
-  $('bookBtn').addEventListener('click', bookTickets);
-
-  $('scanBtn').addEventListener('click', () => { const v = $('scanInput').value.trim(); if(v) validateScan(v); });
-  $('scanInput').addEventListener('keydown', e => { if(e.key==='Enter'){ e.preventDefault(); const v = e.target.value.trim(); if(v) validateScan(v); } });
-  $('scanBus').addEventListener('change', renderConductor);
-
   $('operatorCode').addEventListener('input', e => {
     state.operator = (e.target.value || 'NL').toUpperCase().replace(/[^0-9A-Z]/g,'') || 'NL';
     renderAll();
@@ -1935,30 +1469,28 @@ function bindGlobal(){
    BOOT
    ============================================================ */
 function renderAll(){
-  renderBuilder(); renderPricing(); renderHolds(); renderBooking(); renderConductor();
+  renderBuilder(); renderPricing(); renderHolds();
   if(state.view === 'revenue') renderRevenueView();
   renderAllRevenue();
 }
 
-document.addEventListener('DOMContentLoaded', async () => {
+document.addEventListener('DOMContentLoaded', () => {
   refreshIcons();
   const d = new Date(); d.setDate(d.getDate() + 1);
   state.serviceDate = d.toISOString().slice(0,10);
-  state.serviceName = 'Service 01';
+  state.serviceName = 'Trip 01';
   $('serviceDate').value = state.serviceDate;
   $('serviceName').value = state.serviceName;
 
-  await PNR.init();
-
-  // Seed fleet with three vehicles of different layouts. Names are auto-generated.
-  const coach = makeVehicle('coach');   // → "Coach 01"
-  const tram  = makeVehicle('tram');    // → "Tram 01"
-  const train = makeVehicle('train');   // → "Carriage 01"
+  // Seed fleet: three vehicles, three different layouts. Auto-named.
+  const coach = makeVehicle('coach');   // Coach 01 · open-plan
+  const tram  = makeVehicle('tram');    // Tram 01 · longitudinal
+  const train = makeVehicle('train');   // Carriage 01 · compartment
   state.vehicles.push(coach, tram, train);
   state.selectedVehicleId = coach.id;
   state.activeTierId = state.tiers[1].id;
 
-  // Auto-assign tiers in bands across all vehicles
+  // Auto-assign tiers in bands so the demo starts priced
   state.tiers.forEach((t, ti) => {
     state.vehicles.forEach(v => {
       const total = v.rows;
@@ -1969,8 +1501,8 @@ document.addEventListener('DOMContentLoaded', async () => {
     });
   });
 
-  // Seed a demo hold — no name, only a code
-  const hold = { id:'h_demo', code: 'RA7B8A', releaseDate: new Date(Date.now()+7*86400000).toISOString().slice(0,16), type:'group' };
+  // Seed one hold — code only, no name
+  const hold = { id:'h_demo', code:'RA7B8A', releaseDate: new Date(Date.now()+7*86400000).toISOString().slice(0,16), type:'group' };
   state.holds.push(hold); state.activeHoldId = hold.id;
   allSeats(coach).slice(0, 5).forEach(s => { coach.holdMap[s.name] = hold.id; });
 
