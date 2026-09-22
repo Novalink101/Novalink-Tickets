@@ -8,28 +8,30 @@
 <script src="https://unpkg.com/qrcode-generator@1.4.4/qrcode.js"></script>
 <style>
 :root{
-  --cyan-50:#ecfeff;--cyan-100:#cffafe;--cyan-400:#22d3ee;--cyan-500:#06b6d4;--cyan-600:#0891b2;--cyan-700:#0e7490;
+  --cyan-400:#22d3ee;--cyan-500:#06b6d4;--cyan-600:#0891b2;--cyan-700:#0e7490;
   --bg:#ffffff;--bg-2:#f6f8fb;--surface:#ffffff;--surface-2:#f1f4f8;
   --border:#e4e9f0;--border-2:#d3dbe5;
   --text:#0a0f14;--text-2:#2b3644;--text-muted:#6b7787;
-  --radius:12px;--font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
-  --navy:#1e2f4d;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --radius:12px;--navy:#1e2f4d;--mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   --ok:#065f46;--ok-bg:#ecfdf5;--ok-bd:#a7f3d0;
   --warn:#92400e;--warn-bg:#fffbeb;--warn-bd:#fde68a;
   --bad:#991b1b;--bad-bg:#fef2f2;--bad-bd:#fecaca;
+  /* vehicle shell palette */
+  --shell-body:#f8fafc;--shell-body-2:#eef2f7;--shell-edge:#94a3b8;--shell-edge-2:#64748b;
+  --shell-glass:#dbeafe;--shell-glass-edge:#93c5fd;--shell-driver:#475569;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-height:1.5;min-height:100vh;display:flex;flex-direction:column}
+body{font-family:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;background:var(--bg-2);color:var(--text);line-height:1.5;min-height:100vh;display:flex;flex-direction:column}
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
 input,select,textarea{font-family:inherit;font-size:14px}
 
 /* ---------- HEADER ---------- */
 .site-header{background:var(--surface);border-bottom:1px solid var(--border);padding:12px 0;position:sticky;top:0;z-index:30}
-.hdr{max-width:1600px;margin:0 auto;padding:0 22px;display:flex;align-items:center;gap:20px;justify-content:space-between}
+.hdr{max-width:1600px;margin:0 auto;padding:0 22px;display:flex;align-items:center;gap:20px;justify-content:space-between;flex-wrap:wrap}
 .logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none;color:inherit}
 .logo svg{width:26px;height:32px}
 .logo b{font-weight:800;font-size:1rem;color:var(--navy)}
-.studio-badge{background:#0a0f14;color:#22d3ee;font-size:10.5px;font-weight:800;padding:4px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:.06em}
+.studio-badge{background:#0a0f14;color:#22d3ee;font-size:10.5px;font-weight:800;padding:4px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:.06em;white-space:nowrap}
 .fleet-cfg{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
 .fleet-cfg label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted);margin-right:-4px}
 .fleet-cfg input{padding:7px 11px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:8px;font-size:13px;font-weight:600}
@@ -47,18 +49,17 @@ input,select,textarea{font-family:inherit;font-size:14px}
 
 /* ---------- LAYOUT ---------- */
 main{flex:1;max-width:1600px;margin:0 auto;width:100%;padding:22px}
+@media (max-width:640px){main{padding:12px}.hdr{padding:0 14px}.tabs-inner{padding:0 14px}}
 .view{display:none}
 .view.active{display:block;animation:fadeUp .25s ease}
 @keyframes fadeUp{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
 
-/* ---------- PANELS ---------- */
 .panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;box-shadow:0 4px 12px rgba(10,15,20,.04)}
 .panel + .panel{margin-top:14px}
 .panel-title{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.07em;color:var(--text-muted);margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
 .panel-title button{font-size:10.5px;font-weight:800;color:var(--cyan-700);letter-spacing:.04em}
 .panel-title button:hover{color:var(--cyan-500)}
 
-/* ---------- BUTTONS ---------- */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 16px;border-radius:9px;font-weight:700;font-size:13px;border:1px solid transparent;transition:.15s;white-space:nowrap}
 .btn-accent{background:linear-gradient(135deg,var(--cyan-400),var(--cyan-600));color:#04161c}
 .btn-accent:hover{transform:translateY(-1px);box-shadow:0 6px 16px rgba(6,182,212,.3)}
@@ -67,24 +68,21 @@ main{flex:1;max-width:1600px;margin:0 auto;width:100%;padding:22px}
 .btn-danger{background:#fef2f2;color:#991b1b;border-color:#fecaca}
 .btn-sm{padding:7px 12px;font-size:12px;border-radius:7px}
 .btn-block{width:100%}
-.btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important;box-shadow:none!important}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
 
-/* ---------- FORM FIELDS ---------- */
 .field{margin-bottom:12px}
 .field label{display:block;font-size:10.5px;font-weight:800;color:var(--text-2);margin-bottom:5px;text-transform:uppercase;letter-spacing:.05em}
-.field input,.field select{width:100%;padding:9px 12px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:8px;color:var(--text);font-size:13.5px;transition:.15s}
+.field input,.field select{width:100%;padding:9px 12px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:8px;color:var(--text);font-size:13.5px}
 .field input:focus,.field select:focus{outline:none;border-color:var(--cyan-500);background:#fff;box-shadow:0 0 0 3px rgba(6,182,212,.14)}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
 .field-row.three{grid-template-columns:1fr 1fr 1fr}
 
-/* ---------- BUILDER LAYOUT ---------- */
 .builder{display:grid;grid-template-columns:260px 1fr 300px;gap:14px;align-items:start}
-@media (max-width:1200px){.builder{grid-template-columns:1fr;gap:14px}.builder .sidebar,.builder .config{max-height:none}}
-
+@media (max-width:1200px){.builder{grid-template-columns:1fr}}
 .sidebar{display:flex;flex-direction:column;gap:14px;position:sticky;top:130px;max-height:calc(100vh - 150px);overflow-y:auto}
 .config{position:sticky;top:130px;max-height:calc(100vh - 150px);overflow-y:auto}
+@media (max-width:1200px){.sidebar,.config{position:static;max-height:none}}
 
-/* ---------- VEHICLE LIST ---------- */
 .veh-list{display:flex;flex-direction:column;gap:6px}
 .veh-item{display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:9px;background:var(--bg-2);border:1.5px solid transparent;transition:.15s;text-align:left;width:100%}
 .veh-item:hover{background:var(--surface-2)}
@@ -95,17 +93,16 @@ main{flex:1;max-width:1600px;margin:0 auto;width:100%;padding:22px}
 .veh-item .meta{font-size:10.5px;color:var(--text-muted);font-family:var(--mono);letter-spacing:.02em}
 .veh-item .seats{font-size:10px;font-weight:800;color:var(--cyan-700);background:rgba(6,182,212,.1);padding:2px 7px;border-radius:99px;flex-shrink:0}
 
-/* ---------- PRESET ELEMENTS ---------- */
 .preset-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .preset{padding:12px 8px;border:1.5px solid var(--border-2);border-radius:9px;background:var(--bg-2);text-align:center;transition:.15s;font-size:10.5px;font-weight:800;color:var(--text-2);letter-spacing:.03em;line-height:1.3}
 .preset:hover{border-color:var(--cyan-500);background:#fff;color:var(--cyan-700)}
 .preset .ico{font-size:22px;margin-bottom:5px;display:block;line-height:1}
 .preset small{display:block;font-size:9.5px;font-weight:600;color:var(--text-muted);margin-top:2px;text-transform:none;letter-spacing:0}
 
-/* ---------- CANVAS ---------- */
 .canvas{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:22px;box-shadow:0 4px 12px rgba(10,15,20,.04);min-height:500px}
+@media (max-width:640px){.canvas{padding:14px;min-height:auto}}
 .canvas-head{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap;margin-bottom:18px;padding-bottom:14px;border-bottom:1px solid var(--border)}
-.canvas-head h2{font-size:1.05rem;color:var(--navy);display:flex;align-items:center;gap:8px}
+.canvas-head h2{font-size:1.05rem;color:var(--navy);display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 .canvas-head h2 .code{font-family:var(--mono);font-size:11px;font-weight:800;background:var(--surface-2);padding:3px 8px;border-radius:6px;color:var(--text-2);letter-spacing:.05em}
 .canvas-head .hint{font-size:12px;color:var(--text-muted);font-weight:500}
 .canvas-toolbar{display:flex;gap:6px;flex-wrap:wrap}
@@ -113,51 +110,192 @@ main{flex:1;max-width:1600px;margin:0 auto;width:100%;padding:22px}
 .tool:hover{border-color:var(--cyan-500);color:var(--cyan-700)}
 .tool.active{background:var(--cyan-500);color:#04161c;border-color:var(--cyan-600)}
 
-/* ---------- CABIN / SEAT GRID ---------- */
-.cabin-wrap{display:flex;justify-content:center;padding:20px 0;overflow-x:auto}
-.cabin{background:#f9fafb;border:2px solid var(--border-2);border-radius:22px;padding:20px 22px 26px;display:inline-flex;flex-direction:column;gap:0;position:relative;min-width:min-content}
-.cabin-front,.cabin-back{text-align:center;font-size:10px;font-weight:900;letter-spacing:.2em;text-transform:uppercase;color:var(--text-muted);padding:8px 0}
-.cabin-front::before,.cabin-back::before{content:'⌃';display:block;font-size:14px;margin-bottom:2px;color:var(--cyan-500)}
-.cabin-back::before{content:'⌄';margin-bottom:0;margin-top:2px}
-.cabin-front::before{order:1}
-.cabin-front{display:flex;flex-direction:column;align-items:center}
-.cabin-back{display:flex;flex-direction:column;align-items:center}
+/* ============================================================
+   VEHICLE SHELLS  —  each type gets its own top-down silhouette
+   ============================================================ */
+.vehicle-stage{
+  display:flex;justify-content:center;padding:26px 12px;
+  overflow-x:auto;background:
+    radial-gradient(circle at 50% 30%, rgba(6,182,212,.05), transparent 60%),
+    repeating-linear-gradient(0deg,transparent 0,transparent 39px,rgba(148,163,184,.09) 39px,rgba(148,163,184,.09) 40px),
+    repeating-linear-gradient(90deg,transparent 0,transparent 39px,rgba(148,163,184,.09) 39px,rgba(148,163,184,.09) 40px);
+  border-radius:10px;
+}
 
-.seat-rows{display:flex;flex-direction:column;padding:6px 0}
+/* base shell */
+.vshell{display:inline-flex;flex-direction:column;align-items:center;position:relative;filter:drop-shadow(0 18px 30px rgba(15,23,42,.14))}
+.vshell-body{
+  position:relative;background:linear-gradient(180deg,var(--shell-body),var(--shell-body-2));
+  border:2.5px solid var(--shell-edge);
+  display:flex;flex-direction:column;align-items:center;padding:14px 22px;
+  transition:.2s;
+}
+.vshell-cabin{display:flex;flex-direction:column;padding:8px 0}
+
+/* -------- BUS / COACH / MINIBUS / SHUTTLE -------- */
+.vshell-bus .vshell-body{
+  border-radius:38px 38px 22px 22px;
+  border-top-width:3.5px;
+  padding:14px 22px 20px;
+}
+.vshell-bus .vshell-front,
+.vshell-train .vshell-front,
+.vshell-plane .vshell-front{
+  display:flex;justify-content:space-between;align-items:center;
+  width:100%;padding:0 6px 10px;
+}
+.vshell-driver{
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:9.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;
+  color:var(--shell-driver);background:#e2e8f0;
+  padding:4px 9px;border-radius:99px;
+}
+.vshell-driver::before{
+  content:'';width:14px;height:14px;border-radius:50%;
+  border:2px solid var(--shell-driver);background:radial-gradient(circle,#fff 30%,transparent 32%);
+}
+.vshell-door{
+  font-size:9px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;
+  color:#0369a1;background:#e0f2fe;border:1px dashed #7dd3fc;
+  padding:4px 9px;border-radius:6px;
+}
+.vshell-rear{
+  display:flex;justify-content:center;width:100%;padding:10px 6px 0;
+}
+.vshell-rear .vshell-door{
+  color:#9a3412;background:#ffedd5;border-color:#fdba74;
+}
+
+/* windows along the sides — using pseudo-elements on the body */
+.vshell-bus .vshell-body::before,
+.vshell-bus .vshell-body::after{
+  content:'';position:absolute;top:22%;bottom:22%;width:6px;
+  background:repeating-linear-gradient(180deg,var(--shell-glass) 0,var(--shell-glass) 14px,transparent 14px,transparent 20px);
+  border-radius:3px;
+}
+.vshell-bus .vshell-body::before{left:3px}
+.vshell-bus .vshell-body::after{right:3px}
+
+/* wheels */
+.vshell-wheel{
+  position:absolute;width:16px;height:8px;background:#1e293b;border-radius:3px;
+}
+.vshell-wheel.fl{left:-4px;top:32%}
+.vshell-wheel.fr{right:-4px;top:32%}
+.vshell-wheel.rl{left:-4px;bottom:20%}
+.vshell-wheel.rr{right:-4px;bottom:20%}
+
+/* -------- TRAIN CARRIAGE -------- */
+.vshell-train .vshell-body{
+  border-radius:50% 50% 50% 50% / 12% 12% 12% 12%;
+  padding:16px 24px;
+  border-left-width:3.5px;border-right-width:3.5px;
+}
+.vshell-train .vshell-body::before,
+.vshell-train .vshell-body::after{
+  content:'';position:absolute;top:14%;bottom:14%;width:7px;
+  background:repeating-linear-gradient(180deg,var(--shell-glass) 0,var(--shell-glass) 22px,transparent 22px,transparent 28px);
+  border-radius:2px;
+}
+.vshell-train .vshell-body::before{left:5px}
+.vshell-train .vshell-body::after{right:5px}
+.vshell-vestibule{
+  width:70%;height:8px;margin:0 auto;
+  background:repeating-linear-gradient(90deg,#94a3b8 0,#94a3b8 3px,transparent 3px,transparent 7px);
+  border-radius:2px;
+}
+.vshell-vestibule.top{margin-bottom:8px}
+.vshell-vestibule.bottom{margin-top:8px}
+
+/* -------- PLANE -------- */
+.vshell-plane .vshell-body{
+  border-radius:50% 50% 40% 40% / 22% 22% 12% 12%;
+  padding:36px 30px 24px;
+  border-top-width:4px;
+  background:
+    linear-gradient(180deg,#ffffff,#f1f5f9 65%,#e2e8f0);
+}
+.vshell-plane .vshell-body::before,
+.vshell-plane .vshell-body::after{
+  content:'';position:absolute;top:24%;bottom:26%;width:6px;
+  background:repeating-linear-gradient(180deg,var(--shell-glass) 0,var(--shell-glass) 12px,transparent 12px,transparent 18px);
+}
+.vshell-plane .vshell-body::before{left:4px}
+.vshell-plane .vshell-body::after{right:4px}
+.vshell-cockpit{
+  position:absolute;top:6px;left:50%;transform:translateX(-50%);
+  display:flex;gap:3px;
+}
+.vshell-cockpit span{
+  display:inline-block;width:11px;height:7px;
+  background:linear-gradient(180deg,#bae6fd,#38bdf8);
+  border:1px solid #0284c7;
+  border-radius:3px 3px 6px 6px;
+}
+.vshell-wing{
+  position:absolute;width:60px;height:14px;
+  background:linear-gradient(180deg,#cbd5e1,#94a3b8);
+  border:1.5px solid var(--shell-edge-2);
+  top:44%;
+}
+.vshell-wing.l{left:-58px;border-radius:6px 0 0 6px;transform:skewX(-12deg)}
+.vshell-wing.r{right:-58px;border-radius:0 6px 6px 0;transform:skewX(12deg)}
+.vshell-tailfin{
+  position:absolute;bottom:-14px;left:50%;transform:translateX(-50%);
+  width:0;height:0;border-left:22px solid transparent;border-right:22px solid transparent;
+  border-top:22px solid #94a3b8;
+}
+
+/* -------- SLEEPER -------- */
+.vshell-sleeper .vshell-body{
+  border-radius:34px 34px 18px 18px;
+  padding:14px 22px 20px;
+}
+.vshell-sleeper .vshell-body::before,
+.vshell-sleeper .vshell-body::after{
+  content:'';position:absolute;top:22%;bottom:22%;width:5px;
+  background:repeating-linear-gradient(180deg,#fecaca 0,#fecaca 18px,transparent 18px,transparent 24px);
+  border-radius:3px;
+}
+.vshell-sleeper .vshell-body::before{left:4px}
+.vshell-sleeper .vshell-body::after{right:4px}
+
+/* ---------- SEATS ---------- */
+.seat-rows{display:flex;flex-direction:column;padding:4px 0}
 .seat-row{display:flex;justify-content:center;align-items:center}
-
 .seat{
   width:var(--seat-sz,38px);height:var(--seat-sz,38px);
   border-radius:6px 6px 10px 10px;
   background:#e5e7eb;border:1.5px solid #d1d5db;
   font-size:9.5px;font-weight:800;font-family:var(--mono);
   color:#4b5563;display:flex;align-items:center;justify-content:center;
-  transition:.14s;position:relative;cursor:pointer;flex-shrink:0;
+  transition:.14s;position:relative;flex-shrink:0;
 }
 .seat::before{
-  content:'';position:absolute;top:-4px;left:14%;right:14%;height:4px;
+  content:'';position:absolute;top:-4px;left:16%;right:16%;height:4px;
   background:inherit;border-radius:3px 3px 0 0;
   border:1.5px solid;border-color:inherit;border-bottom:none;
 }
-.seat:hover{transform:translateY(-2px);box-shadow:0 4px 10px rgba(0,0,0,.12);z-index:2}
+.seat.pick{cursor:pointer}
+.seat.pick:hover{transform:translateY(-2px) scale(1.06);box-shadow:0 6px 14px rgba(0,0,0,.18);z-index:2}
 .seat.unassigned{background:#fff;border-color:#cbd5e1;color:#64748b;border-style:dashed}
-.seat.window{border-left-width:3px}
-.seat.aisle{border-right-width:3px}
 .seat.selected{outline:3px solid var(--cyan-500);outline-offset:2px;z-index:3}
 .seat.sold{opacity:.35;cursor:not-allowed;background:repeating-linear-gradient(45deg,#e5e7eb,#e5e7eb 4px,#d1d5db 4px,#d1d5db 8px)}
 .seat.held{background:repeating-linear-gradient(-45deg,#fef9c3,#fef9c3 4px,#fde047 4px,#fde047 8px);border-color:#eab308;color:#713f12}
-.seat.pick{cursor:pointer}
-.seat.pick:hover{transform:translateY(-2px) scale(1.06);box-shadow:0 6px 14px rgba(6,182,212,.25);z-index:2}
 .seat:disabled{cursor:not-allowed}
+.seat.dim{opacity:.18}
 
 .aisle{
-  width:var(--aisle-w,26px);flex-shrink:0;
-  background:repeating-linear-gradient(to bottom,#f3f4f6 0,#f3f4f6 4px,transparent 4px,transparent 8px);
-  align-self:stretch;margin:0 var(--seat-gap,4px);
+  width:var(--aisle-w,26px);flex-shrink:0;align-self:stretch;
+  margin:0 var(--seat-gap,4px);
+  background:repeating-linear-gradient(to bottom,transparent 0,transparent 4px,#e2e8f0 4px,#e2e8f0 8px);
+  border-radius:2px;
 }
-.row-gap{height:var(--row-gap,6px)}
+.vshell-train .aisle,.vshell-plane .aisle{
+  background:repeating-linear-gradient(to bottom,transparent 0,transparent 6px,#cbd5e1 6px,#cbd5e1 10px);
+}
 
-/* ---------- TIER / HOLD ITEMS ---------- */
+/* ---------- OTHER PANELS ---------- */
 .tier-item,.hold-item{display:flex;align-items:center;gap:10px;padding:9px 11px;border-radius:9px;background:var(--bg-2);border:1.5px solid transparent;transition:.15s;cursor:pointer;width:100%;text-align:left}
 .tier-item:hover,.hold-item:hover{background:var(--surface-2)}
 .tier-item.active,.hold-item.active{border-color:var(--cyan-500);background:#fff;box-shadow:0 0 0 3px rgba(6,182,212,.14)}
@@ -166,26 +304,19 @@ main{flex:1;max-width:1600px;margin:0 auto;width:100%;padding:22px}
 .tier-item .name,.hold-item .name{font-size:12.5px;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tier-item .price,.hold-item .sub{font-size:10.5px;color:var(--text-muted);font-family:var(--mono)}
 .tier-item .count,.hold-item .count{font-size:10px;font-weight:900;background:rgba(6,182,212,.1);color:var(--cyan-700);padding:2px 7px;border-radius:99px;flex-shrink:0}
-.hold-item .code{font-family:var(--mono);font-size:10.5px;font-weight:800;color:var(--cyan-700);letter-spacing:.06em}
 
-/* ---------- TABLES ---------- */
 .tbl-wrap{overflow-x:auto;border:1px solid var(--border);border-radius:9px;background:var(--surface)}
 table.data{width:100%;border-collapse:collapse;font-size:12.5px}
 table.data th{text-align:left;font-size:10px;text-transform:uppercase;letter-spacing:.06em;color:var(--text-muted);padding:9px 12px;border-bottom:1px solid var(--border);background:var(--bg-2);font-weight:800;white-space:nowrap}
 table.data td{padding:9px 12px;border-bottom:1px solid var(--border);vertical-align:middle}
 table.data tr:last-child td{border-bottom:none}
-table.data tbody tr:hover{background:var(--bg-2)}
 .pnr{font-family:var(--mono);font-weight:700;letter-spacing:.02em;white-space:nowrap}
 .empty{padding:32px;text-align:center;font-size:12.5px;color:var(--text-muted)}
 .empty .big{font-size:32px;margin-bottom:8px;opacity:.35}
 
-/* ---------- PRICING LAYOUT ---------- */
-.pricing-layout{display:grid;grid-template-columns:1fr 320px;gap:14px;align-items:start}
-@media (max-width:1100px){.pricing-layout{grid-template-columns:1fr}}
+.pricing-layout,.booking-layout{display:grid;grid-template-columns:1fr 320px;gap:14px;align-items:start}
+@media (max-width:1100px){.pricing-layout,.booking-layout{grid-template-columns:1fr}}
 
-/* ---------- BOOKING ---------- */
-.booking-layout{display:grid;grid-template-columns:1fr 320px;gap:14px;align-items:start}
-@media (max-width:1100px){.booking-layout{grid-template-columns:1fr}}
 .filter-bar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:12px 14px;background:var(--surface);border:1px solid var(--border);border-radius:9px;margin-bottom:14px}
 .filter-bar label{font-size:11px;font-weight:800;text-transform:uppercase;letter-spacing:.05em;color:var(--text-muted)}
 .filter-bar select{padding:6px 10px;font-size:12.5px;font-weight:600;background:var(--bg-2);border:1px solid var(--border-2);border-radius:7px}
@@ -195,16 +326,14 @@ table.data tbody tr:hover{background:var(--bg-2)}
 
 .cart-item{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:8px 0;border-bottom:1px dashed var(--border);font-size:12.5px}
 .cart-item:last-child{border-bottom:none}
-.cart-item .seat-info{display:flex;flex-direction:column;gap:1px}
 .cart-item .seat-code{font-family:var(--mono);font-weight:800;font-size:12.5px}
 .cart-item .seat-tier{font-size:10.5px;color:var(--text-muted)}
 .cart-item .seat-price{font-weight:800;font-family:var(--mono);font-size:12.5px;color:var(--cyan-700)}
 .cart-total{display:flex;justify-content:space-between;align-items:center;padding:11px 0;margin-top:8px;border-top:2px solid var(--text);font-weight:900}
 .cart-total .amt{font-size:1.15rem;font-family:var(--mono);color:var(--cyan-700)}
 
-/* ---------- CONDUCTOR ---------- */
-.scan-input{display:flex;gap:8px}
-.scan-input input{flex:1;padding:12px 15px;background:var(--bg-2);border:1.5px solid var(--border-2);border-radius:9px;font-family:var(--mono);font-weight:800;font-size:15px;letter-spacing:.05em;text-transform:uppercase}
+.scan-input{display:flex;gap:8px;flex-wrap:wrap}
+.scan-input input{flex:1;min-width:180px;padding:12px 15px;background:var(--bg-2);border:1.5px solid var(--border-2);border-radius:9px;font-family:var(--mono);font-weight:800;font-size:15px;letter-spacing:.05em;text-transform:uppercase}
 .scan-input input:focus{outline:none;border-color:var(--cyan-500);background:#fff;box-shadow:0 0 0 3px rgba(6,182,212,.15)}
 .scan-result{margin-top:14px;border-radius:11px;padding:15px 17px;border:1.5px solid;display:flex;gap:13px;animation:fadeUp .25s ease}
 .scan-result.ok{background:var(--ok-bg);border-color:var(--ok-bd);color:var(--ok)}
@@ -220,12 +349,10 @@ table.data tbody tr:hover{background:var(--bg-2)}
 .kv strong{font-weight:700;color:var(--text)}
 .scan-log{display:flex;flex-direction:column;gap:5px;max-height:220px;overflow-y:auto;margin-top:12px}
 .log-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:6px 11px;border-radius:7px;background:var(--bg-2);border:1px solid var(--border);font-size:11.5px}
-.log-row .pnr{font-size:11px}
 .quick-chips{display:flex;gap:6px;flex-wrap:wrap;margin-top:12px}
 .chip{font-size:11.5px;font-weight:700;padding:6px 12px;border-radius:99px;background:var(--surface-2);border:1px solid var(--border-2);color:var(--text-2);transition:.15s}
 .chip:hover{border-color:var(--cyan-500);color:var(--cyan-700);background:#fff}
 
-/* ---------- TICKET ---------- */
 .ticket-card{border-radius:14px;padding:20px;display:flex;flex-direction:column;gap:14px;position:relative;overflow:hidden;border:1px solid rgba(0,0,0,.06);box-shadow:0 12px 30px -8px rgba(0,0,0,.2)}
 .ticket-card.cyan{background:linear-gradient(135deg,#ecfeff,#cffafe);color:#0a0f14}
 .ticket-card.teal{background:linear-gradient(135deg,#ccfbf1,#14b8a6);color:#04211f}
@@ -254,13 +381,10 @@ table.data tbody tr:hover{background:var(--bg-2)}
 .t-bar-lines{width:100%;height:22px;background:repeating-linear-gradient(to right,#000 0,#000 2px,#fff 2px,#fff 3px,#000 3px,#000 4px,#fff 4px,#fff 7px,#000 7px,#000 9px,#fff 9px,#fff 11px)}
 .t-bar-num{font-family:var(--mono);font-size:9.5px;font-weight:800;color:#000;letter-spacing:1.5px}
 
-/* ---------- SCROLLBARS ---------- */
 ::-webkit-scrollbar{width:9px;height:9px}
 ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:5px;border:2px solid var(--bg)}
 ::-webkit-scrollbar-thumb:hover{background:#94a3b8}
-::-webkit-scrollbar-track{background:transparent}
 
-/* ---------- TOAST ---------- */
 #toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,16px);background:#0a0f14;color:#e6f9ff;font-size:13px;font-weight:700;padding:11px 20px;border-radius:99px;box-shadow:0 12px 30px rgba(0,0,0,.3);opacity:0;pointer-events:none;transition:.22s;z-index:200;max-width:90vw;text-align:center}
 #toast.show{opacity:1;transform:translate(-50%,0)}
 </style>
@@ -279,7 +403,7 @@ table.data tbody tr:hover{background:var(--bg-2)}
       <label>Service Date</label>
       <input id="serviceDate" type="date" />
       <label>Service Name</label>
-      <input id="serviceName" value="Coastal Express" style="width:180px" />
+      <input id="serviceName" value="Coastal Express" style="width:170px" />
     </div>
     <span class="studio-badge">Fleet Studio</span>
   </div>
@@ -297,7 +421,7 @@ table.data tbody tr:hover{background:var(--bg-2)}
 
 <main>
 
-  <!-- ============ FLEET BUILDER ============ -->
+  <!-- FLEET BUILDER -->
   <section class="view active" id="view-builder">
     <div class="builder">
       <aside class="sidebar">
@@ -324,7 +448,6 @@ table.data tbody tr:hover{background:var(--bg-2)}
             <h2><span id="vehTitle">No vehicle selected</span> <span class="code" id="vehCode">—</span></h2>
             <div class="hint" id="vehHint">Add a vehicle from the left to begin.</div>
           </div>
-          <div class="canvas-toolbar" id="builderTools"></div>
         </div>
         <div id="builderCanvas">
           <div class="empty"><div class="big">🚌</div>Select a vehicle, or add one from the sidebar.</div>
@@ -335,18 +458,18 @@ table.data tbody tr:hover{background:var(--bg-2)}
     </div>
   </section>
 
-  <!-- ============ PRICING TIERS ============ -->
+  <!-- PRICING -->
   <section class="view" id="view-pricing">
     <div class="pricing-layout">
       <div class="canvas">
         <div class="canvas-head">
           <div>
             <h2>Assign Pricing Tiers</h2>
-            <div class="hint">Pick a tier on the right, then click seats on the canvas to assign. Shift-click to clear.</div>
+            <div class="hint">Pick a tier on the right, then click seats to assign.</div>
           </div>
           <div class="canvas-toolbar">
             <button class="tool" id="tierAssignAll">Assign all unassigned</button>
-            <button class="tool" id="tierClearAll">Clear all assignments</button>
+            <button class="tool" id="tierClearAll">Clear all</button>
           </div>
         </div>
         <div id="pricingCanvas"></div>
@@ -361,17 +484,17 @@ table.data tbody tr:hover{background:var(--bg-2)}
     </div>
   </section>
 
-  <!-- ============ SEAT HOLDS ============ -->
+  <!-- HOLDS -->
   <section class="view" id="view-holds">
     <div class="pricing-layout">
       <div class="canvas">
         <div class="canvas-head">
           <div>
             <h2>Seat Holds</h2>
-            <div class="hint">Pick a hold on the right, then click seats to reserve them. Holds block public sale until their release date.</div>
+            <div class="hint">Pick a hold, then click seats to reserve them.</div>
           </div>
           <div class="canvas-toolbar">
-            <button class="tool" id="holdClearAll">Release all seats</button>
+            <button class="tool" id="holdClearAll">Release all</button>
           </div>
         </div>
         <div id="holdsCanvas"></div>
@@ -386,7 +509,7 @@ table.data tbody tr:hover{background:var(--bg-2)}
     </div>
   </section>
 
-  <!-- ============ BOOKING PREVIEW ============ -->
+  <!-- BOOKING -->
   <section class="view" id="view-booking">
     <div class="booking-layout">
       <div>
@@ -399,13 +522,11 @@ table.data tbody tr:hover{background:var(--bg-2)}
         <div class="canvas">
           <div class="canvas-head">
             <div>
-              <h2 id="bookingTitle">Select a vehicle to book</h2>
-              <div class="hint">Click seats to add them to the cart. Held or sold seats are unavailable.</div>
+              <h2 id="bookingTitle">Select a vehicle</h2>
+              <div class="hint">Click seats to add them to the cart.</div>
             </div>
           </div>
-          <div id="bookingCanvas">
-            <div class="empty"><div class="big">🎟️</div>Choose a vehicle above to start booking.</div>
-          </div>
+          <div id="bookingCanvas"></div>
         </div>
       </div>
       <aside class="config">
@@ -429,14 +550,14 @@ table.data tbody tr:hover{background:var(--bg-2)}
     </div>
   </section>
 
-  <!-- ============ CONDUCTOR ============ -->
+  <!-- CONDUCTOR -->
   <section class="view" id="view-conductor">
     <div class="builder" style="grid-template-columns:1fr 380px;">
       <div class="canvas">
         <div class="canvas-head">
           <div>
             <h2>Conductor Scanner</h2>
-            <div class="hint">Offline-capable. Checksum is validated locally against the synced manifest.</div>
+            <div class="hint">Offline-capable. Checksum validated locally.</div>
           </div>
         </div>
         <div class="field-row">
@@ -479,9 +600,6 @@ table.data tbody tr:hover{background:var(--bg-2)}
 (function(){
 'use strict';
 
-/* ============================================================
-   1 · UTILITIES
-   ============================================================ */
 const $  = id => document.getElementById(id);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const esc = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -491,115 +609,81 @@ const slug = s => String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace
 const fmtR = n => 'R' + Number(n||0).toLocaleString('en-ZA');
 
 function toast(msg){
-  const el = $('toast');
-  el.textContent = msg;
-  el.classList.add('show');
-  clearTimeout(el._t);
-  el._t = setTimeout(()=>el.classList.remove('show'), 2600);
+  const el = $('toast'); el.textContent = msg; el.classList.add('show');
+  clearTimeout(el._t); el._t = setTimeout(()=>el.classList.remove('show'), 2600);
 }
 
 /* ============================================================
-   2 · PNR ENGINE
-   Format: OPERATOR - VEHICLE - SEAT - CHECK
-   Bound to (operator, vehicle, seat, tripKey) with HMAC-SHA256
-   truncated to 20 bits → 4 Crockford Base32 characters.
+   PNR ENGINE
    ============================================================ */
 const B32 = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
 const PNR = {
-  key: 'novalink-demo-shared-secret',
-  keyObj: null,
+  key:'novalink-demo-shared-secret', keyObj:null,
   async init(){
     this.keyObj = null;
     if(window.crypto?.subtle){
-      try{
-        this.keyObj = await crypto.subtle.importKey(
-          'raw', new TextEncoder().encode(this.key),
-          {name:'HMAC', hash:'SHA-256'}, false, ['sign']
-        );
-      }catch(_){}
+      try{ this.keyObj = await crypto.subtle.importKey('raw', new TextEncoder().encode(this.key), {name:'HMAC',hash:'SHA-256'}, false, ['sign']); }catch(_){}
     }
   },
-  async raw(message){
-    if(this.keyObj){
-      const buf = await crypto.subtle.sign('HMAC', this.keyObj, new TextEncoder().encode(message));
-      return new Uint8Array(buf);
-    }
-    const out = new Uint8Array(32), data = this.key + '\u0000' + message;
-    let h = 0x811c9dc5;
-    for(let r=0;r<32;r++){
-      for(let i=0;i<data.length;i++){ h^=data.charCodeAt(i); h=Math.imul(h,0x01000193)>>>0; }
-      h = Math.imul(h ^ r, 0x01000193) >>> 0;
-      out[r] = h & 0xff;
-    }
+  async raw(m){
+    if(this.keyObj){ const b = await crypto.subtle.sign('HMAC', this.keyObj, new TextEncoder().encode(m)); return new Uint8Array(b); }
+    const out = new Uint8Array(32), data = this.key + '\u0000' + m; let h = 0x811c9dc5;
+    for(let r=0;r<32;r++){ for(let i=0;i<data.length;i++){ h^=data.charCodeAt(i); h=Math.imul(h,0x01000193)>>>0; } h = Math.imul(h^r,0x01000193)>>>0; out[r]=h&0xff; }
     return out;
   },
-  async check(operator, vehicle, seat, tripKey){
-    const sig = await this.raw(`${operator}|${vehicle}|${seat}|${tripKey}`);
-    const bits = ((sig[0]<<12)|(sig[1]<<4)|(sig[2]>>4)) & 0xFFFFF;
-    let out='';
-    for(let i=0;i<4;i++) out += B32[(bits >>> (15 - i*5)) & 31];
+  async check(op,vh,st,tk){
+    const s = await this.raw(`${op}|${vh}|${st}|${tk}`);
+    const bits = ((s[0]<<12)|(s[1]<<4)|(s[2]>>4)) & 0xFFFFF;
+    let out=''; for(let i=0;i<4;i++) out += B32[(bits >>> (15 - i*5)) & 31];
     return out;
   },
-  async build(operator, vehicle, seat, tripKey){
-    return `${operator}-${vehicle}-${seat}-${await this.check(operator, vehicle, seat, tripKey)}`;
-  }
+  async build(op,vh,st,tk){ return `${op}-${vh}-${st}-${await this.check(op,vh,st,tk)}`; }
 };
 function normalizeScan(s){ return String(s||'').toUpperCase().replace(/[^0-9A-Z]/g,''); }
 function foldCheck(c){ return c.replace(/[IL]/g,'1').replace(/O/g,'0').replace(/U/g,'V'); }
 function parseCandidates(raw){
   const s = normalizeScan(raw), out = [];
-  for(let op=2; op<=6; op++) for(let b=2; b<=8; b++) for(let se=2; se<=3; se++){
+  for(let op=2;op<=6;op++) for(let b=2;b<=8;b++) for(let se=2;se<=3;se++){
     if(op+b+se+4 !== s.length) continue;
     const operator = s.slice(0,op), bus = s.slice(op,op+b), seat = s.slice(op+b,op+b+se);
     if(!/^[0-9]{2}[A-Z]?$/.test(seat)) continue;
-    out.push({ operator, bus, seat, check: foldCheck(s.slice(-4)), canonical: `${operator}-${bus}-${seat}-${foldCheck(s.slice(-4))}` });
+    const check = foldCheck(s.slice(-4));
+    out.push({ operator, bus, seat, check, canonical: `${operator}-${bus}-${seat}-${check}` });
   }
   return out;
 }
 
 /* ============================================================
-   3 · STATE
+   STATE
    ============================================================ */
 const state = {
-  operator: 'NL',
-  serviceDate: '',
-  serviceName: '',
-  vehicles: [],
-  tiers: [
+  operator:'NL', serviceDate:'', serviceName:'',
+  vehicles:[], tiers:[
     { id:'t_premium', name:'Premium', color:'#800020', price:450, fee:25 },
     { id:'t_standard', name:'Standard', color:'#008080', price:250, fee:15 },
     { id:'t_economy', name:'Economy', color:'#eab308', price:150, fee:10 }
   ],
-  holds: [],
-  selectedVehicleId: null,
-  activeTierId: null,
-  activeHoldId: null,
-  cart: [],
-  manifest: new Map(),
-  scanned: new Map(),
-  view: 'builder'
+  holds:[], selectedVehicleId:null, activeTierId:null, activeHoldId:null,
+  cart:[], manifest:new Map(), scanned:new Map(), view:'builder'
 };
 
 /* ============================================================
-   4 · VEHICLE MODEL
+   VEHICLE MODEL
    ============================================================ */
 const PRESETS = {
-  coach:   { name:'Coach',    type:'coach',   rows:10, seatsPerRow:4, aisleAfter:2, layoutName:'2+2' },
-  minibus: { name:'Minibus',  type:'minibus', rows:6,  seatsPerRow:3, aisleAfter:2, layoutName:'2+1' },
-  shuttle: { name:'Shuttle',  type:'shuttle', rows:8,  seatsPerRow:2, aisleAfter:1, layoutName:'1+1' },
-  train:   { name:'Carriage', type:'train',   rows:15, seatsPerRow:4, aisleAfter:2, layoutName:'2+2' },
-  plane:   { name:'Plane',    type:'plane',   rows:20, seatsPerRow:6, aisleAfter:3, layoutName:'3+3' },
-  sleeper: { name:'Sleeper',  type:'sleeper', rows:10, seatsPerRow:2, aisleAfter:1, layoutName:'1+1' }
+  coach:   { name:'Coach',    type:'coach',   rows:10, seatsPerRow:4, aisleAfter:2 },
+  minibus: { name:'Minibus',  type:'minibus', rows:6,  seatsPerRow:3, aisleAfter:2 },
+  shuttle: { name:'Shuttle',  type:'shuttle', rows:8,  seatsPerRow:2, aisleAfter:1 },
+  train:   { name:'Carriage', type:'train',   rows:15, seatsPerRow:4, aisleAfter:2 },
+  plane:   { name:'Plane',    type:'plane',   rows:20, seatsPerRow:6, aisleAfter:3 },
+  sleeper: { name:'Sleeper',  type:'sleeper', rows:10, seatsPerRow:2, aisleAfter:1 }
 };
 
 function nextVehicleCode(){
   const used = new Set(state.vehicles.map(v => v.code));
   for(const t of state.tiers){
     const prefix = t.id.split('_')[1]?.[0]?.toUpperCase() || 'V';
-    for(let i=1; i<=99; i++){
-      const code = prefix + pad2(i);
-      if(!used.has(code)) return code;
-    }
+    for(let i=1; i<=99; i++){ const code = prefix + pad2(i); if(!used.has(code)) return code; }
   }
   return 'V' + pad2(state.vehicles.length + 1);
 }
@@ -607,23 +691,11 @@ function nextVehicleCode(){
 function makeVehicle(presetKey){
   const p = PRESETS[presetKey] || PRESETS.coach;
   return {
-    id: uid(),
-    name: p.name,
-    code: nextVehicleCode(),
-    type: p.type,
-    rows: p.rows,
-    seatsPerRow: p.seatsPerRow,
-    aisleAfter: p.aisleAfter,
-    nameStyle: 'num-letter',
-    startWith: 'A',
-    startNumber: 1,
-    seatSize: 38,
-    seatGap: 4,
-    rowGap: 6,
-    aisleWidth: 26,
-    tierMap: {},
-    holdMap: {},
-    soldSeats: {}
+    id: uid(), name: p.name, code: nextVehicleCode(),
+    type: p.type, rows: p.rows, seatsPerRow: p.seatsPerRow, aisleAfter: p.aisleAfter,
+    nameStyle:'num-letter', startNumber:1,
+    seatSize:38, seatGap:4, rowGap:6, aisleWidth:26,
+    tierMap:{}, holdMap:{}, soldSeats:{}
   };
 }
 
@@ -634,54 +706,24 @@ function seatName(v, row, col){
   if(v.nameStyle === 'letter-num') return letter + pad2(rowNum);
   return pad2(rowNum * v.seatsPerRow + col + 1);
 }
-
 function seatType(v, col){
-  if(v.seatsPerRow === 2 && v.aisleAfter === 1) return col === 0 ? 'Window' : 'Window';
   if(col === 0 || col === v.seatsPerRow - 1) return 'Window';
+  if(v.seatsPerRow === 2) return 'Window';
   return 'Aisle';
 }
-
 function allSeats(v){
   const out = [];
-  for(let r=0; r<v.rows; r++) for(let c=0; c<v.seatsPerRow; c++){
+  for(let r=0;r<v.rows;r++) for(let c=0;c<v.seatsPerRow;c++)
     out.push({ row:r, col:c, name: seatName(v,r,c), type: seatType(v,c) });
-  }
   return out;
 }
 
-function findTier(seatName){ return state.tiers.find(t => t.id === state.activeTierId); }
-
 /* ============================================================
-   5 · VEHICLE LIST / SIDEBAR
+   VEHICLE SHELL RENDERER — dispatches by type
    ============================================================ */
-function renderVehicleList(){
-  const wrap = $('vehList');
-  if(!state.vehicles.length){
-    wrap.innerHTML = '<div class="empty" style="padding:14px 0;font-size:12px;">No vehicles yet.</div>';
-    return;
-  }
-  wrap.innerHTML = state.vehicles.map(v => {
-    const seats = allSeats(v).length;
-    const assigned = Object.values(v.tierMap).filter(Boolean).length;
-    const tierColors = state.tiers.filter(t => Object.values(v.tierMap).includes(t.id));
-    const swatch = tierColors[0]?.color || '#cbd5e1';
-    return `<button class="veh-item ${v.id===state.selectedVehicleId?'active':''}" data-vid="${v.id}">
-      <span class="sw" style="background:${swatch}"></span>
-      <span class="info"><span class="name">${esc(v.name)}</span><span class="meta">${esc(state.operator)}-${esc(v.code)}</span></span>
-      <span class="seats">${assigned}/${seats}</span>
-    </button>`;
-  }).join('');
-}
-
-/* ============================================================
-   6 · CABIN RENDERER (shared by all views)
-   ============================================================ */
-function cabinHTML(v, opts){
-  const { mode='builder', filterTierId='', disabled=false } = opts || {};
-  const style = `--seat-sz:${v.seatSize}px;--seat-gap:${v.seatGap}px;--row-gap:${v.rowGap}px;--aisle-w:${v.aisleWidth}px`;
-  let html = `<div class="cabin-wrap"><div class="cabin" style="${style}" data-vid="${v.id}">`;
-  html += `<div class="cabin-front">FRONT</div><div class="seat-rows">`;
-
+function seatGridHTML(v, opts){
+  const { mode='builder', filterTierId='' } = opts || {};
+  let html = `<div class="seat-rows">`;
   for(let r=0; r<v.rows; r++){
     html += `<div class="seat-row">`;
     for(let c=0; c<v.seatsPerRow; c++){
@@ -695,42 +737,133 @@ function cabinHTML(v, opts){
       const visible = !filterTierId || tierId === filterTierId;
       const inCart = state.cart.some(x => x.vehicleId === v.id && x.seat === name);
 
-      const classes = ['seat'];
-      if(!tier && !isHeld) classes.push('unassigned');
-      if(isHeld) classes.push('held');
-      if(isSold) classes.push('sold');
-      if(inCart) classes.push('selected');
-      if(!visible && filterTierId) classes.push('dim');
-      if(mode === 'booking' || mode === 'pricing' || mode === 'holds') classes.push('pick');
+      const cls = ['seat'];
+      if(!tier && !isHeld) cls.push('unassigned');
+      if(isHeld) cls.push('held');
+      if(isSold) cls.push('sold');
+      if(inCart) cls.push('selected');
+      if(!visible && filterTierId) cls.push('dim');
+      if(mode === 'booking' || mode === 'pricing' || mode === 'holds') cls.push('pick');
 
       const bg = tier ? `background:${tier.color};border-color:${tier.color};color:#fff;` : '';
-      const dis = (disabled || isSold || (mode==='booking' && isHeld)) ? 'disabled' : '';
+      const dis = (isSold || (mode==='booking' && isHeld)) ? 'disabled' : '';
 
-      html += `<button class="${classes.join(' ')}" style="${bg}" data-seat="${esc(name)}" data-row="${r}" data-col="${c}" ${dis} title="${esc(name)} · ${esc(tier?.name||'Unassigned')}${isHeld?' · HELD':''}${isSold?' · SOLD':''}">${esc(name)}</button>`;
+      html += `<button class="${cls.join(' ')}" style="${bg}" data-seat="${esc(name)}" data-row="${r}" data-col="${c}" ${dis} title="${esc(name)} · ${esc(tier?.name||'Unassigned')}${isHeld?' · HELD':''}${isSold?' · SOLD':''}">${esc(name)}</button>`;
     }
     html += `</div>`;
   }
+  return html + `</div>`;
+}
 
-  html += `</div><div class="cabin-back">BACK</div></div></div>`;
-  return html;
+/* --- BUS / COACH / MINIBUS / SHUTTLE --- */
+function shellBus(v, opts){
+  const style = `--seat-sz:${v.seatSize}px;--seat-gap:${v.seatGap}px;--row-gap:${v.rowGap}px;--aisle-w:${v.aisleWidth}px`;
+  return `
+    <div class="vehicle-stage">
+      <div class="vshell vshell-bus" style="${style}">
+        <div class="vshell-body">
+          <span class="vshell-wheel fl"></span><span class="vshell-wheel fr"></span>
+          <span class="vshell-wheel rl"></span><span class="vshell-wheel rr"></span>
+          <div class="vshell-front">
+            <span class="vshell-driver">Driver</span>
+            <span class="vshell-door">Entry</span>
+          </div>
+          <div class="vshell-cabin">${seatGridHTML(v, opts)}</div>
+          <div class="vshell-rear"><span class="vshell-door">Exit</span></div>
+        </div>
+      </div>
+    </div>`;
+}
+
+/* --- TRAIN CARRIAGE --- */
+function shellTrain(v, opts){
+  const style = `--seat-sz:${v.seatSize}px;--seat-gap:${v.seatGap}px;--row-gap:${v.rowGap}px;--aisle-w:${v.aisleWidth}px`;
+  return `
+    <div class="vehicle-stage">
+      <div class="vshell vshell-train" style="${style}">
+        <div class="vshell-vestibule top"></div>
+        <div class="vshell-body">
+          <div class="vshell-cabin">${seatGridHTML(v, opts)}</div>
+        </div>
+        <div class="vshell-vestibule bottom"></div>
+      </div>
+    </div>`;
+}
+
+/* --- PLANE --- */
+function shellPlane(v, opts){
+  const style = `--seat-sz:${v.seatSize}px;--seat-gap:${v.seatGap}px;--row-gap:${v.rowGap}px;--aisle-w:${v.aisleWidth}px`;
+  return `
+    <div class="vehicle-stage">
+      <div class="vshell vshell-plane" style="${style}">
+        <div class="vshell-body">
+          <div class="vshell-cockpit"><span></span><span></span><span></span></div>
+          <div class="vshell-wing l"></div>
+          <div class="vshell-wing r"></div>
+          <div class="vshell-tailfin"></div>
+          <div class="vshell-cabin">${seatGridHTML(v, opts)}</div>
+        </div>
+      </div>
+    </div>`;
+}
+
+/* --- SLEEPER --- */
+function shellSleeper(v, opts){
+  const style = `--seat-sz:${v.seatSize}px;--seat-gap:${v.seatGap}px;--row-gap:${v.rowGap}px;--aisle-w:${v.aisleWidth}px`;
+  return `
+    <div class="vehicle-stage">
+      <div class="vshell vshell-sleeper" style="${style}">
+        <div class="vshell-body">
+          <span class="vshell-wheel fl"></span><span class="vshell-wheel fr"></span>
+          <span class="vshell-wheel rl"></span><span class="vshell-wheel rr"></span>
+          <div class="vshell-front">
+            <span class="vshell-driver">Driver</span>
+            <span class="vshell-door">Entry</span>
+          </div>
+          <div class="vshell-cabin">${seatGridHTML(v, opts)}</div>
+          <div class="vshell-rear"><span class="vshell-door">Exit</span></div>
+        </div>
+      </div>
+    </div>`;
+}
+
+function cabinHTML(v, opts){
+  switch(v.type){
+    case 'train':   return shellTrain(v, opts);
+    case 'plane':   return shellPlane(v, opts);
+    case 'sleeper': return shellSleeper(v, opts);
+    default:        return shellBus(v, opts);
+  }
 }
 
 /* ============================================================
-   7 · FLEET BUILDER VIEW
+   SIDEBAR / BUILDER
    ============================================================ */
+function renderVehicleList(){
+  const wrap = $('vehList');
+  if(!state.vehicles.length){ wrap.innerHTML = '<div class="empty" style="padding:14px 0;font-size:12px;">No vehicles yet.</div>'; return; }
+  wrap.innerHTML = state.vehicles.map(v => {
+    const seats = allSeats(v).length;
+    const assigned = Object.values(v.tierMap).filter(Boolean).length;
+    const tierColors = state.tiers.filter(t => Object.values(v.tierMap).includes(t.id));
+    const swatch = tierColors[0]?.color || '#cbd5e1';
+    return `<button class="veh-item ${v.id===state.selectedVehicleId?'active':''}" data-vid="${v.id}">
+      <span class="sw" style="background:${swatch}"></span>
+      <span class="info"><span class="name">${esc(v.name)}</span><span class="meta">${esc(state.operator)}-${esc(v.code)}</span></span>
+      <span class="seats">${assigned}/${seats}</span>
+    </button>`;
+  }).join('');
+}
+
 function renderBuilder(){
   renderVehicleList();
   const v = state.vehicles.find(x => x.id === state.selectedVehicleId);
-
   if(!v){
-    $('vehTitle').textContent = 'No vehicle selected';
-    $('vehCode').textContent = '—';
+    $('vehTitle').textContent = 'No vehicle selected'; $('vehCode').textContent = '—';
     $('vehHint').textContent = 'Add a vehicle from the left to begin.';
     $('builderCanvas').innerHTML = '<div class="empty"><div class="big">🚌</div>Select a vehicle, or add one from the sidebar.</div>';
-    $('builderConfig').innerHTML = '';
-    return;
+    $('builderConfig').innerHTML = ''; return;
   }
-
   $('vehTitle').textContent = v.name;
   $('vehCode').textContent = `${state.operator}-${v.code}`;
   const seats = allSeats(v).length;
@@ -742,23 +875,20 @@ function renderBuilder(){
   $('builderConfig').innerHTML = `
     <div class="panel">
       <div class="panel-title">Vehicle Configuration</div>
-      <div class="field">
-        <label>Display Name</label>
-        <input id="cfg-name" value="${esc(v.name)}" />
-      </div>
-      <div class="field">
-        <label>Vehicle Code (used in PNR)</label>
-        <input id="cfg-code" value="${esc(v.code)}" maxlength="8" spellcheck="false" style="font-family:var(--mono);font-weight:800;letter-spacing:.05em;text-transform:uppercase;" />
-      </div>
+      <div class="field"><label>Display Name</label><input id="cfg-name" value="${esc(v.name)}" /></div>
+      <div class="field"><label>Vehicle Code (PNR)</label><input id="cfg-code" value="${esc(v.code)}" maxlength="8" spellcheck="false" style="font-family:var(--mono);font-weight:800;letter-spacing:.05em;text-transform:uppercase;" /></div>
       <div class="field-row">
-        <div class="field">
-          <label>Type</label>
+        <div class="field"><label>Type</label>
           <select id="cfg-type">
-            ${Object.entries(PRESETS).map(([k,p]) => `<option value="${k}" ${v.type===p.type?'selected':''}>${p.name}</option>`).join('')}
+            <option value="coach"   ${v.type==='coach'?'selected':''}>Coach (Bus)</option>
+            <option value="minibus" ${v.type==='minibus'?'selected':''}>Minibus</option>
+            <option value="shuttle" ${v.type==='shuttle'?'selected':''}>Shuttle</option>
+            <option value="train"   ${v.type==='train'?'selected':''}>Train Carriage</option>
+            <option value="plane"   ${v.type==='plane'?'selected':''}>Plane</option>
+            <option value="sleeper" ${v.type==='sleeper'?'selected':''}>Sleeper</option>
           </select>
         </div>
-        <div class="field">
-          <label>Layout</label>
+        <div class="field"><label>Layout</label>
           <select id="cfg-layout">
             <option value="2+2" ${v.aisleAfter===2&&v.seatsPerRow===4?'selected':''}>2+2</option>
             <option value="2+1" ${v.aisleAfter===2&&v.seatsPerRow===3?'selected':''}>2+1</option>
@@ -768,70 +898,39 @@ function renderBuilder(){
         </div>
       </div>
       <div class="field-row">
-        <div class="field">
-          <label>Rows</label>
-          <input id="cfg-rows" type="number" min="1" max="30" value="${v.rows}" />
-        </div>
-        <div class="field">
-          <label>Seats per Row</label>
-          <input id="cfg-seats" type="number" min="1" max="6" value="${v.seatsPerRow}" />
-        </div>
+        <div class="field"><label>Rows</label><input id="cfg-rows" type="number" min="1" max="30" value="${v.rows}" /></div>
+        <div class="field"><label>Seats / Row</label><input id="cfg-seats" type="number" min="1" max="6" value="${v.seatsPerRow}" /></div>
       </div>
     </div>
-
     <div class="panel">
       <div class="panel-title">Seat Naming</div>
       <div class="field-row">
-        <div class="field">
-          <label>Style</label>
+        <div class="field"><label>Style</label>
           <select id="cfg-namestyle">
             <option value="num-letter" ${v.nameStyle==='num-letter'?'selected':''}>1A, 1B, 1C</option>
             <option value="letter-num" ${v.nameStyle==='letter-num'?'selected':''}>A1, B1, C1</option>
             <option value="num-only"   ${v.nameStyle==='num-only'?'selected':''}>1, 2, 3, 4</option>
           </select>
         </div>
-        <div class="field">
-          <label>Start Row #</label>
-          <input id="cfg-startnum" type="number" min="1" value="${v.startNumber}" />
-        </div>
+        <div class="field"><label>Start Row #</label><input id="cfg-startnum" type="number" min="1" value="${v.startNumber}" /></div>
       </div>
     </div>
-
     <div class="panel">
       <div class="panel-title">Spacing</div>
-      <div class="field">
-        <label>Seat Size — <span id="lbl-size">${v.seatSize}px</span></label>
-        <input id="cfg-sz" type="range" min="24" max="56" value="${v.seatSize}" />
-      </div>
-      <div class="field">
-        <label>Seat Gap — <span id="lbl-gap">${v.seatGap}px</span></label>
-        <input id="cfg-gap" type="range" min="0" max="14" value="${v.seatGap}" />
-      </div>
-      <div class="field">
-        <label>Row Gap — <span id="lbl-rgap">${v.rowGap}px</span></label>
-        <input id="cfg-rgap" type="range" min="0" max="24" value="${v.rowGap}" />
-      </div>
-      <div class="field">
-        <label>Aisle Width — <span id="lbl-aisle">${v.aisleWidth}px</span></label>
-        <input id="cfg-aisle" type="range" min="0" max="60" value="${v.aisleWidth}" />
-      </div>
+      <div class="field"><label>Seat Size — <span id="lbl-size">${v.seatSize}px</span></label><input id="cfg-sz" type="range" min="24" max="56" value="${v.seatSize}" /></div>
+      <div class="field"><label>Seat Gap — <span id="lbl-gap">${v.seatGap}px</span></label><input id="cfg-gap" type="range" min="0" max="14" value="${v.seatGap}" /></div>
+      <div class="field"><label>Row Gap — <span id="lbl-rgap">${v.rowGap}px</span></label><input id="cfg-rgap" type="range" min="0" max="24" value="${v.rowGap}" /></div>
+      <div class="field"><label>Aisle Width — <span id="lbl-aisle">${v.aisleWidth}px</span></label><input id="cfg-aisle" type="range" min="0" max="60" value="${v.aisleWidth}" /></div>
     </div>
-
     <div class="panel">
       <div class="panel-title">Actions</div>
       <button class="btn btn-ghost btn-block btn-sm" id="dupeVeh" style="margin-bottom:8px;">Duplicate Vehicle</button>
       <button class="btn btn-danger btn-block btn-sm" id="delVeh">Delete Vehicle</button>
     </div>`;
-
   bindBuilderConfig(v);
 }
 
 function bindBuilderConfig(v){
-  const update = (key, val, rerender=true) => {
-    v[key] = val;
-    if(rerender) renderBuilder();
-  };
-
   $('cfg-name').addEventListener('input', e => { v.name = e.target.value; renderVehicleList(); });
   $('cfg-code').addEventListener('input', e => {
     v.code = e.target.value.toUpperCase().replace(/[^0-9A-Z]/g,'');
@@ -839,115 +938,84 @@ function bindBuilderConfig(v){
     renderVehicleList();
   });
   $('cfg-type').addEventListener('change', e => {
-    const p = PRESETS[e.target.value];
-    if(p){ v.rows = p.rows; v.seatsPerRow = p.seatsPerRow; v.aisleAfter = p.aisleAfter; renderBuilder(); }
+    const p = Object.values(PRESETS).find(x => x.type === e.target.value);
+    if(p){ v.type = p.type; v.rows = p.rows; v.seatsPerRow = p.seatsPerRow; v.aisleAfter = p.aisleAfter; renderBuilder(); }
   });
   $('cfg-layout').addEventListener('change', e => {
     const [l,r] = e.target.value.split('+').map(Number);
     v.seatsPerRow = l + r; v.aisleAfter = l; renderBuilder();
   });
-  $('cfg-rows').addEventListener('input', e => update('rows', Math.max(1, parseInt(e.target.value)||1), false) || renderBuilder());
+  $('cfg-rows').addEventListener('input', e => { v.rows = Math.max(1, parseInt(e.target.value)||1); renderBuilder(); });
   $('cfg-seats').addEventListener('input', e => { v.seatsPerRow = Math.max(1, Math.min(6, parseInt(e.target.value)||1)); renderBuilder(); });
-  $('cfg-namestyle').addEventListener('change', e => update('nameStyle', e.target.value));
+  $('cfg-namestyle').addEventListener('change', e => { v.nameStyle = e.target.value; renderBuilder(); });
   $('cfg-startnum').addEventListener('input', e => { v.startNumber = Math.max(1, parseInt(e.target.value)||1); renderBuilder(); });
 
   ['sz','gap','rgap','aisle'].forEach(key => {
     const map = { sz:'seatSize', gap:'seatGap', rgap:'rowGap', aisle:'aisleWidth' };
-    const lblMap = { sz:'lbl-size', gap:'lbl-gap', rgap:'lbl-rgap', aisle:'lbl-aisle' };
+    const lbl = { sz:'lbl-size', gap:'lbl-gap', rgap:'lbl-rgap', aisle:'lbl-aisle' };
+    const css = { sz:'--seat-sz', gap:'--seat-gap', rgap:'--row-gap', aisle:'--aisle-w' };
     $('cfg-'+key).addEventListener('input', e => {
-      const val = parseInt(e.target.value);
-      v[map[key]] = val;
-      $(lblMap[key]).textContent = val + 'px';
-      // live update without full re-render
-      const cabin = $('builderCanvas').querySelector('.cabin');
-      if(cabin){
-        const styleMap = { sz:'--seat-sz', gap:'--seat-gap', rgap:'--row-gap', aisle:'--aisle-w' };
-        cabin.style.setProperty(styleMap[key], val + 'px');
-      }
+      const val = parseInt(e.target.value); v[map[key]] = val;
+      $(lbl[key]).textContent = val + 'px';
+      const shell = $('builderCanvas').querySelector('.vshell');
+      if(shell) shell.style.setProperty(css[key], val + 'px');
     });
   });
 
   $('dupeVeh').addEventListener('click', () => {
-    const copy = JSON.parse(JSON.stringify(v));
-    copy.id = uid();
-    copy.code = nextVehicleCode();
-    copy.name = v.name + ' (copy)';
-    copy.tierMap = {};
-    copy.holdMap = {};
-    copy.soldSeats = {};
-    state.vehicles.push(copy);
-    state.selectedVehicleId = copy.id;
-    renderBuilder();
+    const c = JSON.parse(JSON.stringify(v)); c.id = uid(); c.code = nextVehicleCode();
+    c.name = v.name + ' (copy)'; c.tierMap={}; c.holdMap={}; c.soldSeats={};
+    state.vehicles.push(c); state.selectedVehicleId = c.id; renderBuilder();
     toast('Vehicle duplicated.');
   });
   $('delVeh').addEventListener('click', () => {
     if(!confirm(`Delete "${v.name}"?`)) return;
     state.vehicles = state.vehicles.filter(x => x.id !== v.id);
     state.selectedVehicleId = state.vehicles[0]?.id || null;
-    renderBuilder();
-    toast('Vehicle deleted.');
+    renderBuilder(); toast('Vehicle deleted.');
   });
 }
 
 /* ============================================================
-   8 · PRICING TIERS VIEW
+   PRICING
    ============================================================ */
 function renderPricing(){
   renderTierList();
   $('tierCount').textContent = state.tiers.length;
-
   const v = state.vehicles.find(x => x.id === state.selectedVehicleId) || state.vehicles[0];
-  if(!v){
-    $('pricingCanvas').innerHTML = '<div class="empty"><div class="big">🎨</div>Add a vehicle in Fleet Builder first.</div>';
-    $('tierEditor').innerHTML = '';
-    return;
-  }
+  if(!v){ $('pricingCanvas').innerHTML = '<div class="empty"><div class="big">🎨</div>Add a vehicle in Fleet Builder first.</div>'; $('tierEditor').innerHTML = ''; return; }
 
   $('pricingCanvas').innerHTML = cabinHTML(v, { mode:'pricing' });
   bindSeatClicks('pricing', v, seatEl => {
     const seat = seatEl.dataset.seat;
-    if(!state.activeTierId){ toast('Pick a tier on the right first.'); return; }
-    if(seatEl.classList.contains('held')){ toast('Seat is held — release it first.'); return; }
+    if(!state.activeTierId){ toast('Pick a tier first.'); return; }
+    if(seatEl.classList.contains('held')){ toast('Seat is held.'); return; }
     if(v.tierMap[seat] === state.activeTierId) delete v.tierMap[seat];
     else v.tierMap[seat] = state.activeTierId;
-    renderPricing();
-    renderVehicleList();
+    renderPricing(); renderVehicleList();
   });
-
   renderTierEditor();
 }
 
 function renderTierList(){
   const wrap = $('tierList');
-  if(!state.tiers.length){
-    wrap.innerHTML = '<div class="empty" style="padding:14px 0;font-size:12px;">No tiers yet.</div>';
-    return;
-  }
+  if(!state.tiers.length){ wrap.innerHTML = '<div class="empty" style="padding:14px 0;font-size:12px;">No tiers yet.</div>'; return; }
   wrap.innerHTML = state.tiers.map(t => {
-    let count = 0;
-    state.vehicles.forEach(v => Object.values(v.tierMap).forEach(tid => { if(tid === t.id) count++; }));
+    let n = 0; state.vehicles.forEach(v => Object.values(v.tierMap).forEach(tid => { if(tid === t.id) n++; }));
     return `<button class="tier-item ${t.id===state.activeTierId?'active':''}" data-tid="${t.id}">
       <span class="sw" style="background:${t.color}"></span>
-      <span class="info"><span class="name">${esc(t.name)}</span><span class="price">${fmtR(t.price)} + ${fmtR(t.fee)} fee</span></span>
-      <span class="count">${count}</span>
+      <span class="info"><span class="name">${esc(t.name)}</span><span class="price">${fmtR(t.price)} + ${fmtR(t.fee)}</span></span>
+      <span class="count">${n}</span>
     </button>`;
   }).join('');
-
-  wrap.querySelectorAll('.tier-item').forEach(el => {
-    el.addEventListener('click', () => {
-      state.activeTierId = el.dataset.tid;
-      renderPricing();
-    });
-  });
+  wrap.querySelectorAll('.tier-item').forEach(el => el.addEventListener('click', () => {
+    state.activeTierId = el.dataset.tid; renderPricing();
+  }));
 }
 
 function renderTierEditor(){
   const t = state.tiers.find(x => x.id === state.activeTierId);
-  if(!t){
-    $('tierEditor').innerHTML = `<div class="panel"><div class="panel-title">Tier Editor</div>
-      <div class="empty" style="padding:20px 0;font-size:12px;">Select a tier to edit.</div></div>`;
-    return;
-  }
+  if(!t){ $('tierEditor').innerHTML = `<div class="panel"><div class="panel-title">Tier Editor</div><div class="empty" style="padding:20px 0;font-size:12px;">Select a tier.</div></div>`; return; }
   $('tierEditor').innerHTML = `
     <div class="panel">
       <div class="panel-title">Edit "${esc(t.name)}"</div>
@@ -962,100 +1030,72 @@ function renderTierEditor(){
       </div>
       <button class="btn btn-danger btn-block btn-sm" id="tierDel">Delete Tier</button>
     </div>`;
-
   $('tier-name').addEventListener('input', e => { t.name = e.target.value; renderTierList(); });
   $('tier-color').addEventListener('input', e => { t.color = e.target.value; $('tier-hex').value = e.target.value; renderTierList(); renderPricing(); });
-  $('tier-hex').addEventListener('input', e => {
-    const v = e.target.value.trim();
-    if(/^#[0-9a-f]{6}$/i.test(v)){ t.color = v; $('tier-color').value = v; renderTierList(); renderPricing(); }
-  });
+  $('tier-hex').addEventListener('input', e => { const val = e.target.value.trim(); if(/^#[0-9a-f]{6}$/i.test(val)){ t.color = val; $('tier-color').value = val; renderTierList(); renderPricing(); } });
   $('tier-price').addEventListener('input', e => { t.price = parseInt(e.target.value)||0; renderTierList(); });
   $('tier-fee').addEventListener('input', e => { t.fee = parseInt(e.target.value)||0; renderTierList(); });
   $('tierDel').addEventListener('click', () => {
     if(!confirm(`Delete tier "${t.name}"?`)) return;
     state.tiers = state.tiers.filter(x => x.id !== t.id);
-    state.vehicles.forEach(v => {
-      Object.keys(v.tierMap).forEach(s => { if(v.tierMap[s] === t.id) delete v.tierMap[s]; });
-    });
-    state.activeTierId = state.tiers[0]?.id || null;
-    renderPricing();
-    toast('Tier deleted.');
+    state.vehicles.forEach(v => Object.keys(v.tierMap).forEach(s => { if(v.tierMap[s] === t.id) delete v.tierMap[s]; }));
+    state.activeTierId = state.tiers[0]?.id || null; renderPricing(); toast('Tier deleted.');
   });
 }
 
 /* ============================================================
-   9 · SEAT HOLDS VIEW
+   HOLDS
    ============================================================ */
 function renderHolds(){
   renderHoldList();
   $('holdCount').textContent = state.holds.length;
-
   const v = state.vehicles.find(x => x.id === state.selectedVehicleId) || state.vehicles[0];
-  if(!v){
-    $('holdsCanvas').innerHTML = '<div class="empty"><div class="big">🔒</div>Add a vehicle first.</div>';
-    $('holdEditor').innerHTML = '';
-    return;
-  }
+  if(!v){ $('holdsCanvas').innerHTML = '<div class="empty"><div class="big">🔒</div>Add a vehicle first.</div>'; $('holdEditor').innerHTML = ''; return; }
 
   $('holdsCanvas').innerHTML = cabinHTML(v, { mode:'holds' });
   bindSeatClicks('holds', v, seatEl => {
     const seat = seatEl.dataset.seat;
-    if(!state.activeHoldId){ toast('Pick a hold on the right first.'); return; }
+    if(!state.activeHoldId){ toast('Pick a hold first.'); return; }
     if(v.soldSeats[seat]){ toast('Seat is sold.'); return; }
     if(v.holdMap[seat] === state.activeHoldId) delete v.holdMap[seat];
     else v.holdMap[seat] = state.activeHoldId;
     renderHolds();
   });
-
   renderHoldEditor();
 }
 
 function renderHoldList(){
   const wrap = $('holdList');
-  if(!state.holds.length){
-    wrap.innerHTML = '<div class="empty" style="padding:14px 0;font-size:12px;">No holds yet.</div>';
-    return;
-  }
+  if(!state.holds.length){ wrap.innerHTML = '<div class="empty" style="padding:14px 0;font-size:12px;">No holds yet.</div>'; return; }
   wrap.innerHTML = state.holds.map(h => {
-    let count = 0;
-    state.vehicles.forEach(v => Object.values(v.holdMap).forEach(hid => { if(hid === h.id) count++; }));
+    let n = 0; state.vehicles.forEach(v => Object.values(v.holdMap).forEach(hid => { if(hid === h.id) n++; }));
     return `<button class="hold-item ${h.id===state.activeHoldId?'active':''}" data-hid="${h.id}">
-      <span class="info"><span class="name">${esc(h.name)}</span><span class="code">${esc(h.code)}</span></span>
-      <span class="count">${count}</span>
+      <span class="info"><span class="name">${esc(h.name)}</span><span class="sub">${esc(h.code)}</span></span>
+      <span class="count">${n}</span>
     </button>`;
   }).join('');
-  wrap.querySelectorAll('.hold-item').forEach(el => {
-    el.addEventListener('click', () => { state.activeHoldId = el.dataset.hid; renderHolds(); });
-  });
+  wrap.querySelectorAll('.hold-item').forEach(el => el.addEventListener('click', () => {
+    state.activeHoldId = el.dataset.hid; renderHolds();
+  }));
 }
 
 function renderHoldEditor(){
   const h = state.holds.find(x => x.id === state.activeHoldId);
-  if(!h){
-    $('holdEditor').innerHTML = `<div class="panel"><div class="panel-title">Hold Details</div>
-      <div class="empty" style="padding:20px 0;font-size:12px;">Select a hold to edit.</div></div>`;
-    return;
-  }
+  if(!h){ $('holdEditor').innerHTML = `<div class="panel"><div class="panel-title">Hold Details</div><div class="empty" style="padding:20px 0;font-size:12px;">Select a hold.</div></div>`; return; }
   $('holdEditor').innerHTML = `
     <div class="panel">
       <div class="panel-title">Hold Details</div>
       <div class="field"><label>Name</label><input id="hold-name" value="${esc(h.name)}" /></div>
-      <div class="field"><label>Hold Code</label><input id="hold-code" value="${esc(h.code)}" style="font-family:var(--mono);font-weight:800;letter-spacing:.06em;text-transform:uppercase;" maxlength="8" /></div>
+      <div class="field"><label>Hold Code</label><input id="hold-code" value="${esc(h.code)}" style="font-family:var(--mono);font-weight:800;text-transform:uppercase;" maxlength="8" /></div>
       <div class="field"><label>Release Date</label><input id="hold-rel" type="datetime-local" value="${esc(h.releaseDate||'')}" /></div>
-      <div class="field">
-        <label>Type of Hold</label>
+      <div class="field"><label>Type</label>
         <div style="display:flex;flex-direction:column;gap:6px;margin-top:4px;">
-          <label style="display:flex;gap:7px;align-items:center;font-size:12px;text-transform:none;font-weight:600;letter-spacing:0;color:var(--text);">
-            <input type="radio" name="holdtype" value="group" ${h.type==='group'?'checked':''} /> Purchase hold as a group
-          </label>
-          <label style="display:flex;gap:7px;align-items:center;font-size:12px;text-transform:none;font-weight:600;letter-spacing:0;color:var(--text);">
-            <input type="radio" name="holdtype" value="individual" ${h.type==='individual'?'checked':''} /> Allow purchase of individual seats
-          </label>
+          <label style="display:flex;gap:7px;align-items:center;font-size:12px;text-transform:none;font-weight:600;letter-spacing:0;color:var(--text);"><input type="radio" name="holdtype" value="group" ${h.type==='group'?'checked':''} /> Purchase hold as a group</label>
+          <label style="display:flex;gap:7px;align-items:center;font-size:12px;text-transform:none;font-weight:600;letter-spacing:0;color:var(--text);"><input type="radio" name="holdtype" value="individual" ${h.type==='individual'?'checked':''} /> Allow individual seats</label>
         </div>
       </div>
       <button class="btn btn-danger btn-block btn-sm" id="holdDel">Delete Hold</button>
     </div>`;
-
   $('hold-name').addEventListener('input', e => { h.name = e.target.value; renderHoldList(); });
   $('hold-code').addEventListener('input', e => { h.code = e.target.value.toUpperCase().replace(/[^0-9A-Z]/g,''); renderHoldList(); });
   $('hold-rel').addEventListener('input', e => { h.releaseDate = e.target.value; });
@@ -1064,29 +1104,22 @@ function renderHoldEditor(){
     if(!confirm(`Delete hold "${h.name}"?`)) return;
     state.holds = state.holds.filter(x => x.id !== h.id);
     state.vehicles.forEach(v => Object.keys(v.holdMap).forEach(s => { if(v.holdMap[s] === h.id) delete v.holdMap[s]; }));
-    state.activeHoldId = state.holds[0]?.id || null;
-    renderHolds();
-    toast('Hold deleted.');
+    state.activeHoldId = state.holds[0]?.id || null; renderHolds(); toast('Hold deleted.');
   });
 }
 
 /* ============================================================
-   10 · BOOKING VIEW
+   BOOKING
    ============================================================ */
 function renderBooking(){
-  // filter dropdowns
   const ft = $('filterTier'), fv = $('filterVehicle');
-  const prevTier = ft.value, prevVeh = fv.value;
+  const pt = ft.value, pv = fv.value;
   ft.innerHTML = '<option value="">All tiers</option>' + state.tiers.map(t => `<option value="${t.id}">${esc(t.name)}</option>`).join('');
   fv.innerHTML = '<option value="">All vehicles</option>' + state.vehicles.map(v => `<option value="${v.id}">${esc(state.operator)}-${esc(v.code)} · ${esc(v.name)}</option>`).join('');
-  ft.value = prevTier; fv.value = prevVeh;
+  ft.value = pt; fv.value = pv;
 
   const v = state.vehicles.find(x => x.id === (fv.value || state.selectedVehicleId)) || state.vehicles[0];
-  if(!v){
-    $('bookingCanvas').innerHTML = '<div class="empty"><div class="big">🎟️</div>No vehicles available.</div>';
-    renderCart();
-    return;
-  }
+  if(!v){ $('bookingCanvas').innerHTML = '<div class="empty"><div class="big">🎟️</div>No vehicles available.</div>'; renderCart(); return; }
 
   $('bookingTitle').innerHTML = `Booking · <span style="font-family:var(--mono);">${esc(state.operator)}-${esc(v.code)}</span> ${esc(v.name)}`;
   $('bookingCanvas').innerHTML = cabinHTML(v, { mode:'booking', filterTierId: ft.value });
@@ -1094,8 +1127,8 @@ function renderBooking(){
   bindSeatClicks('booking', v, seatEl => {
     const seat = seatEl.dataset.seat;
     if(seatEl.disabled) return;
-    const existing = state.cart.findIndex(x => x.vehicleId === v.id && x.seat === seat);
-    if(existing >= 0) state.cart.splice(existing, 1);
+    const idx = state.cart.findIndex(x => x.vehicleId === v.id && x.seat === seat);
+    if(idx >= 0) state.cart.splice(idx, 1);
     else {
       const tierId = v.tierMap[seat];
       if(!tierId){ toast('This seat has no tier assigned.'); return; }
@@ -1104,38 +1137,26 @@ function renderBooking(){
     renderBooking();
   });
 
-  renderCart();
-  renderLegend();
+  renderCart(); renderLegend();
 }
 
 function renderLegend(){
-  const wrap = $('legendBar');
-  wrap.innerHTML = state.tiers.map(t => `<span><i style="background:${t.color}"></i>${esc(t.name)}</span>`).join('') +
+  $('legendBar').innerHTML = state.tiers.map(t => `<span><i style="background:${t.color}"></i>${esc(t.name)}</span>`).join('') +
     `<span><i style="background:#fef9c3;border:1px solid #eab308;"></i>Held</span>` +
     `<span><i style="background:repeating-linear-gradient(45deg,#e5e7eb,#e5e7eb 3px,#d1d5db 3px,#d1d5db 6px);"></i>Sold</span>`;
 }
 
 function renderCart(){
   const wrap = $('cartItems');
-  if(!state.cart.length){
-    wrap.innerHTML = '<div class="empty" style="padding:16px 0;font-size:12px;">No seats selected.</div>';
-  } else {
-    wrap.innerHTML = state.cart.map((c, i) => {
-      const t = state.tiers.find(x => x.id === c.tierId);
-      return `<div class="cart-item">
-        <div class="seat-info">
-          <span class="seat-code">${esc(state.operator)}-${esc(c.vehicleCode)} · ${esc(c.seat)}</span>
-          <span class="seat-tier">${esc(t?.name||'—')}</span>
-        </div>
-        <span class="seat-price">${fmtR((t?.price||0)+(t?.fee||0))}</span>
-      </div>`;
-    }).join('');
-  }
-
-  const total = state.cart.reduce((s, c) => {
+  if(!state.cart.length) wrap.innerHTML = '<div class="empty" style="padding:16px 0;font-size:12px;">No seats selected.</div>';
+  else wrap.innerHTML = state.cart.map(c => {
     const t = state.tiers.find(x => x.id === c.tierId);
-    return s + ((t?.price||0) + (t?.fee||0));
-  }, 0);
+    return `<div class="cart-item">
+      <div><div class="seat-code">${esc(state.operator)}-${esc(c.vehicleCode)} · ${esc(c.seat)}</div><div class="seat-tier">${esc(t?.name||'—')}</div></div>
+      <span class="seat-price">${fmtR((t?.price||0)+(t?.fee||0))}</span>
+    </div>`;
+  }).join('');
+  const total = state.cart.reduce((s,c) => { const t = state.tiers.find(x => x.id === c.tierId); return s + (t?.price||0) + (t?.fee||0); }, 0);
   $('cartTotal').textContent = fmtR(total);
   $('cartCount').textContent = state.cart.length;
   $('bookBtn').disabled = !state.cart.length || !$('passengerName').value.trim();
@@ -1143,10 +1164,9 @@ function renderCart(){
 
 async function bookTickets(){
   const name = $('passengerName').value.trim();
-  if(!name){ toast('Enter the passenger name.'); return; }
+  if(!name){ toast('Enter passenger name.'); return; }
   const tripKey = `${state.serviceDate}::${slug(state.serviceName)}`;
-  const btn = $('bookBtn');
-  btn.disabled = true; btn.textContent = 'Booking…';
+  const btn = $('bookBtn'); btn.disabled = true; btn.textContent = 'Booking…';
 
   const issued = [];
   for(const c of state.cart){
@@ -1154,40 +1174,25 @@ async function bookTickets(){
     const pnr = await PNR.build(state.operator, v.code, c.seat, tripKey);
     const t = state.tiers.find(x => x.id === c.tierId);
     v.soldSeats[c.seat] = { pnr, passenger: name, tierId: c.tierId };
-    state.manifest.set(pnr, {
-      pnr, bus: v.code, busLabel: `${state.operator}-${v.code}`,
-      seat: c.seat, tier: t?.name || 'Standard', tierColor: t?.color || '#008080',
-      passenger: name, tripKey, issuedAt: Date.now()
-    });
+    state.manifest.set(pnr, { pnr, bus: v.code, busLabel: `${state.operator}-${v.code}`,
+      seat: c.seat, tier: t?.name||'Standard', tierColor: t?.color||'#008080', passenger: name, tripKey, issuedAt: Date.now() });
     issued.push(pnr);
   }
-
-  state.cart = [];
-  $('passengerName').value = '';
-  renderBooking();
-  renderManifest();
-  renderTicketPreview(issued, name, tripKey);
+  state.cart = []; $('passengerName').value = '';
+  renderBooking(); renderManifest();
+  renderTicketPreview(issued, name);
   toast(`Booked ${issued.length} ticket${issued.length>1?'s':''}.`);
   btn.textContent = 'Confirm Booking';
 }
 
-function renderTicketPreview(pnrs, name, tripKey){
+function renderTicketPreview(pnrs, name){
   if(!pnrs.length){ $('ticketPreviewWrap').style.display = 'none'; return; }
   $('ticketPreviewWrap').style.display = 'block';
-
-  const t = state.tiers.find(x => x.id === state.manifest.get(pnrs[0])?.tierId) || state.tiers[1];
   const entry = state.manifest.get(pnrs[0]);
-  const tierName = entry?.tier || 'Standard';
-  const tierClass = {
-    'Premium':'maroon','Standard':'teal','Economy':'gold'
-  }[tierName] || 'cyan';
-
+  const cls = { 'Premium':'maroon', 'Standard':'teal', 'Economy':'gold' }[entry.tier] || 'cyan';
   $('ticketPreview').innerHTML = `
-    <div class="ticket-card ${tierClass}">
-      <div class="t-head">
-        <div class="t-logo">NOVALINK</div>
-        <div class="t-badges"><span class="t-badge">${esc(tierName.toUpperCase())}</span></div>
-      </div>
+    <div class="ticket-card ${cls}">
+      <div class="t-head"><div class="t-logo">NOVALINK</div><div class="t-badges"><span class="t-badge">${esc(entry.tier.toUpperCase())}</span></div></div>
       <div class="t-body">
         <div class="t-left">
           <div class="t-title">${esc(state.serviceName)}</div>
@@ -1198,20 +1203,16 @@ function renderTicketPreview(pnrs, name, tripKey){
         </div>
         <div class="t-qr" id="ticketQR"></div>
       </div>
-      <div class="t-bar">
-        <div class="t-bar-lines"></div>
-        <div class="t-bar-num">${esc(pnrs[0].replace(/-/g,' '))}</div>
-      </div>
+      <div class="t-bar"><div class="t-bar-lines"></div><div class="t-bar-num">${esc(pnrs[0].replace(/-/g,' '))}</div></div>
     </div>`;
   drawQR($('ticketQR'), pnrs[0]);
 }
 
 /* ============================================================
-   11 · CONDUCTOR VIEW
+   CONDUCTOR
    ============================================================ */
 function renderConductor(){
-  const sel = $('scanBus');
-  const prev = sel.value;
+  const sel = $('scanBus'), prev = sel.value;
   sel.innerHTML = state.vehicles.map(v => `<option value="${v.code}">${esc(state.operator)}-${esc(v.code)} · ${esc(v.name)}</option>`).join('');
   if(prev && state.vehicles.some(v => v.code === prev)) sel.value = prev;
   $('scanManifestSize').value = `${state.manifest.size} tickets`;
@@ -1222,66 +1223,53 @@ function renderManifest(){
   const tbody = $('manifestTable').querySelector('tbody');
   const all = Array.from(state.manifest.values());
   $('manifestCount').textContent = all.length;
-  if(!all.length){
-    tbody.innerHTML = '<tr><td colspan="3" class="empty" style="padding:24px;">No tickets booked yet.</td></tr>';
-    return;
-  }
-  tbody.innerHTML = all.slice(-100).reverse().map(e => `
-    <tr>
-      <td class="pnr">${esc(e.pnr)}</td>
-      <td class="pnr">${esc(e.bus)}</td>
-      <td class="pnr">${esc(e.seat)}</td>
-    </tr>`).join('');
+  if(!all.length){ tbody.innerHTML = '<tr><td colspan="3" class="empty" style="padding:24px;">No tickets yet.</td></tr>'; return; }
+  tbody.innerHTML = all.slice(-100).reverse().map(e => `<tr><td class="pnr">${esc(e.pnr)}</td><td class="pnr">${esc(e.bus)}</td><td class="pnr">${esc(e.seat)}</td></tr>`).join('');
 }
 
 async function validateScan(raw){
-  if(!state.manifest.size){ toast('No tickets booked yet — book some in Booking Preview.'); return; }
-  const scanTripKey = `${state.serviceDate}::${slug(state.serviceName)}`;
-  const assignedBus = $('scanBus').value;
+  if(!state.manifest.size){ toast('No tickets booked yet.'); return; }
+  const scanTK = `${state.serviceDate}::${slug(state.serviceName)}`;
+  const bus = $('scanBus').value;
+  const cands = parseCandidates(raw);
+  if(!cands.length) return showScan('bad','INVALID CODE','Checksum failed — forged or mistyped.', String(raw).toUpperCase(), null);
 
-  const candidates = parseCandidates(raw);
-  if(!candidates.length) return showScanResult('bad', 'INVALID CODE', 'Checksum failed — forged or mistyped.', String(raw).toUpperCase(), null);
+  let ver = null;
+  for(const c of cands){ const e = await PNR.check(c.operator,c.bus,c.seat,scanTK); if(e === c.check){ ver = c; break; } }
+  if(!ver) return showScan('bad','INVALID CODE','Checksum failed — forged or mistyped.', cands[0].canonical, null);
 
-  let verified = null;
-  for(const c of candidates){
-    const expect = await PNR.check(c.operator, c.bus, c.seat, scanTripKey);
-    if(expect === c.check){ verified = c; break; }
-  }
-  if(!verified) return showScanResult('bad', 'INVALID CODE', 'Checksum failed — forged or mistyped.', candidates[0].canonical, null);
-
-  const pnr = verified.canonical;
+  const pnr = ver.canonical;
   const entry = state.manifest.get(pnr);
-  if(!entry) return showScanResult('warn', 'NOT ON MANIFEST', 'Not found in synced manifest — manual override.', pnr, null);
-  if(entry.tripKey !== scanTripKey) return showScanResult('bad', 'WRONG SERVICE', 'Valid ticket, but not for this service.', pnr, entry);
-  if(verified.bus !== assignedBus) return showScanResult('bad', 'WRONG VEHICLE', 'Valid ticket for a different bus.', pnr, entry);
+  if(!entry) return showScan('warn','NOT ON MANIFEST','Not in synced manifest — manual override.', pnr, null);
+  if(entry.tripKey !== scanTK) return showScan('bad','WRONG SERVICE','Valid ticket, wrong service.', pnr, entry);
+  if(ver.bus !== bus) return showScan('bad','WRONG VEHICLE','Ticket for a different bus.', pnr, entry);
 
   const prior = state.scanned.get(pnr);
-  if(prior) return showScanResult('warn', 'ALREADY USED', `First scan at ${new Date(prior).toLocaleTimeString()}.`, pnr, entry, prior);
+  if(prior) return showScan('warn','ALREADY USED',`First scan at ${new Date(prior).toLocaleTimeString()}.`, pnr, entry, prior);
 
   state.scanned.set(pnr, Date.now());
   pushLog({ pnr, tone:'ok', label:'VALID' });
-  return showScanResult('ok', 'VALID', 'Ticket verified. Allow boarding.', pnr, entry);
+  return showScan('ok','VALID','Ticket verified. Allow boarding.', pnr, entry);
 }
 
-function showScanResult(tone, title, msg, pnr, entry, firstScan){
-  const glyph = tone === 'ok' ? '✓' : tone === 'warn' ? '!' : '✕';
-  const detail = [];
+function showScan(tone, title, msg, pnr, entry, first){
+  const g = tone === 'ok' ? '✓' : tone === 'warn' ? '!' : '✕';
+  const d = [];
   if(entry){
-    detail.push(`<div class="kv"><span>Passenger</span><strong>${esc(entry.passenger)}</strong></div>`);
-    detail.push(`<div class="kv"><span>Vehicle</span><strong>${esc(entry.busLabel||entry.bus)}</strong></div>`);
-    detail.push(`<div class="kv"><span>Seat</span><strong>${esc(entry.seat)}</strong></div>`);
-    detail.push(`<div class="kv"><span>Tier</span><strong>${esc(entry.tier)}</strong></div>`);
+    d.push(`<div class="kv"><span>Passenger</span><strong>${esc(entry.passenger)}</strong></div>`);
+    d.push(`<div class="kv"><span>Vehicle</span><strong>${esc(entry.busLabel||entry.bus)}</strong></div>`);
+    d.push(`<div class="kv"><span>Seat</span><strong>${esc(entry.seat)}</strong></div>`);
+    d.push(`<div class="kv"><span>Tier</span><strong>${esc(entry.tier)}</strong></div>`);
   }
-  if(firstScan) detail.push(`<div class="kv"><span>First Scan</span><strong>${new Date(firstScan).toLocaleTimeString()}</strong></div>`);
-
+  if(first) d.push(`<div class="kv"><span>First Scan</span><strong>${new Date(first).toLocaleTimeString()}</strong></div>`);
   $('scanResult').innerHTML = `
     <div class="scan-result ${tone}">
-      <div class="scan-icon">${glyph}</div>
-      <div class="scan-body" style="flex:1;min-width:0;">
+      <div class="scan-icon">${g}</div>
+      <div style="flex:1;min-width:0;">
         <div class="scan-title">${esc(title)}</div>
         <div class="scan-msg">${esc(msg)}</div>
         <div class="scan-pnr">${esc(pnr)}</div>
-        ${detail.length ? `<div class="kv-grid">${detail.join('')}</div>` : ''}
+        ${d.length ? `<div class="kv-grid">${d.join('')}</div>` : ''}
       </div>
     </div>`;
   if(tone === 'ok' || tone === 'warn') pushLog({ pnr, tone, label:title });
@@ -1289,28 +1277,23 @@ function showScanResult(tone, title, msg, pnr, entry, firstScan){
 
 function pushLog({ pnr, tone, label }){
   const log = $('scanLog');
-  const row = document.createElement('div');
-  row.className = 'log-row';
-  row.innerHTML = `
-    <span class="pnr">${esc(pnr)}</span>
-    <span style="flex:1;"></span>
+  const r = document.createElement('div'); r.className = 'log-row';
+  r.innerHTML = `<span class="pnr">${esc(pnr)}</span><span style="flex:1;"></span>
     <span style="font-weight:800;color:${tone==='ok'?'var(--ok)':tone==='warn'?'var(--warn)':'var(--bad)'}">${esc(label)}</span>
     <span style="color:var(--text-muted);font-size:10.5px;">${new Date().toLocaleTimeString()}</span>`;
-  log.prepend(row);
+  log.prepend(r);
   while(log.children.length > 30) log.removeChild(log.lastChild);
 }
 
 /* ============================================================
-   12 · QR HELPER
+   QR
    ============================================================ */
 function drawQR(container, text){
   container.innerHTML = '';
   if(typeof window.qrcode === 'function'){
     try{
-      const qr = qrcode(0, 'M');
-      qr.addData(text);
-      qr.make();
-      container.innerHTML = qr.createSvgTag(3, 0);
+      const qr = qrcode(0,'M'); qr.addData(text); qr.make();
+      container.innerHTML = qr.createSvgTag(3,0);
       const svg = container.querySelector('svg');
       if(svg){ svg.removeAttribute('width'); svg.removeAttribute('height'); svg.setAttribute('preserveAspectRatio','xMidYMid meet'); }
       return;
@@ -1320,17 +1303,14 @@ function drawQR(container, text){
 }
 
 /* ============================================================
-   13 · EVENT BINDING
+   BINDINGS
    ============================================================ */
 function bindSeatClicks(viewName, vehicle, handler){
   const canvas = { builder:'builderCanvas', pricing:'pricingCanvas', holds:'holdsCanvas', booking:'bookingCanvas' }[viewName];
-  document.querySelectorAll(`#${canvas} .seat.pick`).forEach(el => {
-    el.addEventListener('click', e => handler(el, e));
-  });
+  document.querySelectorAll(`#${canvas} .seat.pick`).forEach(el => el.addEventListener('click', e => handler(el, e)));
 }
 
 function bindGlobal(){
-  // tabs
   $$('.tab').forEach(tab => tab.addEventListener('click', () => {
     state.view = tab.dataset.view;
     $$('.tab').forEach(t => t.classList.toggle('active', t === tab));
@@ -1342,98 +1322,58 @@ function bindGlobal(){
     if(state.view === 'conductor') renderConductor();
   }));
 
-  // vehicle selection
   $('vehList').addEventListener('click', e => {
-    const item = e.target.closest('.veh-item');
-    if(!item) return;
-    state.selectedVehicleId = item.dataset.vid;
-    renderBuilder();
+    const item = e.target.closest('.veh-item'); if(!item) return;
+    state.selectedVehicleId = item.dataset.vid; renderBuilder();
   });
 
-  // add vehicle button
   $('addVehicleBtn').addEventListener('click', () => {
-    const v = makeVehicle('coach');
-    state.vehicles.push(v);
-    state.selectedVehicleId = v.id;
-    renderBuilder();
-    toast('Vehicle added.');
+    const v = makeVehicle('coach'); state.vehicles.push(v); state.selectedVehicleId = v.id;
+    renderBuilder(); toast('Vehicle added.');
   });
 
-  // presets
   $$('.preset').forEach(btn => btn.addEventListener('click', () => {
-    const v = makeVehicle(btn.dataset.preset);
-    state.vehicles.push(v);
-    state.selectedVehicleId = v.id;
-    renderBuilder();
-    toast(`${PRESETS[btn.dataset.preset].name} added.`);
+    const v = makeVehicle(btn.dataset.preset); state.vehicles.push(v); state.selectedVehicleId = v.id;
+    renderBuilder(); toast(`${PRESETS[btn.dataset.preset].name} added.`);
   }));
 
-  // pricing tier add
   $('addTierBtn').addEventListener('click', () => {
     const colors = ['#800020','#008080','#eab308','#22d3ee','#7c3aed','#dc2626','#059669','#0ea5e9'];
-    const t = {
-      id: 't_' + uid(),
-      name: 'New Tier',
-      color: colors[state.tiers.length % colors.length],
-      price: 200, fee: 10
-    };
-    state.tiers.push(t);
-    state.activeTierId = t.id;
-    renderPricing();
+    const t = { id:'t_'+uid(), name:'New Tier', color: colors[state.tiers.length % colors.length], price:200, fee:10 };
+    state.tiers.push(t); state.activeTierId = t.id; renderPricing();
   });
 
   $('tierAssignAll').addEventListener('click', () => {
     const v = state.vehicles.find(x => x.id === state.selectedVehicleId) || state.vehicles[0];
     if(!v || !state.activeTierId){ toast('Pick a vehicle and tier first.'); return; }
     allSeats(v).forEach(s => { if(!v.tierMap[s.name]) v.tierMap[s.name] = state.activeTierId; });
-    renderPricing();
-    renderVehicleList();
-    toast('Assigned all unassigned seats.');
+    renderPricing(); renderVehicleList(); toast('Assigned all unassigned.');
   });
   $('tierClearAll').addEventListener('click', () => {
     const v = state.vehicles.find(x => x.id === state.selectedVehicleId) || state.vehicles[0];
-    if(!v) return;
-    if(!confirm('Clear all tier assignments on this vehicle?')) return;
-    v.tierMap = {};
-    renderPricing();
-    renderVehicleList();
+    if(!v || !confirm('Clear all tier assignments?')) return;
+    v.tierMap = {}; renderPricing(); renderVehicleList();
   });
 
-  // holds
   $('addHoldBtn').addEventListener('click', () => {
     const code = Array.from({length:6}, () => B32[Math.floor(Math.random()*32)]).join('');
-    const h = { id: 'h_' + uid(), name: 'New Hold', code, releaseDate:'', type:'group' };
-    state.holds.push(h);
-    state.activeHoldId = h.id;
-    renderHolds();
+    const h = { id:'h_'+uid(), name:'New Hold', code, releaseDate:'', type:'group' };
+    state.holds.push(h); state.activeHoldId = h.id; renderHolds();
   });
   $('holdClearAll').addEventListener('click', () => {
-    if(!confirm('Release all held seats across all vehicles?')) return;
-    state.vehicles.forEach(v => { v.holdMap = {}; });
-    renderHolds();
-    toast('All holds released.');
+    if(!confirm('Release all held seats?')) return;
+    state.vehicles.forEach(v => { v.holdMap = {}; }); renderHolds(); toast('All holds released.');
   });
 
-  // booking
   $('filterTier').addEventListener('change', renderBooking);
-  $('filterVehicle').addEventListener('change', e => {
-    state.selectedVehicleId = e.target.value || null;
-    renderBooking();
-  });
+  $('filterVehicle').addEventListener('change', e => { state.selectedVehicleId = e.target.value || null; renderBooking(); });
   $('passengerName').addEventListener('input', renderCart);
   $('bookBtn').addEventListener('click', bookTickets);
 
-  // conductor
-  $('scanBtn').addEventListener('click', () => {
-    const v = $('scanInput').value.trim();
-    if(v) validateScan(v);
-  });
-  $('scanInput').addEventListener('keydown', e => {
-    if(e.key === 'Enter'){ e.preventDefault(); const v = e.target.value.trim(); if(v) validateScan(v); }
-  });
+  $('scanBtn').addEventListener('click', () => { const v = $('scanInput').value.trim(); if(v) validateScan(v); });
+  $('scanInput').addEventListener('keydown', e => { if(e.key==='Enter'){ e.preventDefault(); const v = e.target.value.trim(); if(v) validateScan(v); } });
   $('scanBus').addEventListener('change', renderConductor);
 
-  // operator / service
   $('operatorCode').addEventListener('input', e => {
     state.operator = (e.target.value || 'NL').toUpperCase().replace(/[^0-9A-Z]/g,'') || 'NL';
     renderAll();
@@ -1443,20 +1383,13 @@ function bindGlobal(){
 }
 
 /* ============================================================
-   14 · RENDER ALL + BOOT
+   BOOT
    ============================================================ */
-function renderAll(){
-  renderBuilder();
-  renderPricing();
-  renderHolds();
-  renderBooking();
-  renderConductor();
-}
+function renderAll(){ renderBuilder(); renderPricing(); renderHolds(); renderBooking(); renderConductor(); }
 
 document.addEventListener('DOMContentLoaded', async () => {
   if(window.lucide) lucide.createIcons();
 
-  // demo defaults
   const d = new Date(); d.setDate(d.getDate() + 1);
   state.serviceDate = d.toISOString().slice(0,10);
   state.serviceName = 'Coastal Express';
@@ -1465,34 +1398,28 @@ document.addEventListener('DOMContentLoaded', async () => {
 
   await PNR.init();
 
-  // seed a starter fleet
-  const coach = makeVehicle('coach');      coach.code='S01'; coach.name='Coastal Express 1';
-  const mini  = makeVehicle('minibus');    mini.code='S02';  mini.name='Town Hopper';
-  const train = makeVehicle('train');      train.code='P01'; train.name='Premium Rail';
-  state.vehicles.push(coach, mini, train);
+  // Seed fleet with one of each shape so all vehicle silhouettes are visible
+  const coach   = makeVehicle('coach');   coach.code   = 'S01'; coach.name   = 'Coastal Express';
+  const train   = makeVehicle('train');   train.code   = 'P01'; train.name   = 'Premium Rail';
+  const mini    = makeVehicle('minibus'); mini.code    = 'S02'; mini.name    = 'Town Hopper';
+  state.vehicles.push(coach, train, mini);
   state.selectedVehicleId = coach.id;
-  state.activeTierId = state.tiers[1].id;  // Standard
+  state.activeTierId = state.tiers[1].id;
 
-  // auto-assign starter tiers so the demo has colours
+  // auto-assign tiers in bands
   state.tiers.forEach((t, ti) => {
     state.vehicles.forEach(v => {
-      allSeats(v).forEach((s, i) => {
-        const band = Math.floor(i / v.seatsPerRow / Math.max(1, v.rows / state.tiers.length));
+      const total = v.rows;
+      allSeats(v).forEach(s => {
+        const band = Math.floor(s.row / Math.max(1, total / state.tiers.length));
         if(band === ti) v.tierMap[s.name] = t.id;
       });
     });
   });
 
   // starter hold
-  const hold = {
-    id: 'h_demo',
-    name: 'Smiths',
-    code: 'RA7B8A',
-    releaseDate: new Date(Date.now() + 7*86400000).toISOString().slice(0,16),
-    type: 'group'
-  };
-  state.holds.push(hold);
-  state.activeHoldId = hold.id;
+  const hold = { id:'h_demo', name:'Smiths', code:'RA7B8A', releaseDate: new Date(Date.now()+7*86400000).toISOString().slice(0,16), type:'group' };
+  state.holds.push(hold); state.activeHoldId = hold.id;
   allSeats(coach).slice(0, 5).forEach(s => { coach.holdMap[s.name] = hold.id; });
 
   bindGlobal();
