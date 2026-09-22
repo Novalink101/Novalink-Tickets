@@ -311,7 +311,7 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
     </div>
     <div class="info-b" id="buyFreeNote" style="display:none;">
       <i data-lucide="info"></i>
-      <span>Free event — no payment required.</span>
+      <span id="buyFreeNoteText">Free event — no payment required.</span>
     </div>
     <div class="info-b pending" id="buyPendingNote" style="display:none;">
       <i data-lucide="construction"></i>
@@ -387,10 +387,14 @@ var ADMINS = ["nylnathan340@gmail.com"];
 var MAX_PER_PURCHASE = 12;
 
 /* ══════════════════════════════════════════════════════════════
-   PAYMENT MODE FLAG
-   false = paid tickets show "coming soon" (test mode)
-   true  = live payments via Val Town backend
+   MODE FLAGS
+   ─────────────────────────────────────────────────────────────
+   TEST_MODE = true   → paid tiers issue tickets immediately (testing)
+   TEST_MODE = false  → paid tiers use real payments
+   PAYMENTS_ENABLED = false → paid tickets blocked
+   PAYMENTS_ENABLED = true  → paid tickets go through Val Town
    ══════════════════════════════════════════════════════════════ */
+var TEST_MODE = true;
 var PAYMENTS_ENABLED = false;
 
 var BACKEND_URL = "https://nathannyl--856b743eb5f911f18c001607ee4eb77e.web.val.run";
@@ -1269,17 +1273,29 @@ function openBuy(){
   buildGuestFields(1);
 
   var isFreeEvent = !hasAnyPaidTier();
-  var isPendingMode = !isFreeEvent && !PAYMENTS_ENABLED;
+  var isTest = TEST_MODE && !isFreeEvent;
+  var isPendingMode = !isFreeEvent && !PAYMENTS_ENABLED && !TEST_MODE;
   var secureNote = $("buySecureNote");
   var freeNote = $("buyFreeNote");
   var pendingNote = $("buyPendingNote");
+  var freeNoteText = $("buyFreeNoteText");
   var confirmBtn = $("buyConfirm");
-  if (secureNote) secureNote.style.display = (!isFreeEvent && PAYMENTS_ENABLED) ? "" : "none";
-  if (freeNote) freeNote.style.display = isFreeEvent ? "" : "none";
+
+  if (secureNote) secureNote.style.display = (!isFreeEvent && PAYMENTS_ENABLED && !TEST_MODE) ? "" : "none";
+  if (freeNote) freeNote.style.display = (isFreeEvent || isTest) ? "" : "none";
   if (pendingNote) pendingNote.style.display = isPendingMode ? "" : "none";
+  if (freeNoteText) {
+    freeNoteText.textContent = isFreeEvent
+      ? "Free event — no payment required."
+      : "Test mode — ticket will be issued without payment for testing.";
+  }
+
   if (confirmBtn) {
     if (isFreeEvent) {
       confirmBtn.innerHTML = '<i data-lucide="check"></i> Confirm ticket';
+      confirmBtn.disabled = false;
+    } else if (isTest) {
+      confirmBtn.innerHTML = '<i data-lucide="check"></i> Confirm ticket (Test)';
       confirmBtn.disabled = false;
     } else if (isPendingMode) {
       confirmBtn.innerHTML = '<i data-lucide="clock"></i> Coming soon';
@@ -1587,16 +1603,28 @@ function confirmBuy(){
 
   var basePrice = parseFloat((eventData.tierPrices || {})[tier]) || 0;
 
+  /* TEST MODE — issue ticket immediately regardless of price */
+  if (TEST_MODE) {
+    if (basePrice > 0) {
+      showToast("Test mode: paid tier issued as test ticket (no payment).", "info", 3500);
+    }
+    createFreeTicket(tier, tierName, qty, guestNames);
+    return;
+  }
+
+  /* FREE ticket */
   if (basePrice <= 0) {
     createFreeTicket(tier, tierName, qty, guestNames);
     return;
   }
 
+  /* PAID ticket — payments disabled */
   if (!PAYMENTS_ENABLED) {
     showToast("Online payments are coming soon. Paid tickets will be available shortly.", "info", 5000);
     return;
   }
 
+  /* PAID ticket — live payments via Val Town */
   var btn = $("buyConfirm");
   var orig = btn.innerHTML;
   btn.disabled = true;
