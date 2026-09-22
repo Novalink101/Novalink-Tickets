@@ -137,6 +137,18 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
 .field input:focus,.field select:focus{outline:none;border-color:var(--cyan);background:#fff;box-shadow:0 0 0 3px rgba(34,211,238,.15)}
 .field-row{display:grid;grid-template-columns:1fr 1fr;gap:11px}
 
+/* COVER IMAGE PANEL */
+.cover-hint{font-size:10.5px;color:var(--text-muted);font-weight:500;margin-top:6px;line-height:1.45;letter-spacing:0;text-transform:none}
+.cover-preview{margin-top:12px;aspect-ratio:16/9;border-radius:10px;border:1.5px dashed var(--border-2);background:var(--surface-2);overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;transition:border-color .15s ease}
+.cover-preview.has-image{border-style:solid;border-color:var(--border);background:#000}
+.cover-preview img{width:100%;height:100%;object-fit:cover;display:block}
+.cover-preview .placeholder{display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--text-faint);font-size:10.5px;font-weight:800;letter-spacing:.08em;text-transform:uppercase;text-align:center;padding:14px}
+.cover-preview .placeholder svg{width:22px;height:22px;stroke-width:1.75;opacity:.65}
+.cover-actions{margin-top:10px;display:flex;gap:6px;flex-wrap:wrap}
+.cover-actions button{font-size:11px;font-weight:800;color:var(--text-muted);padding:6px 11px;border-radius:8px;border:1px solid var(--border);background:var(--surface-2);transition:.15s}
+.cover-actions button:hover{border-color:var(--cyan);color:var(--cyan-dd);background:#fff}
+.cover-actions button:disabled{opacity:.5;cursor:not-allowed}
+
 /* TOGGLE */
 .toggle-row{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px 14px;background:var(--surface-2);border:1px solid var(--border);border-radius:11px;margin-bottom:13px}
 .toggle-row .toggle-info{flex:1;min-width:0}
@@ -432,7 +444,7 @@ table.data td.num{text-align:right;font-family:var(--mono);font-weight:800;white
       <button class="hdr-btn" id="signInBtn" type="button">
         <i data-lucide="log-in"></i> <span class="lbl">Sign in</span>
       </button>
-      <button class="hdr-btn user-chip" id="userChip" type="button" style="display:none;">
+      <button class="hdr-btn" id="userChip" type="button" style="display:none;">
         <span class="avatar" id="userAvatar">?</span>
         <span class="lbl" id="userName">User</span>
       </button>
@@ -474,7 +486,24 @@ table.data td.num{text-align:right;font-family:var(--mono);font-weight:800;white
       <aside class="sidebar">
         <div class="step-card">
           <span class="step-num">1</span>
-          <div class="step-info"><div class="step-title">Fleet</div><div class="step-sub">Vehicles · layouts · capacity</div></div>
+          <div class="step-info"><div class="step-title">Fleet</div><div class="step-sub">Cover · vehicles · capacity</div></div>
+        </div>
+
+        <!-- COVER IMAGE PANEL -->
+        <div class="panel">
+          <div class="panel-title">Trip Cover</div>
+          <div class="field" style="margin-bottom:0;">
+            <label for="coverUrl">Cover Image URL</label>
+            <input id="coverUrl" type="url" placeholder="https://example.com/photo.jpg" spellcheck="false" autocomplete="off" />
+            <div class="cover-hint">Paste a direct link to a JPG, PNG or WebP image. It appears on the home page card and on the trip detail page.</div>
+          </div>
+          <div class="cover-preview" id="coverPreview"></div>
+          <div class="cover-actions">
+            <button type="button" id="coverPaste">
+              <i data-lucide="clipboard-paste" style="width:12px;height:12px;display:inline-block;vertical-align:-2px;margin-right:4px;"></i>Paste
+            </button>
+            <button type="button" id="coverClear">Clear</button>
+          </div>
         </div>
 
         <div class="panel rev-mini">
@@ -742,7 +771,6 @@ function getQueryParam(name){
   try { return new URLSearchParams(window.location.search).get(name); }
   catch(e){ return null; }
 }
-
 function toast(msg, type){
   type = type || 'info';
   const el = $('toast');
@@ -767,7 +795,6 @@ function initialsFrom(name, email){
   if(email) return email.slice(0,2).toUpperCase();
   return '??';
 }
-
 function applyAuthState(user){
   currentUser = user;
   if(user){
@@ -781,7 +808,6 @@ function applyAuthState(user){
   }
   refreshIcons();
 }
-
 function openAuthModal(mode){
   authMode = mode || 'signin';
   syncAuthTabs();
@@ -817,6 +843,7 @@ function syncAuthTabs(){
 const state = {
   tripId: null,
   operator:'NL', serviceDate:'', serviceName:'',
+  heroImage:'',
   vehicles:[], tiers:[
     { id:'t_premium', name:'Premium', color:'#800020', price:450, fee:25 },
     { id:'t_standard', name:'Standard', color:'#008080', price:250, fee:15 },
@@ -909,7 +936,6 @@ function normalizeVehicle(v){
     holdMap: (v && v.holdMap) || {}
   });
 }
-
 function seatName(v, row, col){
   const letter = String.fromCharCode(65 + col);
   const rowNum = v.startNumber + row - 1;
@@ -1161,6 +1187,88 @@ function cabinHTML(v, opts){
     case 'train':   return shellTrain(v, opts);
     case 'sleeper': return shellSleeper(v, opts);
     default:        return shellBus(v, opts);
+  }
+}
+
+/* ============================================================
+   COVER IMAGE
+   ============================================================ */
+let coverDebounce = null;
+
+function renderCoverPreview(){
+  const preview = $('coverPreview');
+  if(!preview) return;
+  const url = (state.heroImage || '').trim();
+
+  if(!url){
+    preview.classList.remove('has-image');
+    preview.innerHTML = '<div class="placeholder">' + icon('image') + '<span>No cover set</span></div>';
+    refreshIcons();
+    return;
+  }
+
+  preview.classList.add('has-image');
+  preview.innerHTML = '<img alt="Cover preview" />';
+  const img = preview.querySelector('img');
+  img.onerror = () => {
+    preview.classList.remove('has-image');
+    preview.innerHTML = '<div class="placeholder">' + icon('alert-triangle') + '<span>Could not load image</span></div>';
+    refreshIcons();
+  };
+  img.onload = () => {
+    preview.classList.add('has-image');
+  };
+  img.src = url;
+}
+
+function syncCoverInput(){
+  const input = $('coverUrl');
+  if(!input) return;
+  input.value = state.heroImage || '';
+  renderCoverPreview();
+}
+
+function bindCoverControls(){
+  const input = $('coverUrl');
+  if(!input) return;
+
+  input.addEventListener('input', e => {
+    state.heroImage = e.target.value.trim();
+    clearTimeout(coverDebounce);
+    coverDebounce = setTimeout(renderCoverPreview, 450);
+  });
+
+  const clearBtn = $('coverClear');
+  if(clearBtn){
+    clearBtn.addEventListener('click', () => {
+      state.heroImage = '';
+      input.value = '';
+      renderCoverPreview();
+      input.focus();
+    });
+  }
+
+  const pasteBtn = $('coverPaste');
+  if(pasteBtn){
+    pasteBtn.addEventListener('click', async () => {
+      if(!navigator.clipboard || !navigator.clipboard.readText){
+        toast('Clipboard access is not supported in this browser.', 'error');
+        return;
+      }
+      try {
+        const text = (await navigator.clipboard.readText() || '').trim();
+        if(!text){
+          toast('Clipboard is empty.');
+          return;
+        }
+        state.heroImage = text;
+        input.value = text;
+        renderCoverPreview();
+        toast('Pasted from clipboard.', 'success');
+      } catch(err){
+        toast('Could not read clipboard. Try pasting manually.', 'error');
+      }
+    });
   }
 }
 
@@ -1669,6 +1777,7 @@ function buildTripPayload(isNew){
     startDate: state.serviceDate,
     destination: state.serviceName || '',
     city: state.serviceName || '',
+    heroImage: state.heroImage || '',
     slug: makeSlug(state.serviceName, state.serviceDate),
     vehicles: state.vehicles,
     tiers: state.tiers,
@@ -1749,6 +1858,7 @@ function applyTripData(data){
   state.operator = data.operator || data.operatorCode || 'NL';
   state.serviceDate = data.serviceDate || data.departureDate || data.startDate || '';
   state.serviceName = data.tripName || data.serviceName || data.name || 'Trip 01';
+  state.heroImage = data.heroImage || data.destinationImage || data.coverImage || '';
 
   state.tiers = (data.tiers || []).map(t => Object.assign(
     { id:'t_'+uid(), name:'Tier', color:'#0891b2', price:0, fee:0 }, t
@@ -1756,7 +1866,6 @@ function applyTripData(data){
 
   state.vehicles = (data.vehicles || []).map(normalizeVehicle);
   if(!state.vehicles.length){
-    // Recovery: if a saved trip lost its vehicles, seed an empty coach
     state.vehicles = [makeVehicle('coach')];
   }
 
@@ -1768,10 +1877,10 @@ function applyTripData(data){
   state.activeTierId = state.tiers[0]?.id || null;
   state.activeHoldId = state.holds[0]?.id || null;
 
-  // Sync header inputs
   $('operatorCode').value = state.operator;
   $('serviceDate').value = state.serviceDate;
   $('serviceName').value = state.serviceName;
+  syncCoverInput();
 }
 
 /* ============================================================
@@ -1951,7 +2060,6 @@ function seedDemoFleet(){
 document.addEventListener('DOMContentLoaded', () => {
   refreshIcons();
 
-  // Default header values
   const d = new Date(); d.setDate(d.getDate() + 1);
   state.serviceDate = d.toISOString().slice(0,10);
   state.serviceName = 'Trip 01';
@@ -1959,14 +2067,14 @@ document.addEventListener('DOMContentLoaded', () => {
   $('serviceName').value = state.serviceName;
 
   bindGlobal();
+  bindCoverControls();
+  syncCoverInput();
 
-  // Auth state → once known, decide between loading saved trip or seeding demo
   auth.onAuthStateChanged(user => {
     applyAuthState(user);
 
     const urlId = getQueryParam('id');
     if(urlId){
-      // Load by URL id (works whether signed in or not — matches Firestore rules)
       loadTripById(urlId)
         .then(data => {
           if(data){
@@ -1977,6 +2085,7 @@ document.addEventListener('DOMContentLoaded', () => {
           } else {
             toast('Trip not found — starting fresh.', 'error');
             seedDemoFleet();
+            syncCoverInput();
             renderAll();
             refreshIcons();
           }
@@ -1985,12 +2094,13 @@ document.addEventListener('DOMContentLoaded', () => {
           console.error('[load trip]', err);
           toast('Could not load trip: ' + (err.message || 'unknown'), 'error');
           seedDemoFleet();
+          syncCoverInput();
           renderAll();
           refreshIcons();
         });
     } else {
-      // No id → new trip
       seedDemoFleet();
+      syncCoverInput();
       renderAll();
       refreshIcons();
     }
@@ -2000,4 +2110,4 @@ document.addEventListener('DOMContentLoaded', () => {
 })();
 </script>
 </body>
-  </html>
+            </html>
