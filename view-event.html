@@ -315,7 +315,7 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
     </div>
     <div class="info-b pending" id="buyPendingNote" style="display:none;">
       <i data-lucide="construction"></i>
-      <span>Online payments are being finalised. Email the host to arrange payment — your ticket will be issued manually.</span>
+      <span>Online payments are coming soon. Paid tickets will be available shortly.</span>
     </div>
     <div class="fg"><label for="buyTier">Ticket tier</label><select id="buyTier"></select></div>
     <div class="fg">
@@ -347,7 +347,7 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
     <div class="pc" style="margin-top:18px;"><span class="lbl">Total</span><span class="val" id="buyTotal">Free</span></div>
     <p class="fh" id="buyDiscountNote" style="display:none;margin-top:6px;text-align:right;font-style:normal;color:var(--cy3);font-weight:700;"></p>
     <div class="actions">
-      <button class="btn btn-ghost" id="buyCancel">Cancel</button>
+      <button class="btn btn-ghost" id="buyCancel">Close</button>
       <button class="btn btn-accent" id="buyConfirm"><i data-lucide="lock"></i> Pay &amp; get ticket</button>
     </div>
   </div>
@@ -388,19 +388,13 @@ var MAX_PER_PURCHASE = 12;
 
 /* ══════════════════════════════════════════════════════════════
    PAYMENT MODE FLAG
-   true  = show "coming soon" for paid events (test/safe mode)
-   false = enable live payment via Val Town backend
+   false = paid tickets show "coming soon" (test mode)
+   true  = live payments via Val Town backend
    ══════════════════════════════════════════════════════════════ */
 var PAYMENTS_ENABLED = false;
 
-/* ══════════════════════════════════════════════════════════════
-   VAL TOWN BACKEND URL — used only when PAYMENTS_ENABLED = true
-   ══════════════════════════════════════════════════════════════ */
 var BACKEND_URL = "https://nathannyl--856b743eb5f911f18c001607ee4eb77e.web.val.run";
 
-/* ══════════════════════════════════════════════════════════════
-   EMAILJS — used only for free ticket confirmations
-   ══════════════════════════════════════════════════════════════ */
 var EMAILJS_PUBLIC_KEY  = "bmHeI_nQwa4UY6mR4";
 var EMAILJS_SERVICE_ID  = "service_prn9hay";
 var EMAILJS_TEMPLATE_ID = "template_5pt25oi";
@@ -644,7 +638,6 @@ function renderPrice(data){
   }
 }
 
-/* ============ SEATING PLAN RENDERER ============ */
 function tierColour(data, tier){
   var cols = data.tierColours || {};
   var defaults = {black:"#1a202c",gold:"#ecc94b",silver:"#cbd5e1",cyan:"#00FFFF",tier5:"#a855f7",tier6:"#f472b6"};
@@ -1144,7 +1137,6 @@ function syncQtyLimits(tier){
   return max;
 }
 
-/* PROMO HELPERS */
 function normaliseCode(s){
   return String(s || "").trim().toUpperCase().replace(/\s+/g, "");
 }
@@ -1290,8 +1282,8 @@ function openBuy(){
       confirmBtn.innerHTML = '<i data-lucide="check"></i> Confirm ticket';
       confirmBtn.disabled = false;
     } else if (isPendingMode) {
-      confirmBtn.innerHTML = '<i data-lucide="mail"></i> Email host to pay';
-      confirmBtn.disabled = false;
+      confirmBtn.innerHTML = '<i data-lucide="clock"></i> Coming soon';
+      confirmBtn.disabled = true;
     } else {
       confirmBtn.innerHTML = '<i data-lucide="lock"></i> Pay &amp; get ticket';
       confirmBtn.disabled = false;
@@ -1355,7 +1347,6 @@ function generateTicketId(){
   return "TKT-" + tm + "-" + rand;
 }
 
-/* EMAIL (free tickets only) */
 function sendTicketEmail(params){
   if (!window.emailjs) { console.warn("[Email] SDK not loaded"); return; }
   emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, params)
@@ -1407,7 +1398,6 @@ function buildTicketEmailParams(ticketId, tier, guestName, seat){
   };
 }
 
-/* FREE TICKET — writes to Firestore directly */
 function createFreeTicket(tier, tierName, qty, guestNames){
   var btn = $("buyConfirm");
   var orig = btn.innerHTML;
@@ -1508,7 +1498,6 @@ function createFreeTicket(tier, tierName, qty, guestNames){
   });
 }
 
-/* Local seat allocator (for free tickets) */
 function findNextAvailableSeatLocal(tier, takenSeats){
   takenSeats = takenSeats || [];
   var sections = (eventData && eventData.sections) || [];
@@ -1563,9 +1552,6 @@ function findNextAvailableSeatLocal(tier, takenSeats){
   return "";
 }
 
-/* ══════════════════════════════════════════════════════════════
-   CONFIRM BUY — routes to free OR paid flow
-   ══════════════════════════════════════════════════════════════ */
 function confirmBuy(){
   if (!eventData || !currentUser) return;
   var tier = $("buyTier").value;
@@ -1601,34 +1587,16 @@ function confirmBuy(){
 
   var basePrice = parseFloat((eventData.tierPrices || {})[tier]) || 0;
 
-  /* FREE ticket — direct Firestore write */
   if (basePrice <= 0) {
     createFreeTicket(tier, tierName, qty, guestNames);
     return;
   }
 
-  /* PAID ticket — payments disabled: show mailto instruction */
   if (!PAYMENTS_ENABLED) {
-    var hostEmail = (eventData.hostEmail || "").trim();
-    var subject = encodeURIComponent("Ticket purchase for " + (eventData.eventName || "event"));
-    var body = encodeURIComponent(
-      "Hi,\n\n" +
-      "I'd like to buy " + qty + " ticket" + (qty === 1 ? "" : "s") + " for " + (eventData.eventName || "your event") + ".\n\n" +
-      "Tier: " + tierName + "\n" +
-      "Total: " + formatMoney(basePrice * qty) + "\n" +
-      "Guest" + (qty === 1 ? ": " : "s: ") + guestNames.join(", ") + "\n\n" +
-      "Please send me a payment link.\n\n" +
-      "Thanks!"
-    );
-    if (hostEmail) {
-      window.location.href = "mailto:" + hostEmail + "?subject=" + subject + "&body=" + body;
-    } else {
-      showToast("This event isn't accepting online payments yet. Please contact the host directly.", "info", 5000);
-    }
+    showToast("Online payments are coming soon. Paid tickets will be available shortly.", "info", 5000);
     return;
   }
 
-  /* PAID ticket — call Val Town backend */
   var btn = $("buyConfirm");
   var orig = btn.innerHTML;
   btn.disabled = true;
@@ -1684,7 +1652,6 @@ function confirmBuy(){
   });
 }
 
-/* DELETE / EDIT */
 function openDelete(){
   if (!canEdit()) { showToast("You don't have permission to delete this event.", "error"); return; }
   $("deleteEventName").textContent = (eventData && eventData.eventName) || "this event";
@@ -1714,20 +1681,12 @@ function editEvent(){
   window.location.href = "create-event.html?id=" + encodeURIComponent(eventId);
 }
 
-/* BOOT */
 document.addEventListener("DOMContentLoaded", function(){
   $("year").textContent = new Date().getFullYear();
   refreshIcons();
 
   eventId = getParam("id");
   if (!eventId) { showError("Missing event ID", "The link is missing an event identifier."); return; }
-
-  var paymentParam = getParam("payment");
-  if (paymentParam === "cancelled") {
-    setTimeout(function(){
-      showToast("Payment cancelled. Your ticket was not purchased.", "info", 5000);
-    }, 500);
-  }
 
   auth.onAuthStateChanged(function(user){
     applyAuth(user);
