@@ -6,6 +6,11 @@
 <meta name="theme-color" content="#0a0f14" />
 <title>Novalink — Trip Studio</title>
 <script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check-compat.js"></script>
+<script src="app-check.js"></script>
 <style>
 :root{
   --cyan:#22d3ee;--cyan-d:#06b6d4;--cyan-dd:#0891b2;
@@ -20,6 +25,7 @@
   --shell-edge:#94a3b8;--shell-edge-2:#64748b;--shell-glass:#dbeafe;
   --rev-grad:linear-gradient(135deg,#22d3ee,#0891b2);
   --rev-grad-2:linear-gradient(135deg,#0a0f14,#1f2937);
+  --danger:#dc2626;--danger-soft:#fef2f2;--danger-border:#fecaca;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
@@ -32,21 +38,29 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .logo{display:inline-flex;align-items:center;gap:11px;text-decoration:none;color:inherit;flex-shrink:0}
 .logo svg{width:26px;height:32px;display:block}
 .logo b{font-weight:800;font-size:1.15rem;color:var(--navy);letter-spacing:-.01em}
-.hdr-actions{display:flex;align-items:center;gap:10px;flex-shrink:0}
+.hdr-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
 .cfg{display:flex;gap:8px;align-items:center;flex-wrap:wrap;flex:1;justify-content:flex-end}
 .cfg input{padding:8px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;font-size:12.5px;font-weight:600;color:var(--text)}
 .cfg input:focus{outline:none;border-color:var(--cyan);background:#fff;box-shadow:0 0 0 3px rgba(34,211,238,.15)}
 .cfg input.op{width:74px;font-family:var(--mono);font-weight:800;letter-spacing:.08em;text-transform:uppercase;color:var(--cyan-dd);text-align:center}
 @media (max-width:820px){.cfg{display:none}}
 
+.hdr-btn{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border-radius:var(--radius-pill);background:var(--surface-2);border:1px solid var(--border);color:var(--text);font-size:12.5px;font-weight:800;transition:.15s;white-space:nowrap}
+.hdr-btn:hover{border-color:var(--cyan);background:#fff;box-shadow:0 0 0 3px rgba(34,211,238,.14)}
+.hdr-btn svg{width:14px;height:14px}
+.hdr-btn .avatar{width:22px;height:22px;border-radius:50%;background:var(--rev-grad);color:#04161c;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;flex-shrink:0;font-family:var(--mono)}
+@media (max-width:520px){.hdr-btn .lbl{display:none}}
+
 .btn-save{display:inline-flex;align-items:center;gap:7px;background:var(--cyan);color:#04161c;font-weight:900;font-size:13px;padding:10px 18px;border-radius:var(--radius-pill);transition:.15s;white-space:nowrap;box-shadow:0 4px 12px rgba(34,211,238,.25)}
 .btn-save:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(34,211,238,.38)}
 .btn-save:active{transform:translateY(0)}
+.btn-save:disabled{opacity:.55;cursor:progress;transform:none!important}
 .btn-save.saved{background:#10b981;color:#fff;box-shadow:0 4px 12px rgba(16,185,129,.3)}
 .btn-save svg{width:15px;height:15px}
-@media (max-width:520px){.btn-save span{display:none}.btn-save{padding:10px 14px}}
+@media (max-width:520px){.btn-save .lbl{display:none}.btn-save{padding:10px 14px}}
 
 .studio-badge{background:var(--ink);color:var(--cyan);font-size:11px;font-weight:900;padding:9px 16px;border-radius:var(--radius-pill);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;flex-shrink:0}
+@media (max-width:520px){.studio-badge{display:none}}
 
 /* HERO */
 .hero{background:
@@ -169,7 +183,7 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
 .tool:hover{border-color:var(--cyan);color:var(--cyan-dd)}
 .tool.active{background:var(--ink);color:#fff;border-color:var(--ink)}
 
-/* VEHICLE SHELLS — stage now scrolls both axes with a max-height so tall layouts stay usable */
+/* VEHICLE SHELLS */
 .vehicle-stage{display:flex;justify-content:center;padding:26px 12px;overflow:auto;max-height:620px;border-radius:14px;
   background:
     radial-gradient(circle at 50% 30%, rgba(34,211,238,.06), transparent 60%),
@@ -362,20 +376,47 @@ table.data td.num{text-align:right;font-family:var(--mono);font-weight:800;white
 .coverage-bar > i{display:block;height:100%;background:var(--rev-grad);border-radius:3px;transition:width .4s cubic-bezier(.22,.9,.3,1)}
 .coverage-pct{font-family:var(--mono);font-weight:900;font-size:11px;color:var(--text-2);min-width:34px;text-align:right}
 
+/* AUTH MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(10,15,20,.6);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;align-items:flex-start;justify-content:center;z-index:100;padding:24px 20px;overflow-y:auto;opacity:0;transition:opacity .3s ease}
+.modal-overlay.open{display:flex;opacity:1}
+.modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;max-width:480px;width:100%;padding:30px 26px;position:relative;margin:auto;box-shadow:0 24px 60px rgba(10,15,20,.25);transform:translateY(20px) scale(.95);opacity:0;transition:transform .4s cubic-bezier(.175,.885,.32,1.275),opacity .3s ease}
+.modal-overlay.open .modal{transform:translateY(0) scale(1);opacity:1}
+.modal-close{position:absolute;top:14px;right:14px;background:var(--surface-2);border:1px solid var(--border);color:var(--text-2);cursor:pointer;padding:6px;border-radius:10px;display:flex;align-items:center;justify-content:center;transition:all .2s ease}
+.modal-close:hover{background:var(--danger-soft);color:var(--danger);transform:rotate(90deg)}
+.modal h3{margin-bottom:6px;font-size:1.3rem;font-weight:800}
+.modal .modal-subtitle{color:var(--text-muted);font-size:13.5px;margin-bottom:20px}
+.auth-tabs{display:flex;gap:6px;background:var(--surface-2);border:1px solid var(--border);border-radius:12px;padding:4px;margin-bottom:20px}
+.auth-tab{flex:1;padding:10px;background:transparent;border:none;border-radius:9px;color:var(--text-muted);font-size:13px;font-weight:700;cursor:pointer;text-transform:uppercase;font-family:inherit;transition:all .25s ease}
+.auth-tab.active{background:var(--ink);color:#fff;box-shadow:0 2px 8px rgba(10,15,20,.15)}
+.form-group{margin-bottom:14px}
+.form-group label{display:block;font-size:11.5px;font-weight:800;color:var(--text-2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.05em}
+.form-group input{width:100%;padding:11px 14px;background:var(--bg);border:1px solid var(--border-2);border-radius:10px;color:var(--text);font-size:14px;font-family:inherit;transition:border-color .2s ease,box-shadow .2s ease}
+.form-group input:focus{outline:none;border-color:var(--cyan);box-shadow:0 0 0 3px rgba(34,211,238,.15)}
+.btn-google{background:#fff;color:#1f2937;border:1.5px solid #e5e7eb}
+.btn-google:hover{background:#f9fafb;transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,.08)}
+.btn-google svg{width:18px;height:18px}
+.divider{display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--text-muted);font-size:11px;text-transform:uppercase}
+.divider::before,.divider::after{content:'';flex:1;height:1px;background:var(--border)}
+.spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
 ::-webkit-scrollbar{width:10px;height:10px}
 ::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:6px;border:2px solid var(--bg)}
 ::-webkit-scrollbar-thumb:hover{background:#94a3b8}
 ::-webkit-scrollbar-track{background:transparent}
 
-#toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,18px);background:var(--ink);color:var(--cyan);font-size:13px;font-weight:800;padding:13px 22px;border-radius:var(--radius-pill);box-shadow:0 14px 34px rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:.22s;z-index:200;max-width:90vw;text-align:center;letter-spacing:.01em}
+#toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,18px);background:var(--ink);color:var(--cyan);font-size:13px;font-weight:800;padding:13px 22px;border-radius:var(--radius-pill);box-shadow:0 14px 34px rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:.22s;z-index:200;max-width:90vw;text-align:center;letter-spacing:.01em;display:flex;align-items:center;gap:9px}
 #toast.show{opacity:1;transform:translate(-50%,0)}
+#toast svg{width:15px;height:15px}
+#toast.success{background:#065f46;color:#d1fae5}
+#toast.error{background:#991b1b;color:#fef2f2}
 </style>
 </head>
 <body>
 
 <header class="site-header">
   <div class="hdr">
-    <a href="#" class="logo" aria-label="Novalink home">
+    <a href="index.html" class="logo" aria-label="Novalink home">
       <svg viewBox="0 0 60 74" aria-hidden="true">
         <path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/>
         <path fill="#7dd3e8" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/>
@@ -388,6 +429,13 @@ table.data td.num{text-align:right;font-family:var(--mono);font-weight:800;white
       <input id="serviceName" value="Trip 01" aria-label="Trip name" style="min-width:150px;" />
     </div>
     <div class="hdr-actions">
+      <button class="hdr-btn" id="signInBtn" type="button">
+        <i data-lucide="log-in"></i> <span class="lbl">Sign in</span>
+      </button>
+      <button class="hdr-btn user-chip" id="userChip" type="button" style="display:none;">
+        <span class="avatar" id="userAvatar">?</span>
+        <span class="lbl" id="userName">User</span>
+      </button>
       <button class="btn-save" id="saveTripBtn" type="button">
         <i data-lucide="save"></i> <span id="saveBtnLabel">Save Trip</span>
       </button>
@@ -400,7 +448,7 @@ table.data td.num{text-align:right;font-family:var(--mono);font-weight:800;white
   <div class="hero-in">
     <span class="hero-tag"><i data-lucide="clipboard-list"></i>TRIP PLANNER</span>
     <h1>Plan the trip. <span>Price every seat.</span></h1>
-    <p>Build the fleet, pick a seating layout, colour the pricing tiers, and block holds for groups. Your estimated trip revenue updates live as you plan. No bookings — this is the host's side.</p>
+    <p>Build the fleet, pick a seating layout, colour the pricing tiers, and block holds for groups. Your estimated trip revenue updates live as you plan. Save to publish it to the home page.</p>
     <div class="hero-actions">
       <button class="btn-cyan" id="heroAddVehicle"><i data-lucide="plus-circle"></i> Add a vehicle</button>
       <button class="btn-cyan" id="heroGoRevenue"><i data-lucide="trending-up"></i> Revenue estimate</button>
@@ -610,12 +658,61 @@ table.data td.num{text-align:right;font-family:var(--mono);font-weight:800;white
 
 </main>
 
+<!-- AUTH MODAL -->
+<div class="modal-overlay" id="authModal">
+  <div class="modal">
+    <button class="modal-close" id="authClose" type="button"><i data-lucide="x"></i></button>
+    <div class="auth-tabs">
+      <button class="auth-tab active" data-mode="signin" type="button">Sign in</button>
+      <button class="auth-tab" data-mode="signup" type="button">Create account</button>
+    </div>
+    <h3 id="authTitle">Welcome back</h3>
+    <p class="modal-subtitle" id="authSubtitle">Sign in to save your trips to your account.</p>
+
+    <button class="btn btn-google btn-block" id="googleBtn" type="button" style="display:flex;align-items:center;justify-content:center;gap:9px;padding:11px 16px;border-radius:11px;font-weight:700;font-size:13.5px;margin-bottom:14px;">
+      <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Continue with Google
+    </button>
+    <div class="divider">or</div>
+    <form id="authForm" novalidate>
+      <div class="form-group" id="nameGroup" style="display:none;"><label for="authName">Full name</label><input type="text" id="authName" autocomplete="name" /></div>
+      <div class="form-group"><label for="authEmail">Email</label><input type="email" id="authEmail" autocomplete="email" required /></div>
+      <div class="form-group"><label for="authPassword">Password</label><input type="password" id="authPassword" autocomplete="current-password" required minlength="6" /></div>
+      <button type="submit" class="btn btn-cyan-solid btn-block" id="authSubmit" style="padding:12px;border-radius:11px;font-weight:800;font-size:14px;display:flex;align-items:center;justify-content:center;gap:8px;">
+        <i data-lucide="log-in"></i> Sign in
+      </button>
+    </form>
+  </div>
+</div>
+
 <div id="toast"></div>
 
 <script>
 (function(){
 'use strict';
 
+/* ============================================================
+   FIREBASE
+   ============================================================ */
+var firebaseConfig = {
+  apiKey: "AIzaSyDSnns131jOlBXAqKo6qy7lTW4Rij-1oWU",
+  authDomain: "novalink-864cf.firebaseapp.com",
+  projectId: "novalink-864cf",
+  storageBucket: "novalink-864cf.firebasestorage.app",
+  messagingSenderId: "602780280140",
+  appId: "1:602780280140:web:5d9ff2351e5a7d5e66dbe9"
+};
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+var db   = firebase.firestore();
+var auth = firebase.auth();
+var TRIPS_COLLECTION = "trips";
+
+var currentUser = null;
+var authMode = "signin";
+
+/* ============================================================
+   UTILITIES
+   ============================================================ */
 const $  = id => document.getElementById(id);
 const $$ = s => Array.from(document.querySelectorAll(s));
 const esc = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
@@ -629,15 +726,96 @@ const fmtK = n => {
   return 'R' + v.toLocaleString('en-ZA');
 };
 const refreshIcons = () => { if(window.lucide) lucide.createIcons(); };
-function toast(msg){
-  const el = $('toast'); el.textContent = msg; el.classList.add('show');
-  clearTimeout(el._t); el._t = setTimeout(()=>el.classList.remove('show'), 2600);
+const icon = n => '<i data-lucide="'+n+'"></i>';
+
+function slugify(str){
+  return String(str||'').toLowerCase()
+    .replace(/[^a-z0-9]+/g,'-')
+    .replace(/^-|-$/g,'')
+    .slice(0,50);
+}
+function makeSlug(name, date){
+  var d = date ? String(date).slice(0,10) : '';
+  return (slugify(name) || 'trip') + (d ? '-' + d : '');
+}
+function getQueryParam(name){
+  try { return new URLSearchParams(window.location.search).get(name); }
+  catch(e){ return null; }
+}
+
+function toast(msg, type){
+  type = type || 'info';
+  const el = $('toast');
+  const i = type === 'error' ? 'alert-circle' : (type === 'success' ? 'check-circle' : 'info');
+  el.className = type;
+  el.innerHTML = icon(i) + '<span>' + esc(msg) + '</span>';
+  refreshIcons();
+  requestAnimationFrame(() => el.classList.add('show'));
+  clearTimeout(toast._t);
+  toast._t = setTimeout(() => el.classList.remove('show'), 3000);
+}
+
+/* ============================================================
+   AUTH
+   ============================================================ */
+function initialsFrom(name, email){
+  if(name && name.trim()){
+    const p = name.trim().split(/\s+/);
+    if(p.length >= 2) return (p[0][0]+p[1][0]).toUpperCase();
+    return p[0].slice(0,2).toUpperCase();
+  }
+  if(email) return email.slice(0,2).toUpperCase();
+  return '??';
+}
+
+function applyAuthState(user){
+  currentUser = user;
+  if(user){
+    $('signInBtn').style.display = 'none';
+    $('userChip').style.display = 'inline-flex';
+    $('userAvatar').textContent = initialsFrom(user.displayName, user.email);
+    $('userName').textContent = user.displayName || user.email.split('@')[0];
+  } else {
+    $('signInBtn').style.display = 'inline-flex';
+    $('userChip').style.display = 'none';
+  }
+  refreshIcons();
+}
+
+function openAuthModal(mode){
+  authMode = mode || 'signin';
+  syncAuthTabs();
+  $('authModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  refreshIcons();
+}
+function closeAuthModal(){
+  $('authModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function syncAuthTabs(){
+  $$('.auth-tab').forEach(t => t.classList.toggle('active', t.dataset.mode === authMode));
+  if(authMode === 'signup'){
+    $('authTitle').textContent = 'Create account';
+    $('authSubtitle').textContent = 'Join Novalink to start planning trips.';
+    $('nameGroup').style.display = 'block';
+    $('authSubmit').innerHTML = icon('user-plus') + ' Create account';
+    $('authPassword').autocomplete = 'new-password';
+  } else {
+    $('authTitle').textContent = 'Welcome back';
+    $('authSubtitle').textContent = 'Sign in to save your trips to your account.';
+    $('nameGroup').style.display = 'none';
+    $('authSubmit').innerHTML = icon('log-in') + ' Sign in';
+    $('authPassword').autocomplete = 'current-password';
+  }
+  refreshIcons();
 }
 
 /* ============================================================
    STATE
    ============================================================ */
 const state = {
+  tripId: null,
   operator:'NL', serviceDate:'', serviceName:'',
   vehicles:[], tiers:[
     { id:'t_premium', name:'Premium', color:'#800020', price:450, fee:25 },
@@ -678,7 +856,6 @@ const PRESETS = {
 };
 
 const B32 = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
-const SAVE_KEY = 'novalink_trip_v1';
 
 function nextVehicleCode(){
   const used = new Set(state.vehicles.map(v => v.code));
@@ -703,7 +880,6 @@ function nextHoldCode(){
   }
   return 'HOLD' + pad2(state.holds.length + 1);
 }
-
 function makeVehicle(presetKey){
   const p = PRESETS[presetKey] || PRESETS.coach;
   return {
@@ -752,9 +928,6 @@ function allSeats(v){
     out.push({ row:r, col:c, name: seatName(v,r,c), type: seatType(v,c) });
   return out;
 }
-
-/* Remap tier/hold assignments when seat naming changes.
-   Captures old names by grid position first, then rekeys to new names. */
 function applyNaming(v, newStyle, newStart){
   const captured = [];
   for(let r = 0; r < v.rows; r++){
@@ -775,7 +948,7 @@ function applyNaming(v, newStyle, newStart){
 }
 
 /* ============================================================
-   REVENUE ESTIMATOR
+   REVENUE
    ============================================================ */
 function calcRevenue(){
   const s = {
@@ -815,7 +988,7 @@ function calcRevenue(){
 }
 
 /* ============================================================
-   SEAT BUTTON
+   SEAT + LAYOUT RENDERING
    ============================================================ */
 function seatButtonHTML(v, row, col, opts, orientation){
   opts = opts || {};
@@ -836,10 +1009,6 @@ function seatButtonHTML(v, row, col, opts, orientation){
   const bg = tier ? `background:${tier.color};border-color:${tier.color};color:#fff;` : '';
   return `<button class="${cls.join(' ')}" style="${bg}" data-seat="${esc(name)}" data-row="${row}" data-col="${col}" title="${esc(name)} · ${esc(tier?.name||'Unassigned')}${isHeld?' · HELD':''}">${esc(name)}</button>`;
 }
-
-/* ============================================================
-   SEATING LAYOUT RENDERERS
-   ============================================================ */
 function renderGridLayout(v, opts, orientMode){
   const orientFor = (r) => orientMode === 'alternate' ? (r % 2 === 0 ? 'fwd' : 'back') : 'fwd';
   let html = '<div class="seat-rows">';
@@ -917,10 +1086,6 @@ function seatGridHTML(v, opts){
     default:             return renderGridLayout(v, opts, 'fwd');
   }
 }
-
-/* ============================================================
-   VEHICLE SHELLS
-   ============================================================ */
 function shellOpts(v){ return `--seat-sz:${v.seatSize}px;--seat-gap:${v.seatGap}px;--row-gap:${v.rowGap}px;--aisle-w:${v.aisleWidth}px`; }
 
 function shellBus(v, opts){
@@ -1040,9 +1205,6 @@ function renderVehicleRevenueMini(v){
     </div>`;
 }
 
-/* Live update — refreshes only the canvas + dependent widgets, NOT the config panel.
-   This is what fixes the input focus-loss bug: typing in Rows/Seats no longer
-   destroys and rebuilds the input element on every keystroke. */
 function refreshVehicleDisplay(v){
   if(!v) return;
   $('vehTitle').textContent = v.name;
@@ -1147,7 +1309,7 @@ function renderBuilder(){
       <div class="toggle-row">
         <div class="toggle-info">
           <span class="toggle-label" id="cfg-allowpick-label">Allow buyers to pick seats</span>
-          <span class="toggle-hint">When on, the public booking page shows the seat map so buyers choose their own. When off, seats are auto-assigned at checkout.</span>
+          <span class="toggle-hint">When on, the public trip page shows the seat map so buyers choose their own. When off, seats are auto-assigned at checkout.</span>
         </div>
         <label class="toggle-switch">
           <input type="checkbox" id="cfg-allowpick" ${v.allowSeatPick ? 'checked' : ''} aria-labelledby="cfg-allowpick-label" />
@@ -1170,6 +1332,7 @@ function renderBuilder(){
 
   renderVehicleRevenueMini(v);
   bindBuilderConfig(v);
+  refreshIcons();
 }
 
 function bindBuilderConfig(v){
@@ -1189,7 +1352,6 @@ function bindBuilderConfig(v){
   });
   $('cfg-style').addEventListener('change', e => { v.layout = e.target.value; renderBuilder(); renderAllRevenue(); });
 
-  /* Rows and Seats-per-row: live update the canvas without re-rendering config. */
   $('cfg-rows').addEventListener('input', e => {
     v.rows = Math.max(1, Math.min(30, parseInt(e.target.value)||1));
     refreshVehicleDisplay(v);
@@ -1199,7 +1361,6 @@ function bindBuilderConfig(v){
     refreshVehicleDisplay(v);
   });
 
-  /* Naming: remap assignments when names change. */
   $('cfg-namestyle').addEventListener('change', e => {
     applyNaming(v, e.target.value, v.startNumber);
     renderBuilder(); renderAllRevenue();
@@ -1210,7 +1371,6 @@ function bindBuilderConfig(v){
     refreshVehicleDisplay(v);
   });
 
-  /* Allow buyers to pick seats. */
   $('cfg-allowpick').addEventListener('change', e => {
     v.allowSeatPick = e.target.checked;
     renderVehicleList();
@@ -1394,7 +1554,7 @@ function renderHoldEditor(){
 }
 
 /* ============================================================
-   REVENUE RENDERING
+   REVENUE
    ============================================================ */
 function renderRevenueMini(){
   const r = calcRevenue();
@@ -1494,63 +1654,124 @@ function renderAllRevenue(){
 }
 
 /* ============================================================
-   SAVE / LOAD
+   FIRESTORE SAVE / LOAD
    ============================================================ */
-function saveTrip(){
+function buildTripPayload(isNew){
   const payload = {
-    version: 1,
-    savedAt: Date.now(),
+    tripName: state.serviceName || 'Untitled Trip',
+    name: state.serviceName || 'Untitled Trip',
     operator: state.operator,
+    operatorCode: state.operator,
     serviceDate: state.serviceDate,
     serviceName: state.serviceName,
+    departureDate: state.serviceDate,
+    returnDate: state.serviceDate,
+    startDate: state.serviceDate,
+    destination: state.serviceName || '',
+    city: state.serviceName || '',
+    slug: makeSlug(state.serviceName, state.serviceDate),
     vehicles: state.vehicles,
     tiers: state.tiers,
     holds: state.holds,
-    activeTierId: state.activeTierId,
-    activeHoldId: state.activeHoldId,
-    selectedVehicleId: state.selectedVehicleId
+    ownerUid: currentUser.uid,
+    ownerEmail: currentUser.email || '',
+    ownerName: currentUser.displayName || '',
+    status: 'published',
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
   };
-  try{
-    localStorage.setItem(SAVE_KEY, JSON.stringify(payload));
-    return true;
-  }catch(e){ return false; }
+  if(isNew){
+    payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+  }
+  return payload;
 }
-function loadSavedTrip(){
-  try{
-    const raw = localStorage.getItem(SAVE_KEY);
-    if(!raw) return null;
-    const data = JSON.parse(raw);
-    if(!data || data.version !== 1) return null;
-    return data;
-  }catch(e){ return null; }
-}
-function applySavedTrip(data){
-  state.operator = data.operator || 'NL';
-  state.serviceDate = data.serviceDate || '';
-  state.serviceName = data.serviceName || 'Trip 01';
-  state.tiers = (data.tiers || []).map(t => Object.assign(
-    { id:'t_'+uid(), name:'Tier', color:'#0891b2', price:0, fee:0 }, t
-  ));
-  state.vehicles = (data.vehicles || []).map(normalizeVehicle);
-  state.holds = (data.holds || []).map(h => Object.assign(
-    { id:'h_'+uid(), code:'HOLD', releaseDate:'', type:'group' }, h
-  ));
-  state.activeTierId = data.activeTierId || state.tiers[0]?.id || null;
-  state.activeHoldId = data.activeHoldId || state.holds[0]?.id || null;
-  state.selectedVehicleId = (state.vehicles.find(v => v.id === data.selectedVehicleId)?.id)
-                         || state.vehicles[0]?.id || null;
-}
+
 function flashSaved(){
   const btn = $('saveTripBtn');
   const label = $('saveBtnLabel');
   if(!btn || !label) return;
-  const original = label.textContent;
   btn.classList.add('saved');
   label.textContent = 'Saved';
   setTimeout(() => {
     btn.classList.remove('saved');
-    label.textContent = original;
+    label.textContent = 'Save Trip';
+    btn.disabled = false;
   }, 1600);
+}
+
+function saveTrip(){
+  if(!currentUser){
+    toast('Sign in to save trips.', 'error');
+    setTimeout(() => openAuthModal('signin'), 600);
+    return;
+  }
+
+  const isNew = !state.tripId;
+  const btn = $('saveTripBtn');
+  const label = $('saveBtnLabel');
+  btn.disabled = true;
+  label.textContent = 'Saving…';
+
+  const payload = buildTripPayload(isNew);
+
+  const promise = isNew
+    ? db.collection(TRIPS_COLLECTION).add(payload)
+    : db.collection(TRIPS_COLLECTION).doc(state.tripId).update(payload);
+
+  promise
+    .then(ref => {
+      if(isNew){
+        state.tripId = ref.id;
+        try { history.replaceState(null, '', '?id=' + ref.id); } catch(e){}
+      }
+      flashSaved();
+      toast('Trip saved — it will appear on the home page.', 'success');
+    })
+    .catch(err => {
+      console.error('[save trip]', err);
+      toast('Save failed: ' + (err.message || 'unknown error'), 'error');
+      btn.disabled = false;
+      label.textContent = 'Save Trip';
+    });
+}
+
+function loadTripById(id){
+  return db.collection(TRIPS_COLLECTION).doc(id).get()
+    .then(doc => {
+      if(!doc.exists) return null;
+      const data = doc.data() || {};
+      data.id = doc.id;
+      return data;
+    });
+}
+
+function applyTripData(data){
+  state.tripId = data.id || null;
+  state.operator = data.operator || data.operatorCode || 'NL';
+  state.serviceDate = data.serviceDate || data.departureDate || data.startDate || '';
+  state.serviceName = data.tripName || data.serviceName || data.name || 'Trip 01';
+
+  state.tiers = (data.tiers || []).map(t => Object.assign(
+    { id:'t_'+uid(), name:'Tier', color:'#0891b2', price:0, fee:0 }, t
+  ));
+
+  state.vehicles = (data.vehicles || []).map(normalizeVehicle);
+  if(!state.vehicles.length){
+    // Recovery: if a saved trip lost its vehicles, seed an empty coach
+    state.vehicles = [makeVehicle('coach')];
+  }
+
+  state.holds = (data.holds || []).map(h => Object.assign(
+    { id:'h_'+uid(), code:'HOLD', releaseDate:'', type:'group' }, h
+  ));
+
+  state.selectedVehicleId = state.vehicles[0]?.id || null;
+  state.activeTierId = state.tiers[0]?.id || null;
+  state.activeHoldId = state.holds[0]?.id || null;
+
+  // Sync header inputs
+  $('operatorCode').value = state.operator;
+  $('serviceDate').value = state.serviceDate;
+  $('serviceName').value = state.serviceName;
 }
 
 /* ============================================================
@@ -1633,21 +1854,65 @@ function bindGlobal(){
   $('serviceDate').addEventListener('input', e => { state.serviceDate = e.target.value; });
   $('serviceName').addEventListener('input', e => { state.serviceName = e.target.value; });
 
-  $('saveTripBtn').addEventListener('click', () => {
-    if(saveTrip()){
-      flashSaved();
-      toast('Trip saved locally.');
-    } else {
-      toast('Save failed — storage unavailable.');
-    }
-  });
+  $('saveTripBtn').addEventListener('click', saveTrip);
 
-  /* Keyboard shortcut: Cmd/Ctrl+S saves */
   document.addEventListener('keydown', e => {
     if((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's'){
       e.preventDefault();
-      if(saveTrip()){ flashSaved(); toast('Trip saved locally.'); }
+      saveTrip();
     }
+  });
+
+  // AUTH
+  $('signInBtn').addEventListener('click', () => openAuthModal('signin'));
+  $('userChip').addEventListener('click', () => {
+    if(!currentUser){ openAuthModal('signin'); return; }
+    if(confirm('Sign out of ' + (currentUser.email || 'your account') + '?')){
+      auth.signOut().then(() => toast('Signed out.', 'success'));
+    }
+  });
+  $('authClose').addEventListener('click', closeAuthModal);
+  $('authModal').addEventListener('click', e => { if(e.target === $('authModal')) closeAuthModal(); });
+  $$('.auth-tab').forEach(tab => tab.addEventListener('click', () => { authMode = tab.dataset.mode; syncAuthTabs(); }));
+
+  $('googleBtn').addEventListener('click', () => {
+    const provider = new firebase.auth.GoogleAuthProvider();
+    $('googleBtn').disabled = true;
+    auth.signInWithPopup(provider)
+      .then(() => { toast('Signed in with Google.', 'success'); closeAuthModal(); })
+      .catch(err => toast(err.message || 'Google sign-in failed', 'error'))
+      .finally(() => { $('googleBtn').disabled = false; });
+  });
+
+  $('authForm').addEventListener('submit', e => {
+    e.preventDefault();
+    const email = $('authEmail').value.trim();
+    const password = $('authPassword').value;
+    const name = $('authName').value.trim();
+
+    if(!email || !password){ toast('Please fill in all fields', 'error'); return; }
+    if(authMode === 'signup' && password.length < 6){ toast('Password must be at least 6 characters', 'error'); return; }
+
+    const btn = $('authSubmit');
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Processing…';
+
+    const promise = authMode === 'signup'
+      ? auth.createUserWithEmailAndPassword(email, password)
+          .then(cred => name ? cred.user.updateProfile({ displayName: name }).then(() => cred) : cred)
+      : auth.signInWithEmailAndPassword(email, password);
+
+    promise
+      .then(() => {
+        toast(authMode === 'signup' ? 'Account created.' : 'Signed in.', 'success');
+        closeAuthModal();
+        $('authForm').reset();
+      })
+      .catch(err => toast(err.message || 'Authentication failed', 'error'))
+      .finally(() => {
+        btn.disabled = false;
+        syncAuthTabs();
+      });
   });
 }
 
@@ -1686,34 +1951,50 @@ function seedDemoFleet(){
 document.addEventListener('DOMContentLoaded', () => {
   refreshIcons();
 
-  const saved = loadSavedTrip();
-  if(saved){
-    applySavedTrip(saved);
-    if(!state.serviceDate){
-      const d = new Date(); d.setDate(d.getDate() + 1);
-      state.serviceDate = d.toISOString().slice(0,10);
-    }
-    if(!state.serviceName) state.serviceName = 'Trip 01';
-  } else {
-    const d = new Date(); d.setDate(d.getDate() + 1);
-    state.serviceDate = d.toISOString().slice(0,10);
-    state.serviceName = 'Trip 01';
-    seedDemoFleet();
-  }
-
-  // Sync header inputs
-  $('operatorCode').value = state.operator;
+  // Default header values
+  const d = new Date(); d.setDate(d.getDate() + 1);
+  state.serviceDate = d.toISOString().slice(0,10);
+  state.serviceName = 'Trip 01';
   $('serviceDate').value = state.serviceDate;
   $('serviceName').value = state.serviceName;
 
   bindGlobal();
-  renderAll();
-  refreshIcons();
 
-  if(saved){
-    const when = new Date(saved.savedAt);
-    toast(`Restored saved trip from ${when.toLocaleDateString()}`);
-  }
+  // Auth state → once known, decide between loading saved trip or seeding demo
+  auth.onAuthStateChanged(user => {
+    applyAuthState(user);
+
+    const urlId = getQueryParam('id');
+    if(urlId){
+      // Load by URL id (works whether signed in or not — matches Firestore rules)
+      loadTripById(urlId)
+        .then(data => {
+          if(data){
+            applyTripData(data);
+            renderAll();
+            refreshIcons();
+            toast('Trip loaded.', 'success');
+          } else {
+            toast('Trip not found — starting fresh.', 'error');
+            seedDemoFleet();
+            renderAll();
+            refreshIcons();
+          }
+        })
+        .catch(err => {
+          console.error('[load trip]', err);
+          toast('Could not load trip: ' + (err.message || 'unknown'), 'error');
+          seedDemoFleet();
+          renderAll();
+          refreshIcons();
+        });
+    } else {
+      // No id → new trip
+      seedDemoFleet();
+      renderAll();
+      refreshIcons();
+    }
+  });
 });
 
 })();
