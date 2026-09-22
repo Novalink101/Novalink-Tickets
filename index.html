@@ -11,6 +11,8 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check-compat.js"></script>
+<script src="app-check.js"></script>
 
 <style>
 :root{
@@ -358,8 +360,8 @@ h3{font-size:1.2rem}
   .horizontal-scroll > * { animation: none; }
 }
 </style>
-</head>
-<body>
+  </head>
+  <body>
 
 <header class="site-header">
   <div class="container header-inner">
@@ -405,6 +407,7 @@ h3{font-size:1.2rem}
     </div>
   </div>
 </header>
+
 <section class="hero-carousel">
   <div class="carousel-slides" id="carouselSlides">
     <div class="carousel-slide carousel-slide-1 active"></div>
@@ -435,6 +438,7 @@ h3{font-size:1.2rem}
     <button class="carousel-dot" data-slide="3" aria-label="Slide 4"></button>
   </div>
 </section>
+
 <section id="explore" class="section alt" style="padding-bottom:24px">
   <div class="container">
 
@@ -701,8 +705,9 @@ h3{font-size:1.2rem}
     </div>
 
   </div>
-                                                                  </section>
-                                                                  <footer class="site-footer">
+</section>
+
+<footer class="site-footer">
   <div class="container">
     <div class="footer-grid">
       <div>
@@ -815,11 +820,6 @@ h3{font-size:1.2rem}
   (function(){
 'use strict';
 
-/* ============================================================
-   NOVALINK — Firebase-backed index.html
-   ============================================================ */
-
-/* ===== FIREBASE CONFIG ===== */
 var firebaseConfig = {
   apiKey: "AIzaSyDSnns131jOlBXAqKo6qy7lTW4Rij-1oWU",
   authDomain: "novalink-864cf.firebaseapp.com",
@@ -833,10 +833,8 @@ var db   = firebase.firestore();
 var auth = firebase.auth();
 var EVENTS_COLLECTION = "events";
 
-/* ===== ADMIN EMAIL ===== */
 var ADMIN_EMAILS = ["nylnathan340@gmail.com"];
 
-/* ===== STATE ===== */
 var currentUser = null;
 var isAdmin = false;
 var authMode = "signin";
@@ -844,7 +842,6 @@ var carouselTimer = null;
 var carouselIndex = 0;
 var eventsUnsub = null;
 
-/* ===== HELPERS ===== */
 function $(id){ return document.getElementById(id); }
 function icon(n){ return '<i data-lucide="'+n+'"></i>'; }
 function refreshIcons(){ if(window.lucide) lucide.createIcons(); }
@@ -867,7 +864,6 @@ function showToast(msg,type,ms){
   showToast._t = setTimeout(function(){ t.classList.remove("show"); }, ms);
 }
 
-/* ===== AUTH STATE UI ===== */
 function applyAuthState(user){
   currentUser = user;
   isAdmin = !!(user && ADMIN_EMAILS.map(function(e){return e.toLowerCase();}).indexOf(String(user.email).toLowerCase()) !== -1);
@@ -892,7 +888,6 @@ function applyAuthState(user){
   refreshIcons();
 }
 
-/* ===== EVENTS — REALTIME FROM FIRESTORE ===== */
 function formatEventCost(e){
   if(typeof e.cost === "number"){
     if(e.cost <= 0) return "Free";
@@ -1036,7 +1031,6 @@ function renderFeaturedEvents(events){
   refreshIcons();
 }
 
-/* ===== AUTH MODAL ===== */
 $("signInBtn").addEventListener("click", function(){ $("authModal").classList.add("open"); document.body.style.overflow = "hidden"; });
 $("authClose").addEventListener("click", function(){ $("authModal").classList.remove("open"); document.body.style.overflow = ""; });
 $("authModal").addEventListener("click", function(e){ if(e.target === this){ this.classList.remove("open"); document.body.style.overflow = ""; } });
@@ -1122,7 +1116,6 @@ $("googleBtn").addEventListener("click", function(){
     .finally(function(){ $("googleBtn").disabled = false; });
 });
 
-/* ===== USER DROPDOWN ===== */
 $("userMenuBtn").addEventListener("click", function(e){
   e.stopPropagation();
   var open = $("userDropdown").classList.toggle("open");
@@ -1143,7 +1136,6 @@ $("ddCreateEvent").addEventListener("click", function(){ window.location.href = 
 $("ddMyCards").addEventListener("click", function(){ window.location.href = "my-cards.html"; });
 $("ddScanner").addEventListener("click", function(){ window.location.href = "scanner.html"; });
 
-/* ===== DELETE ACCOUNT ===== */
 $("ddDeleteAccount").addEventListener("click", function(){
   $("deleteAccountModal").classList.add("open");
   document.body.style.overflow = "hidden";
@@ -1186,7 +1178,6 @@ $("deleteAccountConfirmBtn").addEventListener("click", function(){
     });
 });
 
-/* ===== CAROUSEL / TABS / REVEAL ===== */
 function initScrollReveal() {
   var reveals = document.querySelectorAll(".reveal");
   if (!reveals.length || !("IntersectionObserver" in window)) { reveals.forEach(function(el){ el.classList.add("active"); }); return; }
@@ -1242,7 +1233,6 @@ function initTabs(){
   });
 }
 
-/* ===== BOOT ===== */
 document.addEventListener("DOMContentLoaded", function(){
   $("year").textContent = new Date().getFullYear();
   startCarousel();
@@ -1264,4 +1254,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-                  </html>
+</html>
