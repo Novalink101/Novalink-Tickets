@@ -87,6 +87,9 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .picker select{width:100%;padding:14px 16px;background:var(--bg);border:1px solid var(--bd2);border-radius:10px;color:var(--tx);font-size:15px;font-family:inherit;appearance:none;padding-right:44px;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23009999' stroke-width='3'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;background-size:14px;cursor:pointer}
 .picker select:focus{outline:none;border-color:var(--cy);box-shadow:0 0 0 3px rgba(0,255,255,0.15);background-color:#fff}
 .picker .meta{margin-top:10px;font-size:12px;color:var(--mut);text-align:center}
+.picker .kind-hint{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;padding:3px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:0.06em}
+.picker .kind-hint.event{background:var(--cyf);color:var(--cy3)}
+.picker .kind-hint.trip{background:#f3e8ff;color:#6b21a8}
 
 .scanner-wrap{background:#0a0f14;border-radius:var(--rd);overflow:hidden;position:relative;margin:0 auto 24px;box-shadow:0 20px 60px rgba(10,15,20,0.25);max-width:760px;width:100%;border:6px solid #0a0f14}
 #reader{width:100%;background:#0a0f14;min-height:480px}
@@ -194,6 +197,7 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
       <div class="dd" id="userDropdown">
         <button class="dd-item" id="ddSignOut"><i data-lucide="log-out"></i> Sign out</button>
         <button class="dd-item" id="ddCreateEvent"><i data-lucide="plus-circle"></i> Create an event</button>
+        <button class="dd-item" id="ddCreateTrip"><i data-lucide="map"></i> Create a trip</button>
       </div>
     </div>
   </div>
@@ -219,7 +223,7 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
     <div id="signinState" class="es" style="display:none">
       <div class="ic"><i data-lucide="lock"></i></div>
       <h2>Sign in required</h2>
-      <p>You need to sign in as the event host to use the scanner.</p>
+      <p>You need to sign in as a host to use the scanner.</p>
       <div class="actions">
         <a href="index.html#signin" class="btn btn-accent"><i data-lucide="log-in"></i> Sign in</a>
         <a href="index.html" class="btn btn-ghost"><i data-lucide="arrow-left"></i> Home</a>
@@ -236,7 +240,7 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 
       <div class="picker">
         <div class="picker-head">
-          <label for="eventSelect">Event</label>
+          <label for="eventSelect">Event or Trip</label>
           <div class="sound-controls">
             <button type="button" class="sound-test" id="soundTestBtn" title="Test sound">
               <i data-lucide="volume-1"></i>
@@ -247,7 +251,7 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
           </div>
         </div>
         <select id="eventSelect">
-          <option value="">Loading your events…</option>
+          <option value="">Loading your events and trips…</option>
         </select>
         <div class="meta" id="eventMeta"></div>
       </div>
@@ -271,7 +275,7 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
             <i data-lucide="search-check"></i> Search
           </button>
         </div>
-        <div class="hint">Type at least 1 character. Matches every ticket in this event whose guest name contains your search.</div>
+        <div class="hint">Type at least 1 character. Matches every ticket in this event or trip whose guest name, email, seat or reference contains your search.</div>
         <div class="search-results" id="searchResults">
           <div class="sr-empty">Type a name to see matching tickets</div>
         </div>
@@ -331,14 +335,14 @@ var firebaseConfig = {
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 var db = firebase.firestore();
 var auth = firebase.auth();
-var EVENTS = "events";
 var ADMINS = ["nylnathan340@gmail.com"];
 
 var currentUser = null;
 var isAdmin = false;
-var myEvents = [];
+var myEvents = [];          // combined list, each tagged with _kind = "events" | "trips"
 var eventId = null;
 var eventData = null;
+var currentKind = "events"; // "events" or "trips" for the currently selected parent
 var sessionScans = [];
 var allEventTickets = [];
 var searchDebounce = null;
@@ -349,12 +353,7 @@ var scanning = false;
 var scannerCooldown = null;
 
 /* ══════════════════════════════════════════════════════════════
-   AUDIO ENGINE  (bulletproof version)
-   — Eager context creation
-   — Resume on EVERY user gesture
-   — Linear ramps only (exponential ramps fail silently)
-   — Higher gain so it's unmistakable
-   — Console logging for debugging
+   AUDIO ENGINE
    ══════════════════════════════════════════════════════════════ */
 var audioCtx = null;
 var audioUnlocked = false;
@@ -367,36 +366,19 @@ function getAudioCtx(){
   try {
     if (!audioCtx) {
       var AC = window.AudioContext || window.webkitAudioContext;
-      if (!AC) { console.warn("[Sound] Web Audio not supported on this browser."); return null; }
+      if (!AC) { return null; }
       audioCtx = new AC();
-      console.log("[Sound] AudioContext created. State:", audioCtx.state);
     }
     if (audioCtx.state === "suspended") {
-      audioCtx.resume().then(function(){
-        audioUnlocked = true;
-        console.log("[Sound] AudioContext resumed.");
-      }).catch(function(err){
-        console.warn("[Sound] Resume failed:", err);
-      });
+      audioCtx.resume().then(function(){ audioUnlocked = true; }).catch(function(){});
     } else {
       audioUnlocked = true;
     }
-  } catch(e){
-    console.error("[Sound] Init error:", e);
-    return null;
-  }
+  } catch(e){ return null; }
   return audioCtx;
 }
+function tryUnlockAudio(){ var ctx = getAudioCtx(); if (ctx && ctx.state === "running") audioUnlocked = true; }
 
-/* Try to unlock on any user gesture (needed for iOS) */
-function tryUnlockAudio(){
-  var ctx = getAudioCtx();
-  if (ctx && ctx.state === "running") {
-    audioUnlocked = true;
-  }
-}
-
-/* Simple beep with linear ramps only — bulletproof */
 function beep(freq, delay, duration, volume, wave){
   var ctx = getAudioCtx();
   if (!ctx) return;
@@ -406,44 +388,23 @@ function beep(freq, delay, duration, volume, wave){
     var gain = ctx.createGain();
     osc.type = wave || "sine";
     osc.frequency.setValueAtTime(freq, t);
-    /* Attack */
     gain.gain.setValueAtTime(0.0001, t);
     gain.gain.linearRampToValueAtTime(volume || 0.5, t + 0.008);
-    /* Sustain + Decay */
     gain.gain.linearRampToValueAtTime(0.0001, t + duration);
     osc.connect(gain);
     gain.connect(ctx.destination);
     osc.start(t);
     osc.stop(t + duration + 0.03);
-  } catch(e){
-    console.error("[Sound] Beep error:", e);
-  }
+  } catch(e){}
 }
 
 function playScanSound(type){
   if (!soundEnabled) return;
   if (!audioUnlocked) tryUnlockAudio();
-
-  if (type === "valid") {
-    /* Rising happy "dee-DEET" */
-    beep(880,  0.00, 0.12, 0.6, "sine");
-    beep(1320, 0.12, 0.22, 0.6, "sine");
-  }
-  else if (type === "used") {
-    /* Harsh triple buzzer */
-    beep(180, 0.00, 0.22, 0.7, "square");
-    beep(180, 0.30, 0.22, 0.7, "square");
-    beep(180, 0.60, 0.22, 0.7, "square");
-  }
-  else if (type === "cancelled") {
-    /* Descending "bee-boo" */
-    beep(500, 0.00, 0.18, 0.55, "sine");
-    beep(320, 0.20, 0.28, 0.55, "sine");
-  }
-  else {
-    /* Invalid — single low buzz */
-    beep(220, 0.00, 0.45, 0.6, "square");
-  }
+  if (type === "valid") { beep(880, 0.00, 0.12, 0.6, "sine"); beep(1320, 0.12, 0.22, 0.6, "sine"); }
+  else if (type === "used") { beep(180, 0.00, 0.22, 0.7, "square"); beep(180, 0.30, 0.22, 0.7, "square"); beep(180, 0.60, 0.22, 0.7, "square"); }
+  else if (type === "cancelled") { beep(500, 0.00, 0.18, 0.55, "sine"); beep(320, 0.20, 0.28, 0.55, "sine"); }
+  else { beep(220, 0.00, 0.45, 0.6, "square"); }
 }
 
 function updateSoundToggle(){
@@ -458,24 +419,16 @@ function updateSoundToggle(){
   }
   refreshIcons();
 }
-
 function toggleSound(){
   soundEnabled = !soundEnabled;
   try { localStorage.setItem("novalink_scanner_sound", soundEnabled ? "on" : "off"); } catch(e){}
   updateSoundToggle();
-  if (soundEnabled) {
-    tryUnlockAudio();
-    setTimeout(function(){ playScanSound("valid"); }, 50);
-  }
+  if (soundEnabled) { tryUnlockAudio(); setTimeout(function(){ playScanSound("valid"); }, 50); }
   showToast(soundEnabled ? "Sound on" : "Sound off", "success", 1500);
 }
-
 function testSound(){
   tryUnlockAudio();
-  if (!soundEnabled) {
-    showToast("Turn sound on first.", "error", 2000);
-    return;
-  }
+  if (!soundEnabled) { showToast("Turn sound on first.", "error", 2000); return; }
   setTimeout(function(){ playScanSound("valid"); }, 50);
 }
 /* ── END AUDIO ───────────────────────────────────────────── */
@@ -515,6 +468,42 @@ function buildRef(evId, tId){
   return "NL-" + e + "-" + t;
 }
 
+/* ── Pretty seat display ── */
+function prettySeat(raw){
+  if (!raw) return "General admission";
+  var m1 = /^([A-Z])-T(\d+)-C(\d+)$/.exec(raw);
+  if (m1) return "Table " + m1[1] + m1[2] + " · Seat " + m1[3];
+  var m2 = /^([A-Z])-T(\d+)$/.exec(raw);
+  if (m2) return "Table " + m2[1] + m2[2];
+  var m3 = /^([A-Z0-9]+):([A-Z0-9\-]+)$/.exec(raw);
+  if (m3) return m3[1] + " · Seat " + m3[2];
+  return raw;
+}
+
+/* ── Parent display helpers ── */
+function parentTitle(parent){
+  if (!parent) return "Untitled";
+  if (parent._kind === "trips") return parent.tripName || parent.serviceName || parent.name || "Untitled Trip";
+  return parent.eventName || "Untitled Event";
+}
+function parentDateLine(parent){
+  if (!parent) return "";
+  if (parent._kind === "trips") {
+    var dep = parent.departureDate || parent.serviceDate || parent.startDate || "";
+    var ret = parent.returnDate || parent.endDate || "";
+    if (!dep && !ret) return "Dates TBA";
+    if (dep && !ret) return dep;
+    if (!dep && ret) return ret;
+    if (dep === ret) return dep;
+    return dep + " → " + ret;
+  }
+  return parent.startDate || "";
+}
+function parentCity(parent){
+  if (!parent) return "";
+  return parent.city || parent.venueAddress || parent.destination || "";
+}
+
 function applyAuth(user){
   currentUser = user;
   isAdmin = !!(user && ADMINS.map(function(e){return e.toLowerCase();}).indexOf(String(user.email).toLowerCase()) !== -1);
@@ -540,7 +529,6 @@ function showError(title, msg, icon){
   $("errorIcon").setAttribute("data-lucide", icon || "alert-circle");
   refreshIcons();
 }
-
 function showSignin(){
   $("loadingState").style.display = "none";
   $("scannerContent").style.display = "none";
@@ -548,7 +536,6 @@ function showSignin(){
   $("signinState").style.display = "block";
   refreshIcons();
 }
-
 function showScanner(){
   $("loadingState").style.display = "none";
   $("errorState").style.display = "none";
@@ -557,21 +544,41 @@ function showScanner(){
   refreshIcons();
 }
 
+/* ============================================================
+   Load my events + trips
+   ------------------------------------------------------------
+   Queries both collections in parallel. Each result is tagged
+   with _kind so downstream code knows where to read/write
+   the ticket subcollection.
+   ============================================================ */
 function loadMyEvents(){
-  var q = db.collection(EVENTS);
+  var evQ = db.collection("events");
+  var trQ = db.collection("trips");
   if (!isAdmin) {
-    q = q.where("ownerUid", "==", currentUser.uid);
+    evQ = evQ.where("ownerUid", "==", currentUser.uid);
+    trQ = trQ.where("ownerUid", "==", currentUser.uid);
   }
-  return q.get().then(function(snap){
+  return Promise.all([evQ.get(), trQ.get()]).then(function(rs){
     myEvents = [];
-    snap.forEach(function(doc){
+
+    rs[0].forEach(function(doc){
       var d = doc.data() || {};
       d.id = doc.id;
+      d._kind = "events";
       myEvents.push(d);
     });
-    myEvents.sort(function(a, b){
-      return String(b.startDate || "").localeCompare(String(a.startDate || ""));
+    rs[1].forEach(function(doc){
+      var d = doc.data() || {};
+      d.id = doc.id;
+      d._kind = "trips";
+      myEvents.push(d);
     });
+
+    /* Sort by date descending, most recent first */
+    myEvents.sort(function(a, b){
+      return String(parentDateLine(b) || "").localeCompare(String(parentDateLine(a) || ""));
+    });
+
     populateEventDropdown();
   });
 }
@@ -583,35 +590,66 @@ function populateEventDropdown(){
   if (!myEvents.length) {
     var opt = document.createElement("option");
     opt.value = "";
-    opt.textContent = "No events found";
+    opt.textContent = "No events or trips found";
     sel.appendChild(opt);
     sel.disabled = true;
-    $("eventMeta").textContent = "You don't have any events to scan for.";
+    $("eventMeta").textContent = "You don't have any events or trips to scan for yet.";
     showScanner();
     return;
   }
 
   var placeholder = document.createElement("option");
   placeholder.value = "";
-  placeholder.textContent = "— Select an event to scan —";
+  placeholder.textContent = "— Select an event or trip to scan —";
   sel.appendChild(placeholder);
 
-  myEvents.forEach(function(ev){
-    var opt = document.createElement("option");
-    opt.value = ev.id;
-    var label = ev.eventName || "Untitled Event";
-    var city = ev.city ? " · " + ev.city : "";
-    var date = ev.startDate ? " · " + ev.startDate : "";
-    opt.textContent = label + city + date;
-    sel.appendChild(opt);
-  });
+  /* Build grouped dropdown — Events first, then Trips */
+  var eventsOnly = myEvents.filter(function(e){ return e._kind === "events"; });
+  var tripsOnly  = myEvents.filter(function(e){ return e._kind === "trips"; });
+
+  if (eventsOnly.length) {
+    var evGroup = document.createElement("optgroup");
+    evGroup.label = "Events";
+    eventsOnly.forEach(function(ev){
+      var opt = document.createElement("option");
+      opt.value = ev._kind + "::" + ev.id;
+      var bits = [ev.eventName || "Untitled Event"];
+      if (ev.city) bits.push(ev.city);
+      if (ev.startDate) bits.push(ev.startDate);
+      opt.textContent = bits.join(" · ");
+      evGroup.appendChild(opt);
+    });
+    sel.appendChild(evGroup);
+  }
+
+  if (tripsOnly.length) {
+    var trGroup = document.createElement("optgroup");
+    trGroup.label = "Trips";
+    tripsOnly.forEach(function(tr){
+      var opt = document.createElement("option");
+      opt.value = tr._kind + "::" + tr.id;
+      var name = tr.tripName || tr.serviceName || tr.name || "Untitled Trip";
+      var bits = [name];
+      if (tr.destination || tr.city) bits.push(tr.destination || tr.city);
+      if (tr.departureDate || tr.startDate || tr.serviceDate) bits.push(tr.departureDate || tr.startDate || tr.serviceDate);
+      opt.textContent = bits.join(" · ");
+      trGroup.appendChild(opt);
+    });
+    sel.appendChild(trGroup);
+  }
 
   showScanner();
 
-  var pre = getParam("event");
-  if (pre && myEvents.some(function(e){ return e.id === pre; })) {
-    sel.value = pre;
-    sel.dispatchEvent(new Event("change"));
+  /* Pre-select from ?event= and ?collection= */
+  var preId = getParam("event");
+  var preCol = getParam("collection");
+  if (preId) {
+    var wanted = (preCol === "trips" ? "trips" : "events") + "::" + preId;
+    var found = Array.prototype.find.call(sel.options, function(o){ return o.value === wanted; });
+    if (found) {
+      sel.value = wanted;
+      sel.dispatchEvent(new Event("change"));
+    }
   }
 }
 
@@ -620,28 +658,52 @@ function getParam(n){
   catch(e){ return null; }
 }
 
-function selectEvent(id){
-  if (!id) {
+/* ============================================================
+   Select event / trip
+   ============================================================ */
+function selectEvent(value){
+  if (!value) {
     stopScanner();
     $("scannerWrap").style.display = "none";
-    $("eventMeta").textContent = "";
+    $("eventMeta").innerHTML = "";
     eventId = null;
     eventData = null;
+    currentKind = "events";
     allEventTickets = [];
     clearSearchResults();
     return;
   }
-  eventId = id;
-  eventData = myEvents.find(function(e){ return e.id === id; }) || null;
+
+  /* value is "events::abc123" or "trips::xyz789" */
+  var parts = value.split("::");
+  currentKind = parts[0] === "trips" ? "trips" : "events";
+  eventId = parts[1];
+
+  eventData = myEvents.find(function(e){ return e.id === eventId && e._kind === currentKind; }) || null;
 
   if (eventData) {
-    var tierCount = eventData.activeTierCount || 4;
-    var seats = eventData.totalAttendees || 0;
-    var planId = (eventData.plan && eventData.plan.id) || "";
-    var seatLine = (planId === "basic" || !eventData.sections || !eventData.sections.length)
-                    ? "General admission"
-                    : (seats ? seats + " seats" : "No seat data");
-    $("eventMeta").textContent = seatLine + " · " + tierCount + " tier" + (tierCount === 1 ? "" : "s");
+    var tierCount = eventData.activeTierCount || (eventData.tiers ? eventData.tiers.length : 0) || 4;
+    var seatLine;
+
+    if (currentKind === "trips") {
+      var totalSeats = 0;
+      (eventData.vehicles || []).forEach(function(v){
+        totalSeats += (parseInt(v.rows, 10) || 0) * (parseInt(v.seatsPerRow, 10) || 0);
+      });
+      seatLine = totalSeats > 0 ? (totalSeats + " seats") : "No seat data";
+    } else {
+      var planId = (eventData.plan && eventData.plan.id) || "";
+      var seats = eventData.totalAttendees || 0;
+      seatLine = (planId === "basic" || !eventData.sections || !eventData.sections.length)
+        ? "General admission"
+        : (seats ? seats + " seats" : "No seat data");
+    }
+
+    var kindBadge = currentKind === "trips"
+      ? '<span class="kind-hint trip">Trip</span>'
+      : '<span class="kind-hint event">Event</span>';
+
+    $("eventMeta").innerHTML = kindBadge + " · " + esc(seatLine) + " · " + tierCount + " tier" + (tierCount === 1 ? "" : "s");
   }
 
   clearSearchResults();
@@ -649,10 +711,13 @@ function selectEvent(id){
   loadEventTickets();
 }
 
+/* ============================================================
+   Load all tickets for the currently selected parent
+   ============================================================ */
 function loadEventTickets(){
   allEventTickets = [];
   if (!eventId) return;
-  db.collection(EVENTS).doc(eventId).collection("tickets").get()
+  db.collection(currentKind).doc(eventId).collection("tickets").get()
     .then(function(snap){
       snap.forEach(function(doc){
         var t = doc.data() || {};
@@ -663,10 +728,13 @@ function loadEventTickets(){
       if (q) runNameSearch();
     })
     .catch(function(err){
-      console.error("Load event tickets error:", err);
+      console.error("Load tickets error:", err);
     });
 }
 
+/* ============================================================
+   Camera scanner
+   ============================================================ */
 function startScanner(){
   if (!window.Html5Qrcode) {
     showToast("QR library failed to load. Use search by name below.", "error", 5000);
@@ -697,9 +765,7 @@ function startScanner(){
     onQrScan,
     function(err) { /* silent per-frame errors */ }
   )
-  .then(function(){
-    scannerRunning = true;
-  })
+  .then(function(){ scannerRunning = true; })
   .catch(function(err){
     console.error("Camera start error:", err);
     $("scannerWrap").style.display = "none";
@@ -716,7 +782,7 @@ function stopScanner(){
   }
 }
 
-function onQrScan(decodedText, decodedResult){
+function onQrScan(decodedText){
   if (scanning) return;
   scanning = true;
 
@@ -743,14 +809,16 @@ function onQrScan(decodedText, decodedResult){
   }
 
   if (parsed.eventId !== eventId) {
-    flashResult("invalid", "WRONG EVENT", "", "", "This ticket is for a different event.");
+    flashResult("invalid", "WRONG EVENT", "", "", "This ticket is for a different event or trip.");
     return;
   }
 
   verifyTicketById(parsed.ticketId);
 }
 
-/* ===== SEARCH BY NAME ===== */
+/* ============================================================
+   Search by name
+   ============================================================ */
 function clearSearchResults(){
   var box = $("searchResults");
   if (!box) return;
@@ -766,17 +834,18 @@ function updateSearchClearBtn(){
 
 function runNameSearch(){
   if (!eventId) {
-    $("searchResults").innerHTML = '<div class="sr-empty">Select an event first to search its tickets</div>';
+    $("searchResults").innerHTML = '<div class="sr-empty">Select an event or trip first to search its tickets</div>';
     return;
   }
   var q = ($("searchNameInput").value || "").trim().toLowerCase();
   if (!q) { clearSearchResults(); return; }
 
   var matches = allEventTickets.filter(function(t){
-    var name = String(t.guestName || "").toLowerCase();
+    var name  = String(t.guestName || "").toLowerCase();
     var email = String(t.buyerEmail || "").toLowerCase();
-    var ref = buildRef(eventId, t.ticketId || t.id).toLowerCase();
-    return name.indexOf(q) !== -1 || email.indexOf(q) !== -1 || ref.indexOf(q) !== -1;
+    var seat  = String(t.seat || "").toLowerCase();
+    var ref   = buildRef(eventId, t.ticketId || t.id).toLowerCase();
+    return name.indexOf(q) !== -1 || email.indexOf(q) !== -1 || seat.indexOf(q) !== -1 || ref.indexOf(q) !== -1;
   });
 
   var order = { "valid": 0, "checked-in": 1, "checked_in": 1, "used": 1, "cancelled": 2 };
@@ -808,8 +877,8 @@ function renderSearchResults(list, q){
     else if (status === "checked-in" || status === "checked_in" || status === "used") { badgeLabel = "USED"; badgeClass = "used"; }
 
     var tierLabel = (eventData && eventData.tierNames && eventData.tierNames[t.tier]) || t.tier || "";
-    var seatLabel = t.seat ? " · " + t.seat : " · General admission";
-    var refLabel = buildRef(eventId, t.ticketId || t.id);
+    var seatLabel = t.seat ? " · " + prettySeat(t.seat) : " · General admission";
+    var refLabel  = buildRef(eventId, t.ticketId || t.id);
 
     var item = document.createElement("button");
     item.type = "button";
@@ -822,20 +891,20 @@ function renderSearchResults(list, q){
       '</div>' +
       '<div class="sr-badge ' + badgeClass + '">' + badgeLabel + '</div>';
 
-    item.addEventListener("click", function(){
-      verifyTicketById(t.id);
-    });
+    item.addEventListener("click", function(){ verifyTicketById(t.id); });
     box.appendChild(item);
   });
 
   refreshIcons();
 }
 
-/* ===== Verify ticket ===== */
+/* ============================================================
+   Verify ticket (transaction)
+   ============================================================ */
 function verifyTicketById(ticketId){
   if (!eventId || !ticketId) { flashResult("invalid", "INVALID", "", "", "Missing data."); return; }
 
-  var ticketRef = db.collection(EVENTS).doc(eventId).collection("tickets").doc(ticketId);
+  var ticketRef = db.collection(currentKind).doc(eventId).collection("tickets").doc(ticketId);
 
   db.runTransaction(function(transaction){
     return transaction.get(ticketRef).then(function(snap){
@@ -863,11 +932,13 @@ function verifyTicketById(ticketId){
   })
   .then(function(res){
     var t = res.ticket || {};
-    var guest = t.guestName || "Guest";
-    var seat = t.seat || "";
+    var guest    = t.guestName || "Guest";
+    var seatRaw  = t.seat || "";
+    var seatDisp = prettySeat(seatRaw);
     var tierName = (eventData && eventData.tierNames && eventData.tierNames[t.tier]) || t.tier || "";
-    var seatLine = seat ? (tierName ? tierName + " · " + seat : seat) : (tierName ? tierName + " · General admission" : "General admission");
+    var seatLine = seatRaw ? (tierName ? tierName + " · " + seatDisp : seatDisp) : (tierName ? tierName + " · General admission" : "General admission");
 
+    /* Update cached ticket in memory so name search reflects new status */
     for (var i = 0; i < allEventTickets.length; i++) {
       if (allEventTickets[i].id === ticketId) {
         if (res.result === "valid") allEventTickets[i].status = "checked-in";
@@ -877,17 +948,17 @@ function verifyTicketById(ticketId){
 
     if (res.result === "valid") {
       flashResult("valid", "ADMIT", guest, seatLine, "Ticket marked as checked-in.");
-      logScan("valid", guest, seat, tierName);
+      logScan("valid", guest, seatDisp, tierName);
     } else if (res.result === "used") {
       var when = t.checkedInAt && t.checkedInAt.toDate ? t.checkedInAt.toDate().toLocaleString("en-ZA") : "";
       flashResult("used", "ALREADY USED", guest, seatLine, "This ticket was already scanned" + (when ? " at " + when : "") + ".");
-      logScan("used", guest, seat, tierName);
+      logScan("used", guest, seatDisp, tierName);
     } else if (res.result === "cancelled") {
       flashResult("cancelled", "CANCELLED", guest, seatLine, "This ticket was cancelled by the buyer.");
-      logScan("cancelled", guest, seat, tierName);
+      logScan("cancelled", guest, seatDisp, tierName);
     } else {
       flashResult("invalid", "INVALID", guest || "", "", "This ticket cannot be used.");
-      logScan("invalid", guest || "Unknown", seat, tierName);
+      logScan("invalid", guest || "Unknown", seatDisp, tierName);
     }
   })
   .catch(function(err){
@@ -896,23 +967,21 @@ function verifyTicketById(ticketId){
   });
 }
 
-/* ── VIBRATION HELPER ────────────────────────────────────── */
+/* ── VIBRATION ── */
 function buzz(pattern){
   try {
     if (navigator && typeof navigator.vibrate === "function") {
       navigator.vibrate(pattern);
     }
-  } catch(e){ /* ignore */ }
+  } catch(e){}
 }
 
 function flashResult(type, title, guest, seat, msg){
   var ov = $("resultOverlay");
   ov.className = "result-overlay show " + type;
 
-  /* Play verification sound */
   playScanSound(type);
 
-  /* Vibration per result type */
   if (type === "used")           buzz([300, 120, 300, 120, 300]);
   else if (type === "valid")     buzz([80, 40, 80]);
   else if (type === "cancelled") buzz([400, 150, 400]);
@@ -920,8 +989,8 @@ function flashResult(type, title, guest, seat, msg){
 
   $("resultTitle").textContent = title;
   $("resultGuest").textContent = guest || "";
-  $("resultSeat").textContent = seat || "";
-  $("resultMsg").textContent = msg || "";
+  $("resultSeat").textContent  = seat || "";
+  $("resultMsg").textContent   = msg || "";
 
   var iconName = type === "valid" ? "check-circle"
                : type === "used" ? "alert-triangle"
@@ -931,22 +1000,14 @@ function flashResult(type, title, guest, seat, msg){
   refreshIcons();
 
   var p = $("resultProgress");
-  if (p) {
-    p.style.animation = "none";
-    void p.offsetWidth;
-    p.style.animation = "";
-  }
+  if (p) { p.style.animation = "none"; void p.offsetWidth; p.style.animation = ""; }
 
   clearTimeout(scannerCooldown);
   scannerCooldown = setTimeout(function(){
     ov.classList.remove("show");
     scanning = false;
     try {
-      if (html5QrCode && scannerRunning && html5QrCode.getState && html5QrCode.getState() === 3) {
-        html5QrCode.resume();
-      } else if (html5QrCode && scannerRunning) {
-        html5QrCode.resume();
-      }
+      if (html5QrCode && scannerRunning) html5QrCode.resume();
     } catch(e){
       stopScanner();
       setTimeout(startScanner, 200);
@@ -960,6 +1021,7 @@ function logScan(type, guest, seat, tier){
     guest: guest,
     seat: seat,
     tier: tier,
+    kind: currentKind,
     time: new Date().toLocaleTimeString("en-ZA", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
   });
   if (sessionScans.length > 50) sessionScans.length = 50;
@@ -1003,13 +1065,14 @@ function renderRecent(){
   refreshIcons();
 }
 
+/* ============================================================
+   Boot
+   ============================================================ */
 document.addEventListener("DOMContentLoaded", function(){
   $("year").textContent = new Date().getFullYear();
   refreshIcons();
 
-  /* ── Create the AudioContext eagerly, then resume on every interaction ── */
   getAudioCtx();
-
   ["pointerdown", "touchstart", "mousedown", "keydown", "click"].forEach(function(evt){
     document.addEventListener(evt, tryUnlockAudio, { passive: true, capture: true });
     window.addEventListener(evt, tryUnlockAudio, { passive: true, capture: true });
@@ -1027,18 +1090,19 @@ document.addEventListener("DOMContentLoaded", function(){
   document.addEventListener("click", function(){ $("userDropdown").classList.remove("open"); });
   $("ddSignOut").addEventListener("click", function(){ auth.signOut().then(function(){ showToast("Signed out","success"); }); });
   $("ddCreateEvent").addEventListener("click", function(){ window.location.href = "create-event.html"; });
+  $("ddCreateTrip").addEventListener("click",  function(){ window.location.href = "create-trip.html";  });
 
   $("eventSelect").addEventListener("change", function(){
     selectEvent(this.value);
   });
 
   var searchInput = $("searchNameInput");
-  var searchBtn = $("searchNameBtn");
+  var searchBtn   = $("searchNameBtn");
   var searchClear = $("searchClearBtn");
 
   if (searchBtn) {
     searchBtn.addEventListener("click", function(){
-      if (!eventId) { showToast("Select an event first.", "error"); return; }
+      if (!eventId) { showToast("Select an event or trip first.", "error"); return; }
       runNameSearch();
     });
   }
@@ -1070,8 +1134,8 @@ document.addEventListener("DOMContentLoaded", function(){
     }
     loadMyEvents()
       .catch(function(err){
-        console.error("Load events error:", err);
-        showError("Could not load events", err.message || "Try again.", "alert-circle");
+        console.error("Load events/trips error:", err);
+        showError("Could not load", err.message || "Try again.", "alert-circle");
       });
   });
 
@@ -1082,4 +1146,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-                     </html>
+  </html>
