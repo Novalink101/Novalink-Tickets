@@ -444,11 +444,12 @@ h3{font-size:1.2rem}
 
     <div class="tabs-nav reveal" role="tablist">
       <button class="tab-btn active" data-tab="tab-events"><i data-lucide="calendar"></i> Featured events</button>
+      <button class="tab-btn" data-tab="tab-featured-trips"><i data-lucide="map"></i> Featured trips</button>
       <button class="tab-btn" data-tab="tab-cards"><i data-lucide="credit-card"></i> Premium cards</button>
       <button class="tab-btn" data-tab="tab-pricing"><i data-lucide="tag"></i> Packages &amp; rates</button>
       <button class="tab-btn" data-tab="tab-company"><i data-lucide="building-2"></i> Company</button>
       <button class="tab-btn" data-tab="tab-practices"><i data-lucide="list-checks"></i> What we do</button>
-      <button class="tab-btn" data-tab="tab-trips"><i data-lucide="map"></i> Trips</button>
+      <button class="tab-btn" data-tab="tab-trips"><i data-lucide="ticket"></i> Trip cards</button>
       <button class="tab-btn" data-tab="tab-advertise"><i data-lucide="megaphone"></i> Advertise</button>
       <button class="tab-btn" data-tab="tab-support"><i data-lucide="life-buoy"></i> Support</button>
     </div>
@@ -464,6 +465,21 @@ h3{font-size:1.2rem}
       <div class="carousel-wrap reveal reveal-delay-1">
         <div class="horizontal-scroll" id="eventsScroll">
           <p style="color: var(--text-muted); padding: 20px; font-size: 14px;">Loading events…</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="tab-panel" id="tab-featured-trips">
+      <div class="section-header reveal" style="display:flex;justify-content:space-between;align-items:flex-end;flex-wrap:wrap;gap:8px">
+        <div>
+          <h2>Featured trips</h2>
+          <p>Long-distance journeys with destination cards and multi-day itineraries.</p>
+        </div>
+        <a href="trips.html" style="color:var(--cyan-600);font-weight:700;font-size:13.5px">See all trips →</a>
+      </div>
+      <div class="carousel-wrap reveal reveal-delay-1">
+        <div class="horizontal-scroll" id="tripsScroll">
+          <p style="color: var(--text-muted); padding: 20px; font-size: 14px;">Loading trips…</p>
         </div>
       </div>
     </div>
@@ -630,14 +646,14 @@ h3{font-size:1.2rem}
 
     <div class="tab-panel" id="tab-trips">
       <div class="section-header center reveal">
-        <h2>Long-distance trips</h2>
+        <h2>Trip cards</h2>
         <p>Trip cards are built for journeys that span days or weeks. Each card carries images of the destination, a description, departure and return dates.</p>
       </div>
       <div class="compact-grid">
         <div class="value-card reveal reveal-delay-1">
           <div class="icon"><i data-lucide="image"></i></div>
           <h3>Destination images</h3>
-          <p>Upload photos of the destination so travellers know what to expect. Images appear on the card and on the event page.</p>
+          <p>Upload photos of the destination so travellers know what to expect. Images appear on the card and on the trip page.</p>
         </div>
         <div class="value-card reveal reveal-delay-2">
           <div class="icon"><i data-lucide="calendar"></i></div>
@@ -832,6 +848,7 @@ if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 var db   = firebase.firestore();
 var auth = firebase.auth();
 var EVENTS_COLLECTION = "events";
+var TRIPS_COLLECTION  = "trips";
 
 var ADMIN_EMAILS = ["nylnathan340@gmail.com"];
 
@@ -841,6 +858,7 @@ var authMode = "signin";
 var carouselTimer = null;
 var carouselIndex = 0;
 var eventsUnsub = null;
+var tripsUnsub = null;
 
 function $(id){ return document.getElementById(id); }
 function icon(n){ return '<i data-lucide="'+n+'"></i>'; }
@@ -888,6 +906,7 @@ function applyAuthState(user){
   refreshIcons();
 }
 
+/* ---------------- Shared card helpers ---------------- */
 function formatEventCost(e){
   if(typeof e.cost === "number"){
     if(e.cost <= 0) return "Free";
@@ -897,6 +916,13 @@ function formatEventCost(e){
   if(typeof e.costFormatted === "string" && e.costFormatted.trim() !== "") return e.costFormatted;
   return "Free";
 }
+function canDeleteEvent(e){
+  if (!currentUser) return false;
+  if (isAdmin) return true;
+  return e.ownerUid && e.ownerUid === currentUser.uid;
+}
+
+/* ---------------- Event-specific helpers ---------------- */
 function eventAttendeeCount(e){
   if(typeof e.totalAttendees === "number") return e.totalAttendees;
   if(e.venue && typeof e.venue.totalAttendees === "number") return e.venue.totalAttendees;
@@ -914,12 +940,49 @@ function eventDateLabel(e){
   if(!dateStr) dateStr = "Date TBA";
   return dateStr;
 }
-function canDeleteEvent(e){
-  if (!currentUser) return false;
-  if (isAdmin) return true;
-  return e.ownerUid && e.ownerUid === currentUser.uid;
+
+/* ---------------- Trip-specific helpers ---------------- */
+function tripName(t){
+  return t.tripName || t.eventName || t.name || "Untitled Trip";
+}
+function tripDestination(t){
+  return t.destination || t.city || t.venueAddress ||
+    (t.venue && t.venue.stage && t.venue.stage.name) || "Destination TBA";
+}
+function tripOperatorCode(t){
+  return t.operator || t.operatorCode || "";
+}
+function tripCapacity(t){
+  if(typeof t.totalAttendees === "number") return t.totalAttendees;
+  if(typeof t.seats === "number") return t.seats;
+  if(t.venue && typeof t.venue.totalAttendees === "number") return t.venue.totalAttendees;
+  if(Array.isArray(t.vehicles)){
+    return t.vehicles.reduce(function(sum, v){
+      var rows = parseInt(v.rows, 10) || 0;
+      var spr  = parseInt(v.seatsPerRow, 10) || 0;
+      return sum + (rows * spr);
+    }, 0);
+  }
+  return 0;
+}
+function prettyDate(iso){
+  if(!iso) return "";
+  var s = String(iso);
+  var d = new Date(s.length === 10 ? s + "T00:00:00" : s);
+  if(isNaN(d.getTime())) return s;
+  return d.toLocaleDateString("en-ZA", { day: "2-digit", month: "short", year: "numeric" });
+}
+function tripDateSpan(t){
+  var dep = t.departureDate || t.startDate || t.serviceDate || "";
+  var ret = t.returnDate || t.endDate || "";
+  if(!dep && !ret) return "Dates TBA";
+  if(dep && !ret)  return prettyDate(dep);
+  if(!dep && ret)  return prettyDate(ret);
+  if(dep === ret)  return prettyDate(dep);
+  return prettyDate(dep) + " → " + prettyDate(ret);
 }
 
+/* ---------------- Events listener + renderer ---------------- */
 function attachEventsListener(){
   var container = $("eventsScroll");
   if (!container) return;
@@ -1008,16 +1071,129 @@ function renderFeaturedEvents(events){
     container.appendChild(card);
   });
 
+  bindCardDeleteButtons(container, EVENTS_COLLECTION, "Event");
+  refreshIcons();
+}
+
+/* ---------------- Trips listener + renderer ---------------- */
+function attachTripsListener(){
+  var container = $("tripsScroll");
+  if (!container) return;
+  container.innerHTML = '<p style="color: var(--text-muted); padding: 20px; font-size: 14px;">Loading trips…</p>';
+
+  if (tripsUnsub) { try { tripsUnsub(); } catch(e){} }
+
+  tripsUnsub = db.collection(TRIPS_COLLECTION)
+    .orderBy("createdAt", "desc")
+    .limit(30)
+    .onSnapshot(function(snapshot){
+      var trips = [];
+      snapshot.forEach(function(doc){
+        var d = doc.data() || {};
+        d.id = doc.id;
+        trips.push(d);
+      });
+      renderFeaturedTrips(trips);
+    }, function(err){
+      // Trips collection may not exist yet or index may be building — fail soft.
+      console.warn("Trips listener error:", err && err.message);
+      container.innerHTML =
+        '<p style="color: var(--text-muted); padding: 20px; font-size: 14px;">' +
+          'No trips yet. ' +
+          '<a href="create-trip.html" style="color:var(--cyan-600);font-weight:700;">Create the first trip →</a>' +
+        '</p>';
+    });
+}
+
+function renderFeaturedTrips(trips){
+  var container = $("tripsScroll");
+  if (!container) return;
+
+  if (!trips || !trips.length) {
+    container.innerHTML =
+      '<p style="color: var(--text-muted); padding: 20px; font-size: 14px;">' +
+        'No trips yet. ' +
+        '<a href="create-trip.html" style="color:var(--cyan-600);font-weight:700;">Create the first trip →</a>' +
+      '</p>';
+    return;
+  }
+
+  var gradients = [
+    "linear-gradient(135deg, #0ea5e9 0%, #0c4a6e 100%)",
+    "linear-gradient(135deg, #f97316 0%, #c2410c 100%)",
+    "linear-gradient(135deg, #10b981 0%, #065f46 100%)",
+    "linear-gradient(135deg, #8b5cf6 0%, #5b21b6 100%)",
+    "linear-gradient(135deg, #f43f5e 0%, #9f1239 100%)"
+  ];
+
+  container.innerHTML = "";
+
+  trips.forEach(function(t, idx){
+    var card = document.createElement("div");
+    card.className = "event-card";
+    card.style.cursor = "pointer";
+
+    var gradient = gradients[idx % gradients.length];
+    var dateStr = tripDateSpan(t);
+    var destination = tripDestination(t);
+    var costStr = formatEventCost(t);
+    var name = tripName(t);
+    var seats = tripCapacity(t);
+    var operator = tripOperatorCode(t);
+    var badge = operator ? operator : (t.source === "demo" ? "TRIP" : "NEW");
+
+    var bgStyle = "background:" + gradient;
+    var img = t.heroImage || t.destinationImage || t.coverImage || "";
+    if (img) bgStyle = "background-image:url('" + esc(img) + "');background-size:cover;background-position:center;";
+
+    var deleteBtnHTML = "";
+    if (canDeleteEvent(t)) {
+      deleteBtnHTML =
+        '<button class="event-card-delete" data-id="' + esc(t.id) + '" title="Delete trip">' +
+        '<i data-lucide="trash-2"></i></button>';
+    }
+
+    var seatsLine = seats > 0
+      ? '<div class="event-card-meta">' + icon("users") + ' ' + seats + ' seats</div>'
+      : '';
+
+    card.innerHTML =
+      '<div class="event-card-img" style="' + bgStyle + '">' +
+        '<span class="event-card-badge">' + esc(badge) + '</span>' +
+        deleteBtnHTML +
+      '</div>' +
+      '<div class="event-card-body">' +
+        '<h3>' + esc(name) + '</h3>' +
+        '<div class="event-card-meta">' + icon("calendar") + ' ' + esc(dateStr) + '</div>' +
+        '<div class="event-card-meta">' + icon("map-pin") + ' ' + esc(destination) + '</div>' +
+        seatsLine +
+        '<div class="event-card-price">From <span>' + esc(costStr) + '</span></div>' +
+      '</div>';
+
+    card.addEventListener("click", function(ev){
+      if (ev.target.closest(".event-card-delete")) return;
+      window.location.href = "view-trip.html?id=" + encodeURIComponent(t.id);
+    });
+
+    container.appendChild(card);
+  });
+
+  bindCardDeleteButtons(container, TRIPS_COLLECTION, "Trip");
+  refreshIcons();
+}
+
+/* Shared delete-button wiring used by both grids */
+function bindCardDeleteButtons(container, collectionName, label){
   container.querySelectorAll(".event-card-delete").forEach(function(btn){
     btn.addEventListener("click", function(ev){
       ev.stopPropagation();
       var id = btn.getAttribute("data-id");
       if (!id) return;
-      if (!confirm("Delete this event permanently? This cannot be undone.")) return;
+      if (!confirm("Delete this " + label.toLowerCase() + " permanently? This cannot be undone.")) return;
       btn.disabled = true;
       btn.innerHTML = '<span style="display:inline-block;width:12px;height:12px;border:2px solid rgba(255,255,255,.4);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;"></span>';
-      db.collection(EVENTS_COLLECTION).doc(id).delete()
-        .then(function(){ showToast("Event deleted", "success"); })
+      db.collection(collectionName).doc(id).delete()
+        .then(function(){ showToast(label + " deleted", "success"); })
         .catch(function(err){
           console.error(err);
           showToast("Could not delete: " + err.message, "error", 4000);
@@ -1027,8 +1203,6 @@ function renderFeaturedEvents(events){
         });
     });
   });
-
-  refreshIcons();
 }
 
 $("signInBtn").addEventListener("click", function(){ $("authModal").classList.add("open"); document.body.style.overflow = "hidden"; });
@@ -1161,12 +1335,23 @@ $("deleteAccountConfirmBtn").addEventListener("click", function(){
   var uid = currentUser.uid;
   var email = currentUser.email;
 
-  db.collection(EVENTS_COLLECTION).where("ownerUid", "==", uid).get()
+  var wipeEvents = db.collection(EVENTS_COLLECTION).where("ownerUid", "==", uid).get()
     .then(function(snap){
       var batch = db.batch();
       snap.forEach(function(doc){ batch.delete(doc.ref); });
       if (snap.size > 0) return batch.commit();
     })
+    .catch(function(){ /* collection may not exist — non-fatal */ });
+
+  var wipeTrips = db.collection(TRIPS_COLLECTION).where("ownerUid", "==", uid).get()
+    .then(function(snap){
+      var batch = db.batch();
+      snap.forEach(function(doc){ batch.delete(doc.ref); });
+      if (snap.size > 0) return batch.commit();
+    })
+    .catch(function(){ /* collection may not exist — non-fatal */ });
+
+  Promise.all([wipeEvents, wipeTrips])
     .then(function(){ return currentUser.delete(); })
     .then(function(){
       closeDeleteModal();
@@ -1244,6 +1429,7 @@ document.addEventListener("DOMContentLoaded", function(){
   auth.onAuthStateChanged(function(user){
     applyAuthState(user);
     attachEventsListener();
+    attachTripsListener();
   });
 
   if (window.location.hash === "#signin") {
@@ -1254,4 +1440,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-</html>
+  </html>
