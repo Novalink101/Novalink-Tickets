@@ -22,6 +22,8 @@
   --warn:#92400e;--warn-bg:#fffbeb;--warn-bd:#fde68a;
   --bad:#991b1b;--bad-bg:#fef2f2;--bad-bd:#fecaca;
   --shell-edge:#94a3b8;--shell-edge-2:#64748b;--shell-glass:#dbeafe;
+  --rev-grad:linear-gradient(135deg,#22d3ee,#0891b2);
+  --rev-grad-2:linear-gradient(135deg,#0a0f14,#1f2937);
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.5;min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
@@ -37,7 +39,6 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .logo svg{width:26px;height:32px;display:block}
 .logo b{font-weight:800;font-size:1.15rem;color:var(--navy);letter-spacing:-.01em}
 .studio-badge{background:var(--ink);color:var(--cyan);font-size:11px;font-weight:900;padding:9px 16px;border-radius:var(--radius-pill);text-transform:uppercase;letter-spacing:.08em;white-space:nowrap;flex-shrink:0}
-
 .cfg{display:flex;gap:8px;align-items:center;flex-wrap:wrap;flex:1;justify-content:flex-end}
 .cfg input{padding:8px 12px;background:var(--surface-2);border:1px solid var(--border);border-radius:10px;font-size:12.5px;font-weight:600;color:var(--text)}
 .cfg input:focus{outline:none;border-color:var(--cyan);background:#fff;box-shadow:0 0 0 3px rgba(34,211,238,.15)}
@@ -80,6 +81,9 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .pill.active{background:var(--ink);color:#fff}
 .pill .cnt{font-size:10px;font-weight:900;background:var(--bg-2);color:var(--text-2);padding:2px 7px;border-radius:var(--radius-pill);margin-left:2px}
 .pill.active .cnt{background:rgba(34,211,238,.22);color:var(--cyan)}
+.pill.rev-pill.active{background:var(--rev-grad);color:#04161c}
+.pill.rev-pill.active svg{color:#04161c}
+.pill.rev-pill.active .cnt{background:rgba(4,22,28,.2);color:#04161c}
 @media (max-width:560px){.pill{padding:10px 14px;font-size:12px}.pill .lbl{display:none}.pill .lbl.show{display:inline}}
 
 /* ============================================================
@@ -91,9 +95,6 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
 .view.active{display:block;animation:fadeUp .3s cubic-bezier(.22,.9,.3,1)}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
-/* ============================================================
-   STEP CARDS
-   ============================================================ */
 .step-card{background:var(--ink);color:#fff;border-radius:var(--radius);padding:14px 16px;display:flex;gap:13px;align-items:center;position:relative;overflow:hidden}
 .step-card + .step-card{margin-top:8px}
 .step-card::after{content:'';position:absolute;right:-30px;top:-30px;width:110px;height:110px;background:radial-gradient(circle,rgba(34,211,238,.13),transparent 68%);pointer-events:none}
@@ -102,10 +103,9 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
 .step-title{font-weight:800;font-size:13.5px;letter-spacing:-.005em;color:#fff}
 .step-sub{font-size:11px;color:#94a3b8;font-weight:600;margin-top:1px;letter-spacing:.01em}
 .step-card .step-cnt{font-size:10px;font-weight:900;background:rgba(34,211,238,.18);color:var(--cyan);padding:3px 9px;border-radius:var(--radius-pill);flex-shrink:0;letter-spacing:.04em}
+.step-card.rev{background:var(--rev-grad-2)}
+.step-card.rev .step-num{background:var(--rev-grad);color:#04161c}
 
-/* ============================================================
-   PANELS
-   ============================================================ */
 .panel{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;box-shadow:0 4px 14px rgba(15,23,42,.05)}
 .panel + .panel{margin-top:14px}
 .panel-title{font-size:10.5px;font-weight:900;text-transform:uppercase;letter-spacing:.1em;color:var(--text-faint);margin-bottom:13px;display:flex;justify-content:space-between;align-items:center;gap:8px}
@@ -117,7 +117,6 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
 .btn-cyan-solid{background:var(--cyan);color:#04161c}
 .btn-cyan-solid:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(34,211,238,.35)}
 .btn-ink{background:var(--ink);color:#fff}
-.btn-ink:hover{background:var(--ink-2)}
 .btn-ghost{background:var(--surface);color:var(--text-2);border-color:var(--border-2)}
 .btn-ghost:hover{border-color:var(--cyan);color:var(--cyan-dd)}
 .btn-danger{background:#fef2f2;color:#991b1b;border-color:#fecaca}
@@ -136,7 +135,6 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
 .sidebar,.config{display:flex;flex-direction:column;gap:14px;position:sticky;top:96px;max-height:calc(100vh - 118px);overflow-y:auto}
 @media (max-width:1200px){.sidebar,.config{position:static;max-height:none;overflow:visible}}
 
-/* ---------- vehicle list ---------- */
 .veh-list{display:flex;flex-direction:column;gap:7px}
 .veh-item{display:flex;align-items:center;gap:11px;padding:11px 13px;border-radius:12px;background:var(--surface-2);border:1.5px solid transparent;transition:.15s;text-align:left;width:100%}
 .veh-item:hover{background:var(--bg)}
@@ -146,8 +144,8 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
 .veh-item .name{font-size:13px;font-weight:800;color:var(--text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;letter-spacing:-.005em}
 .veh-item .meta{font-size:10.5px;color:var(--text-muted);font-family:var(--mono);letter-spacing:.03em;font-weight:600;margin-top:1px}
 .veh-item .seats{font-size:10px;font-weight:900;color:var(--cyan-dd);background:rgba(34,211,238,.13);padding:3px 8px;border-radius:var(--radius-pill);flex-shrink:0;font-family:var(--mono)}
+.veh-item .revenue{font-size:10px;font-weight:900;color:#0a4d3a;background:#d1fae5;padding:3px 8px;border-radius:var(--radius-pill);flex-shrink:0;font-family:var(--mono)}
 
-/* ---------- preset grid ---------- */
 .preset-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
 .preset{padding:14px 8px 12px;border:1.5px solid var(--border);border-radius:12px;background:var(--surface-2);text-align:center;transition:.15s;font-size:10.5px;font-weight:900;color:var(--text-2);letter-spacing:.03em;line-height:1.25}
 .preset:hover{border-color:var(--cyan);background:#fff;color:var(--cyan-dd);transform:translateY(-1px)}
@@ -155,7 +153,6 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
 .preset:hover .ico{color:var(--cyan-dd)}
 .preset small{display:block;font-size:9.5px;font-weight:600;color:var(--text-faint);margin-top:3px;text-transform:none;letter-spacing:0}
 
-/* ---------- canvas ---------- */
 .canvas{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-lg);padding:22px;box-shadow:0 4px 14px rgba(15,23,42,.05);min-height:500px}
 @media (max-width:560px){.canvas{padding:14px;min-height:auto;border-radius:var(--radius)}}
 .canvas-head{display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-bottom:18px;padding-bottom:15px;border-bottom:1px solid var(--border)}
@@ -209,7 +206,7 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
 .vshell-sleeper .vshell-body::before,.vshell-sleeper .vshell-body::after{content:'';position:absolute;top:22%;bottom:22%;width:5px;background:repeating-linear-gradient(180deg,#fecaca 0,#fecaca 18px,transparent 18px,transparent 24px);border-radius:3px}
 .vshell-sleeper .vshell-body::before{left:4px}.vshell-sleeper .vshell-body::after{right:4px}
 
-/* ---------- seats ---------- */
+/* seats */
 .seat-rows{display:flex;flex-direction:column;padding:4px 0}
 .seat-row{display:flex;justify-content:center;align-items:center}
 .seat{width:var(--seat-sz,38px);height:var(--seat-sz,38px);border-radius:6px 6px 10px 10px;background:#e5e7eb;border:1.5px solid #d1d5db;font-size:9.5px;font-weight:800;font-family:var(--mono);color:#4b5563;display:flex;align-items:center;justify-content:center;transition:.14s;position:relative;flex-shrink:0}
@@ -225,7 +222,7 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
 .aisle{width:var(--aisle-w,26px);flex-shrink:0;align-self:stretch;margin:0 var(--seat-gap,4px);background:repeating-linear-gradient(to bottom,transparent 0,transparent 4px,#e2e8f0 4px,#e2e8f0 8px);border-radius:2px}
 .vshell-train .aisle,.vshell-plane .aisle{background:repeating-linear-gradient(to bottom,transparent 0,transparent 6px,#cbd5e1 6px,#cbd5e1 10px)}
 
-/* ---------- tier / hold items ---------- */
+/* tier / hold items */
 .tier-item,.hold-item{display:flex;align-items:center;gap:11px;padding:10px 12px;border-radius:11px;background:var(--surface-2);border:1.5px solid transparent;transition:.15s;cursor:pointer;width:100%;text-align:left}
 .tier-item:hover,.hold-item:hover{background:var(--bg)}
 .tier-item.active,.hold-item.active{border-color:var(--cyan);background:#fff;box-shadow:0 0 0 3px rgba(34,211,238,.14)}
@@ -241,6 +238,7 @@ table.data th{text-align:left;font-size:10px;text-transform:uppercase;letter-spa
 table.data td{padding:10px 13px;border-bottom:1px solid var(--border);vertical-align:middle}
 table.data tr:last-child td{border-bottom:none}
 table.data tbody tr:hover{background:var(--surface-2)}
+table.data td.num{text-align:right;font-family:var(--mono);font-weight:800;white-space:nowrap}
 .pnr{font-family:var(--mono);font-weight:800;letter-spacing:.02em;white-space:nowrap;font-size:12px}
 .empty{padding:32px;text-align:center;font-size:12.5px;color:var(--text-muted)}
 .empty .big{width:38px;height:38px;margin:0 auto 10px;color:var(--text-faint);opacity:.55;display:flex;align-items:center;justify-content:center}
@@ -281,11 +279,100 @@ table.data tbody tr:hover{background:var(--surface-2)}
 .kv strong{font-weight:800;color:var(--text)}
 .scan-log{display:flex;flex-direction:column;gap:6px;max-height:220px;overflow-y:auto;margin-top:13px}
 .log-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:7px 12px;border-radius:9px;background:var(--surface-2);border:1px solid var(--border);font-size:11.5px}
-.quick-chips{display:flex;gap:7px;flex-wrap:wrap;margin-top:13px}
-.chip{font-size:11.5px;font-weight:800;padding:7px 13px;border-radius:var(--radius-pill);background:var(--surface-2);border:1px solid var(--border);color:var(--text-2);transition:.15s}
-.chip:hover{border-color:var(--cyan);color:var(--cyan-dd);background:#fff}
 
-/* ---------- ticket ---------- */
+/* ============================================================
+   REVENUE MINI WIDGET (Fleet Builder sidebar)
+   ============================================================ */
+.rev-mini{background:var(--rev-grad-2);color:#fff;border:none;position:relative;overflow:hidden}
+.rev-mini::after{content:'';position:absolute;right:-40px;top:-40px;width:140px;height:140px;background:radial-gradient(circle,rgba(34,211,238,.22),transparent 70%);pointer-events:none}
+.rev-mini .panel-title{color:rgba(255,255,255,.5);margin-bottom:10px;position:relative;z-index:1}
+.rev-mini .panel-title .live{display:inline-flex;align-items:center;gap:5px;color:var(--cyan);font-family:var(--mono)}
+.rev-mini .panel-title .live::before{content:'';width:6px;height:6px;border-radius:50%;background:var(--cyan);animation:pulse 1.6s infinite}
+@keyframes pulse{0%,100%{opacity:1;box-shadow:0 0 0 0 rgba(34,211,238,.6)}50%{opacity:.6;box-shadow:0 0 0 5px rgba(34,211,238,0)}}
+.rev-mini-hero{position:relative;z-index:1}
+.rev-mini-label{font-size:9.5px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:3px}
+.rev-mini-value{font-size:1.55rem;font-weight:900;font-family:var(--mono);color:var(--cyan);letter-spacing:-.02em;line-height:1.1}
+.rev-mini-value small{font-size:.85rem;font-weight:800;color:rgba(255,255,255,.55);margin-left:4px}
+.rev-mini-bar{height:5px;background:rgba(255,255,255,.13);border-radius:3px;overflow:hidden;margin:11px 0 8px;position:relative;z-index:1}
+.rev-mini-bar > i{display:block;height:100%;background:var(--rev-grad);border-radius:3px;transition:width .4s cubic-bezier(.22,.9,.3,1)}
+.rev-mini-meta{display:flex;justify-content:space-between;font-size:10.5px;font-weight:700;color:rgba(255,255,255,.6);font-family:var(--mono);position:relative;z-index:1}
+.rev-mini-meta strong{color:#fff;font-weight:800}
+.rev-mini-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px;padding-top:12px;border-top:1px solid rgba(255,255,255,.09);position:relative;z-index:1}
+.rev-mini-stat{display:flex;flex-direction:column;gap:2px}
+.rev-mini-stat span{font-size:9px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.42)}
+.rev-mini-stat strong{font-size:13px;font-weight:900;font-family:var(--mono);color:#fff}
+
+/* ============================================================
+   REVENUE VIEW
+   ============================================================ */
+.rev-layout{display:flex;flex-direction:column;gap:16px}
+.rev-kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px}
+@media (max-width:1000px){.rev-kpis{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:520px){.rev-kpis{grid-template-columns:1fr}}
+.rev-kpi{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;position:relative;overflow:hidden;box-shadow:0 4px 14px rgba(15,23,42,.05)}
+.rev-kpi::before{content:'';position:absolute;left:0;top:0;bottom:0;width:3px;background:var(--cyan);border-radius:3px 0 0 3px}
+.rev-kpi.real::before{background:#10b981}
+.rev-kpi.occ::before{background:#f59e0b}
+.rev-kpi.avg::before{background:#8b5cf6}
+.rev-kpi-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:8px}
+.rev-kpi-label{font-size:10px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--text-faint)}
+.rev-kpi-ico{width:26px;height:26px;border-radius:8px;background:var(--surface-2);color:var(--text-muted);display:flex;align-items:center;justify-content:center}
+.rev-kpi-ico svg{width:14px;height:14px}
+.rev-kpi.real .rev-kpi-ico{background:#ecfdf5;color:#059669}
+.rev-kpi.occ .rev-kpi-ico{background:#fffbeb;color:#b45309}
+.rev-kpi.avg .rev-kpi-ico{background:#f5f3ff;color:#7c3aed}
+.rev-kpi-value{font-size:1.6rem;font-weight:900;font-family:var(--mono);letter-spacing:-.02em;line-height:1.05;color:var(--text);word-break:break-word}
+.rev-kpi-value.sm{font-size:1.35rem}
+.rev-kpi-value span{font-size:.85rem;color:var(--text-muted);font-weight:800}
+.rev-kpi-sub{font-size:11px;font-weight:600;color:var(--text-muted);margin-top:6px}
+.rev-kpi-bar{height:5px;background:var(--surface-2);border-radius:3px;overflow:hidden;margin-top:10px}
+.rev-kpi-bar > i{display:block;height:100%;border-radius:3px;transition:width .4s cubic-bezier(.22,.9,.3,1)}
+.rev-kpi.real .rev-kpi-bar > i{background:#10b981}
+.rev-kpi.occ .rev-kpi-bar > i{background:#f59e0b}
+
+.rev-grid{display:grid;grid-template-columns:1.1fr 0.9fr;gap:16px;align-items:start}
+@media (max-width:1000px){.rev-grid{grid-template-columns:1fr}}
+
+.rev-tier-row{display:grid;grid-template-columns:auto 1fr auto;gap:12px;align-items:center;padding:12px 0;border-bottom:1px dashed var(--border)}
+.rev-tier-row:last-child{border-bottom:none}
+.rev-tier-sw{width:14px;height:14px;border-radius:4px;flex-shrink:0}
+.rev-tier-name{font-size:12.5px;font-weight:800;letter-spacing:-.005em}
+.rev-tier-meta{font-size:10.5px;color:var(--text-muted);font-family:var(--mono);font-weight:600;margin-top:1px}
+.rev-tier-track{grid-column:1 / -1;height:6px;background:var(--surface-2);border-radius:3px;overflow:hidden;margin-top:-2px}
+.rev-tier-track > i{display:block;height:100%;border-radius:3px;transition:width .4s cubic-bezier(.22,.9,.3,1)}
+.rev-tier-amt{font-family:var(--mono);font-weight:900;font-size:13px;color:var(--text);text-align:right;white-space:nowrap}
+.rev-tier-amt small{display:block;font-size:10px;font-weight:700;color:var(--text-muted);margin-top:1px}
+.rev-tier-num{font-size:10px;font-weight:900;color:var(--cyan-dd);background:rgba(34,211,238,.13);padding:3px 8px;border-radius:var(--radius-pill);font-family:var(--mono);align-self:flex-start;margin-top:1px}
+
+/* price simulator */
+.sim-row{padding:13px 0;border-bottom:1px dashed var(--border)}
+.sim-row:last-child{border-bottom:none}
+.sim-row-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px}
+.sim-row-name{display:flex;align-items:center;gap:9px;font-size:12.5px;font-weight:800;letter-spacing:-.005em}
+.sim-row-sw{width:14px;height:14px;border-radius:4px;flex-shrink:0}
+.sim-row-value{font-family:var(--mono);font-weight:900;font-size:13px;color:var(--cyan-dd)}
+.sim-row-value input{width:88px;padding:6px 10px;background:var(--surface-2);border:1px solid var(--border);border-radius:8px;font-family:var(--mono);font-weight:900;font-size:13px;color:var(--text);text-align:right}
+.sim-row-value input:focus{outline:none;border-color:var(--cyan);background:#fff;box-shadow:0 0 0 3px rgba(34,211,238,.15)}
+.sim-slider{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:3px;background:var(--surface-2);outline:none;cursor:pointer;margin-bottom:6px}
+.sim-slider::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:18px;height:18px;border-radius:50%;background:var(--rev-grad);border:2px solid #fff;box-shadow:0 2px 6px rgba(6,182,212,.5);cursor:pointer}
+.sim-slider::-moz-range-thumb{width:18px;height:18px;border-radius:50%;background:#22d3ee;border:2px solid #fff;box-shadow:0 2px 6px rgba(6,182,212,.5);cursor:pointer;border:none}
+.sim-row-foot{display:flex;justify-content:space-between;font-size:10.5px;font-weight:700;color:var(--text-muted);font-family:var(--mono)}
+.sim-row-foot strong{color:var(--text-2);font-weight:800}
+
+.rev-delta{padding:12px 16px;border-radius:12px;background:var(--surface-2);border:1px dashed var(--border);display:flex;justify-content:space-between;align-items:center;gap:14px;flex-wrap:wrap;margin-top:14px}
+.rev-delta-label{font-size:10.5px;font-weight:900;letter-spacing:.09em;text-transform:uppercase;color:var(--text-faint)}
+.rev-delta-value{font-family:var(--mono);font-weight:900;font-size:1.1rem;letter-spacing:-.02em}
+.rev-delta-value.pos{color:#059669}
+.rev-delta-value.neg{color:#dc2626}
+.rev-delta-value.zero{color:var(--text-muted)}
+
+.rank-badge{display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:var(--ink);color:var(--cyan);font-size:10px;font-weight:900;font-family:var(--mono);flex-shrink:0}
+.occ-cell{display:flex;align-items:center;gap:8px}
+.occ-bar{flex:1;height:5px;background:var(--surface-2);border-radius:3px;overflow:hidden;min-width:50px}
+.occ-bar > i{display:block;height:100%;background:var(--rev-grad);border-radius:3px;transition:width .4s cubic-bezier(.22,.9,.3,1)}
+.occ-pct{font-family:var(--mono);font-weight:900;font-size:11px;color:var(--text-2);min-width:34px;text-align:right}
+
+/* ticket */
 .ticket-card{border-radius:16px;padding:20px;display:flex;flex-direction:column;gap:15px;position:relative;overflow:hidden;border:1px solid rgba(0,0,0,.06);box-shadow:0 14px 32px -10px rgba(0,0,0,.22)}
 .ticket-card.cyan{background:linear-gradient(135deg,#ecfeff,#cffafe);color:#0a0f14}
 .ticket-card.teal{background:linear-gradient(135deg,#ccfbf1,#14b8a6);color:#04211f}
@@ -325,7 +412,6 @@ table.data tbody tr:hover{background:var(--surface-2)}
 </head>
 <body>
 
-<!-- ============ HEADER ============ -->
 <header class="site-header">
   <div class="hdr">
     <a href="#" class="logo" aria-label="Novalink home">
@@ -335,39 +421,33 @@ table.data tbody tr:hover{background:var(--surface-2)}
       </svg>
       <b>NOVALINK</b>
     </a>
-
     <div class="cfg">
       <input id="operatorCode" class="op" value="NL" maxlength="6" spellcheck="false" aria-label="Operator code" />
       <input id="serviceDate" type="date" aria-label="Service date" />
       <input id="serviceName" value="Coastal Express" aria-label="Service name" style="min-width:150px;" />
     </div>
-
     <span class="studio-badge">Fleet Studio</span>
   </div>
 </header>
 
-<!-- ============ HERO ============ -->
 <section class="hero">
   <div class="hero-in">
-    <span class="hero-tag">
-      <i data-lucide="sparkles"></i>
-      SIGNED FLEET TICKETS
-    </span>
+    <span class="hero-tag"><i data-lucide="sparkles"></i>SIGNED FLEET TICKETS</span>
     <h1>Fleet, <span>ticketed in seconds.</span></h1>
-    <p>Configure each vehicle's cabin, assign pricing tiers, block seats for groups, and issue tamper-proof tickets. Every booking produces a scannable PNR the conductor can verify offline.</p>
+    <p>Configure each vehicle's cabin, assign pricing tiers, block seats for groups, and issue tamper-proof tickets. Watch your revenue estimate update live as you build.</p>
     <div class="hero-actions">
       <button class="btn-cyan" id="heroAddVehicle"><i data-lucide="plus-circle"></i> Add a vehicle</button>
-      <button class="btn-cyan" id="heroGoBooking"><i data-lucide="ticket"></i> Book a seat</button>
+      <button class="btn-cyan" id="heroGoRevenue"><i data-lucide="trending-up"></i> Revenue calculator</button>
     </div>
   </div>
 </section>
 
-<!-- ============ PILL TABS ============ -->
 <nav class="tabbar">
   <div class="tabbar-in">
     <div class="pills" role="tablist">
       <button class="pill active" data-view="builder" role="tab"><i data-lucide="layout-dashboard"></i><span class="lbl">Fleet Builder</span></button>
       <button class="pill" data-view="pricing" role="tab"><i data-lucide="palette"></i><span class="lbl">Pricing Tiers</span><span class="cnt" id="tierCount">3</span></button>
+      <button class="pill rev-pill" data-view="revenue" role="tab"><i data-lucide="trending-up"></i><span class="lbl">Revenue</span><span class="cnt" id="revPillAmount">R0</span></button>
       <button class="pill" data-view="holds" role="tab"><i data-lucide="lock"></i><span class="lbl">Seat Holds</span><span class="cnt" id="holdCount">0</span></button>
       <button class="pill" data-view="booking" role="tab"><i data-lucide="ticket"></i><span class="lbl">Booking</span></button>
       <button class="pill" data-view="conductor" role="tab"><i data-lucide="scan-line"></i><span class="lbl">Conductor</span></button>
@@ -375,7 +455,6 @@ table.data tbody tr:hover{background:var(--surface-2)}
   </div>
 </nav>
 
-<!-- ============ MAIN ============ -->
 <main>
 
   <!-- FLEET BUILDER -->
@@ -384,9 +463,24 @@ table.data tbody tr:hover{background:var(--surface-2)}
       <aside class="sidebar">
         <div class="step-card">
           <span class="step-num">1</span>
-          <div class="step-info">
-            <div class="step-title">Fleet</div>
-            <div class="step-sub">Vehicles · shapes · capacity</div>
+          <div class="step-info"><div class="step-title">Fleet</div><div class="step-sub">Vehicles · shapes · capacity</div></div>
+        </div>
+
+        <!-- REVENUE MINI WIDGET -->
+        <div class="panel rev-mini">
+          <div class="panel-title">Revenue Estimate <span class="live">LIVE</span></div>
+          <div class="rev-mini-hero">
+            <div class="rev-mini-label">Potential</div>
+            <div class="rev-mini-value" id="miniPotential">R0</div>
+            <div class="rev-mini-bar"><i id="miniOccBar" style="width:0%"></i></div>
+            <div class="rev-mini-meta">
+              <span><strong id="miniRealized">R0</strong> booked</span>
+              <span><strong id="miniOcc">0%</strong> sold</span>
+            </div>
+            <div class="rev-mini-row">
+              <div class="rev-mini-stat"><span>Seats</span><strong id="miniSeats">0</strong></div>
+              <div class="rev-mini-stat"><span>Avg ticket</span><strong id="miniAvg">R0</strong></div>
+            </div>
           </div>
         </div>
 
@@ -443,10 +537,7 @@ table.data tbody tr:hover{background:var(--surface-2)}
       <aside class="config">
         <div class="step-card">
           <span class="step-num">2</span>
-          <div class="step-info">
-            <div class="step-title">Pricing Tiers</div>
-            <div class="step-sub">Colour · price · fee</div>
-          </div>
+          <div class="step-info"><div class="step-title">Pricing Tiers</div><div class="step-sub">Colour · price · fee</div></div>
         </div>
         <div class="panel">
           <div class="panel-title">Tiers <button id="addTierBtn">+ Add Tier</button></div>
@@ -454,6 +545,94 @@ table.data tbody tr:hover{background:var(--surface-2)}
         </div>
         <div class="panel" id="tierEditor"></div>
       </aside>
+    </div>
+  </section>
+
+  <!-- REVENUE -->
+  <section class="view" id="view-revenue">
+    <div class="rev-layout">
+      <!-- KPIs -->
+      <div class="rev-kpis">
+        <div class="rev-kpi">
+          <div class="rev-kpi-head">
+            <span class="rev-kpi-label">Potential Revenue</span>
+            <span class="rev-kpi-ico"><i data-lucide="sparkles"></i></span>
+          </div>
+          <div class="rev-kpi-value" id="kpiPotential">R0</div>
+          <div class="rev-kpi-sub" id="kpiPotentialSub">0 of 0 seats assigned to a tier</div>
+        </div>
+        <div class="rev-kpi real">
+          <div class="rev-kpi-head">
+            <span class="rev-kpi-label">Realized Revenue</span>
+            <span class="rev-kpi-ico"><i data-lucide="circle-dollar-sign"></i></span>
+          </div>
+          <div class="rev-kpi-value" id="kpiRealized">R0</div>
+          <div class="rev-kpi-sub" id="kpiRealizedSub">0 tickets booked</div>
+          <div class="rev-kpi-bar"><i id="kpiRealizedBar" style="width:0%"></i></div>
+        </div>
+        <div class="rev-kpi occ">
+          <div class="rev-kpi-head">
+            <span class="rev-kpi-label">Occupancy</span>
+            <span class="rev-kpi-ico"><i data-lucide="users"></i></span>
+          </div>
+          <div class="rev-kpi-value" id="kpiOcc">0%</div>
+          <div class="rev-kpi-sub" id="kpiOccSub">0 sold · 0 held · 0 open</div>
+          <div class="rev-kpi-bar"><i id="kpiOccBar" style="width:0%"></i></div>
+        </div>
+        <div class="rev-kpi avg">
+          <div class="rev-kpi-head">
+            <span class="rev-kpi-label">Avg Ticket</span>
+            <span class="rev-kpi-ico"><i data-lucide="calculator"></i></span>
+          </div>
+          <div class="rev-kpi-value sm" id="kpiAvg">R0</div>
+          <div class="rev-kpi-sub" id="kpiAvgSub">Across all sold seats</div>
+        </div>
+      </div>
+
+      <!-- Breakdown row -->
+      <div class="rev-grid">
+        <div class="panel">
+          <div class="panel-title">Revenue by Tier <span id="tierRevCount" style="font-family:var(--mono);">0</span></div>
+          <div id="revTierList"></div>
+        </div>
+        <div class="panel">
+          <div class="panel-title">Price Simulator <button id="simResetBtn">Reset</button></div>
+          <div id="simList"></div>
+          <div class="rev-delta">
+            <div>
+              <div class="rev-delta-label">Projected Change</div>
+              <div class="rev-delta-value zero" id="simDelta">R0</div>
+            </div>
+            <div style="text-align:right;">
+              <div class="rev-delta-label">Baseline</div>
+              <div class="rev-delta-value" id="simBaseline">R0</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Fleet revenue table -->
+      <div class="panel">
+        <div class="panel-title">Revenue by Vehicle <span id="vehicleRevCount" style="font-family:var(--mono);">0</span></div>
+        <div class="tbl-wrap" style="border-radius:11px;">
+          <table class="data" id="revVehicleTable">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Vehicle</th>
+                <th>Seats</th>
+                <th>Assigned</th>
+                <th>Sold</th>
+                <th>Held</th>
+                <th style="text-align:right;">Potential</th>
+                <th style="text-align:right;">Realized</th>
+                <th>Occupancy</th>
+              </tr>
+            </thead>
+            <tbody id="revVehicleBody"></tbody>
+          </table>
+        </div>
+      </div>
     </div>
   </section>
 
@@ -475,10 +654,7 @@ table.data tbody tr:hover{background:var(--surface-2)}
       <aside class="config">
         <div class="step-card">
           <span class="step-num">3</span>
-          <div class="step-info">
-            <div class="step-title">Seat Holds</div>
-            <div class="step-sub">Groups · release date</div>
-          </div>
+          <div class="step-info"><div class="step-title">Seat Holds</div><div class="step-sub">Groups · release date</div></div>
         </div>
         <div class="panel">
           <div class="panel-title">Holds <button id="addHoldBtn">+ Add Hold</button></div>
@@ -512,10 +688,7 @@ table.data tbody tr:hover{background:var(--surface-2)}
       <aside class="config">
         <div class="step-card">
           <span class="step-num">4</span>
-          <div class="step-info">
-            <div class="step-title">Booking</div>
-            <div class="step-sub">Passenger · seat · PNR</div>
-          </div>
+          <div class="step-info"><div class="step-title">Booking</div><div class="step-sub">Passenger · seat · PNR</div></div>
         </div>
         <div class="panel">
           <div class="panel-title">Cart <span id="cartCount" style="font-weight:900;color:var(--cyan-dd);font-family:var(--mono);">0</span></div>
@@ -525,9 +698,7 @@ table.data tbody tr:hover{background:var(--surface-2)}
             <label for="passengerName">Passenger Name</label>
             <input id="passengerName" placeholder="e.g., Jane Smith" />
           </div>
-          <button class="btn btn-cyan-solid btn-block" id="bookBtn" disabled>
-            <i data-lucide="ticket"></i> Confirm Booking
-          </button>
+          <button class="btn btn-cyan-solid btn-block" id="bookBtn" disabled><i data-lucide="ticket"></i> Confirm Booking</button>
         </div>
         <div class="panel" id="ticketPreviewWrap" style="display:none;">
           <div class="panel-title">Latest Ticket</div>
@@ -548,30 +719,20 @@ table.data tbody tr:hover{background:var(--surface-2)}
           </div>
         </div>
         <div class="field-row">
-          <div class="field">
-            <label for="scanBus">Assigned Vehicle</label>
-            <select id="scanBus"></select>
-          </div>
-          <div class="field">
-            <label>Manifest Size</label>
-            <input id="scanManifestSize" readonly value="0 tickets" style="font-weight:800;color:var(--cyan-dd);background:var(--surface-2);font-family:var(--mono);" />
-          </div>
+          <div class="field"><label for="scanBus">Assigned Vehicle</label><select id="scanBus"></select></div>
+          <div class="field"><label>Manifest Size</label><input id="scanManifestSize" readonly value="0 tickets" style="font-weight:800;color:var(--cyan-dd);background:var(--surface-2);font-family:var(--mono);" /></div>
         </div>
         <div class="scan-input">
           <input id="scanInput" placeholder="SCAN OR TYPE PNR" autocomplete="off" spellcheck="false" />
           <button class="btn btn-cyan-solid" id="scanBtn"><i data-lucide="scan-line"></i> Validate</button>
         </div>
-        <div class="quick-chips" id="quickChips"></div>
         <div id="scanResult"></div>
         <div class="scan-log" id="scanLog"></div>
       </div>
       <aside class="config">
         <div class="step-card">
           <span class="step-num">5</span>
-          <div class="step-info">
-            <div class="step-title">Conductor</div>
-            <div class="step-sub">Validate · manifest · log</div>
-          </div>
+          <div class="step-info"><div class="step-title">Conductor</div><div class="step-sub">Validate · manifest · log</div></div>
         </div>
         <div class="panel">
           <div class="panel-title">Live Manifest <span id="manifestCount" style="font-weight:900;color:var(--cyan-dd);font-family:var(--mono);">0</span></div>
@@ -600,7 +761,13 @@ const esc = s => String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;')
 const pad2 = n => String(n).padStart(2,'0');
 const uid = () => Math.random().toString(36).slice(2,9);
 const slug = s => String(s||'').toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');
-const fmtR = n => 'R' + Number(n||0).toLocaleString('en-ZA');
+const fmtR = n => 'R' + Math.round(Number(n||0)).toLocaleString('en-ZA');
+const fmtK = n => {
+  const v = Math.round(Number(n||0));
+  if(Math.abs(v) >= 1000000) return 'R' + (v/1000000).toFixed(1) + 'M';
+  if(Math.abs(v) >= 10000)   return 'R' + (v/1000).toFixed(1) + 'k';
+  return 'R' + v.toLocaleString('en-ZA');
+};
 const refreshIcons = () => { if(window.lucide) lucide.createIcons(); };
 
 function toast(msg){
@@ -654,12 +821,12 @@ function parseCandidates(raw){
 const state = {
   operator:'NL', serviceDate:'', serviceName:'',
   vehicles:[], tiers:[
-    { id:'t_premium', name:'Premium', color:'#800020', price:450, fee:25 },
-    { id:'t_standard', name:'Standard', color:'#008080', price:250, fee:15 },
-    { id:'t_economy', name:'Economy', color:'#eab308', price:150, fee:10 }
+    { id:'t_premium', name:'Premium', color:'#800020', price:450, fee:25, baselinePrice:450 },
+    { id:'t_standard', name:'Standard', color:'#008080', price:250, fee:15, baselinePrice:250 },
+    { id:'t_economy', name:'Economy', color:'#eab308', price:150, fee:10, baselinePrice:150 }
   ],
   holds:[], selectedVehicleId:null, activeTierId:null, activeHoldId:null,
-  cart:[], manifest:new Map(), scanned:new Map(), view:'builder'
+  cart:[], manifest:new Map(), scanned: new Map(), view:'builder'
 };
 
 const PRESETS = {
@@ -679,7 +846,6 @@ function nextVehicleCode(){
   }
   return 'V' + pad2(state.vehicles.length + 1);
 }
-
 function makeVehicle(presetKey){
   const p = PRESETS[presetKey] || PRESETS.coach;
   return {
@@ -707,6 +873,56 @@ function allSeats(v){
   for(let r=0;r<v.rows;r++) for(let c=0;c<v.seatsPerRow;c++)
     out.push({ row:r, col:c, name: seatName(v,r,c), type: seatType(v,c) });
   return out;
+}
+
+/* ============================================================
+   REVENUE CALCULATOR
+   ============================================================ */
+function calcRevenue(){
+  const s = {
+    totalSeats: 0, assignedSeats: 0, unassignedSeats: 0,
+    heldSeats: 0, soldSeats: 0,
+    potentialRevenue: 0, realizedRevenue: 0,
+    avgTicket: 0, occupancy: 0, assignmentRate: 0,
+    byTier: {}, byVehicle: []
+  };
+  state.tiers.forEach(t => { s.byTier[t.id] = { seats:0, sold:0, potential:0, realized:0 }; });
+
+  state.vehicles.forEach(v => {
+    const seats = allSeats(v);
+    const vs = { id:v.id, name:v.name, code:v.code, type:v.type, total:seats.length,
+                 assigned:0, unassigned:0, held:0, sold:0, potential:0, realized:0, occupancy:0 };
+    seats.forEach(st => {
+      const tierId = v.tierMap[st.name];
+      const tier = tierId ? state.tiers.find(t => t.id === tierId) : null;
+      const isSold = !!v.soldSeats[st.name];
+      const isHeld = !!v.holdMap[st.name];
+      s.totalSeats++;
+      if(tierId && tier){
+        const unit = (tier.price || 0) + (tier.fee || 0);
+        s.assignedSeats++; vs.assigned++;
+        s.potentialRevenue += unit; vs.potential += unit;
+        s.byTier[tierId].seats++;
+        s.byTier[tierId].potential += unit;
+        if(isSold){
+          s.soldSeats++; vs.sold++;
+          s.realizedRevenue += unit; vs.realized += unit;
+          s.byTier[tierId].sold++;
+          s.byTier[tierId].realized += unit;
+        }
+      } else {
+        s.unassignedSeats++; vs.unassigned++;
+      }
+      if(isHeld){ s.heldSeats++; vs.held++; }
+    });
+    vs.occupancy = vs.total ? (vs.sold / vs.total) * 100 : 0;
+    s.byVehicle.push(vs);
+  });
+
+  s.avgTicket = s.soldSeats ? s.realizedRevenue / s.soldSeats : 0;
+  s.occupancy = s.totalSeats ? (s.soldSeats / s.totalSeats) * 100 : 0;
+  s.assignmentRate = s.totalSeats ? (s.assignedSeats / s.totalSeats) * 100 : 0;
+  return s;
 }
 
 /* ============================================================
@@ -796,30 +1012,34 @@ function cabinHTML(v, opts){
    ============================================================ */
 function renderVehicleList(){
   const wrap = $('vehList');
+  const rev = calcRevenue();
+  const revByVeh = new Map(rev.byVehicle.map(v => [v.id, v]));
   if(!state.vehicles.length){ wrap.innerHTML = '<div class="empty" style="padding:14px 0;font-size:12px;">No vehicles yet.</div>'; return; }
   wrap.innerHTML = state.vehicles.map(v => {
     const seats = allSeats(v).length;
     const assigned = Object.values(v.tierMap).filter(Boolean).length;
     const tierColors = state.tiers.filter(t => Object.values(v.tierMap).includes(t.id));
     const swatch = tierColors[0]?.color || '#cbd5e1';
+    const rv = revByVeh.get(v.id);
+    const pot = rv ? rv.potential : 0;
     return `<button class="veh-item ${v.id===state.selectedVehicleId?'active':''}" data-vid="${v.id}">
       <span class="sw" style="background:${swatch}"></span>
       <span class="info"><span class="name">${esc(v.name)}</span><span class="meta">${esc(state.operator)}-${esc(v.code)}</span></span>
-      <span class="seats">${assigned}/${seats}</span>
+      <span class="revenue">${fmtK(pot)}</span>
     </button>`;
   }).join('');
 }
 
 function renderBuilder(){
   renderVehicleList();
+  renderRevenueMini();
   const v = state.vehicles.find(x => x.id === state.selectedVehicleId);
   if(!v){
     $('vehTitle').textContent = 'No vehicle selected'; $('vehCode').textContent = '—';
     $('vehHint').textContent = 'Add a vehicle from the left to begin.';
     $('builderCanvas').innerHTML = '<div class="empty"><div class="big"><i data-lucide="bus"></i></div>Select a vehicle, or add one from the sidebar.</div>';
     $('builderConfig').innerHTML = '';
-    refreshIcons();
-    return;
+    refreshIcons(); return;
   }
   $('vehTitle').textContent = v.name;
   $('vehCode').textContent = `${state.operator}-${v.code}`;
@@ -829,10 +1049,28 @@ function renderBuilder(){
 
   $('builderCanvas').innerHTML = cabinHTML(v, { mode:'builder' });
 
+  const rev = calcRevenue();
+  const rv = rev.byVehicle.find(x => x.id === v.id) || { potential:0, realized:0, occupancy:0, sold:0, held:0, unassigned:0 };
   $('builderConfig').innerHTML = `
     <div class="step-card">
       <span class="step-num">1</span>
       <div class="step-info"><div class="step-title">Vehicle Layout</div><div class="step-sub">Shape · rows · spacing</div></div>
+    </div>
+    <div class="panel rev-mini" style="margin-top:0;">
+      <div class="panel-title">This Vehicle <span class="live">LIVE</span></div>
+      <div class="rev-mini-hero">
+        <div class="rev-mini-label">Potential</div>
+        <div class="rev-mini-value">${fmtR(rv.potential)}</div>
+        <div class="rev-mini-bar"><i style="width:${rv.occupancy.toFixed(1)}%"></i></div>
+        <div class="rev-mini-meta">
+          <span><strong>${fmtR(rv.realized)}</strong> booked</span>
+          <span><strong>${rv.occupancy.toFixed(0)}%</strong> sold</span>
+        </div>
+        <div class="rev-mini-row">
+          <div class="rev-mini-stat"><span>Sold</span><strong>${rv.sold}</strong></div>
+          <div class="rev-mini-stat"><span>Held</span><strong>${rv.held}</strong></div>
+        </div>
+      </div>
     </div>
     <div class="panel">
       <div class="panel-title">Vehicle Configuration</div>
@@ -927,13 +1165,13 @@ function bindBuilderConfig(v){
     const c = JSON.parse(JSON.stringify(v)); c.id = uid(); c.code = nextVehicleCode();
     c.name = v.name + ' (copy)'; c.tierMap={}; c.holdMap={}; c.soldSeats={};
     state.vehicles.push(c); state.selectedVehicleId = c.id; renderBuilder();
-    toast('Vehicle duplicated.');
+    renderAllRevenue(); toast('Vehicle duplicated.');
   });
   $('delVeh').addEventListener('click', () => {
     if(!confirm(`Delete "${v.name}"?`)) return;
     state.vehicles = state.vehicles.filter(x => x.id !== v.id);
     state.selectedVehicleId = state.vehicles[0]?.id || null;
-    renderBuilder(); toast('Vehicle deleted.');
+    renderBuilder(); renderAllRevenue(); toast('Vehicle deleted.');
   });
 }
 
@@ -946,11 +1184,8 @@ function renderPricing(){
   const v = state.vehicles.find(x => x.id === state.selectedVehicleId) || state.vehicles[0];
   if(!v){
     $('pricingCanvas').innerHTML = '<div class="empty"><div class="big"><i data-lucide="palette"></i></div>Add a vehicle in Fleet Builder first.</div>';
-    $('tierEditor').innerHTML = '';
-    refreshIcons();
-    return;
+    $('tierEditor').innerHTML = ''; refreshIcons(); return;
   }
-
   $('pricingCanvas').innerHTML = cabinHTML(v, { mode:'pricing' });
   bindSeatClicks('pricing', v, seatEl => {
     const seat = seatEl.dataset.seat;
@@ -958,7 +1193,7 @@ function renderPricing(){
     if(seatEl.classList.contains('held')){ toast('Seat is held.'); return; }
     if(v.tierMap[seat] === state.activeTierId) delete v.tierMap[seat];
     else v.tierMap[seat] = state.activeTierId;
-    renderPricing(); renderVehicleList();
+    renderPricing(); renderVehicleList(); renderAllRevenue();
   });
   renderTierEditor();
 }
@@ -996,17 +1231,226 @@ function renderTierEditor(){
       </div>
       <button class="btn btn-danger btn-block btn-sm" id="tierDel">Delete Tier</button>
     </div>`;
-  $('tier-name').addEventListener('input', e => { t.name = e.target.value; renderTierList(); });
+  $('tier-name').addEventListener('input', e => { t.name = e.target.value; renderTierList(); renderAllRevenue(); });
   $('tier-color').addEventListener('input', e => { t.color = e.target.value; $('tier-hex').value = e.target.value; renderTierList(); renderPricing(); });
   $('tier-hex').addEventListener('input', e => { const val = e.target.value.trim(); if(/^#[0-9a-f]{6}$/i.test(val)){ t.color = val; $('tier-color').value = val; renderTierList(); renderPricing(); } });
-  $('tier-price').addEventListener('input', e => { t.price = parseInt(e.target.value)||0; renderTierList(); });
-  $('tier-fee').addEventListener('input', e => { t.fee = parseInt(e.target.value)||0; renderTierList(); });
+  $('tier-price').addEventListener('input', e => { t.price = parseInt(e.target.value)||0; t.baselinePrice = t.price; renderTierList(); renderAllRevenue(); });
+  $('tier-fee').addEventListener('input', e => { t.fee = parseInt(e.target.value)||0; renderTierList(); renderAllRevenue(); });
   $('tierDel').addEventListener('click', () => {
     if(!confirm(`Delete tier "${t.name}"?`)) return;
     state.tiers = state.tiers.filter(x => x.id !== t.id);
     state.vehicles.forEach(v => Object.keys(v.tierMap).forEach(s => { if(v.tierMap[s] === t.id) delete v.tierMap[s]; }));
-    state.activeTierId = state.tiers[0]?.id || null; renderPricing(); toast('Tier deleted.');
+    state.activeTierId = state.tiers[0]?.id || null;
+    renderPricing(); renderAllRevenue(); toast('Tier deleted.');
   });
+}
+
+/* ============================================================
+   REVENUE RENDERING
+   ============================================================ */
+function renderRevenueMini(){
+  const r = calcRevenue();
+  const setTxt = (id, val) => { const el = $(id); if(el) el.textContent = val; };
+  setTxt('miniPotential', fmtK(r.potentialRevenue));
+  setTxt('miniRealized', fmtR(r.realizedRevenue));
+  setTxt('miniOcc', r.occupancy.toFixed(0) + '%');
+  setTxt('miniSeats', r.assignedSeats + ' / ' + r.totalSeats);
+  setTxt('miniAvg', fmtR(r.avgTicket));
+  const bar = $('miniOccBar'); if(bar) bar.style.width = Math.min(100, r.occupancy) + '%';
+  const pill = $('revPillAmount'); if(pill) pill.textContent = fmtK(r.potentialRevenue);
+}
+
+function renderRevenueView(){
+  const r = calcRevenue();
+
+  /* KPIs */
+  $('kpiPotential').textContent = fmtR(r.potentialRevenue);
+  $('kpiPotentialSub').textContent = `${r.assignedSeats} of ${r.totalSeats} seats assigned to a tier · ${r.assignmentRate.toFixed(0)}%`;
+
+  $('kpiRealized').textContent = fmtR(r.realizedRevenue);
+  $('kpiRealizedSub').textContent = `${r.soldSeats} tickets booked`;
+  $('kpiRealizedBar').style.width = (r.potentialRevenue ? (r.realizedRevenue / r.potentialRevenue) * 100 : 0).toFixed(1) + '%';
+
+  $('kpiOcc').textContent = r.occupancy.toFixed(1) + '%';
+  const open = r.totalSeats - r.soldSeats - r.heldSeats;
+  $('kpiOccSub').textContent = `${r.soldSeats} sold · ${r.heldSeats} held · ${open} open`;
+  $('kpiOccBar').style.width = Math.min(100, r.occupancy) + '%';
+
+  $('kpiAvg').textContent = fmtR(r.avgTicket);
+  $('kpiAvgSub').textContent = r.soldSeats
+    ? `Across ${r.soldSeats} sold seat${r.soldSeats===1?'':'s'}`
+    : 'No sales yet';
+
+  /* Tier breakdown */
+  const tierWrap = $('revTierList');
+  const maxTierRev = Math.max(1, ...state.tiers.map(t => (r.byTier[t.id]?.potential || 0)));
+  $('tierRevCount').textContent = state.tiers.length + ' tiers';
+
+  if(!state.tiers.length){
+    tierWrap.innerHTML = '<div class="empty" style="padding:20px 0;font-size:12px;">No tiers configured.</div>';
+  } else {
+    tierWrap.innerHTML = state.tiers.map(t => {
+      const b = r.byTier[t.id] || { seats:0, sold:0, potential:0, realized:0 };
+      const pct = (b.potential / maxTierRev) * 100;
+      const unit = t.price + t.fee;
+      return `<div class="rev-tier-row" style="grid-template-columns:auto 1fr auto;">
+        <span class="rev-tier-sw" style="background:${t.color}"></span>
+        <div>
+          <div class="rev-tier-name">${esc(t.name)}</div>
+          <div class="rev-tier-meta">${fmtR(unit)} / seat · ${b.seats} seat${b.seats===1?'':'s'}</div>
+        </div>
+        <div class="rev-tier-amt">${fmtR(b.potential)}<small>${b.sold} sold · ${fmtR(b.realized)}</small></div>
+        <div class="rev-tier-track" style="grid-column:1 / -1;">
+          <i style="width:${pct}%;background:${t.color}"></i>
+        </div>
+      </div>`;
+    }).join('');
+  }
+
+  /* Simulator */
+  renderSimulator(r);
+
+  /* Vehicle table */
+  const tbody = $('revVehicleBody');
+  $('vehicleRevCount').textContent = state.vehicles.length + ' vehicles';
+  const sorted = [...r.byVehicle].sort((a,b) => b.potential - a.potential);
+  if(!sorted.length){
+    tbody.innerHTML = '<tr><td colspan="9" class="empty" style="padding:32px;">No vehicles configured.</td></tr>';
+  } else {
+    tbody.innerHTML = sorted.map((v, i) => `
+      <tr>
+        <td><span class="rank-badge">${i+1}</span></td>
+        <td>
+          <div style="font-weight:800;font-size:12.5px;">${esc(v.name)}</div>
+          <div class="pnr" style="font-size:10.5px;color:var(--text-muted);">${esc(state.operator)}-${esc(v.code)}</div>
+        </td>
+        <td class="num">${v.total}</td>
+        <td class="num">${v.assigned}${v.unassigned ? ` <span style="color:#b45309;font-weight:700;font-size:10.5px;">/${v.unassigned} open</span>` : ''}</td>
+        <td class="num">${v.sold}</td>
+        <td class="num">${v.held}</td>
+        <td class="num" style="color:var(--cyan-dd);font-weight:900;">${fmtR(v.potential)}</td>
+        <td class="num" style="color:#059669;font-weight:900;">${fmtR(v.realized)}</td>
+        <td>
+          <div class="occ-cell">
+            <div class="occ-bar"><i style="width:${v.occupancy.toFixed(1)}%"></i></div>
+            <span class="occ-pct">${v.occupancy.toFixed(0)}%</span>
+          </div>
+        </td>
+      </tr>`).join('');
+  }
+}
+
+function renderSimulator(r){
+  const simWrap = $('simList');
+  const baseline = state.tiers.reduce((sum, t) => sum + (t.baselinePrice + t.fee) * (r.byTier[t.id]?.seats || 0), 0);
+  const projected = r.potentialRevenue;
+  const delta = projected - baseline;
+
+  simWrap.innerHTML = state.tiers.map(t => {
+    const b = r.byTier[t.id] || { seats:0 };
+    const unit = t.price + t.fee;
+    const tierPotential = unit * b.seats;
+    return `<div class="sim-row" data-tid="${t.id}">
+      <div class="sim-row-head">
+        <div class="sim-row-name">
+          <span class="sim-row-sw" style="background:${t.color}"></span>
+          ${esc(t.name)}
+        </div>
+        <div class="sim-row-value">R<span class="sim-price">${t.price}</span></div>
+      </div>
+      <input class="sim-slider" type="range" min="0" max="1500" step="10" value="${t.price}" data-tid="${t.id}" aria-label="${esc(t.name)} price" />
+      <div class="sim-row-foot">
+        <span>${b.seats} seat${b.seats===1?'':'s'} · ${fmtR(t.fee)} fee</span>
+        <span><strong>${fmtR(tierPotential)}</strong> potential</span>
+      </div>
+    </div>`;
+  }).join('') || '<div class="empty" style="padding:20px 0;font-size:12px;">Add tiers to simulate pricing.</div>';
+
+  simWrap.querySelectorAll('.sim-slider').forEach(slider => {
+    slider.addEventListener('input', e => {
+      const t = state.tiers.find(x => x.id === e.target.dataset.tid);
+      if(!t) return;
+      t.price = parseInt(e.target.value);
+      const row = e.target.closest('.sim-row');
+      if(row) row.querySelector('.sim-price').textContent = t.price;
+
+      /* live re-render of revenue numbers, but NOT the simulator itself (would reset slider) */
+      renderRevenueMini();
+      const fresh = calcRevenue();
+      $('kpiPotential').textContent = fmtR(fresh.potentialRevenue);
+      $('kpiPotentialSub').textContent = `${fresh.assignedSeats} of ${fresh.totalSeats} seats assigned · ${fresh.assignmentRate.toFixed(0)}%`;
+      $('kpiRealized').textContent = fmtR(fresh.realizedRevenue);
+      $('kpiRealizedBar').style.width = (fresh.potentialRevenue ? (fresh.realizedRevenue / fresh.potentialRevenue) * 100 : 0).toFixed(1) + '%';
+      $('kpiAvg').textContent = fmtR(fresh.avgTicket);
+      $('kpiAvgSub').textContent = fresh.soldSeats ? `Across ${fresh.soldSeats} sold seat${fresh.soldSeats===1?'':'s'}` : 'No sales yet';
+      $('revPillAmount').textContent = fmtK(fresh.potentialRevenue);
+
+      /* tier breakdown updates */
+      const newMax = Math.max(1, ...state.tiers.map(tt => (fresh.byTier[tt.id]?.potential || 0)));
+      state.tiers.forEach(tt => {
+        const bb = fresh.byTier[tt.id] || { seats:0, sold:0, potential:0, realized:0 };
+        const row = document.querySelector(`.rev-tier-row:nth-child(${state.tiers.indexOf(tt)+1})`);
+        if(row){
+          row.querySelector('.rev-tier-amt').innerHTML = `${fmtR(bb.potential)}<small>${bb.sold} sold · ${fmtR(bb.realized)}</small>`;
+          const track = row.querySelector('.rev-tier-track > i');
+          if(track) track.style.width = ((bb.potential / newMax) * 100) + '%';
+        }
+      });
+
+      /* update row footer potential */
+      const b = fresh.byTier[t.id] || { seats:0 };
+      const foot = row?.querySelector('.sim-row-foot strong');
+      if(foot) foot.textContent = fmtR((t.price + t.fee) * b.seats);
+
+      /* update delta */
+      const newBaseline = state.tiers.reduce((sum, tt) => sum + (tt.baselinePrice + tt.fee) * (fresh.byTier[tt.id]?.seats || 0), 0);
+      const newDelta = fresh.potentialRevenue - newBaseline;
+      const dEl = $('simDelta');
+      dEl.textContent = (newDelta >= 0 ? '+' : '') + fmtR(newDelta);
+      dEl.className = 'rev-delta-value ' + (newDelta > 0 ? 'pos' : newDelta < 0 ? 'neg' : 'zero');
+      $('simBaseline').textContent = fmtR(newBaseline);
+
+      /* vehicle table refresh */
+      renderRevenueVehicleTableOnly(fresh);
+    });
+  });
+
+  /* delta summary */
+  const dEl = $('simDelta');
+  dEl.textContent = (delta >= 0 ? '+' : '') + fmtR(delta);
+  dEl.className = 'rev-delta-value ' + (delta > 0 ? 'pos' : delta < 0 ? 'neg' : 'zero');
+  $('simBaseline').textContent = fmtR(baseline);
+}
+
+function renderRevenueVehicleTableOnly(r){
+  const tbody = $('revVehicleBody');
+  const sorted = [...r.byVehicle].sort((a,b) => b.potential - a.potential);
+  if(!sorted.length) return;
+  tbody.innerHTML = sorted.map((v, i) => `
+    <tr>
+      <td><span class="rank-badge">${i+1}</span></td>
+      <td>
+        <div style="font-weight:800;font-size:12.5px;">${esc(v.name)}</div>
+        <div class="pnr" style="font-size:10.5px;color:var(--text-muted);">${esc(state.operator)}-${esc(v.code)}</div>
+      </td>
+      <td class="num">${v.total}</td>
+      <td class="num">${v.assigned}${v.unassigned ? ` <span style="color:#b45309;font-weight:700;font-size:10.5px;">/${v.unassigned} open</span>` : ''}</td>
+      <td class="num">${v.sold}</td>
+      <td class="num">${v.held}</td>
+      <td class="num" style="color:var(--cyan-dd);font-weight:900;">${fmtR(v.potential)}</td>
+      <td class="num" style="color:#059669;font-weight:900;">${fmtR(v.realized)}</td>
+      <td>
+        <div class="occ-cell">
+          <div class="occ-bar"><i style="width:${v.occupancy.toFixed(1)}%"></i></div>
+          <span class="occ-pct">${v.occupancy.toFixed(0)}%</span>
+        </div>
+      </td>
+    </tr>`).join('');
+}
+
+function renderAllRevenue(){
+  renderRevenueMini();
+  if(state.view === 'revenue') renderRevenueView();
 }
 
 /* ============================================================
@@ -1018,11 +1462,8 @@ function renderHolds(){
   const v = state.vehicles.find(x => x.id === state.selectedVehicleId) || state.vehicles[0];
   if(!v){
     $('holdsCanvas').innerHTML = '<div class="empty"><div class="big"><i data-lucide="lock"></i></div>Add a vehicle first.</div>';
-    $('holdEditor').innerHTML = '';
-    refreshIcons();
-    return;
+    $('holdEditor').innerHTML = ''; refreshIcons(); return;
   }
-
   $('holdsCanvas').innerHTML = cabinHTML(v, { mode:'holds' });
   bindSeatClicks('holds', v, seatEl => {
     const seat = seatEl.dataset.seat;
@@ -1030,7 +1471,7 @@ function renderHolds(){
     if(v.soldSeats[seat]){ toast('Seat is sold.'); return; }
     if(v.holdMap[seat] === state.activeHoldId) delete v.holdMap[seat];
     else v.holdMap[seat] = state.activeHoldId;
-    renderHolds();
+    renderHolds(); renderAllRevenue();
   });
   renderHoldEditor();
 }
@@ -1075,7 +1516,8 @@ function renderHoldEditor(){
     if(!confirm(`Delete hold "${h.name}"?`)) return;
     state.holds = state.holds.filter(x => x.id !== h.id);
     state.vehicles.forEach(v => Object.keys(v.holdMap).forEach(s => { if(v.holdMap[s] === h.id) delete v.holdMap[s]; }));
-    state.activeHoldId = state.holds[0]?.id || null; renderHolds(); toast('Hold deleted.');
+    state.activeHoldId = state.holds[0]?.id || null;
+    renderHolds(); renderAllRevenue(); toast('Hold deleted.');
   });
 }
 
@@ -1092,14 +1534,10 @@ function renderBooking(){
   const v = state.vehicles.find(x => x.id === (fv.value || state.selectedVehicleId)) || state.vehicles[0];
   if(!v){
     $('bookingCanvas').innerHTML = '<div class="empty"><div class="big"><i data-lucide="ticket"></i></div>No vehicles available.</div>';
-    renderCart();
-    refreshIcons();
-    return;
+    renderCart(); refreshIcons(); return;
   }
-
   $('bookingTitle').innerHTML = `Booking · <span style="font-family:var(--mono);">${esc(state.operator)}-${esc(v.code)}</span> ${esc(v.name)}`;
   $('bookingCanvas').innerHTML = cabinHTML(v, { mode:'booking', filterTierId: ft.value });
-
   bindSeatClicks('booking', v, seatEl => {
     const seat = seatEl.dataset.seat;
     if(seatEl.disabled) return;
@@ -1153,7 +1591,7 @@ async function bookTickets(){
     issued.push(pnr);
   }
   state.cart = []; $('passengerName').value = '';
-  renderBooking(); renderManifest(); renderTicketPreview(issued, name);
+  renderBooking(); renderManifest(); renderAllRevenue(); renderTicketPreview(issued, name);
   toast(`Booked ${issued.length} ticket${issued.length>1?'s':''}.`);
   btn.textContent = 'Confirm Booking';
   refreshIcons();
@@ -1286,9 +1724,11 @@ function bindGlobal(){
     $$('.view').forEach(v => v.classList.toggle('active', v.id === 'view-' + state.view));
     if(state.view === 'builder') renderBuilder();
     if(state.view === 'pricing') renderPricing();
+    if(state.view === 'revenue') renderRevenueView();
     if(state.view === 'holds') renderHolds();
     if(state.view === 'booking') renderBooking();
     if(state.view === 'conductor') renderConductor();
+    refreshIcons();
     window.scrollTo({top:document.querySelector('.tabbar').offsetTop - 80, behavior:'smooth'});
   }));
 
@@ -1301,33 +1741,35 @@ function bindGlobal(){
     $$('.pill').find(p => p.dataset.view === 'builder').click();
     setTimeout(() => $('addVehicleBtn').click(), 120);
   });
-  $('heroGoBooking').addEventListener('click', () => {
-    $$('.pill').find(p => p.dataset.view === 'booking').click();
+  $('heroGoRevenue').addEventListener('click', () => {
+    $$('.pill').find(p => p.dataset.view === 'revenue').click();
   });
   $('addVehicleBtn').addEventListener('click', () => {
     const v = makeVehicle('coach'); state.vehicles.push(v); state.selectedVehicleId = v.id;
-    renderBuilder(); toast('Vehicle added.');
+    renderBuilder(); renderAllRevenue(); toast('Vehicle added.');
   });
   $$('.preset').forEach(btn => btn.addEventListener('click', () => {
     const v = makeVehicle(btn.dataset.preset); state.vehicles.push(v); state.selectedVehicleId = v.id;
-    renderBuilder(); toast(`${PRESETS[btn.dataset.preset].name} added.`);
+    renderBuilder(); renderAllRevenue(); toast(`${PRESETS[btn.dataset.preset].name} added.`);
   }));
 
   $('addTierBtn').addEventListener('click', () => {
     const colors = ['#800020','#008080','#eab308','#22d3ee','#7c3aed','#dc2626','#059669','#0ea5e9'];
-    const t = { id:'t_'+uid(), name:'New Tier', color: colors[state.tiers.length % colors.length], price:200, fee:10 };
-    state.tiers.push(t); state.activeTierId = t.id; renderPricing();
+    const price = 200;
+    const t = { id:'t_'+uid(), name:'New Tier', color: colors[state.tiers.length % colors.length], price, fee:10, baselinePrice:price };
+    state.tiers.push(t); state.activeTierId = t.id;
+    renderPricing(); renderAllRevenue();
   });
   $('tierAssignAll').addEventListener('click', () => {
     const v = state.vehicles.find(x => x.id === state.selectedVehicleId) || state.vehicles[0];
     if(!v || !state.activeTierId){ toast('Pick a vehicle and tier first.'); return; }
     allSeats(v).forEach(s => { if(!v.tierMap[s.name]) v.tierMap[s.name] = state.activeTierId; });
-    renderPricing(); renderVehicleList(); toast('Assigned all unassigned.');
+    renderPricing(); renderVehicleList(); renderAllRevenue(); toast('Assigned all unassigned.');
   });
   $('tierClearAll').addEventListener('click', () => {
     const v = state.vehicles.find(x => x.id === state.selectedVehicleId) || state.vehicles[0];
     if(!v || !confirm('Clear all tier assignments?')) return;
-    v.tierMap = {}; renderPricing(); renderVehicleList();
+    v.tierMap = {}; renderPricing(); renderVehicleList(); renderAllRevenue();
   });
 
   $('addHoldBtn').addEventListener('click', () => {
@@ -1337,13 +1779,21 @@ function bindGlobal(){
   });
   $('holdClearAll').addEventListener('click', () => {
     if(!confirm('Release all held seats?')) return;
-    state.vehicles.forEach(v => { v.holdMap = {}; }); renderHolds(); toast('All holds released.');
+    state.vehicles.forEach(v => { v.holdMap = {}; });
+    renderHolds(); renderAllRevenue(); toast('All holds released.');
   });
 
   $('filterTier').addEventListener('change', renderBooking);
   $('filterVehicle').addEventListener('change', e => { state.selectedVehicleId = e.target.value || null; renderBooking(); });
   $('passengerName').addEventListener('input', renderCart);
   $('bookBtn').addEventListener('click', bookTickets);
+
+  $('simResetBtn').addEventListener('click', () => {
+    state.tiers.forEach(t => { t.price = t.baselinePrice; });
+    renderAllRevenue();
+    if(state.view === 'revenue') renderRevenueView();
+    toast('Prices reset to baseline.');
+  });
 
   $('scanBtn').addEventListener('click', () => { const v = $('scanInput').value.trim(); if(v) validateScan(v); });
   $('scanInput').addEventListener('keydown', e => { if(e.key==='Enter'){ e.preventDefault(); const v = e.target.value.trim(); if(v) validateScan(v); } });
@@ -1360,11 +1810,10 @@ function bindGlobal(){
 /* ============================================================
    BOOT
    ============================================================ */
-function renderAll(){ renderBuilder(); renderPricing(); renderHolds(); renderBooking(); renderConductor(); }
+function renderAll(){ renderBuilder(); renderPricing(); renderHolds(); renderBooking(); renderConductor(); if(state.view === 'revenue') renderRevenueView(); renderAllRevenue(); }
 
 document.addEventListener('DOMContentLoaded', async () => {
   refreshIcons();
-
   const d = new Date(); d.setDate(d.getDate() + 1);
   state.serviceDate = d.toISOString().slice(0,10);
   state.serviceName = 'Coastal Express';
