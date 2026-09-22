@@ -9,7 +9,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check-compat.js"></script>
 <script src="app-check.js"></script>
 <style>
@@ -178,10 +177,8 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
 .cover-actions button.primary:hover:not(:disabled){background:var(--cyan-d);transform:translateY(-1px);box-shadow:0 4px 12px rgba(34,211,238,.3)}
 .cover-actions button svg{width:12px;height:12px;stroke-width:2.25}
 .cover-hint{font-size:10.5px;color:var(--text-muted);font-weight:500;margin-top:8px;line-height:1.5;letter-spacing:0;text-transform:none}
-.cover-progress{margin-top:10px}
-.cover-progress-bar{height:6px;background:var(--surface-2);border-radius:3px;overflow:hidden}
-.cover-progress-bar > i{display:block;height:100%;background:linear-gradient(90deg,var(--cyan),var(--cyan-d));border-radius:3px;transition:width .2s ease;width:0}
-.cover-progress-text{font-size:10.5px;font-weight:700;color:var(--text-muted);text-align:center;margin-top:6px;font-family:var(--mono)}
+.cover-meta{font-size:10px;color:var(--text-faint);font-weight:700;margin-top:6px;font-family:var(--mono);text-align:center;letter-spacing:.03em;display:none}
+.cover-meta.show{display:block}
 .cover-error{background:var(--danger-soft);border:1px solid var(--danger-border);color:#991b1b;font-size:11px;font-weight:700;padding:9px 12px;border-radius:9px;margin-top:10px;line-height:1.5;display:none}
 .cover-error.show{display:block}
 
@@ -538,7 +535,7 @@ table.data td.num{text-align:right;font-family:var(--mono);font-weight:800;white
             </div>
           </div>
 
-          <input type="file" id="coverFile" accept="image/jpeg,image/png,image/webp,image/gif" style="display:none" />
+          <input type="file" id="coverFile" accept="image/jpeg,image/png,image/webp" style="display:none" />
 
           <div class="cover-actions">
             <button type="button" id="coverChoose" class="primary">
@@ -549,14 +546,10 @@ table.data td.num{text-align:right;font-family:var(--mono);font-weight:800;white
             </button>
           </div>
 
-          <div class="cover-progress" id="coverProgress" style="display:none;">
-            <div class="cover-progress-bar"><i id="coverProgressBar"></i></div>
-            <div class="cover-progress-text" id="coverProgressText">Uploading… 0%</div>
-          </div>
-
+          <div class="cover-meta" id="coverMeta"></div>
           <div class="cover-error" id="coverError"></div>
 
-          <div class="cover-hint">JPG, PNG, WebP or GIF. Max 5 MB. Shown on the home card and the trip detail page.</div>
+          <div class="cover-hint">JPG, PNG or WebP. The image is auto-compressed and stored with the trip — no hosting needed.</div>
         </div>
 
         <div class="panel rev-mini">
@@ -784,18 +777,21 @@ var firebaseConfig = {
   appId: "1:602780280140:web:5d9ff2351e5a7d5e66dbe9"
 };
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-var db      = firebase.firestore();
-var auth    = firebase.auth();
-var storage = firebase.storage();
+var db   = firebase.firestore();
+var auth = firebase.auth();
 var TRIPS_COLLECTION = "trips";
-var COVER_PATH_PREFIX = "trip-covers";
-var COVER_MAX_BYTES = 5 * 1024 * 1024;
-var COVER_ALLOWED_TYPES = ['image/jpeg','image/png','image/webp','image/gif'];
-var COVER_TIMEOUT_MS = 20000;
+
+// Base64 image constraints (Firestore doc limit is 1 MB; keep well under)
+var COVER_MAX_SOURCE_BYTES = 15 * 1024 * 1024;  // reject source files bigger than 15 MB
+var COVER_MAX_OUTPUT_BYTES = 700 * 1024;        // target ~700 KB base64 max
+var COVER_MAX_DIM_FIRST = 1400;
+var COVER_QUALITY_FIRST = 0.75;
+var COVER_MAX_DIM_SECOND = 1000;
+var COVER_QUALITY_SECOND = 0.6;
+var COVER_ALLOWED_TYPES = ['image/jpeg','image/png','image/webp'];
 
 var currentUser = null;
 var authMode = "signin";
-var storageDiagnosticLogged = false;
 
 /* ============================================================
    UTILITIES
@@ -832,7 +828,18 @@ function getQueryParam(name){
 function formatBytes(n){
   if(n < 1024) return n + ' B';
   if(n < 1024*1024) return (n/1024).toFixed(1) + ' KB';
-  return (n/(1024*1024)).toFixed(1) + ' MB';
+  return (n/(1024*1024)).toFixed(2) + ' MB';
+}
+function base64BytesFromDataUrl(dataUrl){
+  if(!dataUrl || typeof dataUrl !== 'string') return 0;
+  var comma = dataUrl.indexOf(',');
+  if(comma < 0) return 0;
+  var b64 = dataUrl.slice(comma + 1);
+  // Remove padding when computing
+  var pad = 0;
+  if(b64.endsWith('==')) pad = 2;
+  else if(b64.endsWith('=')) pad = 1;
+  return Math.floor((b64.length * 3) / 4) - pad;
 }
 function toast(msg, type, ms){
   type = type || 'info';
@@ -907,7 +914,7 @@ function syncAuthTabs(){
 const state = {
   tripId: null,
   operator:'NL', serviceDate:'', serviceName:'',
-  heroImage:'', heroImagePath:'',
+  heroImage:'',
   vehicles:[], tiers:[
     { id:'t_premium', name:'Premium', color:'#800020', price:450, fee:25 },
     { id:'t_standard', name:'Standard', color:'#008080', price:250, fee:15 },
@@ -1255,11 +1262,9 @@ function cabinHTML(v, opts){
 }
 
 /* ============================================================
-   COVER UPLOAD
+   COVER IMAGE — base64 compression, no Storage needed
    ============================================================ */
-let coverUploadTask = null;
 let coverObjectUrl = null;
-let coverTimeoutHandle = null;
 
 function setCoverError(msg){
   const el = $('coverError');
@@ -1272,28 +1277,16 @@ function setCoverError(msg){
     el.classList.remove('show');
   }
 }
-
-function checkStorageSetup(){
-  const opts = firebase.app().options || {};
-  const bucket = opts.storageBucket;
-  const hasStorage = !!(storage && typeof storage.ref === 'function');
-
-  if(!storageDiagnosticLogged){
-    console.log('[Trip Studio] Storage diagnostic:', {
-      hasStorageSdk: hasStorage,
-      storageBucket: bucket || '(missing)',
-      projectId: opts.projectId
-    });
-    storageDiagnosticLogged = true;
+function setCoverMeta(text){
+  const el = $('coverMeta');
+  if(!el) return;
+  if(text){
+    el.textContent = text;
+    el.classList.add('show');
+  } else {
+    el.textContent = '';
+    el.classList.remove('show');
   }
-
-  if(!hasStorage){
-    return { ok: false, reason: 'Storage SDK not loaded. Check that firebase-storage-compat.js is included.' };
-  }
-  if(!bucket){
-    return { ok: false, reason: 'storageBucket is missing from the Firebase config.' };
-  }
-  return { ok: true };
 }
 
 function renderCoverPreview(){
@@ -1312,6 +1305,7 @@ function renderCoverPreview(){
         '<span class="sub">Click to choose an image, or drag one here</span>' +
       '</div>';
     if(removeBtn) removeBtn.disabled = true;
+    setCoverMeta('');
     refreshIcons();
     return;
   }
@@ -1335,26 +1329,16 @@ function renderCoverPreview(){
   };
   img.onload = () => {
     preview.classList.add('has-image');
+    // Show size only for base64 data URLs
+    if(url.indexOf('data:') === 0){
+      const bytes = base64BytesFromDataUrl(url);
+      setCoverMeta('Stored • ' + formatBytes(bytes));
+    } else {
+      setCoverMeta('');
+    }
   };
   img.src = url;
   if(removeBtn) removeBtn.disabled = false;
-}
-
-function showCoverProgress(pct){
-  const wrap = $('coverProgress');
-  const bar  = $('coverProgressBar');
-  const txt  = $('coverProgressText');
-  if(!wrap || !bar || !txt) return;
-  wrap.style.display = 'block';
-  const clamped = Math.max(0, Math.min(100, pct));
-  bar.style.width = clamped + '%';
-  txt.textContent = clamped < 100 ? ('Uploading… ' + clamped + '%') : 'Finalising…';
-}
-function hideCoverProgress(){
-  const wrap = $('coverProgress');
-  if(wrap) wrap.style.display = 'none';
-  const bar = $('coverProgressBar');
-  if(bar) bar.style.width = '0';
 }
 
 function validateCoverFile(file){
@@ -1363,27 +1347,97 @@ function validateCoverFile(file){
     return false;
   }
   if(COVER_ALLOWED_TYPES.indexOf(file.type) === -1){
-    toast('Unsupported type. Use JPG, PNG, WebP or GIF.', 'error');
+    toast('Unsupported type. Use JPG, PNG or WebP.', 'error');
     return false;
   }
-  if(file.size > COVER_MAX_BYTES){
-    toast('Image too large (' + formatBytes(file.size) + '). Max 5 MB.', 'error');
+  if(file.size > COVER_MAX_SOURCE_BYTES){
+    toast('Image too large (' + formatBytes(file.size) + '). Max 15 MB.', 'error');
     return false;
   }
   return true;
 }
 
-function pickFile(){
-  const input = $('coverFile');
-  if(input) input.click();
+/* Read file → Image element */
+function readFileAsImage(file){
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      const img = new Image();
+      img.onload = () => resolve(img);
+      img.onerror = () => reject(new Error('Image decode failed.'));
+      img.src = e.target.result;
+    };
+    reader.onerror = () => reject(new Error('Could not read the file.'));
+    reader.readAsDataURL(file);
+  });
+}
+
+/* Resize + re-encode via canvas to a JPEG data URL */
+function compressImageToDataUrl(img, maxDim, quality){
+  let w = img.naturalWidth || img.width;
+  let h = img.naturalHeight || img.height;
+  if(w <= 0 || h <= 0) return null;
+
+  if(w > maxDim || h > maxDim){
+    if(w >= h){
+      h = Math.round((h / w) * maxDim);
+      w = maxDim;
+    } else {
+      w = Math.round((w / h) * maxDim);
+      h = maxDim;
+    }
+  }
+
+  const canvas = document.createElement('canvas');
+  canvas.width = w;
+  canvas.height = h;
+  const ctx = canvas.getContext('2d');
+  // Fill white first so PNGs with transparency don't go black in JPEG
+  ctx.fillStyle = '#ffffff';
+  ctx.fillRect(0, 0, w, h);
+  ctx.drawImage(img, 0, 0, w, h);
+
+  try {
+    return canvas.toDataURL('image/jpeg', quality);
+  } catch(e){
+    return null;
+  }
+}
+
+/* Two-pass compression:
+   pass 1 = 1400px @ 0.75
+   pass 2 = 1000px @ 0.60   (only if pass 1 was too big) */
+async function fileToCoverDataUrl(file){
+  const img = await readFileAsImage(file);
+
+  let dataUrl = compressImageToDataUrl(img, COVER_MAX_DIM_FIRST, COVER_QUALITY_FIRST);
+  if(!dataUrl) throw new Error('Compression failed.');
+  let bytes = base64BytesFromDataUrl(dataUrl);
+
+  if(bytes > COVER_MAX_OUTPUT_BYTES){
+    const second = compressImageToDataUrl(img, COVER_MAX_DIM_SECOND, COVER_QUALITY_SECOND);
+    if(second){
+      const secondBytes = base64BytesFromDataUrl(second);
+      if(secondBytes < bytes){
+        dataUrl = second;
+        bytes = secondBytes;
+      }
+    }
+  }
+
+  if(bytes > COVER_MAX_OUTPUT_BYTES){
+    throw new Error('Image is still ' + formatBytes(bytes) + ' after compression. Try a simpler image.');
+  }
+
+  return { dataUrl, bytes };
 }
 
 async function handleFileSelected(file){
   if(!validateCoverFile(file)) return;
-
   setCoverError('');
+  setCoverMeta('Compressing…');
 
-  // Local instant preview
+  // Instant preview while we compress
   if(coverObjectUrl){
     try { URL.revokeObjectURL(coverObjectUrl); } catch(e){}
     coverObjectUrl = null;
@@ -1394,176 +1448,45 @@ async function handleFileSelected(file){
     preview.classList.add('has-image');
     preview.innerHTML =
       '<img alt="Trip cover preview" src="' + coverObjectUrl + '" />' +
-      '<span class="overlay-tip">Uploading…</span>';
+      '<span class="overlay-tip">Compressing…</span>';
   }
   const removeBtn = $('coverRemove');
   if(removeBtn) removeBtn.disabled = false;
 
-  if(!currentUser){
-    setCoverError('Sign in to upload a cover.');
-    toast('Sign in to upload a cover.', 'error');
-    setTimeout(() => openAuthModal('signin'), 700);
-    return;
-  }
-
-  const check = checkStorageSetup();
-  if(!check.ok){
-    setCoverError(check.reason);
-    toast('Storage not ready: ' + check.reason, 'error', 6000);
-    return;
-  }
-
-  await uploadCoverFile(file);
-}
-
-async function uploadCoverFile(file){
-  if(coverUploadTask){
-    try { coverUploadTask.cancel(); } catch(e){}
-    coverUploadTask = null;
-  }
-  if(coverTimeoutHandle){
-    clearTimeout(coverTimeoutHandle);
-    coverTimeoutHandle = null;
-  }
-
-  const bucket = firebase.app().options.storageBucket;
-  console.log('[cover upload] starting', {
-    bucket,
-    uid: currentUser.uid,
-    fileSize: file.size,
-    fileType: file.type,
-    fileName: file.name
-  });
-
-  const safeName = (file.name || 'cover')
-    .replace(/[^a-zA-Z0-9._-]/g, '_')
-    .slice(-60);
-  const path = COVER_PATH_PREFIX + '/' + currentUser.uid + '/' + Date.now() + '-' + safeName;
-
-  let ref;
   try {
-    ref = storage.ref(path);
-  } catch(err){
-    console.error('[cover upload] ref() failed', err);
-    setCoverError('Storage reference failed: ' + (err.message || err.code || 'unknown'));
-    toast('Could not build storage reference.', 'error');
-    return;
-  }
-
-  showCoverProgress(0);
-
-  let task;
-  try {
-    task = ref.put(file, {
-      contentType: file.type,
-      cacheControl: 'public, max-age=31536000'
-    });
-    coverUploadTask = task;
-  } catch(err){
-    console.error('[cover upload] put() failed', err);
-    hideCoverProgress();
-    setCoverError('Upload could not start: ' + (err.message || err.code || 'unknown'));
-    toast('Upload could not start.', 'error');
-    return;
-  }
-
-  let madeProgress = false;
-
-  coverTimeoutHandle = setTimeout(() => {
-    if(!madeProgress){
-      console.warn('[cover upload] stalled at 0% — bucket, rules, or App Check issue');
-      try { task.cancel(); } catch(e){}
-      coverUploadTask = null;
-      hideCoverProgress();
-      const reason = 'Upload stuck at 0%. Check that Firebase Storage is enabled, the bucket name matches, and rules are published. Open the browser console for details.';
-      setCoverError(reason);
-      toast(reason, 'error', 9000);
+    const { dataUrl, bytes } = await fileToCoverDataUrl(file);
+    state.heroImage = dataUrl;
+    if(coverObjectUrl){
+      try { URL.revokeObjectURL(coverObjectUrl); } catch(e){}
+      coverObjectUrl = null;
     }
-  }, COVER_TIMEOUT_MS);
-
-  task.on('state_changed',
-    (snap) => {
-      madeProgress = true;
-      const pct = Math.round((snap.bytesTransferred / snap.totalBytes) * 100);
-      showCoverProgress(pct);
-    },
-    (err) => {
-      if(coverTimeoutHandle){
-        clearTimeout(coverTimeoutHandle);
-        coverTimeoutHandle = null;
-      }
-      console.error('[cover upload] error', err, 'code:', err && err.code);
-      coverUploadTask = null;
-      hideCoverProgress();
-      const code = err && err.code ? ' (' + err.code + ')' : '';
-      const msg = err && err.message ? err.message : 'unknown error';
-      let human = 'Upload failed' + code + ': ' + msg;
-      if(err && err.code === 'storage/unauthorized'){
-        human = 'Upload denied. Publish Storage rules allowing writes to trip-covers/YourUID/.';
-      } else if(err && err.code === 'storage/bucket-not-found'){
-        human = 'Storage bucket not found. Enable Storage in the Firebase Console.';
-      } else if(err && err.code === 'storage/canceled'){
-        human = 'Upload cancelled.';
-      }
-      setCoverError(human);
-      toast(human, 'error', 7000);
-    },
-    async () => {
-      if(coverTimeoutHandle){
-        clearTimeout(coverTimeoutHandle);
-        coverTimeoutHandle = null;
-      }
-      try {
-        const url = await task.snapshot.ref.getDownloadURL();
-        const prevPath = state.heroImagePath;
-        state.heroImage = url;
-        state.heroImagePath = path;
-        coverUploadTask = null;
-        hideCoverProgress();
-        setCoverError('');
-        renderCoverPreview();
-        toast('Cover uploaded.', 'success');
-        if(prevPath && prevPath !== path){
-          try { await storage.ref(prevPath).delete(); } catch(e){ /* ignore */ }
-        }
-      } catch(err){
-        console.error('[cover url]', err);
-        coverUploadTask = null;
-        hideCoverProgress();
-        setCoverError('Could not get image URL: ' + (err.message || 'unknown'));
-        toast('Could not get image URL.', 'error');
-      }
-    }
-  );
+    renderCoverPreview();
+    toast('Cover ready · ' + formatBytes(bytes), 'success');
+  } catch(err){
+    console.error('[cover]', err);
+    setCoverError(err.message || 'Could not process this image.');
+    toast(err.message || 'Could not process image.', 'error', 5000);
+    // Keep the raw local preview so the user can see what they picked
+  }
 }
 
 function removeCover(){
-  if(coverUploadTask){
-    try { coverUploadTask.cancel(); } catch(e){}
-    coverUploadTask = null;
-  }
-  if(coverTimeoutHandle){
-    clearTimeout(coverTimeoutHandle);
-    coverTimeoutHandle = null;
-  }
-  hideCoverProgress();
-  setCoverError('');
-
-  const oldPath = state.heroImagePath;
-  if(oldPath && currentUser){
-    storage.ref(oldPath).delete().catch(() => { /* ignore */ });
-  }
-
   if(coverObjectUrl){
     try { URL.revokeObjectURL(coverObjectUrl); } catch(e){}
     coverObjectUrl = null;
   }
   state.heroImage = '';
-  state.heroImagePath = '';
+  setCoverError('');
+  setCoverMeta('');
   renderCoverPreview();
 
   const input = $('coverFile');
   if(input) input.value = '';
+}
+
+function pickFile(){
+  const input = $('coverFile');
+  if(input) input.click();
 }
 
 function bindCoverControls(){
@@ -2158,7 +2081,6 @@ function buildTripPayload(isNew){
     destination: state.serviceName || '',
     city: state.serviceName || '',
     heroImage: state.heroImage || '',
-    heroImagePath: state.heroImagePath || '',
     slug: makeSlug(state.serviceName, state.serviceDate),
     vehicles: state.vehicles,
     tiers: state.tiers,
@@ -2194,10 +2116,6 @@ function saveTrip(){
     setTimeout(() => openAuthModal('signin'), 600);
     return;
   }
-  if(coverUploadTask){
-    toast('Please wait for the cover upload to finish.', 'error');
-    return;
-  }
 
   const isNew = !state.tripId;
   const btn = $('saveTripBtn');
@@ -2206,6 +2124,20 @@ function saveTrip(){
   label.textContent = 'Saving…';
 
   const payload = buildTripPayload(isNew);
+
+  // Pre-check the payload size — Firestore doc limit is 1 MB
+  let payloadSize = 0;
+  try {
+    payloadSize = JSON.stringify(payload).length;
+  } catch(e){}
+  console.log('[save trip] payload size ~', formatBytes(payloadSize), isNew ? '(new)' : '(update)');
+
+  if(payloadSize > 1000000){
+    toast('Trip too large to save (' + formatBytes(payloadSize) + '). Remove or shrink the cover image.', 'error', 6000);
+    btn.disabled = false;
+    label.textContent = 'Save Trip';
+    return;
+  }
 
   const promise = isNew
     ? db.collection(TRIPS_COLLECTION).add(payload)
@@ -2222,7 +2154,7 @@ function saveTrip(){
     })
     .catch(err => {
       console.error('[save trip]', err);
-      toast('Save failed: ' + (err.message || 'unknown error'), 'error');
+      toast('Save failed: ' + (err.message || 'unknown error'), 'error', 5000);
       btn.disabled = false;
       label.textContent = 'Save Trip';
     });
@@ -2244,7 +2176,6 @@ function applyTripData(data){
   state.serviceDate = data.serviceDate || data.departureDate || data.startDate || '';
   state.serviceName = data.tripName || data.serviceName || data.name || 'Trip 01';
   state.heroImage = data.heroImage || data.destinationImage || data.coverImage || '';
-  state.heroImagePath = data.heroImagePath || '';
 
   state.tiers = (data.tiers || []).map(t => Object.assign(
     { id:'t_'+uid(), name:'Tier', color:'#0891b2', price:0, fee:0 }, t
@@ -2464,9 +2395,6 @@ document.addEventListener('DOMContentLoaded', () => {
   renderAll();
   refreshIcons();
 
-  // Log storage setup once on boot
-  checkStorageSetup();
-
   auth.onAuthStateChanged(user => {
     applyAuthState(user);
 
@@ -2494,4 +2422,4 @@ document.addEventListener('DOMContentLoaded', () => {
 })();
 </script>
 </body>
-  </html>
+                </html>
