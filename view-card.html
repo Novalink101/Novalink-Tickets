@@ -110,8 +110,10 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .tk-badge{font-size:9px;font-weight:900;padding:3px 9px;border-radius:6px;text-transform:uppercase;letter-spacing:0.6px;background:var(--tc-badge-bg);color:var(--tc-badge-text)}
 .tk-badge.tier{background:rgba(0,0,0,0.15);color:rgba(0,0,0,0.85);font-weight:900}
 .tk-badge.kind{background:rgba(124,58,237,0.2);color:#6b21a8;font-weight:900}
+.tk-badge.locked{background:rgba(251,146,60,0.25);color:#9a3412;font-weight:900}
 .ticket[data-is-dark="1"] .tk-badge.tier{background:rgba(255,255,255,0.15);color:#fff}
 .ticket[data-is-dark="1"] .tk-badge.kind{background:rgba(167,139,250,0.3);color:#e9d5ff}
+.ticket[data-is-dark="1"] .tk-badge.locked{background:rgba(251,146,60,0.35);color:#fed7aa}
 .tk-event{position:relative;font-size:clamp(18px,3.2vw,24px);font-weight:900;line-height:1.05;letter-spacing:-0.4px;text-transform:uppercase;word-break:break-word;margin-bottom:4px;max-width:70%}
 .tk-event-meta{position:relative;display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--tc-muted);margin-bottom:14px;word-break:break-word}
 .tk-event-meta i{width:12px;height:12px}
@@ -341,6 +343,7 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
               <span class="tk-badge kind" id="ticketKindBadge">EVENT</span>
               <span class="tk-badge" id="ticketStatusBadge">VALID</span>
               <span class="tk-badge tier" id="ticketTierBadge">STANDARD</span>
+              <span class="tk-badge locked" id="ticketLockBadge" style="display:none;"><i data-lucide="lock" style="width:9px;height:9px;vertical-align:-1px;"></i> LOCKED</span>
             </div>
           </div>
 
@@ -492,16 +495,18 @@ function formatDate(dateStr, timeStr){
   } catch(e){ return dateStr; }
 }
 
+/* Date span for trips (departure → return) */
 function formatParentDate(parent){
   if (!parent) return "Date TBA";
   if (parent.startDate) return formatDate(parent.startDate, parent.startTime);
   var dep = parent.departureDate || parent.serviceDate || "";
   var ret = parent.returnDate || parent.endDate || "";
+  var time = parent.startTime || parent.departureTime || parent.serviceTime || "";
   if (!dep && !ret) return "Date TBA";
-  if (dep && !ret) return formatDate(dep, parent.startTime);
-  if (!dep && ret) return formatDate(ret, parent.startTime);
-  if (dep === ret) return formatDate(dep, parent.startTime);
-  return formatDate(dep, parent.startTime) + " → " + formatDate(ret);
+  if (dep && !ret) return formatDate(dep, time);
+  if (!dep && ret) return formatDate(ret, time);
+  if (dep === ret) return formatDate(dep, time);
+  return formatDate(dep, time) + " → " + formatDate(ret);
 }
 
 function getParam(n){
@@ -623,13 +628,17 @@ function applyTicketPalette(tierKey){
   card.setAttribute("data-tier", tierKey);
 }
 
-/* ===== Ticket unlock time logic ===== */
+/* ===== Ticket unlock time logic =====
+   - Unlocks 2 hours before event start time
+   - If no startTime, defaults to 00:00 on the event date
+   - After 12h past event start → expired
+*/
 function getTicketTimeState(){
   var dateStr = "";
   var timeStr = "";
   if (COLLECTION === "trips") {
     dateStr = eventData.startDate || eventData.departureDate || eventData.serviceDate || "";
-    timeStr = eventData.startTime || "00:00";
+    timeStr = eventData.startTime || eventData.departureTime || eventData.serviceTime || "00:00";
   } else {
     dateStr = eventData.startDate || "";
     timeStr = eventData.startTime || "00:00";
@@ -802,6 +811,12 @@ function renderQr(){
   wrap.innerHTML = "";
 
   var timeState = getTicketTimeState();
+
+  /* Update the LOCKED badge visibility */
+  var lockBadge = $("ticketLockBadge");
+  if (lockBadge) {
+    lockBadge.style.display = (timeState.state === "locked") ? "inline-flex" : "none";
+  }
 
   /* LOCKED — show countdown, hide QR */
   if (timeState.state === "locked") {
@@ -1057,4 +1072,4 @@ window.addEventListener("beforeunload", function(){
 })();
 </script>
 </body>
-</html>
+  </html>
