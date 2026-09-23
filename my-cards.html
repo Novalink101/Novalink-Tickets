@@ -295,8 +295,8 @@ var ADMINS = ["nylnathan340@gmail.com"];
 
 var currentUser = null;
 var isAdmin = false;
-var allCards = [];           // flat list of { ...ticket, _parent: {...}, _kind: "events"|"trips" }
-var activeFilter = "all";    // "all" | "events" | "trips"
+var allCards = [];
+var activeFilter = "all";
 
 function $(id){ return document.getElementById(id); }
 function refreshIcons(){ if(window.lucide) lucide.createIcons(); }
@@ -330,7 +330,6 @@ function formatDate(dateStr){
   } catch(e){ return dateStr; }
 }
 
-/* ===== Parent date helpers — trips have departure/return ===== */
 function parentDisplayDate(parent){
   if (!parent) return "";
   if (parent.startDate) return formatDate(parent.startDate);
@@ -353,7 +352,7 @@ function parentVenue(parent){
   return parent.venueAddress || parent.city || "";
 }
 
-/* ===== Colour helpers (mirror create-event + view-card) ===== */
+/* ===== Colour helpers ===== */
 var TIER_DEFAULTS = {
   black:"#1a202c", gold:"#ecc94b", silver:"#cbd5e1",
   cyan:"#00FFFF", tier5:"#a855f7", tier6:"#f472b6"
@@ -362,6 +361,39 @@ var TIER_DEFAULT_NAMES = {
   black:"Elite", gold:"VIP", silver:"Silver",
   cyan:"Standard", tier5:"Platinum", tier6:"Diamond"
 };
+
+/* Priority order for looking up a tier's colour:
+   1. parent.tierColours[tierKey]  (trip's saved custom colours)
+   2. parent.tiers[].color         (trip's saved tier objects)
+   3. TIER_DEFAULTS[tierKey]       (built-in fallbacks)
+   4. cyan fallback
+*/
+function getTierColour(parent, tierKey){
+  if (!tierKey) tierKey = "cyan";
+  if (parent && parent.tierColours && parent.tierColours[tierKey]) {
+    return parent.tierColours[tierKey];
+  }
+  if (parent && Array.isArray(parent.tiers)) {
+    for (var i = 0; i < parent.tiers.length; i++) {
+      var t = parent.tiers[i];
+      if (t && t.id === tierKey && t.color) return t.color;
+    }
+  }
+  return TIER_DEFAULTS[tierKey] || "#00FFFF";
+}
+function getTierName(parent, tierKey){
+  if (!tierKey) tierKey = "cyan";
+  if (parent && parent.tierNames && parent.tierNames[tierKey]) {
+    return parent.tierNames[tierKey];
+  }
+  if (parent && Array.isArray(parent.tiers)) {
+    for (var i = 0; i < parent.tiers.length; i++) {
+      var t = parent.tiers[i];
+      if (t && t.id === tierKey && t.name) return t.name;
+    }
+  }
+  return TIER_DEFAULT_NAMES[tierKey] || tierKey;
+}
 
 function hexToRgbObj(hex){
   var c = String(hex || "").replace("#","");
@@ -427,19 +459,13 @@ function applyPalette(el, hex){
   el.setAttribute("data-is-dark", p.isDark ? "1" : "0");
 }
 
-/* ===== Pretty seat display =====
-   A-T1-C3  →  Table A1 · Seat 3
-   A-T1     →  Table A1
-   V01:A-1  →  V01 · Seat A-1  (trip seats use code:seat format)
-   ""       →  General admission
-*/
+/* ===== Pretty seat display ===== */
 function prettySeat(raw){
   if (!raw) return "General admission";
   var t = /^([A-Z])-T(\d+)-C(\d+)$/.exec(raw);
   if (t) return "Table " + t[1] + t[2] + " · Seat " + t[3];
   var t2 = /^([A-Z])-T(\d+)$/.exec(raw);
   if (t2) return "Table " + t2[1] + t2[2];
-  // Trip format: "S01:04B" or "S01:04B" (vehicleCode:seatName)
   var m = /^([A-Z0-9]+):([A-Z0-9\-]+)$/.exec(raw);
   if (m) return m[1] + " · Seat " + m[2];
   return raw;
@@ -491,17 +517,10 @@ function showContent(){
 
 /* ============================================================
    Load cards
-   ------------------------------------------------------------
-   Strategy: read every parent document (public read on both
-   collections), then for each parent, query the tickets
-   subcollection for anything owned by the current user.
-   Combine into one flat list. Errors on a single parent are
-   non-fatal — that parent is simply skipped.
    ============================================================ */
 async function loadCards(){
   if (!currentUser) { showSignin(); return; }
 
-  /* Fetch all parents from both collections in parallel */
   const [eventsSnap, tripsSnap] = await Promise.all([
     db.collection("events").get(),
     db.collection("trips").get()
@@ -521,7 +540,6 @@ async function loadCards(){
     parents.push(d);
   });
 
-  /* For each parent, pull that user's tickets */
   const ticketPromises = parents.map(parent => {
     return db.collection(parent._kind).doc(parent.id)
       .collection("tickets")
@@ -539,8 +557,6 @@ async function loadCards(){
         return list;
       })
       .catch(err => {
-        /* A single parent may block reads if the user has no
-           permission on it — skip silently. */
         console.warn("Skip " + parent._kind + "/" + parent.id + ": " + err.message);
         return [];
       });
@@ -585,7 +601,6 @@ function renderAll(){
 
     if (c._kind === "trips") nTrips++; else nEvents++;
 
-    /* Apply filter */
     if (activeFilter === "events" && c._kind !== "events") return;
     if (activeFilter === "trips"  && c._kind !== "trips")  return;
 
@@ -594,14 +609,12 @@ function renderAll(){
     else upcoming.push(c);
   });
 
-  /* Stats — always reflect the full set, not just the filtered view */
   $("statTotal").textContent     = total;
   $("statValid").textContent     = valid;
   $("statCancelled").textContent = cancelled;
   $("statEvents").textContent    = nEvents;
   $("statTrips").textContent     = nTrips;
 
-  /* Filter chip counts */
   $("countAll").textContent    = total;
   $("countEvents").textContent = nEvents;
   $("countTrips").textContent  = nTrips;
@@ -616,7 +629,6 @@ function renderAll(){
     return;
   }
 
-  /* Filtered set came up empty */
   if (!upcoming.length && !past.length) {
     $("emptyState").style.display = "block";
     $("emptyTitle").textContent = "Nothing here";
@@ -631,14 +643,12 @@ function renderAll(){
 
   $("emptyState").style.display = "none";
 
-  /* Sort upcoming by soonest first */
   upcoming.sort(function(a, b){
     var da = parentSortDate(a._parent) || "9999";
     var db_ = parentSortDate(b._parent) || "9999";
     return da.localeCompare(db_);
   });
 
-  /* Sort past by most recent first */
   past.sort(function(a, b){
     var da = parentSortDate(a._parent) || "";
     var db_ = parentSortDate(b._parent) || "";
@@ -676,8 +686,9 @@ function buildCard(card){
   var kind     = card._kind   || "events";
   var tierKey  = card.tier || "cyan";
 
-  var tierName = (parent.tierNames   && parent.tierNames[tierKey])   || TIER_DEFAULT_NAMES[tierKey] || tierKey;
-  var tierColour = (parent.tierColours && parent.tierColours[tierKey]) || TIER_DEFAULTS[tierKey]      || "#00FFFF";
+  /* Read the tier name + colour using the helpers above */
+  var tierName   = getTierName(parent, tierKey);
+  var tierColour = getTierColour(parent, tierKey);
 
   var el = document.createElement("div");
   el.className = "ticket-mini";
@@ -686,6 +697,7 @@ function buildCard(card){
   if (status === "cancelled") el.classList.add("cancelled");
   else if (status === "checked-in" || status === "checked_in") el.classList.add("used");
 
+  /* Apply the tier's colour palette to the card */
   applyPalette(el, tierColour);
 
   var eventName = parentTitle(parent, kind);
@@ -741,7 +753,6 @@ document.addEventListener("DOMContentLoaded", function(){
   $("year").textContent = new Date().getFullYear();
   refreshIcons();
 
-  /* Header menu */
   $("userMenuBtn").addEventListener("click", function(e){
     e.stopPropagation();
     $("userDropdown").classList.toggle("open");
@@ -778,4 +789,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-        </html>
+</html>
