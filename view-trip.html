@@ -231,6 +231,7 @@ main{flex:1;max-width:1280px;margin:0 auto;width:100%;padding:0 20px 64px}
 .seat.orient-back::before{top:auto;bottom:-4px;border-radius:0 0 3px 3px;border-top:none;border-bottom:1.5px solid;border-color:inherit}
 .seat.unassigned{background:#fff;border-color:#cbd5e1;color:#64748b;border-style:dashed}
 .seat.held{background:repeating-linear-gradient(-45deg,#fef9c3,#fef9c3 4px,#fde047 4px,#fde047 8px);border-color:#eab308;color:#713f12}
+.seat.sold{background:#e2e8f0;border-color:#94a3b8;color:#94a3b8;opacity:0.6;background-image:repeating-linear-gradient(45deg,rgba(0,0,0,0.05) 0,rgba(0,0,0,0.05) 2px,transparent 2px,transparent 4px)}
 .aisle{width:var(--aisle-w,26px);flex-shrink:0;align-self:stretch;margin:0 var(--seat-gap,4px);background:repeating-linear-gradient(to bottom,transparent 0,transparent 4px,#e2e8f0 4px,#e2e8f0 8px);border-radius:2px}
 .vshell-train .aisle,.vshell-metro .aisle{background:repeating-linear-gradient(to bottom,transparent 0,transparent 6px,#cbd5e1 6px,#cbd5e1 10px)}
 
@@ -540,53 +541,64 @@ function allSeats(v){
 /* ============================================================
    SEAT + LAYOUT RENDERING (read-only)
    ============================================================ */
-function seatHTML(v, row, col, tiers, orientation){
+function seatHTML(v, row, col, tiers, orientation, soldSeatKeys){
   orientation = orientation || 'fwd';
   const name = seatName(v, row, col);
   const tierId = v.tierMap[name];
   const tier = tierId ? tiers.find(t => t.id === tierId) : null;
   const isHeld = !!v.holdMap[name];
+  const seatKey = v.code + ':' + name;
+  const isSold = soldSeatKeys && soldSeatKeys.has(seatKey);
 
   const cls = ['seat'];
   if(!tier && !isHeld) cls.push('unassigned');
   if(isHeld) cls.push('held');
+  if(isSold) cls.push('sold');
   if(orientation === 'back') cls.push('orient-back');
 
-  const bg = tier ? `background:${tier.color};border-color:${tier.color};color:#fff;` : '';
-  const title = tier
-    ? `${name} · ${tier.name} · ${fmtR(tier.price + tier.fee)}`
-    : (isHeld ? `${name} · HELD` : `${name} · Unpriced`);
+  let bg = '';
+  if(isSold) {
+    bg = ''; // Use .sold class styles
+  } else if(tier) {
+    bg = `background:${tier.color};border-color:${tier.color};color:#fff;`;
+  }
+
+  let title = '';
+  if(isSold) title = `${name} · SOLD`;
+  else if(tier) title = `${name} · ${tier.name} · ${fmtR(tier.price + tier.fee)}`;
+  else if(isHeld) title = `${name} · HELD`;
+  else title = `${name} · Unpriced`;
 
   return `<div class="${cls.join(' ')}" style="${bg}" title="${esc(title)}" aria-label="${esc(title)}">${esc(name)}</div>`;
 }
-function renderGrid(v, tiers, orientMode){
+function renderGrid(v, tiers, orientMode, soldSeatKeys){
   const orientFor = r => orientMode === 'alternate' ? (r % 2 === 0 ? 'fwd' : 'back') : 'fwd';
   let html = '<div class="seat-rows">';
   for(let r = 0; r < v.rows; r++){
     html += '<div class="seat-row">';
     for(let c = 0; c < v.seatsPerRow; c++){
       if(c === v.aisleAfter) html += '<div class="aisle"></div>';
-      html += seatHTML(v, r, c, tiers, orientFor(r));
+      html += seatHTML(v, r, c, tiers, orientFor(r), soldSeatKeys);
     }
     html += '</div>';
   }
   return html + '</div>';
 }
-function renderTable(v, tiers){
+function renderTable(v, tiers, soldSeatKeys){
   let html = '<div class="seat-rows">';
   for(let r = 0; r < v.rows; r++){
     const orient = r % 2 === 0 ? 'fwd' : 'back';
     html += '<div class="seat-row">';
     for(let c = 0; c < v.seatsPerRow; c++){
       if(c === v.aisleAfter) html += '<div class="aisle"></div>';
-      html += seatHTML(v, r, c, tiers, orient);
+      html += seatHTML(v, r, c, tiers, orient, soldSeatKeys);
     }
     html += '</div>';
     if(r % 2 === 1 && r < v.rows - 1) html += '<div class="booth-table"></div>';
   }
   return html + '</div>';
 }
-function renderCompartment(v, tiers){
+function renderCompartment(v, tiers, soldSeatKeys){
   const compartments = Math.max(1, Math.ceil(v.rows / 2));
   let html = '<div class="compartment-stack">';
   for(let comp = 0; comp < compartments; comp++){
@@ -599,7 +611,7 @@ function renderCompartment(v, tiers){
       const orient = half === 0 ? 'fwd' : 'back';
       html += '<div class="seat-row">';
       for(let c = 0; c < v.seatsPerRow; c++){
-        html += seatHTML(v, r, c, tiers, orient);
+        html += seatHTML(v, r, c, tiers, orient, soldSeatKeys);
       }
       html += '</div>';
       if(half === 0) html += '<div class="compartment-table"></div>';
@@ -608,13 +620,13 @@ function renderCompartment(v, tiers){
   }
   return html + '</div>';
 }
-function renderLongitudinal(v, tiers){
+function renderLongitudinal(v, tiers, soldSeatKeys){
   const total = v.rows * v.seatsPerRow;
   const perSide = Math.ceil(total / 2);
   const cells = [];
   for(let r = 0; r < v.rows; r++){
     for(let c = 0; c < v.seatsPerRow; c++){
-      cells.push(seatHTML(v, r, c, tiers, 'side'));
+      cells.push(seatHTML(v, r, c, tiers, 'side', soldSeatKeys));
     }
   }
   const left = cells.slice(0, perSide).join('');
@@ -625,125 +637,133 @@ function renderLongitudinal(v, tiers){
     <div class="bench"><span class="bench-label">Bench R</span>${right}</div>
   </div>`;
 }
-function seatGridHTML(v, tiers){
+function seatGridHTML(v, tiers, soldSeatKeys){
   const layout = v.layout || 'open-plan';
   switch(layout){
-    case 'compartment':  return renderCompartment(v, tiers);
-    case 'longitudinal': return renderLongitudinal(v, tiers);
-    case 'table':        return renderTable(v, tiers);
-    case 'airline':      return renderGrid(v, tiers, 'fwd');
-    case 'forward-back': return renderGrid(v, tiers, 'alternate');
-    default:             return renderGrid(v, tiers, 'fwd');
+    case 'compartment':  return renderCompartment(v, tiers, soldSeatKeys);
+    case 'longitudinal': return renderLongitudinal(v, tiers, soldSeatKeys);
+    case 'table':        return renderTable(v, tiers, soldSeatKeys);
+    case 'airline':      return renderGrid(v, tiers, 'fwd', soldSeatKeys);
+    case 'forward-back': return renderGrid(v, tiers, 'alternate', soldSeatKeys);
+    default:             return renderGrid(v, tiers, 'fwd', soldSeatKeys);
   }
 }
 function shellOpts(v){ return `--seat-sz:${v.seatSize}px;--seat-gap:${v.seatGap}px;--row-gap:${v.rowGap}px;--aisle-w:${v.aisleWidth}px`; }
 
-function shellBus(v, tiers){
+function shellBus(v, tiers, soldSeatKeys){
   return `<div class="vehicle-stage"><div class="vshell vshell-bus" style="${shellOpts(v)}"><div class="vshell-body">
     <span class="vshell-wheel fl"></span><span class="vshell-wheel fr"></span>
     <span class="vshell-wheel rl"></span><span class="vshell-wheel rr"></span>
     <div class="vshell-front"><span class="vshell-driver">Driver</span><span class="vshell-door">Entry</span></div>
-    <div class="vshell-cabin">${seatGridHTML(v, tiers)}</div>
+    <div class="vshell-cabin">${seatGridHTML(v, tiers, soldSeatKeys)}</div>
     <div class="vshell-rear"><span class="vshell-door">Exit</span></div>
   </div></div></div>`;
 }
-function shellDouble(v, tiers){
+function shellDouble(v, tiers, soldSeatKeys){
   return `<div class="vehicle-stage"><div class="vshell vshell-double" style="${shellOpts(v)}"><div class="vshell-body">
     <span class="vshell-wheel fl"></span><span class="vshell-wheel fr"></span>
     <span class="vshell-wheel rl"></span><span class="vshell-wheel rr"></span>
     <span class="deck-tag">2 DECKS</span>
     <div class="vshell-front"><span class="vshell-driver">Driver</span><span class="vshell-door">Entry</span></div>
-    <div class="vshell-cabin">${seatGridHTML(v, tiers)}</div>
+    <div class="vshell-cabin">${seatGridHTML(v, tiers, soldSeatKeys)}</div>
     <div class="vshell-rear"><span class="vshell-door">Exit</span></div>
   </div></div></div>`;
 }
-function shellArtic(v, tiers){
+function shellArtic(v, tiers, soldSeatKeys){
   return `<div class="vehicle-stage"><div class="vshell vshell-artic" style="${shellOpts(v)}"><div class="vshell-body">
     <span class="artic-joint"></span>
     <span class="vshell-wheel fl"></span><span class="vshell-wheel fr"></span>
     <span class="vshell-wheel rl"></span><span class="vshell-wheel rr"></span>
     <div class="vshell-front"><span class="vshell-driver">Driver</span><span class="vshell-door">Entry</span></div>
-    <div class="vshell-cabin">${seatGridHTML(v, tiers)}</div>
+    <div class="vshell-cabin">${seatGridHTML(v, tiers, soldSeatKeys)}</div>
     <div class="vshell-rear"><span class="vshell-door">Exit</span></div>
   </div></div></div>`;
 }
-function shellTram(v, tiers){
+function shellTram(v, tiers, soldSeatKeys){
   return `<div class="vehicle-stage"><div class="vshell vshell-tram" style="${shellOpts(v)}">
     <div class="tram-panto"><span></span></div>
     <div class="tram-pole"></div>
     <div class="vshell-body">
       <div class="tram-rail"></div>
       <div class="vshell-front"><span class="vshell-driver">Driver</span><span class="vshell-door">Entry</span></div>
-      <div class="vshell-cabin">${seatGridHTML(v, tiers)}</div>
+      <div class="vshell-cabin">${seatGridHTML(v, tiers, soldSeatKeys)}</div>
       <div class="vshell-rear"><span class="vshell-door">Exit</span></div>
     </div>
   </div></div>`;
 }
-function shellMetro(v, tiers){
+function shellMetro(v, tiers, soldSeatKeys){
   return `<div class="vehicle-stage"><div class="vshell vshell-metro" style="${shellOpts(v)}"><div class="vshell-body">
     <div class="metro-cap"><span></span></div>
-    <div class="vshell-cabin">${seatGridHTML(v, tiers)}</div>
+    <div class="vshell-cabin">${seatGridHTML(v, tiers, soldSeatKeys)}</div>
     <div class="metro-cap"><span></span></div>
   </div></div></div>`;
 }
-function shellTrain(v, tiers){
+function shellTrain(v, tiers, soldSeatKeys){
   return `<div class="vehicle-stage"><div class="vshell vshell-train" style="${shellOpts(v)}">
     <div class="vshell-vestibule top"></div>
-    <div class="vshell-body"><div class="vshell-cabin">${seatGridHTML(v, tiers)}</div></div>
+    <div class="vshell-body"><div class="vshell-cabin">${seatGridHTML(v, tiers, soldSeatKeys)}</div></div>
     <div class="vshell-vestibule bottom"></div>
   </div></div>`;
 }
-function shellSleeper(v, tiers){
+function shellSleeper(v, tiers, soldSeatKeys){
   return `<div class="vehicle-stage"><div class="vshell vshell-sleeper" style="${shellOpts(v)}"><div class="vshell-body">
     <span class="vshell-wheel fl"></span><span class="vshell-wheel fr"></span>
     <span class="vshell-wheel rl"></span><span class="vshell-wheel rr"></span>
     <div class="vshell-front"><span class="vshell-driver">Driver</span><span class="vshell-door">Entry</span></div>
-    <div class="vshell-cabin">${seatGridHTML(v, tiers)}</div>
+    <div class="vshell-cabin">${seatGridHTML(v, tiers, soldSeatKeys)}</div>
     <div class="vshell-rear"><span class="vshell-door">Exit</span></div>
   </div></div></div>`;
 }
-function cabinHTML(v, tiers){
+function cabinHTML(v, tiers, soldSeatKeys){
   switch(v.type){
-    case 'double':  return shellDouble(v, tiers);
-    case 'artic':   return shellArtic(v, tiers);
-    case 'tram':    return shellTram(v, tiers);
-    case 'metro':   return shellMetro(v, tiers);
-    case 'train':   return shellTrain(v, tiers);
-    case 'sleeper': return shellSleeper(v, tiers);
-    default:        return shellBus(v, tiers);
+    case 'double':  return shellDouble(v, tiers, soldSeatKeys);
+    case 'artic':   return shellArtic(v, tiers, soldSeatKeys);
+    case 'tram':    return shellTram(v, tiers, soldSeatKeys);
+    case 'metro':   return shellMetro(v, tiers, soldSeatKeys);
+    case 'train':   return shellTrain(v, tiers, soldSeatKeys);
+    case 'sleeper': return shellSleeper(v, tiers, soldSeatKeys);
+    default:        return shellBus(v, tiers, soldSeatKeys);
   }
 }
 
 /* ============================================================
-   REVENUE / SUMMARY
+   REVENUE / SUMMARY (NOW TAKES SOLD SEATS INTO ACCOUNT)
    ============================================================ */
-function calcTripSummary(trip){
+function calcTripSummary(trip, soldSeatKeys){
   const tiers = trip.tiers || [];
   const vehicles = (trip.vehicles || []).map(normalizeVehicle);
+  soldSeatKeys = soldSeatKeys || new Set();
 
   const s = {
-    totalSeats: 0, pricedSeats: 0, unpricedSeats: 0, heldSeats: 0,
+    totalSeats: 0, availableSeats: 0, soldSeats: 0, pricedSeats: 0, unpricedSeats: 0, heldSeats: 0,
     estimatedRevenue: 0, minPrice: Infinity, maxPrice: 0,
     byVehicle: [], byTier: {}
   };
-  tiers.forEach(t => { s.byTier[t.id] = { seats:0, revenue:0 }; });
+  tiers.forEach(t => { s.byTier[t.id] = { seats:0, sold:0, revenue:0 }; });
 
   vehicles.forEach(v => {
     const seats = allSeats(v);
     const vs = { id:v.id, name:v.name, code:v.code, layout:v.layout, type:v.type,
-                 total:seats.length, priced:0, held:0, unpriced:0, revenue:0,
+                 total:seats.length, priced:0, held:0, unpriced:0, revenue:0, sold:0,
                  minPrice:Infinity, maxPrice:0 };
     seats.forEach(st => {
       const tierId = v.tierMap[st.name];
       const tier = tierId ? tiers.find(t => t.id === tierId) : null;
       const held = !!v.holdMap[st.name];
+      const seatKey = v.code + ':' + st.name;
+      const sold = soldSeatKeys.has(seatKey);
+
       s.totalSeats++;
+      if(sold) { s.soldSeats++; vs.sold++; }
+      else { s.availableSeats++; }
+
       if(tier){
         const unit = (tier.price||0) + (tier.fee||0);
         s.pricedSeats++; vs.priced++;
         s.estimatedRevenue += unit; vs.revenue += unit;
         s.byTier[tier.id].seats++;
         s.byTier[tier.id].revenue += unit;
+        if(sold) s.byTier[tier.id].sold++;
         if(unit < s.minPrice) s.minPrice = unit;
         if(unit > s.maxPrice) s.maxPrice = unit;
         if(unit < vs.minPrice) vs.minPrice = unit;
@@ -783,10 +803,10 @@ function renderError(title, message, actionsHTML){
 }
 
 /* ============================================================
-   RENDER TRIP
+   RENDER TRIP (NOW TAKES soldSeatKeys)
    ============================================================ */
-function renderTrip(trip, ctx){
-  const { vehicles, summary } = calcTripSummary(trip);
+function renderTrip(trip, ctx, soldSeatKeys){
+  const { vehicles, summary } = calcTripSummary(trip, soldSeatKeys);
   const tiers = trip.tiers || [];
   const isOwner = ctx.isOwner;
   const isAdmin = ctx.isAdmin;
@@ -830,9 +850,9 @@ function renderTrip(trip, ctx){
         '<div class="kpi-sub">' + (summary.maxPrice > summary.minPrice ? 'up to ' + fmtR(summary.maxPrice) + ' per seat' : 'per seat') + '</div>' +
       '</div>' +
       '<div class="kpi seats">' +
-        '<div class="kpi-label">' + icon('armchair') + ' Seats</div>' +
-        '<div class="kpi-value">' + summary.totalSeats + '</div>' +
-        '<div class="kpi-sub">across ' + vehicles.length + ' vehicle' + (vehicles.length === 1 ? '' : 's') + '</div>' +
+        '<div class="kpi-label">' + icon('armchair') + ' Seats Available</div>' +
+        '<div class="kpi-value">' + summary.availableSeats + '</div>' +
+        '<div class="kpi-sub">' + (summary.soldSeats > 0 ? summary.soldSeats + ' sold' : 'across ' + vehicles.length + ' vehicle' + (vehicles.length === 1 ? '' : 's')) + '</div>' +
       '</div>' +
       '<div class="kpi tiers">' +
         '<div class="kpi-label">' + icon('layers') + ' Tiers</div>' +
@@ -854,15 +874,16 @@ function renderTrip(trip, ctx){
       '</div>' +
       '<div class="tier-strip">' +
         tiers.map(t => {
-          const b = summary.byTier[t.id] || { seats:0 };
+          const b = summary.byTier[t.id] || { seats:0, sold:0 };
           const unit = (t.price||0) + (t.fee||0);
+          const availableInTier = b.seats - b.sold;
           return '<div class="tier-card" style="--tier-color:' + esc(t.color) + ';">' +
             '<div class="tier-name">' +
               '<i style="background:' + esc(t.color) + ';"></i>' +
               esc(t.name) +
             '</div>' +
             '<div class="tier-price">' + fmtR(unit) + '<small> / seat</small></div>' +
-            '<div class="tier-seats">' + b.seats + ' seat' + (b.seats === 1 ? '' : 's') + ' assigned</div>' +
+            '<div class="tier-seats">' + availableInTier + ' of ' + b.seats + ' seat' + (b.seats === 1 ? '' : 's') + ' available</div>' +
           '</div>';
         }).join('') +
       '</div>' +
@@ -877,9 +898,10 @@ function renderTrip(trip, ctx){
       '</div>' +
       '<div class="vehicle-grid">' +
         vehicles.map(v => {
-          const rv = summary.byVehicle.find(x => x.id === v.id) || { total:0, priced:0, held:0, minPrice:0 };
+          const rv = summary.byVehicle.find(x => x.id === v.id) || { total:0, priced:0, held:0, sold:0, minPrice:0 };
           const layoutLabel = LAYOUT_LABELS[v.layout] || 'Open-Plan Saloon';
           const priceLabel = rv.minPrice && rv.minPrice !== Infinity ? fmtR(rv.minPrice) : '—';
+          const availableSeats = rv.total - rv.sold;
           return '<div class="vehicle-card">' +
             '<div class="veh-head">' +
               '<div class="veh-name">' + esc(v.name) + '</div>' +
@@ -887,8 +909,8 @@ function renderTrip(trip, ctx){
             '</div>' +
             '<div class="veh-layout">' + icon('layout-grid') + ' ' + esc(layoutLabel) + '</div>' +
             '<div class="veh-stats">' +
-              '<div class="veh-stat"><span>Seats</span><strong>' + rv.total + '</strong></div>' +
-              '<div class="veh-stat"><span>Priced</span><strong>' + rv.priced + '</strong></div>' +
+              '<div class="veh-stat"><span>Available</span><strong>' + availableSeats + '</strong></div>' +
+              '<div class="veh-stat"><span>Sold</span><strong>' + rv.sold + '</strong></div>' +
               '<div class="veh-stat"><span>Held</span><strong>' + rv.held + '</strong></div>' +
             '</div>' +
             '<div class="veh-price">' +
@@ -905,12 +927,13 @@ function renderTrip(trip, ctx){
     '<section class="section seating-section">' +
       '<div class="section-head">' +
         '<h2>' + icon('armchair') + ' Seating plan</h2>' +
-        '<span class="hint">Full layout across all vehicles. Held seats are striped yellow.</span>' +
+        '<span class="hint">Sold seats are marked grey. Held seats are striped yellow.</span>' +
       '</div>' +
       vehicles.map(v => {
         const planLegend =
           '<div class="plan-legend">' +
             tiers.map(t => '<span><i style="background:' + esc(t.color) + ';"></i>' + esc(t.name) + '</span>').join('') +
+            '<span><i style="background:#e2e8f0;border:1px solid #94a3b8;opacity:0.6;"></i>Sold</span>' +
             '<span><i style="background:#fef9c3;border:1px solid #eab308;"></i>Held</span>' +
             '<span><i style="background:#fff;border:1px dashed #cbd5e1;"></i>Unpriced</span>' +
           '</div>';
@@ -924,7 +947,7 @@ function renderTrip(trip, ctx){
             '</div>' +
             planLegend +
           '</div>' +
-          cabinHTML(v, tiers) +
+          cabinHTML(v, tiers, soldSeatKeys) +
         '</div>';
       }).join('') +
     '</section>'
@@ -951,7 +974,7 @@ function renderTrip(trip, ctx){
         '<div class="trip-hero-meta">' +
           '<span>' + icon('calendar') + ' ' + esc(dates) + '</span>' +
           (destination ? '<span>' + icon('map-pin') + ' ' + esc(destination) + '</span>' : '') +
-          '<span>' + icon('armchair') + ' ' + summary.totalSeats + ' seats</span>' +
+          '<span>' + icon('armchair') + ' ' + summary.availableSeats + ' seats available</span>' +
         '</div>' +
         '<div class="trip-hero-actions">' + ownerActionsHTML + '</div>' +
       '</div>' +
@@ -1284,6 +1307,8 @@ function applyAuthState(user){
 let currentUser = null;
 let isAdmin = false;
 let currentTrip = null;
+let ticketsUnsub = null;
+let soldSeatKeys = new Set();
 
 function determineOwnership(trip){
   if(!currentUser) return { isOwner:false, isAdmin:false };
@@ -1294,7 +1319,27 @@ function determineOwnership(trip){
 function attemptRender(){
   if(!currentTrip) return;
   const ctx = determineOwnership(currentTrip);
-  renderTrip(currentTrip, ctx);
+  renderTrip(currentTrip, ctx, soldSeatKeys);
+}
+
+function listenToTickets(tripId){
+  if (ticketsUnsub) { try { ticketsUnsub(); } catch(e){} }
+  ticketsUnsub = db.collection(TRIPS_COLLECTION).doc(tripId).collection('tickets')
+    .onSnapshot(snap => {
+      soldSeatKeys = new Set();
+      snap.forEach(doc => {
+        const d = doc.data() || {};
+        if (d.status === 'cancelled') return;
+        if (d.seat) soldSeatKeys.add(d.seat);
+      });
+      // Re-render the main UI with the new sold seats data
+      if (currentTrip) {
+        const ctx = determineOwnership(currentTrip);
+        renderTrip(currentTrip, ctx, soldSeatKeys);
+      }
+    }, err => {
+      console.error('[tickets listener]', err);
+    });
 }
 
 document.addEventListener('DOMContentLoaded', () => {
@@ -1344,6 +1389,7 @@ document.addEventListener('DOMContentLoaded', () => {
         return;
       }
       currentTrip = Object.assign({ id: doc.id }, doc.data() || {});
+      listenToTickets(tripId);
       attemptRender();
     })
     .catch(err => {
@@ -1358,9 +1404,14 @@ document.addEventListener('DOMContentLoaded', () => {
         '<a class="btn ghost" href="trips.html">' + icon('map') + ' See all trips</a>'
       );
     });
+
+  // Cleanup listener on page unload
+  window.addEventListener('beforeunload', () => {
+    if (ticketsUnsub) { try { ticketsUnsub(); } catch(e){} }
+  });
 });
 
 })();
 </script>
 </body>
-</html>
+  </html>
