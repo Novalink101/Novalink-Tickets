@@ -71,6 +71,8 @@ main{flex:1;max-width:1280px;margin:0 auto;width:100%;padding:0 20px 64px}
 .trip-badge-row{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .trip-badge{display:inline-flex;align-items:center;gap:6px;border:1px solid rgba(34,211,238,.42);background:rgba(34,211,238,.12);color:var(--cyan);font-size:10.5px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;padding:6px 12px;border-radius:var(--radius-pill)}
 .trip-badge.dark{border-color:rgba(255,255,255,.16);background:rgba(255,255,255,.08);color:rgba(255,255,255,.85)}
+.trip-badge.locked{border-color:rgba(251,146,60,.55);background:rgba(251,146,60,.15);color:#fdba74}
+.trip-badge.live{border-color:rgba(16,185,129,.55);background:rgba(16,185,129,.15);color:#6ee7b7}
 .trip-badge svg{width:12px;height:12px}
 .trip-name{font-size:clamp(1.7rem,4vw,2.6rem);font-weight:900;line-height:1.08;letter-spacing:-.02em;margin-bottom:14px;max-width:820px;text-shadow:0 4px 24px rgba(0,0,0,.35);word-break:break-word}
 .trip-hero-meta{display:flex;gap:22px;flex-wrap:wrap;color:rgba(255,255,255,.82);font-size:13.5px;font-weight:500;margin-bottom:24px}
@@ -94,10 +96,12 @@ main{flex:1;max-width:1280px;margin:0 auto;width:100%;padding:0 20px 64px}
 .kpi.seats::before{background:#8b5cf6}
 .kpi.tiers::before{background:#f59e0b}
 .kpi.price::before{background:#10b981}
+.kpi.unlock::before{background:#fb923c}
 .kpi-label{font-size:10px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--text-faint);margin-bottom:6px;display:flex;align-items:center;gap:6px}
 .kpi-label svg{width:12px;height:12px}
 .kpi-value{font-size:1.5rem;font-weight:900;font-family:var(--mono);letter-spacing:-.02em;line-height:1.05;color:var(--text);word-break:break-word}
 .kpi-value.sm{font-size:1.25rem}
+.kpi-value.counting{color:#c2410c}
 .kpi-sub{font-size:11px;color:var(--text-muted);font-weight:600;margin-top:4px}
 
 /* SECTION */
@@ -475,14 +479,24 @@ function prettyDate(iso){
   if(isNaN(d.getTime())) return s;
   return d.toLocaleDateString('en-ZA', { day: '2-digit', month: 'short', year: 'numeric' });
 }
+function prettyTime(t){
+  if(!t) return '';
+  const s = String(t);
+  const parts = s.split(':');
+  if(parts.length < 2) return s;
+  return parts[0].padStart(2,'0') + ':' + parts[1].padStart(2,'0');
+}
 function tripDateSpan(t){
   const dep = t.departureDate || t.startDate || t.serviceDate || '';
   const ret = t.returnDate || t.endDate || '';
+  const time = t.startTime || t.departureTime || t.serviceTime || '';
+  const timeSuffix = time ? ' · ' + prettyTime(time) : '';
+
   if(!dep && !ret) return 'Dates TBA';
-  if(dep && !ret)  return prettyDate(dep);
+  if(dep && !ret)  return prettyDate(dep) + timeSuffix;
   if(!dep && ret)  return prettyDate(ret);
-  if(dep === ret)  return prettyDate(dep);
-  return prettyDate(dep) + ' → ' + prettyDate(ret);
+  if(dep === ret)  return prettyDate(dep) + timeSuffix;
+  return prettyDate(dep) + timeSuffix + ' → ' + prettyDate(ret);
 }
 function initialsFrom(name, email){
   if(name && name.trim()){
@@ -492,6 +506,40 @@ function initialsFrom(name, email){
   }
   if(email) return email.slice(0,2).toUpperCase();
   return '??';
+}
+
+/* ============================================================
+   UNLOCK LOGIC (mirrors view-card.html)
+   Unlocks 2 hours before departure; expires 12h after
+   ============================================================ */
+function getUnlockState(trip){
+  const dateStr = trip.startDate || trip.departureDate || trip.serviceDate || '';
+  const timeStr = trip.startTime || trip.departureTime || trip.serviceTime || '00:00';
+  if(!dateStr) return { state: 'open', unlockAt: null, eventStart: null };
+
+  const eventStart = new Date(dateStr + 'T' + timeStr + ':00');
+  if(isNaN(eventStart.getTime())) return { state: 'open', unlockAt: null, eventStart: null };
+
+  const unlockAt = new Date(eventStart.getTime() - 2 * 60 * 60 * 1000);
+  const expiredAt = new Date(eventStart.getTime() + 12 * 60 * 60 * 1000);
+  const now = new Date();
+
+  if(now >= expiredAt) return { state: 'expired', unlockAt, eventStart };
+  if(now >= unlockAt)  return { state: 'open',    unlockAt, eventStart };
+  return { state: 'locked', unlockAt, eventStart };
+}
+function formatCountdown(unlockAt){
+  const now = new Date();
+  const diff = unlockAt.getTime() - now.getTime();
+  if(diff <= 0) return '00m 00s';
+  const totalSec = Math.floor(diff / 1000);
+  const days  = Math.floor(totalSec / 86400);
+  const hours = Math.floor((totalSec % 86400) / 3600);
+  const mins  = Math.floor((totalSec % 3600) / 60);
+  const secs  = totalSec % 60;
+  if(days > 0) return days + 'd ' + String(hours).padStart(2,'0') + 'h';
+  if(hours > 0) return String(hours).padStart(2,'0') + 'h ' + String(mins).padStart(2,'0') + 'm';
+  return String(mins).padStart(2,'0') + 'm ' + String(secs).padStart(2,'0') + 's';
 }
 
 /* ============================================================
@@ -558,7 +606,7 @@ function seatHTML(v, row, col, tiers, orientation, soldSeatKeys){
 
   let bg = '';
   if(isSold) {
-    bg = ''; // Use .sold class styles
+    bg = '';
   } else if(tier) {
     bg = `background:${tier.color};border-color:${tier.color};color:#fff;`;
   }
@@ -727,7 +775,7 @@ function cabinHTML(v, tiers, soldSeatKeys){
 }
 
 /* ============================================================
-   REVENUE / SUMMARY (NOW TAKES SOLD SEATS INTO ACCOUNT)
+   REVENUE / SUMMARY
    ============================================================ */
 function calcTripSummary(trip, soldSeatKeys){
   const tiers = trip.tiers || [];
@@ -803,8 +851,10 @@ function renderError(title, message, actionsHTML){
 }
 
 /* ============================================================
-   RENDER TRIP (NOW TAKES soldSeatKeys)
+   RENDER TRIP
    ============================================================ */
+var _heroCountdownInterval = null;
+
 function renderTrip(trip, ctx, soldSeatKeys){
   const { vehicles, summary } = calcTripSummary(trip, soldSeatKeys);
   const tiers = trip.tiers || [];
@@ -817,6 +867,8 @@ function renderTrip(trip, ctx, soldSeatKeys){
   const dates = tripDateSpan(trip);
   const description = trip.description || trip.tripDescription || '';
   const bg = trip.heroImage || trip.destinationImage || trip.coverImage || '';
+
+  const unlock = getUnlockState(trip);
 
   const minPrice = summary.minPrice || 0;
   const fromPrice = minPrice > 0 ? fmtR(minPrice) : '—';
@@ -842,8 +894,28 @@ function renderTrip(trip, ctx, soldSeatKeys){
     '</button>'
   );
 
+  /* Unlock badge HTML for the hero */
+  let unlockBadge = '';
+  if(unlock.state === 'locked' && unlock.unlockAt){
+    unlockBadge = '<span class="trip-badge locked">' + icon('lock') + ' Unlocks in <span id="heroCountdown">' + esc(formatCountdown(unlock.unlockAt)) + '</span></span>';
+  } else if(unlock.state === 'open'){
+    unlockBadge = '<span class="trip-badge live">' + icon('unlock') + ' Tickets live</span>';
+  } else if(unlock.state === 'expired'){
+    unlockBadge = '<span class="trip-badge dark">' + icon('clock') + ' Trip ended</span>';
+  }
+
+  /* Unlock KPI (only when locked) */
+  const unlockKpiHTML = (unlock.state === 'locked' && unlock.unlockAt) ? (
+    '<div class="kpi unlock">' +
+      '<div class="kpi-label">' + icon('lock') + ' Unlocks in</div>' +
+      '<div class="kpi-value sm counting" id="kpiCountdown">' + esc(formatCountdown(unlock.unlockAt)) + '</div>' +
+      '<div class="kpi-sub">2 hours before departure</div>' +
+    '</div>'
+  ) : '';
+
+  /* KPI strip — 4 items normally, 5 when locked */
   const kpiHTML =
-    '<div class="kpi-strip">' +
+    '<div class="kpi-strip" ' + (unlockKpiHTML ? 'style="grid-template-columns:repeat(5,1fr);"' : '') + '>' +
       '<div class="kpi price">' +
         '<div class="kpi-label">' + icon('tag') + ' From</div>' +
         '<div class="kpi-value sm">' + esc(fromPrice) + '</div>' +
@@ -860,10 +932,11 @@ function renderTrip(trip, ctx, soldSeatKeys){
         '<div class="kpi-sub">' + (summary.heldSeats > 0 ? summary.heldSeats + ' seats held' : 'all seats open') + '</div>' +
       '</div>' +
       '<div class="kpi">' +
-        '<div class="kpi-label">' + icon('calendar') + ' Duration</div>' +
+        '<div class="kpi-label">' + icon('calendar') + ' Departure</div>' +
         '<div class="kpi-value sm">' + esc(dates) + '</div>' +
         '<div class="kpi-sub">' + esc(destination || 'Destination TBA') + '</div>' +
       '</div>' +
+      unlockKpiHTML +
     '</div>';
 
   const tiersHTML = tiers.length ? (
@@ -969,6 +1042,7 @@ function renderTrip(trip, ctx, soldSeatKeys){
           '<span class="trip-badge">' + icon('map') + ' Trip</span>' +
           (operator ? '<span class="trip-badge dark">' + icon('hash') + ' ' + esc(operator) + '</span>' : '') +
           (isOwner ? '<span class="trip-badge dark">' + icon('user') + ' Your trip</span>' : '') +
+          unlockBadge +
         '</div>' +
         '<h1 class="trip-name">' + esc(tripName) + '</h1>' +
         '<div class="trip-hero-meta">' +
@@ -988,6 +1062,31 @@ function renderTrip(trip, ctx, soldSeatKeys){
   $('main').innerHTML = html;
   refreshIcons();
   bindTripActions(trip, ctx);
+  startHeroCountdown(unlock);
+}
+
+function startHeroCountdown(unlock){
+  if(_heroCountdownInterval){ clearInterval(_heroCountdownInterval); _heroCountdownInterval = null; }
+  if(!unlock || unlock.state !== 'locked' || !unlock.unlockAt) return;
+
+  _heroCountdownInterval = setInterval(() => {
+    const diff = unlock.unlockAt.getTime() - Date.now();
+    if(diff <= 0){
+      clearInterval(_heroCountdownInterval);
+      _heroCountdownInterval = null;
+      // Re-render to flip the badge to "live"
+      if(currentTrip){
+        const ctx = determineOwnership(currentTrip);
+        renderTrip(currentTrip, ctx, soldSeatKeys);
+      }
+      return;
+    }
+    const str = formatCountdown(unlock.unlockAt);
+    const heroEl = $('heroCountdown');
+    if(heroEl) heroEl.textContent = str;
+    const kpiEl = $('kpiCountdown');
+    if(kpiEl) kpiEl.textContent = str;
+  }, 1000);
 }
 
 function bindTripActions(trip, ctx){
@@ -1044,6 +1143,13 @@ function openBuy(){
     return;
   }
   if(!currentTrip) return;
+
+  // Locked tickets can't be bought until unlock time
+  const unlock = getUnlockState(currentTrip);
+  if(unlock.state === 'expired'){
+    toast('This trip has already ended.', 'error', 4200);
+    return;
+  }
 
   const tiers = (currentTrip.tiers || []).filter(t => t && t.id && t.name);
   if(!tiers.length){
@@ -1332,7 +1438,6 @@ function listenToTickets(tripId){
         if (d.status === 'cancelled') return;
         if (d.seat) soldSeatKeys.add(d.seat);
       });
-      // Re-render the main UI with the new sold seats data
       if (currentTrip) {
         const ctx = determineOwnership(currentTrip);
         renderTrip(currentTrip, ctx, soldSeatKeys);
@@ -1405,9 +1510,9 @@ document.addEventListener('DOMContentLoaded', () => {
       );
     });
 
-  // Cleanup listener on page unload
   window.addEventListener('beforeunload', () => {
     if (ticketsUnsub) { try { ticketsUnsub(); } catch(e){} }
+    if (_heroCountdownInterval) { try { clearInterval(_heroCountdownInterval); } catch(e){} }
   });
 });
 
