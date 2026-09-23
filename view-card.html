@@ -136,66 +136,54 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 }
 .tk-qr canvas,.tk-qr img{display:block;max-width:100%;height:auto}
 
-/* ===== QR TIMER STATES (upgraded) ===== */
+/* ===== QR TIMER STATES — WHITE / BLACK ===== */
 .tk-qr.locked{
-  background:
-    radial-gradient(circle at 50% 40%, rgba(34,211,238,0.18), transparent 65%),
-    linear-gradient(150deg,#0a0f14 0%,#111827 55%,#0a0f14 100%);
+  background:#ffffff;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:3px;padding:6px;
-  border:1.5px solid rgba(34,211,238,0.35);
+  gap:4px;padding:8px;
+  border:2px solid #0a0f14;
   box-shadow:
-    0 6px 16px rgba(0,0,0,0.35),
-    0 0 0 3px rgba(34,211,238,0.08),
-    inset 0 0 20px rgba(34,211,238,0.08);
+    0 6px 16px rgba(0,0,0,0.18),
+    0 0 0 3px rgba(10,15,20,0.06);
   position:relative;
   overflow:hidden;
 }
 .tk-qr.locked::before{
   content:'';
   position:absolute;inset:0;
-  background-image:radial-gradient(circle at 1px 1px, rgba(34,211,238,0.15) 1px, transparent 0);
+  background-image:radial-gradient(circle at 1px 1px, rgba(10,15,20,0.06) 1px, transparent 0);
   background-size:6px 6px;
-  opacity:0.5;pointer-events:none;
+  opacity:0.6;pointer-events:none;
 }
 .tk-qr.locked .lock-icon{
   font-size:20px;line-height:1;position:relative;z-index:1;
-  filter:drop-shadow(0 0 8px rgba(34,211,238,0.6));
   animation:lockPulse 2.2s ease-in-out infinite;
 }
 @keyframes lockPulse{
-  0%,100%{transform:scale(1);filter:drop-shadow(0 0 6px rgba(34,211,238,0.5));}
-  50%{transform:scale(1.08);filter:drop-shadow(0 0 12px rgba(34,211,238,0.9));}
+  0%,100%{transform:scale(1);}
+  50%{transform:scale(1.08);}
 }
 .tk-qr.locked .lock-label{
   font-size:7px;font-weight:900;letter-spacing:1.6px;text-transform:uppercase;
-  color:#67e8f9;text-align:center;line-height:1;
+  color:#0a0f14;text-align:center;line-height:1;
   position:relative;z-index:1;
-  opacity:0.85;
+  opacity:0.75;
 }
 .tk-qr.locked .timer{
   font-family:ui-monospace,monospace;
   font-size:12px;font-weight:900;letter-spacing:0.5px;
-  color:#ffffff;text-align:center;
-  background:linear-gradient(180deg,rgba(34,211,238,0.18),rgba(34,211,238,0.08));
-  border:1px solid rgba(34,211,238,0.5);
+  color:#0a0f14;text-align:center;
+  background:#f1f5f9;
+  border:1.5px solid #0a0f14;
   padding:3px 7px;border-radius:6px;
-  min-width:76px;
+  min-width:80px;
   line-height:1.1;
   position:relative;z-index:1;
-  box-shadow:
-    0 0 12px rgba(34,211,238,0.25),
-    inset 0 1px 0 rgba(255,255,255,0.08);
-  text-shadow:0 0 8px rgba(34,211,238,0.7);
 }
 .tk-qr.locked .timer.urgent{
-  color:#fef3c7;
-  border-color:rgba(251,146,60,0.7);
-  background:linear-gradient(180deg,rgba(251,146,60,0.2),rgba(251,146,60,0.08));
-  box-shadow:
-    0 0 14px rgba(251,146,60,0.4),
-    inset 0 1px 0 rgba(255,255,255,0.1);
-  text-shadow:0 0 8px rgba(251,146,60,0.9);
+  color:#ffffff;
+  background:#0a0f14;
+  border-color:#0a0f14;
   animation:urgentPulse 1.5s ease-in-out infinite;
 }
 @keyframes urgentPulse{
@@ -443,7 +431,6 @@ var db = firebase.firestore();
 var auth = firebase.auth();
 var ADMINS = ["nylnathan340@gmail.com"];
 
-/* Read ?collection= once and cache */
 var COLLECTION = (function(){
   try {
     var c = new URLSearchParams(window.location.search).get("collection");
@@ -495,7 +482,6 @@ function formatDate(dateStr, timeStr){
   } catch(e){ return dateStr; }
 }
 
-/* Date span for trips (departure → return) */
 function formatParentDate(parent){
   if (!parent) return "Date TBA";
   if (parent.startDate) return formatDate(parent.startDate, parent.startTime);
@@ -514,7 +500,6 @@ function getParam(n){
   catch(e){ return null; }
 }
 
-/* ===== Ticket reference ===== */
 function buildTicketRef(){
   var RE = window.NovalinkRoutingEngine;
   if (RE && typeof RE.buildTicketRef === "function" && ticketData && ticketData.ticketId && eventId) {
@@ -529,7 +514,6 @@ function buildTicketRef(){
   return "NL-" + e + "-" + t;
 }
 
-/* ===== Pretty seat display ===== */
 function prettySeat(raw){
   if (!raw) return { label: "Seat", value: "General admission" };
   var m1 = /^([A-Z])-T(\d+)-C(\d+)$/.exec(raw);
@@ -541,7 +525,6 @@ function prettySeat(raw){
   return { label: "Seat", value: raw };
 }
 
-/* ===== Tier colour helpers ===== */
 var TIER_DEFAULTS = {
   black:"#1a202c", gold:"#ecc94b", silver:"#cbd5e1",
   cyan:"#00FFFF", tier5:"#a855f7", tier6:"#f472b6"
@@ -628,11 +611,6 @@ function applyTicketPalette(tierKey){
   card.setAttribute("data-tier", tierKey);
 }
 
-/* ===== Ticket unlock time logic =====
-   - Unlocks 2 hours before event start time
-   - If no startTime, defaults to 00:00 on the event date
-   - After 12h past event start → expired
-*/
 function getTicketTimeState(){
   var dateStr = "";
   var timeStr = "";
@@ -662,7 +640,7 @@ function getTicketTimeState(){
   return { state: "locked", unlockAt: unlockAt, eventStart: eventStart };
 }
 
-/* ===== Countdown ticker (upgraded) ===== */
+/* ===== Countdown ticker — always H/M/S ===== */
 function startCountdown(unlockAt){
   if (_timerInterval) { clearInterval(_timerInterval); _timerInterval = null; }
   var timerEl = document.querySelector(".tk-qr.locked .timer");
@@ -679,19 +657,13 @@ function startCountdown(unlockAt){
     }
 
     var totalSec = Math.floor(diff / 1000);
-    var days = Math.floor(totalSec / 86400);
-    var hours = Math.floor((totalSec % 86400) / 3600);
+    // Always show H/M/S format, even when days remain
+    var totalHours = Math.floor(totalSec / 3600);
     var mins = Math.floor((totalSec % 3600) / 60);
     var secs = totalSec % 60;
-    var str;
-
-    if (days > 0) {
-      str = days + "d " + String(hours).padStart(2,"0") + "h";
-    } else if (hours > 0) {
-      str = String(hours).padStart(2,"0") + "h " + String(mins).padStart(2,"0") + "m";
-    } else {
-      str = String(mins).padStart(2,"0") + "m " + String(secs).padStart(2,"0") + "s";
-    }
+    var str = String(totalHours).padStart(2,"0") + "h " +
+              String(mins).padStart(2,"0") + "m " +
+              String(secs).padStart(2,"0") + "s";
 
     timerEl.textContent = str;
 
@@ -706,7 +678,6 @@ function startCountdown(unlockAt){
   _timerInterval = setInterval(tick, 1000);
 }
 
-/* ===== Render ===== */
 function renderTicket(){
   if (!ticketData || !eventData) return;
 
@@ -715,31 +686,25 @@ function renderTicket(){
 
   applyTicketPalette(tier);
 
-  /* Status */
   var statusLabel = "VALID";
   if (ticketData.status === "cancelled") statusLabel = "CANCELLED";
   else if (ticketData.status === "checked-in" || ticketData.status === "checked_in") statusLabel = "USED";
   $("ticketStatusBadge").textContent = statusLabel;
 
-  /* Kind badge */
   $("ticketKindBadge").textContent = COLLECTION === "trips" ? "TRIP" : "EVENT";
 
-  /* Tier badge */
   $("ticketTierBadge").textContent = String(getTierName(eventData, tier)).toUpperCase();
 
   var card = $("ticketCard");
   card.classList.toggle("cancelled", ticketData.status === "cancelled");
 
-  /* Event / trip title */
   var title = COLLECTION === "trips"
     ? (eventData.tripName || eventData.serviceName || eventData.name || ticketData.eventName || "Untitled Trip")
     : (eventData.eventName || ticketData.eventName || "Untitled Event");
   $("ticketEventName").textContent = title;
 
-  /* Date */
   $("ticketEventDate").textContent = formatParentDate(eventData);
 
-  /* Venue */
   var venue;
   if (COLLECTION === "trips") {
     venue = eventData.destination
@@ -754,15 +719,12 @@ function renderTicket(){
   }
   $("ticketEventVenue").textContent = venue;
 
-  /* Guest */
   $("ticketGuest").textContent = ticketData.guestName || "Guest";
 
-  /* Seat */
   var seatInfo = prettySeat(ticketData.seat);
   $("ticketSeatLabel").textContent = seatInfo.label;
   $("ticketSeat").textContent = seatInfo.value;
 
-  /* Reference + barcode digits */
   var ref = buildTicketRef();
   $("ticketRef").textContent = ref;
   var digits = ref.replace(/[^A-Z0-9]/g, "");
@@ -775,7 +737,6 @@ function renderTicket(){
 
   renderQr();
 
-  /* Back link */
   var backUrl = COLLECTION === "trips"
     ? "view-trip.html?id=" + encodeURIComponent(eventId)
     : "view-event.html?id=" + encodeURIComponent(eventId);
@@ -787,7 +748,6 @@ function renderTicket(){
       : '<i data-lucide="calendar"></i> Back to event';
   }
 
-  /* Cancel button visibility */
   var cancelBtn = $("cancelTicketBtn");
   var isBuyer = currentUser && ticketData.buyerUid === currentUser.uid;
   var isCancelled = ticketData.status === "cancelled";
@@ -800,7 +760,6 @@ function renderTicket(){
   refreshIcons();
 }
 
-/* ===== QR code (with timer states) ===== */
 function renderQr(){
   var wrap = $("ticketQr");
   if (!wrap) return;
@@ -812,13 +771,11 @@ function renderQr(){
 
   var timeState = getTicketTimeState();
 
-  /* Update the LOCKED badge visibility */
   var lockBadge = $("ticketLockBadge");
   if (lockBadge) {
     lockBadge.style.display = (timeState.state === "locked") ? "inline-flex" : "none";
   }
 
-  /* LOCKED — show countdown, hide QR */
   if (timeState.state === "locked") {
     wrap.classList.add("locked");
     wrap.innerHTML =
@@ -829,7 +786,6 @@ function renderQr(){
     return;
   }
 
-  /* OPEN or EXPIRED — show the QR */
   var payload;
   var RE = window.NovalinkRoutingEngine;
   if (RE && typeof RE.buildQrPayload === "function") {
@@ -862,7 +818,6 @@ function renderQr(){
   }
 }
 
-/* ===== Auth UI ===== */
 function applyAuth(user){
   currentUser = user;
   isAdmin = !!(user && ADMINS.map(function(e){return e.toLowerCase();}).indexOf(String(user.email).toLowerCase()) !== -1);
@@ -879,7 +834,6 @@ function applyAuth(user){
   if (ticketData && eventData) renderTicket();
 }
 
-/* ===== State display ===== */
 function showError(title, msg, icon){
   $("loadingState").style.display = "none";
   $("ticketContent").style.display = "none";
@@ -904,7 +858,6 @@ function showTicket(){
   $("ticketContent").style.display = "block";
 }
 
-/* ===== Data loading ===== */
 function loadTicketAndEvent(){
   if (!currentUser) { showSignin(); return; }
 
@@ -975,7 +928,6 @@ function canViewTicket(){
   return false;
 }
 
-/* ===== Cancel ticket ===== */
 function openCancelModal(){
   if (!ticketData || !eventData) return;
   if (ticketData.status === "cancelled") { showToast("This ticket is already cancelled.", "info"); return; }
@@ -1017,7 +969,6 @@ function doCancelTicket(){
     });
 }
 
-/* ===== Boot ===== */
 document.addEventListener("DOMContentLoaded", function(){
   $("year").textContent = new Date().getFullYear();
   refreshIcons();
@@ -1064,7 +1015,6 @@ document.addEventListener("DOMContentLoaded", function(){
   });
 });
 
-/* Cleanup timer on page unload */
 window.addEventListener("beforeunload", function(){
   if (_timerInterval) { try { clearInterval(_timerInterval); } catch(e){} }
 });
@@ -1072,4 +1022,4 @@ window.addEventListener("beforeunload", function(){
 })();
 </script>
 </body>
-  </html>
+                  </html>
