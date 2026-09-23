@@ -134,27 +134,71 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 }
 .tk-qr canvas,.tk-qr img{display:block;max-width:100%;height:auto}
 
-/* ===== QR TIMER STATES ===== */
+/* ===== QR TIMER STATES (upgraded) ===== */
 .tk-qr.locked{
-  background:linear-gradient(135deg,#1e293b,#0f172a);
+  background:
+    radial-gradient(circle at 50% 40%, rgba(34,211,238,0.18), transparent 65%),
+    linear-gradient(150deg,#0a0f14 0%,#111827 55%,#0a0f14 100%);
   display:flex;flex-direction:column;align-items:center;justify-content:center;
-  gap:4px;padding:8px;
+  gap:3px;padding:6px;
+  border:1.5px solid rgba(34,211,238,0.35);
+  box-shadow:
+    0 6px 16px rgba(0,0,0,0.35),
+    0 0 0 3px rgba(34,211,238,0.08),
+    inset 0 0 20px rgba(34,211,238,0.08);
+  position:relative;
+  overflow:hidden;
+}
+.tk-qr.locked::before{
+  content:'';
+  position:absolute;inset:0;
+  background-image:radial-gradient(circle at 1px 1px, rgba(34,211,238,0.15) 1px, transparent 0);
+  background-size:6px 6px;
+  opacity:0.5;pointer-events:none;
 }
 .tk-qr.locked .lock-icon{
-  font-size:22px;line-height:1;opacity:0.9;
+  font-size:20px;line-height:1;position:relative;z-index:1;
+  filter:drop-shadow(0 0 8px rgba(34,211,238,0.6));
+  animation:lockPulse 2.2s ease-in-out infinite;
+}
+@keyframes lockPulse{
+  0%,100%{transform:scale(1);filter:drop-shadow(0 0 6px rgba(34,211,238,0.5));}
+  50%{transform:scale(1.08);filter:drop-shadow(0 0 12px rgba(34,211,238,0.9));}
 }
 .tk-qr.locked .lock-label{
-  font-size:8px;font-weight:900;letter-spacing:1px;text-transform:uppercase;
-  color:#67e8f9;text-align:center;line-height:1.2;
+  font-size:7px;font-weight:900;letter-spacing:1.6px;text-transform:uppercase;
+  color:#67e8f9;text-align:center;line-height:1;
+  position:relative;z-index:1;
+  opacity:0.85;
 }
 .tk-qr.locked .timer{
   font-family:ui-monospace,monospace;
-  font-size:11px;font-weight:900;letter-spacing:0.5px;
+  font-size:12px;font-weight:900;letter-spacing:0.5px;
   color:#ffffff;text-align:center;
-  background:rgba(34,211,238,0.15);
-  border:1px solid rgba(34,211,238,0.4);
-  padding:2px 6px;border-radius:4px;
-  min-width:72px;
+  background:linear-gradient(180deg,rgba(34,211,238,0.18),rgba(34,211,238,0.08));
+  border:1px solid rgba(34,211,238,0.5);
+  padding:3px 7px;border-radius:6px;
+  min-width:76px;
+  line-height:1.1;
+  position:relative;z-index:1;
+  box-shadow:
+    0 0 12px rgba(34,211,238,0.25),
+    inset 0 1px 0 rgba(255,255,255,0.08);
+  text-shadow:0 0 8px rgba(34,211,238,0.7);
+}
+.tk-qr.locked .timer.urgent{
+  color:#fef3c7;
+  border-color:rgba(251,146,60,0.7);
+  background:linear-gradient(180deg,rgba(251,146,60,0.2),rgba(251,146,60,0.08));
+  box-shadow:
+    0 0 14px rgba(251,146,60,0.4),
+    inset 0 1px 0 rgba(255,255,255,0.1);
+  text-shadow:0 0 8px rgba(251,146,60,0.9);
+  animation:urgentPulse 1.5s ease-in-out infinite;
+}
+@keyframes urgentPulse{
+  0%,100%{opacity:1;}
+  50%{opacity:0.75;}
 }
 .tk-qr.expired-overlay{
   position:relative;
@@ -164,8 +208,10 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
   position:absolute;inset:0;
   display:flex;align-items:center;justify-content:center;
   font-size:10px;font-weight:900;letter-spacing:1.5px;
-  color:#fff;background:rgba(100,116,139,0.85);
+  color:#fff;background:rgba(71,85,105,0.88);
   border-radius:10px;
+  backdrop-filter:blur(2px);
+  -webkit-backdrop-filter:blur(2px);
 }
 
 .tk-barcode{margin-top:14px;background:#fff;border-radius:8px;padding:8px 10px}
@@ -446,7 +492,6 @@ function formatDate(dateStr, timeStr){
   } catch(e){ return dateStr; }
 }
 
-/* Date span for trips (departure → return) */
 function formatParentDate(parent){
   if (!parent) return "Date TBA";
   if (parent.startDate) return formatDate(parent.startDate, parent.startTime);
@@ -578,11 +623,7 @@ function applyTicketPalette(tierKey){
   card.setAttribute("data-tier", tierKey);
 }
 
-/* ===== Ticket unlock time logic =====
-   - Unlocks 2 hours before event start time
-   - If no startTime, defaults to 00:00 on the event date
-   - After 12h past event start → expired
-*/
+/* ===== Ticket unlock time logic ===== */
 function getTicketTimeState(){
   var dateStr = "";
   var timeStr = "";
@@ -612,7 +653,7 @@ function getTicketTimeState(){
   return { state: "locked", unlockAt: unlockAt, eventStart: eventStart };
 }
 
-/* ===== Countdown ticker ===== */
+/* ===== Countdown ticker (upgraded) ===== */
 function startCountdown(unlockAt){
   if (_timerInterval) { clearInterval(_timerInterval); _timerInterval = null; }
   var timerEl = document.querySelector(".tk-qr.locked .timer");
@@ -627,21 +668,29 @@ function startCountdown(unlockAt){
       renderQr();
       return;
     }
+
     var totalSec = Math.floor(diff / 1000);
     var days = Math.floor(totalSec / 86400);
     var hours = Math.floor((totalSec % 86400) / 3600);
     var mins = Math.floor((totalSec % 3600) / 60);
     var secs = totalSec % 60;
-
     var str;
+
     if (days > 0) {
-      str = days + "d " + String(hours).padStart(2,"0") + "h " + String(mins).padStart(2,"0") + "m";
+      str = days + "d " + String(hours).padStart(2,"0") + "h";
     } else if (hours > 0) {
-      str = String(hours).padStart(2,"0") + "h " + String(mins).padStart(2,"0") + "m " + String(secs).padStart(2,"0") + "s";
+      str = String(hours).padStart(2,"0") + "h " + String(mins).padStart(2,"0") + "m";
     } else {
       str = String(mins).padStart(2,"0") + "m " + String(secs).padStart(2,"0") + "s";
     }
+
     timerEl.textContent = str;
+
+    if (diff < 15 * 60 * 1000) {
+      timerEl.classList.add("urgent");
+    } else {
+      timerEl.classList.remove("urgent");
+    }
   }
 
   tick();
@@ -1008,4 +1057,4 @@ window.addEventListener("beforeunload", function(){
 })();
 </script>
 </body>
-              </html>
+</html>
