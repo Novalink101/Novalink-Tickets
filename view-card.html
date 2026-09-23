@@ -133,6 +133,41 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
   margin-top:-58px;
 }
 .tk-qr canvas,.tk-qr img{display:block;max-width:100%;height:auto}
+
+/* ===== QR TIMER STATES ===== */
+.tk-qr.locked{
+  background:linear-gradient(135deg,#1e293b,#0f172a);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:4px;padding:8px;
+}
+.tk-qr.locked .lock-icon{
+  font-size:22px;line-height:1;opacity:0.9;
+}
+.tk-qr.locked .lock-label{
+  font-size:8px;font-weight:900;letter-spacing:1px;text-transform:uppercase;
+  color:#67e8f9;text-align:center;line-height:1.2;
+}
+.tk-qr.locked .timer{
+  font-family:ui-monospace,monospace;
+  font-size:11px;font-weight:900;letter-spacing:0.5px;
+  color:#ffffff;text-align:center;
+  background:rgba(34,211,238,0.15);
+  border:1px solid rgba(34,211,238,0.4);
+  padding:2px 6px;border-radius:4px;
+  min-width:72px;
+}
+.tk-qr.expired-overlay{
+  position:relative;
+}
+.tk-qr.expired-overlay::after{
+  content:'EXPIRED';
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  font-size:10px;font-weight:900;letter-spacing:1.5px;
+  color:#fff;background:rgba(100,116,139,0.85);
+  border-radius:10px;
+}
+
 .tk-barcode{margin-top:14px;background:#fff;border-radius:8px;padding:8px 10px}
 .tk-barcode .bars{
   width:100%;height:36px;
@@ -375,6 +410,7 @@ var eventId = null;
 var ticketId = null;
 var ticketUnsub = null;
 var eventUnsub = null;
+var _timerInterval = null;
 
 function $(id){ return document.getElementById(id); }
 function refreshIcons(){ if(window.lucide) lucide.createIcons(); }
@@ -443,12 +479,7 @@ function buildTicketRef(){
   return "NL-" + e + "-" + t;
 }
 
-/* ===== Pretty seat display =====
-   Event table: A-T1-C3  →  Table A1 · Seat 3
-   Trip seat:   S01:04B  →  S01 · Seat 04B
-   Row mode:    A-A-1    →  Seat A-A-1
-   Empty:       General admission
-*/
+/* ===== Pretty seat display ===== */
 function prettySeat(raw){
   if (!raw) return { label: "Seat", value: "General admission" };
   var m1 = /^([A-Z])-T(\d+)-C(\d+)$/.exec(raw);
@@ -547,6 +578,76 @@ function applyTicketPalette(tierKey){
   card.setAttribute("data-tier", tierKey);
 }
 
+/* ===== Ticket unlock time logic =====
+   - Unlocks 2 hours before event start time
+   - If no startTime, defaults to 00:00 on the event date
+   - After 12h past event start → expired
+*/
+function getTicketTimeState(){
+  var dateStr = "";
+  var timeStr = "";
+  if (COLLECTION === "trips") {
+    dateStr = eventData.startDate || eventData.departureDate || eventData.serviceDate || "";
+    timeStr = eventData.startTime || "00:00";
+  } else {
+    dateStr = eventData.startDate || "";
+    timeStr = eventData.startTime || "00:00";
+  }
+
+  if (!dateStr) {
+    return { state: "open", unlockAt: null, eventStart: null };
+  }
+
+  var eventStart = new Date(dateStr + "T" + timeStr + ":00");
+  if (isNaN(eventStart.getTime())) {
+    return { state: "open", unlockAt: null, eventStart: null };
+  }
+
+  var unlockAt = new Date(eventStart.getTime() - (2 * 60 * 60 * 1000));
+  var expiredAt = new Date(eventStart.getTime() + (12 * 60 * 60 * 1000));
+  var now = new Date();
+
+  if (now >= expiredAt) return { state: "expired", unlockAt: unlockAt, eventStart: eventStart };
+  if (now >= unlockAt)  return { state: "open",    unlockAt: unlockAt, eventStart: eventStart };
+  return { state: "locked", unlockAt: unlockAt, eventStart: eventStart };
+}
+
+/* ===== Countdown ticker ===== */
+function startCountdown(unlockAt){
+  if (_timerInterval) { clearInterval(_timerInterval); _timerInterval = null; }
+  var timerEl = document.querySelector(".tk-qr.locked .timer");
+  if (!timerEl) return;
+
+  function tick(){
+    var now = new Date();
+    var diff = unlockAt.getTime() - now.getTime();
+    if (diff <= 0) {
+      clearInterval(_timerInterval);
+      _timerInterval = null;
+      renderQr();
+      return;
+    }
+    var totalSec = Math.floor(diff / 1000);
+    var days = Math.floor(totalSec / 86400);
+    var hours = Math.floor((totalSec % 86400) / 3600);
+    var mins = Math.floor((totalSec % 3600) / 60);
+    var secs = totalSec % 60;
+
+    var str;
+    if (days > 0) {
+      str = days + "d " + String(hours).padStart(2,"0") + "h " + String(mins).padStart(2,"0") + "m";
+    } else if (hours > 0) {
+      str = String(hours).padStart(2,"0") + "h " + String(mins).padStart(2,"0") + "m " + String(secs).padStart(2,"0") + "s";
+    } else {
+      str = String(mins).padStart(2,"0") + "m " + String(secs).padStart(2,"0") + "s";
+    }
+    timerEl.textContent = str;
+  }
+
+  tick();
+  _timerInterval = setInterval(tick, 1000);
+}
+
 /* ===== Render ===== */
 function renderTicket(){
   if (!ticketData || !eventData) return;
@@ -562,7 +663,7 @@ function renderTicket(){
   else if (ticketData.status === "checked-in" || ticketData.status === "checked_in") statusLabel = "USED";
   $("ticketStatusBadge").textContent = statusLabel;
 
-  /* Kind badge — EVENT or TRIP */
+  /* Kind badge */
   $("ticketKindBadge").textContent = COLLECTION === "trips" ? "TRIP" : "EVENT";
 
   /* Tier badge */
@@ -616,7 +717,7 @@ function renderTicket(){
 
   renderQr();
 
-  /* Back link — points to the right viewer */
+  /* Back link */
   var backUrl = COLLECTION === "trips"
     ? "view-trip.html?id=" + encodeURIComponent(eventId)
     : "view-event.html?id=" + encodeURIComponent(eventId);
@@ -641,11 +742,30 @@ function renderTicket(){
   refreshIcons();
 }
 
-/* ===== QR code ===== */
+/* ===== QR code (with timer states) ===== */
 function renderQr(){
   var wrap = $("ticketQr");
+  if (!wrap) return;
+
+  if (_timerInterval) { clearInterval(_timerInterval); _timerInterval = null; }
+
+  wrap.classList.remove("locked", "expired-overlay");
   wrap.innerHTML = "";
 
+  var timeState = getTicketTimeState();
+
+  /* LOCKED — show countdown, hide QR */
+  if (timeState.state === "locked") {
+    wrap.classList.add("locked");
+    wrap.innerHTML =
+      '<div class="lock-icon">🔒</div>' +
+      '<div class="lock-label">Unlocks in</div>' +
+      '<div class="timer">—</div>';
+    if (timeState.unlockAt) startCountdown(timeState.unlockAt);
+    return;
+  }
+
+  /* OPEN or EXPIRED — show the QR */
   var payload;
   var RE = window.NovalinkRoutingEngine;
   if (RE && typeof RE.buildQrPayload === "function") {
@@ -669,6 +789,9 @@ function renderQr(){
       colorLight: "#ffffff",
       correctLevel: window.QRCode.CorrectLevel.M
     });
+    if (timeState.state === "expired") {
+      wrap.classList.add("expired-overlay");
+    }
   } catch(e) {
     console.warn("QR generation failed:", e);
     wrap.innerHTML = '<div style="font-size:10px;color:#6b7787;text-align:center;padding:16px;">QR error</div>';
@@ -876,7 +999,13 @@ document.addEventListener("DOMContentLoaded", function(){
     }
   });
 });
+
+/* Cleanup timer on page unload */
+window.addEventListener("beforeunload", function(){
+  if (_timerInterval) { try { clearInterval(_timerInterval); } catch(e){} }
+});
+
 })();
 </script>
 </body>
-  </html>
+</html>
