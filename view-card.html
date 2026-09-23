@@ -373,7 +373,10 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
       </div>
 
       <div class="ticket-actions">
-        <a class="btn btn-accent" id="backToEventBtn" href="#"><i data-lucide="calendar"></i> Back to event</a>
+        <button class="btn btn-accent" id="saveTicketBtn" type="button">
+          <i data-lucide="download"></i> <span id="saveTicketLabel">Save Ticket</span>
+        </button>
+        <a class="btn btn-ghost" id="backToEventBtn" href="#"><i data-lucide="calendar"></i> Back to event</a>
         <button class="btn btn-ghost" id="cancelTicketBtn"><i data-lucide="x-circle"></i> Cancel this ticket</button>
       </div>
 
@@ -447,6 +450,7 @@ var ticketId = null;
 var ticketUnsub = null;
 var eventUnsub = null;
 var _timerInterval = null;
+var _saveBtnInterval = null;
 
 function $(id){ return document.getElementById(id); }
 function refreshIcons(){ if(window.lucide) lucide.createIcons(); }
@@ -609,6 +613,8 @@ function applyTicketPalette(tierKey){
   card.style.setProperty("--tc-badge-text", badgeText);
   card.setAttribute("data-is-dark", isDark ? "1" : "0");
   card.setAttribute("data-tier", tierKey);
+  // Also stash on a global so the snapshot can use it
+  window._ticketPalette = { c1: c1, c2: c2, text: text, muted: muted, logo: logo };
 }
 
 function getTicketTimeState(){
@@ -640,7 +646,20 @@ function getTicketTimeState(){
   return { state: "locked", unlockAt: unlockAt, eventStart: eventStart };
 }
 
-/* ===== Countdown ticker — always H/M/S ===== */
+function formatCountdown(unlockAt){
+  var now = new Date();
+  var diff = unlockAt.getTime() - now.getTime();
+  if (diff <= 0) return "00h 00m 00s";
+  var totalSec = Math.floor(diff / 1000);
+  var totalHours = Math.floor(totalSec / 3600);
+  var mins = Math.floor((totalSec % 3600) / 60);
+  var secs = totalSec % 60;
+  return String(totalHours).padStart(2,"0") + "h " +
+         String(mins).padStart(2,"0") + "m " +
+         String(secs).padStart(2,"0") + "s";
+}
+
+/* ===== Countdown ticker — QR box ===== */
 function startCountdown(unlockAt){
   if (_timerInterval) { clearInterval(_timerInterval); _timerInterval = null; }
   var timerEl = document.querySelector(".tk-qr.locked .timer");
@@ -657,27 +676,62 @@ function startCountdown(unlockAt){
     }
 
     var totalSec = Math.floor(diff / 1000);
-    // Always show H/M/S format, even when days remain
     var totalHours = Math.floor(totalSec / 3600);
     var mins = Math.floor((totalSec % 3600) / 60);
     var secs = totalSec % 60;
-    var str = String(totalHours).padStart(2,"0") + "h " +
-              String(mins).padStart(2,"0") + "m " +
-              String(secs).padStart(2,"0") + "s";
+    timerEl.textContent = String(totalHours).padStart(2,"0") + "h " +
+                          String(mins).padStart(2,"0") + "m " +
+                          String(secs).padStart(2,"0") + "s";
 
-    timerEl.textContent = str;
-
-    if (diff < 15 * 60 * 1000) {
-      timerEl.classList.add("urgent");
-    } else {
-      timerEl.classList.remove("urgent");
-    }
+    if (diff < 15 * 60 * 1000) timerEl.classList.add("urgent");
+    else timerEl.classList.remove("urgent");
   }
 
   tick();
   _timerInterval = setInterval(tick, 1000);
 }
 
+/* ===== Save Ticket button state machine ===== */
+function updateSaveButton(){
+  var btn = $("saveTicketBtn");
+  var label = $("saveTicketLabel");
+  if (!btn || !label) return;
+
+  var unlock = getTicketTimeState();
+
+  if (unlock.state === "expired") {
+    btn.disabled = true;
+    label.textContent = "Ticket expired";
+    if (_saveBtnInterval) { clearInterval(_saveBtnInterval); _saveBtnInterval = null; }
+    return;
+  }
+
+  if (unlock.state === "open") {
+    btn.disabled = false;
+    label.textContent = "Save Ticket";
+    if (_saveBtnInterval) { clearInterval(_saveBtnInterval); _saveBtnInterval = null; }
+    return;
+  }
+
+  // Locked — countdown label
+  btn.disabled = true;
+  label.textContent = "Unlocks in " + formatCountdown(unlock.unlockAt);
+
+  if (_saveBtnInterval) { clearInterval(_saveBtnInterval); _saveBtnInterval = null; }
+  _saveBtnInterval = setInterval(function(){
+    var now = new Date();
+    var diff = unlock.unlockAt.getTime() - now.getTime();
+    if (diff <= 0) {
+      clearInterval(_saveBtnInterval);
+      _saveBtnInterval = null;
+      updateSaveButton();
+      return;
+    }
+    label.textContent = "Unlocks in " + formatCountdown(unlock.unlockAt);
+  }, 1000);
+}
+
+/* ===== Render ===== */
 function renderTicket(){
   if (!ticketData || !eventData) return;
 
@@ -736,6 +790,7 @@ function renderTicket(){
   $("ticketBarcodeNum").textContent = barcodeStr;
 
   renderQr();
+  updateSaveButton();
 
   var backUrl = COLLECTION === "trips"
     ? "view-trip.html?id=" + encodeURIComponent(eventId)
@@ -818,6 +873,341 @@ function renderQr(){
   }
 }
 
+/* ============================================================
+   SAVE TICKET AS PNG
+   ============================================================ */
+function sanitizeFilenamePart(s){
+  return String(s || "").toLowerCase()
+    .replace(/[^a-z0-9]+/g, "-")
+    .replace(/^-|-$/g, "")
+    .slice(0, 40);
+}
+
+async function captureTicketAsPng(){
+  var card = $("ticketCard");
+  if (!card) throw new Error("Ticket card not found.");
+
+  // Snapshot the DOM tree onto a canvas
+  // We use a pure-canvas approach because html2canvas isn't loaded.
+  // Strategy: build a fresh canvas that mimics the card layout exactly.
+
+  var W = 640;
+  var H = 340;
+  var DPR = 3; // High-res for print quality
+
+  var canvas = document.createElement("canvas");
+  canvas.width = W * DPR;
+  canvas.height = H * DPR;
+  var ctx = canvas.getContext("2d");
+  ctx.scale(DPR, DPR);
+
+  var pal = window._ticketPalette || { c1:"#e6ffff", c2:"#b3ffff", text:"#0a0f14", muted:"rgba(0,0,0,0.6)", logo:"#1e2f4d" };
+  var textColor = pal.text;
+  var mutedColor = pal.muted;
+  var logoColor = pal.logo;
+
+  // Background gradient
+  var grad = ctx.createLinearGradient(0, 0, W, H);
+  grad.addColorStop(0, pal.c1);
+  grad.addColorStop(1, pal.c2);
+  roundRect(ctx, 0, 0, W, H, 20);
+  ctx.fillStyle = grad;
+  ctx.fill();
+
+  // Dotted grid overlay (subtle)
+  ctx.save();
+  ctx.globalAlpha = 0.35;
+  for (var yy = 4; yy < H; yy += 14) {
+    for (var xx = 4; xx < W; xx += 14) {
+      ctx.beginPath();
+      ctx.arc(xx, yy, 0.6, 0, Math.PI * 2);
+      ctx.fillStyle = "rgba(0,0,0,0.06)";
+      ctx.fill();
+    }
+  }
+  ctx.restore();
+
+  // Padding
+  var PAD = 24;
+
+  // --- Header row ---
+  ctx.fillStyle = logoColor;
+  ctx.font = "800 12px Inter, system-ui, -apple-system, sans-serif";
+  ctx.textAlign = "left";
+  ctx.textBaseline = "middle";
+  ctx.fillText("NOVALINK", PAD, PAD + 6);
+
+  // Badges (right aligned)
+  var kindLabel = COLLECTION === "trips" ? "TRIP" : "EVENT";
+  var statusLabel = "VALID";
+  if (ticketData.status === "cancelled") statusLabel = "CANCELLED";
+  else if (ticketData.status === "checked-in" || ticketData.status === "checked_in") statusLabel = "USED";
+  var tierLabel = String(getTierName(eventData, ticketData.tier || "cyan")).toUpperCase();
+
+  var badges = [kindLabel, statusLabel, tierLabel];
+  var badgeY = PAD - 4;
+  var badgeX = W - PAD;
+  ctx.textAlign = "center";
+  ctx.font = "900 9px Inter, system-ui, -apple-system, sans-serif";
+
+  for (var b = badges.length - 1; b >= 0; b--) {
+    var label = badges[b];
+    var tw = ctx.measureText(label).width;
+    var bw = tw + 18;
+    var bh = 16;
+    badgeX -= bw;
+    roundRect(ctx, badgeX, badgeY, bw, bh, 6);
+    ctx.fillStyle = "rgba(0,0,0,0.10)";
+    ctx.fill();
+    ctx.fillStyle = textColor;
+    ctx.fillText(label, badgeX + bw / 2, badgeY + bh / 2 + 0.5);
+    badgeX -= 6;
+  }
+
+  // --- Event title ---
+  ctx.textAlign = "left";
+  ctx.textBaseline = "alphabetic";
+  ctx.fillStyle = textColor;
+  ctx.font = "900 22px Inter, system-ui, -apple-system, sans-serif";
+
+  var title = COLLECTION === "trips"
+    ? (eventData.tripName || eventData.serviceName || eventData.name || ticketData.eventName || "Untitled Trip")
+    : (eventData.eventName || ticketData.eventName || "Untitled Event");
+  title = title.toUpperCase();
+
+  // Wrap the title to fit
+  var titleLines = wrapText(ctx, title, W - PAD * 2 - 130, 24);
+  var titleY = PAD + 42;
+  for (var tl = 0; tl < titleLines.length && tl < 2; tl++) {
+    ctx.fillText(titleLines[tl], PAD, titleY + tl * 26);
+  }
+
+  // --- Event meta (date) ---
+  var metaY = titleY + (Math.min(titleLines.length, 2) * 26) + 4;
+  ctx.fillStyle = mutedColor;
+  ctx.font = "700 10.5px Inter, system-ui, -apple-system, sans-serif";
+  var dateStr = formatParentDate(eventData);
+  ctx.fillText(dateStr.toUpperCase(), PAD, metaY);
+
+  // --- Divider ---
+  ctx.save();
+  ctx.strokeStyle = textColor;
+  ctx.globalAlpha = 0.35;
+  ctx.setLineDash([6, 6]);
+  ctx.beginPath();
+  ctx.moveTo(PAD, metaY + 14);
+  ctx.lineTo(W - PAD, metaY + 14);
+  ctx.stroke();
+  ctx.restore();
+
+  // --- Body grid: guest / seat / ref (left) + QR (right) ---
+  var bodyY = metaY + 30;
+  var leftColW = W - PAD * 2 - 130;
+
+  // Guest
+  ctx.fillStyle = mutedColor;
+  ctx.font = "900 9px Inter, system-ui, -apple-system, sans-serif";
+  ctx.fillText("GUEST", PAD, bodyY);
+  ctx.fillStyle = textColor;
+  ctx.font = "900 17px Inter, system-ui, -apple-system, sans-serif";
+  ctx.fillText((ticketData.guestName || "Guest"), PAD, bodyY + 20);
+
+  // Seat + Ref row
+  var rowY = bodyY + 44;
+  var seatInfo = prettySeat(ticketData.seat);
+
+  ctx.fillStyle = mutedColor;
+  ctx.font = "900 9px Inter, system-ui, -apple-system, sans-serif";
+  ctx.fillText(seatInfo.label.toUpperCase(), PAD, rowY);
+  ctx.fillStyle = textColor;
+  ctx.font = "800 13px Inter, system-ui, -apple-system, sans-serif";
+  ctx.fillText(seatInfo.value, PAD, rowY + 17);
+
+  var refX = PAD + Math.floor(leftColW / 2) + 8;
+  ctx.fillStyle = mutedColor;
+  ctx.font = "900 9px Inter, system-ui, -apple-system, sans-serif";
+  ctx.fillText("TICKET REFERENCE", refX, rowY);
+  ctx.fillStyle = textColor;
+  ctx.font = "800 12px ui-monospace, SFMono-Regular, Menlo, monospace";
+  ctx.fillText(buildTicketRef(), refX, rowY + 17);
+
+  // --- QR code (right side) ---
+  var qrCanvas = card.querySelector(".tk-qr canvas") || card.querySelector(".tk-qr img");
+  var qrBoxW = 104, qrBoxH = 104;
+  var qrBoxX = W - PAD - qrBoxW;
+  var qrBoxY = PAD + 20;
+
+  // White background for QR
+  roundRect(ctx, qrBoxX, qrBoxY, qrBoxW, qrBoxH, 10);
+  ctx.fillStyle = "#ffffff";
+  ctx.fill();
+
+  if (qrCanvas) {
+    try {
+      ctx.drawImage(qrCanvas, qrBoxX + 6, qrBoxY + 6, qrBoxW - 12, qrBoxH - 12);
+    } catch (e) {
+      console.warn("Could not draw QR onto canvas:", e);
+    }
+  }
+
+  // --- Barcode strip ---
+  var barcodeY = H - PAD - 66;
+  roundRect(ctx, PAD, barcodeY, W - PAD * 2, 60, 8);
+  ctx.fillStyle = "#ffffff";
+  ctx.fill();
+
+  // Draw a decorative barcode
+  ctx.fillStyle = "#000";
+  var barX = PAD + 10;
+  var barY = barcodeY + 8;
+  var barH = 28;
+  var barEndX = W - PAD - 10;
+  var widths = [2, 2, 4, 4, 2, 6, 2, 4, 2, 2, 6, 2, 4, 6, 2, 2, 4, 4, 2, 6, 2, 4, 6, 2, 2, 4];
+  var wi = 0;
+  while (barX < barEndX - 4) {
+    var w = widths[wi % widths.length];
+    ctx.fillRect(barX, barY, w, barH);
+    barX += w + 4;
+    wi++;
+  }
+
+  // Barcode number
+  ctx.fillStyle = "#000";
+  ctx.textAlign = "center";
+  ctx.font = "700 10.5px ui-monospace, SFMono-Regular, Menlo, monospace";
+
+  var ref = buildTicketRef();
+  var digits = ref.replace(/[^A-Z0-9]/g, "");
+  var groups = [];
+  for (var i = 0; i < digits.length && groups.join("").length < 16; i += 4) {
+    groups.push(digits.slice(i, i + 4));
+  }
+  var barcodeStr = groups.join(" ").padEnd(19, "0").slice(0, 19);
+  ctx.fillText(barcodeStr, W / 2, barcodeY + 50);
+
+  // --- Footer ---
+  ctx.textAlign = "left";
+  ctx.fillStyle = mutedColor;
+  ctx.font = "700 9.5px Inter, system-ui, -apple-system, sans-serif";
+
+  var venue;
+  if (COLLECTION === "trips") {
+    venue = eventData.destination
+      || (eventData.venueName ? eventData.venueName + (eventData.city ? ", " + eventData.city : "") : "")
+      || eventData.venueAddress
+      || eventData.city
+      || "Destination TBA";
+  } else {
+    venue = eventData.venueName
+      ? (eventData.venueName + (eventData.city ? ", " + eventData.city : ""))
+      : (eventData.venueAddress || eventData.city || "VENUE");
+  }
+  ctx.fillText(String(venue).toUpperCase().slice(0, 40), PAD, H - 12);
+
+  ctx.textAlign = "right";
+  ctx.fillText("NOVALINK", W - PAD, H - 12);
+
+  // Build filename
+  var filenameParts = [
+    "novalink",
+    COLLECTION === "trips" ? "trip" : "event",
+    sanitizeFilenamePart(title),
+    sanitizeFilenamePart(ref)
+  ].filter(Boolean);
+  var filename = filenameParts.join("-") + ".png";
+
+  // Trigger download
+  return new Promise(function(resolve, reject){
+    try {
+      canvas.toBlob(function(blob){
+        if (!blob) { reject(new Error("Could not generate image.")); return; }
+        var url = URL.createObjectURL(blob);
+        var a = document.createElement("a");
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        setTimeout(function(){
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          resolve(filename);
+        }, 120);
+      }, "image/png", 0.95);
+    } catch(e){
+      reject(e);
+    }
+  });
+}
+
+/* Helpers for canvas drawing */
+function roundRect(ctx, x, y, w, h, r){
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.lineTo(x + w - r, y);
+  ctx.quadraticCurveTo(x + w, y, x + w, y + r);
+  ctx.lineTo(x + w, y + h - r);
+  ctx.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+  ctx.lineTo(x + r, y + h);
+  ctx.quadraticCurveTo(x, y + h, x, y + h - r);
+  ctx.lineTo(x, y + r);
+  ctx.quadraticCurveTo(x, y, x + r, y);
+  ctx.closePath();
+}
+function wrapText(ctx, text, maxWidth, lineHeight){
+  var words = String(text).split(/\s+/);
+  var lines = [];
+  var current = "";
+  for (var i = 0; i < words.length; i++) {
+    var w = words[i];
+    var test = current ? current + " " + w : w;
+    if (ctx.measureText(test).width <= maxWidth) {
+      current = test;
+    } else {
+      if (current) lines.push(current);
+      current = w;
+    }
+  }
+  if (current) lines.push(current);
+  return lines;
+}
+
+function handleSaveTicketClick(){
+  var unlock = getTicketTimeState();
+  if (unlock.state === "locked") {
+    showToast("Ticket unlocks in " + formatCountdown(unlock.unlockAt), "info", 3200);
+    return;
+  }
+  if (unlock.state === "expired") {
+    showToast("This ticket has expired.", "error", 3200);
+    return;
+  }
+  if (ticketData && ticketData.status === "cancelled") {
+    showToast("This ticket has been cancelled.", "error", 3200);
+    return;
+  }
+
+  var btn = $("saveTicketBtn");
+  var origLabel = $("saveTicketLabel").textContent;
+  btn.disabled = true;
+  $("saveTicketLabel").textContent = "Generating…";
+
+  captureTicketAsPng()
+    .then(function(filename){
+      showToast("Saved to your device.", "success", 3200);
+      btn.disabled = false;
+      $("saveTicketLabel").textContent = "Save Ticket";
+    })
+    .catch(function(err){
+      console.error("[save ticket]", err);
+      showToast(err.message || "Could not save the ticket.", "error", 5000);
+      btn.disabled = false;
+      $("saveTicketLabel").textContent = "Save Ticket";
+    });
+}
+
+/* ============================================================
+   AUTH / STATE / DATA
+   ============================================================ */
 function applyAuth(user){
   currentUser = user;
   isAdmin = !!(user && ADMINS.map(function(e){return e.toLowerCase();}).indexOf(String(user.email).toLowerCase()) !== -1);
@@ -989,6 +1379,7 @@ document.addEventListener("DOMContentLoaded", function(){
   $("ddCreateTrip").addEventListener("click",  function(){ window.location.href = "create-trip.html"; });
   $("ddMyCards").addEventListener("click",     function(){ window.location.href = "my-cards.html"; });
 
+  $("saveTicketBtn").addEventListener("click", handleSaveTicketClick);
   $("cancelTicketBtn").addEventListener("click", openCancelModal);
   $("cancelModalClose").addEventListener("click", closeCancelModal);
   $("cancelModalNo").addEventListener("click", closeCancelModal);
@@ -1017,9 +1408,10 @@ document.addEventListener("DOMContentLoaded", function(){
 
 window.addEventListener("beforeunload", function(){
   if (_timerInterval) { try { clearInterval(_timerInterval); } catch(e){} }
+  if (_saveBtnInterval) { try { clearInterval(_saveBtnInterval); } catch(e){} }
 });
 
 })();
 </script>
 </body>
-                  </html>
+  </html>
