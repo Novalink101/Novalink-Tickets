@@ -83,6 +83,7 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
   background:linear-gradient(135deg,var(--tc-1),var(--tc-2));
   color:var(--tc-text);
   --tc-1:#e6ffff;--tc-2:#b3ffff;--tc-text:#0a0f14;--tc-muted:rgba(0,0,0,0.6);--tc-logo:#1e2f4d;--tc-badge-bg:rgba(0,0,0,0.08);--tc-badge-text:#4a5568;
+  transition:background 0.4s ease, color 0.4s ease;
 }
 .ticket.cancelled{opacity:0.7;filter:grayscale(0.5)}
 .ticket.cancelled::after{
@@ -427,83 +428,6 @@ function getParam(n){
   catch(e){ return null; }
 }
 
-/* ===== Colour helpers ===== */
-var TIER_DEFAULTS = {
-  black:"#1a202c", gold:"#ecc94b", silver:"#cbd5e1",
-  cyan:"#00FFFF", tier5:"#a855f7", tier6:"#f472b6"
-};
-var TIER_DEFAULT_NAMES = {
-  black:"Elite", gold:"VIP", silver:"Silver",
-  cyan:"Standard", tier5:"Platinum", tier6:"Diamond"
-};
-
-function hexToRgbObj(hex){
-  var c = String(hex || "").replace("#","");
-  if (c.length === 3) c = c[0]+c[0]+c[1]+c[1]+c[2]+c[2];
-  if (c.length !== 6) return null;
-  return { r: parseInt(c.substring(0,2),16), g: parseInt(c.substring(2,4),16), b: parseInt(c.substring(4,6),16) };
-}
-function rgbObjToHex(c){
-  return "#" + [c.r,c.g,c.b].map(function(x){
-    return Math.max(0, Math.min(255, Math.round(x))).toString(16).padStart(2,"0");
-  }).join("");
-}
-function mixWithWhite(hex, ratio){
-  var c = hexToRgbObj(hex); if (!c) return hex;
-  return rgbObjToHex({ r: c.r+(255-c.r)*ratio, g: c.g+(255-c.g)*ratio, b: c.b+(255-c.b)*ratio });
-}
-function mixWithBlack(hex, ratio){
-  var c = hexToRgbObj(hex); if (!c) return hex;
-  return rgbObjToHex({ r: c.r*(1-ratio), g: c.g*(1-ratio), b: c.b*(1-ratio) });
-}
-function relativeLuminance(hex){
-  var c = hexToRgbObj(hex); if (!c) return 0;
-  var arr = [c.r, c.g, c.b].map(function(v){
-    v /= 255;
-    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
-  });
-  return 0.2126 * arr[0] + 0.7152 * arr[1] + 0.0722 * arr[2];
-}
-function contrastTextOn(hex){ return relativeLuminance(hex) > 0.5 ? "#0a0f14" : "#ffffff"; }
-
-function getTicketPalette(hex){
-  var lum = relativeLuminance(hex);
-  var isDark = lum < 0.35;
-  if (isDark) return {
-    c1: mixWithWhite(hex, 0.06), c2: mixWithBlack(hex, 0.45),
-    text: "#ffffff", muted: "rgba(255,255,255,0.65)",
-    logo: "#00FFFF", badgeBg: "rgba(255,255,255,0.15)", badgeText: "#ffffff",
-    isDark: true
-  };
-  var c1 = mixWithWhite(hex, 0.92);
-  var c2 = mixWithWhite(hex, 0.4);
-  var text = contrastTextOn(c2);
-  var isLightText = text === "#ffffff";
-  return {
-    c1: c1, c2: c2, text: text,
-    muted: isLightText ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.6)",
-    logo: isLightText ? "#00FFFF" : "#1e2f4d",
-    badgeBg: isLightText ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.08)",
-    badgeText: isLightText ? "#ffffff" : "#4a5568",
-    isDark: false
-  };
-}
-
-function applyTicketPalette(tierKey){
-  var hex = (eventData && eventData.tierColours && eventData.tierColours[tierKey]) || TIER_DEFAULTS[tierKey] || "#00FFFF";
-  var p = getTicketPalette(hex);
-  var card = $("ticketCard");
-  card.style.setProperty("--tc-1", p.c1);
-  card.style.setProperty("--tc-2", p.c2);
-  card.style.setProperty("--tc-text", p.text);
-  card.style.setProperty("--tc-muted", p.muted);
-  card.style.setProperty("--tc-logo", p.logo);
-  card.style.setProperty("--tc-badge-bg", p.badgeBg);
-  card.style.setProperty("--tc-badge-text", p.badgeText);
-  card.setAttribute("data-is-dark", p.isDark ? "1" : "0");
-  card.setAttribute("data-tier", tierKey);
-}
-
 /* ===== Ticket reference ===== */
 function buildTicketRef(){
   var RE = window.NovalinkRoutingEngine;
@@ -536,12 +460,99 @@ function prettySeat(raw){
   return { label: "Seat", value: raw };
 }
 
+/* ===== Tier colour helpers ===== */
+var TIER_DEFAULTS = {
+  black:"#1a202c", gold:"#ecc94b", silver:"#cbd5e1",
+  cyan:"#00FFFF", tier5:"#a855f7", tier6:"#f472b6"
+};
+var TIER_DEFAULT_NAMES = {
+  black:"Elite", gold:"VIP", silver:"Silver",
+  cyan:"Standard", tier5:"Platinum", tier6:"Diamond"
+};
+
+function getTierColour(parent, tierKey){
+  if (!tierKey) tierKey = "cyan";
+  if (parent && parent.tierColours && parent.tierColours[tierKey]) return parent.tierColours[tierKey];
+  if (parent && Array.isArray(parent.tiers)) {
+    var match = parent.tiers.find(function(t){ return t.id === tierKey; });
+    if (match && match.color) return match.color;
+  }
+  return TIER_DEFAULTS[tierKey] || "#00FFFF";
+}
+function getTierName(parent, tierKey){
+  if (!tierKey) tierKey = "cyan";
+  if (parent && parent.tierNames && parent.tierNames[tierKey]) return parent.tierNames[tierKey];
+  if (parent && Array.isArray(parent.tiers)) {
+    var match = parent.tiers.find(function(t){ return t.id === tierKey; });
+    if (match && match.name) return match.name;
+  }
+  return TIER_DEFAULT_NAMES[tierKey] || tierKey;
+}
+function hexToRgbObj(hex){
+  var c = String(hex || "").replace("#","");
+  if (c.length === 3) c = c[0]+c[0]+c[1]+c[1]+c[2]+c[2];
+  if (c.length !== 6) return null;
+  return { r: parseInt(c.substring(0,2),16), g: parseInt(c.substring(2,4),16), b: parseInt(c.substring(4,6),16) };
+}
+function rgbObjToHex(c){
+  return "#" + [c.r,c.g,c.b].map(function(x){
+    return Math.max(0, Math.min(255, Math.round(x))).toString(16).padStart(2,"0");
+  }).join("");
+}
+function mixWithWhite(hex, ratio){
+  var c = hexToRgbObj(hex); if (!c) return hex;
+  return rgbObjToHex({ r: c.r+(255-c.r)*ratio, g: c.g+(255-c.g)*ratio, b: c.b+(255-c.b)*ratio });
+}
+function mixWithBlack(hex, ratio){
+  var c = hexToRgbObj(hex); if (!c) return hex;
+  return rgbObjToHex({ r: c.r*(1-ratio), g: c.g*(1-ratio), b: c.b*(1-ratio) });
+}
+function relativeLuminance(hex){
+  var c = hexToRgbObj(hex); if (!c) return 0;
+  var arr = [c.r, c.g, c.b].map(function(v){
+    v /= 255;
+    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+  });
+  return 0.2126 * arr[0] + 0.7152 * arr[1] + 0.0722 * arr[2];
+}
+function contrastTextOn(hex){ return relativeLuminance(hex) > 0.5 ? "#0a0f14" : "#ffffff"; }
+
+function applyTicketPalette(tierKey){
+  var hex = getTierColour(eventData, tierKey);
+  var lum = relativeLuminance(hex);
+  var isDark = lum < 0.35;
+  var c1, c2, text, muted, logo, badgeBg, badgeText;
+  if (isDark) {
+    c1 = mixWithWhite(hex, 0.06); c2 = mixWithBlack(hex, 0.45);
+    text = "#ffffff"; muted = "rgba(255,255,255,0.65)";
+    logo = "#00FFFF"; badgeBg = "rgba(255,255,255,0.15)"; badgeText = "#ffffff";
+  } else {
+    c1 = mixWithWhite(hex, 0.92); c2 = mixWithWhite(hex, 0.4);
+    text = contrastTextOn(c2);
+    var isLightText = text === "#ffffff";
+    muted = isLightText ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.6)";
+    logo = isLightText ? "#00FFFF" : "#1e2f4d";
+    badgeBg = isLightText ? "rgba(255,255,255,0.15)" : "rgba(0,0,0,0.08)";
+    badgeText = isLightText ? "#ffffff" : "#4a5568";
+  }
+  var card = $("ticketCard");
+  card.style.setProperty("--tc-1", c1);
+  card.style.setProperty("--tc-2", c2);
+  card.style.setProperty("--tc-text", text);
+  card.style.setProperty("--tc-muted", muted);
+  card.style.setProperty("--tc-logo", logo);
+  card.style.setProperty("--tc-badge-bg", badgeBg);
+  card.style.setProperty("--tc-badge-text", badgeText);
+  card.setAttribute("data-is-dark", isDark ? "1" : "0");
+  card.setAttribute("data-tier", tierKey);
+}
+
 /* ===== Render ===== */
 function renderTicket(){
   if (!ticketData || !eventData) return;
 
   var tier = ticketData.tier || "cyan";
-  var tierName = (eventData.tierNames && eventData.tierNames[tier]) || TIER_DEFAULT_NAMES[tier] || tier;
+  var tierName = getTierName(eventData, tier);
 
   applyTicketPalette(tier);
 
@@ -555,7 +566,7 @@ function renderTicket(){
   $("ticketKindBadge").textContent = COLLECTION === "trips" ? "TRIP" : "EVENT";
 
   /* Tier badge */
-  $("ticketTierBadge").textContent = String(tierName).toUpperCase();
+  $("ticketTierBadge").textContent = String(getTierName(eventData, tier)).toUpperCase();
 
   var card = $("ticketCard");
   card.classList.toggle("cancelled", ticketData.status === "cancelled");
@@ -868,4 +879,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-                </html>
+  </html>
