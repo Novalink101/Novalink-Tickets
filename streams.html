@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="theme-color" content="#0a0f14" />
-<meta name="description" content="Browse every live stream on Novalink — concerts, workshops, webinars, and online shows." />
+<meta name="description" content="Browse every live stream on Novalink — free, ad-supported, unlimited viewers." />
 <title>All Streams · Novalink</title>
 
 <script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
@@ -24,8 +24,10 @@
   --danger:#dc2626;--danger-soft:#fef2f2;
   --live:#dc2626;--live-soft:#fef2f2;
   --navy:#1e2f4d;
+  --success:#059669;--success-soft:#ecfdf5;
   --ease-smooth:cubic-bezier(0.25,0.8,0.25,1);
   --ease-bounce:cubic-bezier(0.175,0.885,0.32,1.275);
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 html{scroll-behavior:smooth}
@@ -52,13 +54,39 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
 
 .site-header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,0.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--border)}
 .header-inner{display:flex;align-items:center;justify-content:space-between;padding:12px 0;gap:12px;flex-wrap:wrap}
+.header-right{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+
+/* SLOT PILL */
+.slot-pill{display:inline-flex;align-items:center;gap:8px;padding:9px 14px;background:var(--surface);border:1px solid var(--border);border-radius:99px;font-size:12.5px;font-weight:800;color:var(--text-2);font-family:var(--mono)}
+.slot-pill i{width:14px;height:14px;color:var(--cyan-600)}
+.slot-pill.warn{border-color:#fbbf24;background:#fffbeb;color:#92400e}
+.slot-pill.warn i{color:#d97706}
+.slot-pill.full{border-color:#fca5a5;background:#fef2f2;color:#991b1b}
+.slot-pill.full i{color:#dc2626}
+.slot-pill .bar{width:52px;height:5px;border-radius:99px;background:var(--border);overflow:hidden;position:relative}
+.slot-pill .bar span{display:block;height:100%;background:var(--cyan-500);border-radius:99px;transition:width .3s ease}
+.slot-pill.warn .bar span{background:#f59e0b}
+.slot-pill.full .bar span{background:#dc2626}
 
 .page-wrap{flex:1;padding:32px 0 64px}
 @media (min-width:1024px){.page-wrap{padding:48px 0 80px}}
 
-.page-header{margin-bottom:28px}
+.page-header{margin-bottom:22px}
 .page-header h1{font-size:clamp(1.8rem,3.6vw,2.6rem);color:var(--navy);letter-spacing:-0.02em;margin-bottom:6px}
-.page-header p{color:var(--text-muted);font-size:15px}
+.page-header p{color:var(--text-muted);font-size:15px;max-width:680px}
+
+/* FREE NOTE */
+.free-banner{display:flex;gap:12px;align-items:flex-start;padding:14px 18px;background:linear-gradient(135deg,rgba(16,185,129,.08),rgba(6,182,212,.05));border:1px solid rgba(16,185,129,.28);border-radius:12px;margin-bottom:22px}
+.free-banner i{width:20px;height:20px;color:#059669;flex-shrink:0;margin-top:2px}
+.free-banner .fb-t{font-size:13px;font-weight:900;color:#065f46;margin-bottom:3px}
+.free-banner .fb-s{font-size:12.5px;color:#047857;line-height:1.55;font-weight:500}
+
+/* SLOT-FULL WARNING */
+.slot-warn{display:flex;gap:12px;align-items:center;padding:14px 18px;background:#fef2f2;border:1px solid #fca5a5;border-radius:12px;margin-bottom:22px}
+.slot-warn i{width:20px;height:20px;color:#dc2626;flex-shrink:0}
+.slot-warn .sw-t{font-size:13px;font-weight:900;color:#991b1b;margin-bottom:2px}
+.slot-warn .sw-s{font-size:12.5px;color:#b91c1c;line-height:1.5;font-weight:500}
+.slot-warn .sw-act{margin-left:auto;flex-shrink:0}
 
 /* FILTERS */
 .filters-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:24px;box-shadow:0 4px 16px rgba(10,15,20,0.04);display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
@@ -118,6 +146,18 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
   50%{opacity:0.4;transform:scale(0.85)}
 }
 
+/* FREE TAG on card — top right */
+.free-tag{
+  position:absolute;top:12px;right:12px;
+  background:linear-gradient(135deg, rgba(16,185,129,.95), rgba(5,150,105,.95));
+  color:#fff;
+  font-size:9.5px;font-weight:900;letter-spacing:0.08em;
+  text-transform:uppercase;padding:5px 10px;border-radius:99px;
+  display:inline-flex;align-items:center;gap:5px;
+  box-shadow:0 4px 12px rgba(0,0,0,0.25);z-index:3;
+}
+.free-tag::before{content:'';width:5px;height:5px;border-radius:50%;background:#fff;box-shadow:0 0 6px rgba(255,255,255,.9)}
+
 .platform-tag{
   position:absolute;bottom:12px;right:12px;
   background:rgba(10,15,20,0.75);color:#fff;
@@ -130,14 +170,21 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
 .stream-card-body h3{font-size:15.5px;font-weight:800;line-height:1.28;color:var(--text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;letter-spacing:-0.005em;word-break:break-word}
 
 .stream-card-meta{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--text-muted);font-weight:500;min-width:0}
-.stream-card-meta i{width:13px;height:13px;flex-shrink:0;color:var(--text-faint)}
+.stream-card-meta i{width:13px;height:13px;flex-shrink:0;color:var(--text-muted)}
 .stream-card-meta span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
 
 .stream-card-footer{margin-top:auto;padding-top:10px;border-top:1px dashed var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px}
-.stream-card-price{font-size:13px;font-weight:700;color:#0f172a;display:flex;align-items:baseline;gap:4px}
-.stream-card-price small{font-size:11px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.04em}
-.stream-card-price strong{color:var(--cyan-700);font-family:ui-monospace,monospace;font-weight:900;font-size:14.5px}
-.stream-card-cta{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:800;color:var(--cyan-700);letter-spacing:0.02em;transition:transform 0.2s ease}
+.stream-card-status{font-size:12px;font-weight:800;color:var(--text-2);display:inline-flex;align-items:center;gap:6px;min-width:0}
+.stream-card-status i{width:13px;height:13px;color:var(--cyan-600);flex-shrink:0}
+.stream-card-status.live{color:#dc2626}
+.stream-card-status.live i{color:#dc2626}
+.stream-card-status.replay{color:#7c3aed}
+.stream-card-status.replay i{color:#7c3aed}
+.stream-card-status.ended{color:var(--text-muted)}
+.stream-card-status.ended i{color:var(--text-muted)}
+.stream-card-status span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+
+.stream-card-cta{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:800;color:var(--cyan-700);letter-spacing:0.02em;transition:transform 0.2s ease;flex-shrink:0}
 .stream-card:hover .stream-card-cta{transform:translateX(3px)}
 .stream-card-cta i{width:13px;height:13px}
 
@@ -170,9 +217,14 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
       <svg class="mark" viewBox="0 0 60 74"><path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/><path fill="#00FFFF" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/></svg>
       <span class="wordmark">NOVALINK</span>
     </a>
-    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+    <div class="header-right">
+      <span class="slot-pill" id="slotPill" style="display:none">
+        <i data-lucide="radio"></i>
+        <span class="bar"><span id="slotBarFill" style="width:0%"></span></span>
+        <span id="slotText">0 / 8</span>
+      </span>
       <a href="index.html" class="btn btn-ghost btn-sm"><i data-lucide="arrow-left"></i> Home</a>
-      <a href="create-streams.html" class="btn btn-accent btn-sm"><i data-lucide="radio"></i> Go live</a>
+      <a href="create-streams.html" class="btn btn-accent btn-sm" id="goLiveBtn"><i data-lucide="radio"></i> Go live</a>
     </div>
   </div>
 </header>
@@ -182,7 +234,24 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
 
     <div class="page-header">
       <h1>Live streams</h1>
-      <p>Online concerts, workshops, webinars and shows. Buy a ticket, get a private watch link, tune in from anywhere.</p>
+      <p>Concerts, workshops, webinars and shows — all free to watch, all ad-supported. No tickets, no signup.</p>
+    </div>
+
+    <div class="free-banner">
+      <i data-lucide="badge-check"></i>
+      <div>
+        <div class="fb-t">Free to watch · Ad-supported</div>
+        <div class="fb-s">Every stream on Novalink is completely free. Short ads keep the platform running and cover hosting for hosts.</div>
+      </div>
+    </div>
+
+    <div class="slot-warn" id="slotWarn" style="display:none">
+      <i data-lucide="alert-triangle"></i>
+      <div>
+        <div class="sw-t">You've reached the 8-stream limit</div>
+        <div class="sw-s">You have 8 upcoming or live streams. Delete an old one to create another.</div>
+      </div>
+      <a href="streams.html?mine=1" class="btn btn-ghost btn-sm sw-act">Manage my streams</a>
     </div>
 
     <div class="filters-bar">
@@ -194,8 +263,8 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
         <label for="statusFilter">Status</label>
         <select id="statusFilter">
           <option value="">All streams</option>
-          <option value="live" selected>Live now</option>
-          <option value="upcoming">Upcoming</option>
+          <option value="live">Live now</option>
+          <option value="upcoming" selected>Upcoming</option>
           <option value="past">Past &amp; replay</option>
         </select>
       </div>
@@ -216,7 +285,6 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
           <option value="live-first">Live first</option>
           <option value="newest">Newest added</option>
           <option value="name">Name A–Z</option>
-          <option value="cheapest">Cheapest first</option>
         </select>
       </div>
     </div>
@@ -264,6 +332,13 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
 'use strict';
 
 /* ══════════════════════════════════════════════════════════════
+   GLOBAL SETTINGS — keep in sync with view-stream.html
+   ══════════════════════════════════════════════════════════════ */
+var GLOBAL_MAX_STREAMS = 8;     // per-host cap on upcoming + live streams
+var GLOBAL_REPLAY_DAYS = 30;    // replay window length
+var ADMIN_EMAILS = ["nylnathan340@gmail.com"];
+
+/* ══════════════════════════════════════════════════════════════
    FIREBASE
    ══════════════════════════════════════════════════════════════ */
 var firebaseConfig = {
@@ -284,6 +359,8 @@ var STREAMS_COLLECTION = "streams";
    ══════════════════════════════════════════════════════════════ */
 var allStreams = [];
 var unsubscribe = null;
+var currentUser = null;
+var mineOnly = false;
 
 /* ══════════════════════════════════════════════════════════════
    HELPERS
@@ -292,6 +369,7 @@ function $(id){ return document.getElementById(id); }
 function icon(n){ return '<i data-lucide="'+n+'"></i>'; }
 function refreshIcons(){ if (window.lucide) lucide.createIcons(); }
 function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function getParam(n){ try { return new URLSearchParams(location.search).get(n); } catch(e){ return null; } }
 
 function showToast(msg,type,ms){
   type = type || "info"; ms = ms || 3000;
@@ -303,12 +381,6 @@ function showToast(msg,type,ms){
   requestAnimationFrame(function(){ t.classList.add("show"); });
   clearTimeout(showToast._t);
   showToast._t = setTimeout(function(){ t.classList.remove("show"); }, ms);
-}
-
-function formatMoney(v){
-  if (typeof v !== "number") v = parseFloat(v) || 0;
-  if (v <= 0) return "Free";
-  return "R " + v.toFixed(2).replace(/\.00$/, "");
 }
 
 function formatStreamDate(dateStr, timeStr){
@@ -323,58 +395,37 @@ function formatStreamDate(dateStr, timeStr){
   } catch(e){ return dateStr; }
 }
 
-function streamTitleOf(s){
-  return s.streamTitle || s.eventName || "Untitled Stream";
-}
+function streamTitleOf(s){ return s.streamTitle || s.eventName || "Untitled Stream"; }
+function streamHostOf(s){ return s.hostName || s.ownerName || "Host"; }
+function streamPlatformLabel(p){ return { youtube:"YouTube", vimeo:"Vimeo", twitch:"Twitch", custom:"Embed" }[p] || "Live"; }
 
-function streamHostOf(s){
-  return s.hostName || s.ownerName || "Host";
-}
-
-function streamPlatformLabel(p){
-  return { youtube:"YouTube", vimeo:"Vimeo", twitch:"Twitch", custom:"Embed" }[p] || "Live";
-}
-
-/* Cheapest paid tier, or 0 for free */
-function cheapestPrice(data){
-  var tiers = data.tierPrices || {};
-  var prices = [];
-  ["black","gold","silver","cyan","tier5","tier6"].forEach(function(t){
-    var v = parseFloat(tiers[t]);
-    if (!isNaN(v) && v > 0) prices.push(v);
-  });
-  if (!prices.length) return 0;
-  return Math.min.apply(null, prices);
-}
-
-/* Where does this stream sit in time?
-   Returns { status: 'live'|'upcoming'|'past', startMs, endMs, replayOk } */
+/* Status: live | upcoming | past */
 function streamStatus(s){
   var dateStr = s.startDate || "";
   var timeStr = s.startTime || "00:00";
   var durationMin = parseInt(s.durationMinutes, 10) || 90;
-  var grace = 15 * 60 * 1000; // 15-min grace for late starts
+  var grace = 15 * 60 * 1000;
 
-  if (!dateStr) return { status: 'upcoming', startMs: 0, endMs: 0, replayOk: false };
-
+  if (!dateStr) return { status: 'upcoming', startMs: 0, endMs: 0, replayOk: false, replayUntilMs: 0 };
   var startMs = new Date(dateStr + "T" + timeStr + ":00").getTime();
-  if (isNaN(startMs)) return { status: 'upcoming', startMs: 0, endMs: 0, replayOk: false };
+  if (isNaN(startMs)) return { status: 'upcoming', startMs: 0, endMs: 0, replayOk: false, replayUntilMs: 0 };
 
   var endMs = startMs + (durationMin * 60 * 1000) + grace;
+  var replayUntilMs = endMs + (GLOBAL_REPLAY_DAYS * 24 * 60 * 60 * 1000);
   var now = Date.now();
 
-  if (now < startMs) return { status: 'upcoming', startMs: startMs, endMs: endMs, replayOk: false };
-  if (now <= endMs) return { status: 'live', startMs: startMs, endMs: endMs, replayOk: false };
+  if (now < startMs) return { status: 'upcoming', startMs: startMs, endMs: endMs, replayOk: false, replayUntilMs: replayUntilMs };
+  if (now <= endMs)  return { status: 'live',     startMs: startMs, endMs: endMs, replayOk: false, replayUntilMs: replayUntilMs };
 
-  var replayOk = s.replayEnabled !== false; // default: replay allowed
-  return { status: 'past', startMs: startMs, endMs: endMs, replayOk: replayOk };
+  var replayOk = s.replayEnabled !== false && now <= replayUntilMs;
+  return { status: 'past', startMs: startMs, endMs: endMs, replayOk: replayOk, replayUntilMs: replayUntilMs };
 }
 
 function sortValue(s){
   var st = streamStatus(s);
-  if (st.status === 'live')     return 0;         // live streams bubble to top
-  if (st.status === 'upcoming') return st.startMs; // then soonest upcoming
-  return Number.MAX_SAFE_INTEGER;                  // then past streams
+  if (st.status === 'live')     return 0;
+  if (st.status === 'upcoming') return st.startMs;
+  return Number.MAX_SAFE_INTEGER;
 }
 
 function createdValue(data){
@@ -383,6 +434,85 @@ function createdValue(data){
     if (typeof data.createdAt === "object" && data.createdAt.toMillis) return data.createdAt.toMillis();
     return new Date(data.createdAt).getTime() || 0;
   } catch(e){ return 0; }
+}
+
+/* Human-readable status line for card footer */
+function statusLine(s){
+  var st = streamStatus(s);
+  if (st.status === 'live') {
+    return { cls: 'live', ic: 'radio', text: 'Live now' };
+  }
+  if (st.status === 'upcoming') {
+    var diff = st.startMs - Date.now();
+    var days = Math.floor(diff / 86400000);
+    var hours = Math.floor((diff % 86400000) / 3600000);
+    var mins = Math.floor((diff % 3600000) / 60000);
+    var when;
+    if (days >= 1) when = 'in ' + days + 'd ' + hours + 'h';
+    else if (hours >= 1) when = 'in ' + hours + 'h ' + mins + 'm';
+    else when = 'in ' + mins + 'm';
+    return { cls: '', ic: 'clock', text: 'Starts ' + when };
+  }
+  if (st.replayOk) return { cls: 'replay', ic: 'history', text: 'Replay available' };
+  return { cls: 'ended', ic: 'square', text: 'Ended' };
+}
+
+function ctaText(s){
+  var st = streamStatus(s);
+  if (st.status === 'live') return 'Watch now';
+  if (st.status === 'past' && st.replayOk) return 'Watch replay';
+  if (st.status === 'past') return 'View details';
+  return 'View';
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SLOT COUNTER (per-host cap)
+   ══════════════════════════════════════════════════════════════ */
+function updateSlotCounter(){
+  var pill = $("slotPill");
+  var warn = $("slotWarn");
+  var goLive = $("goLiveBtn");
+
+  if (!currentUser) {
+    pill.style.display = "none";
+    warn.style.display = "none";
+    goLive.removeAttribute("disabled");
+    return;
+  }
+
+  var active = allStreams.filter(function(s){
+    if (s.ownerUid !== currentUser.uid) return false;
+    var st = streamStatus(s);
+    return st.status === 'upcoming' || st.status === 'live';
+  }).length;
+
+  var used = active;
+  var max = GLOBAL_MAX_STREAMS;
+  var pct = Math.min(100, Math.round((used / max) * 100));
+
+  pill.style.display = "inline-flex";
+  $("slotBarFill").style.width = pct + "%";
+  $("slotText").textContent = used + " / " + max;
+
+  pill.classList.remove("warn", "full");
+  if (used >= max) {
+    pill.classList.add("full");
+    warn.style.display = "flex";
+    goLive.setAttribute("disabled", "disabled");
+    goLive.style.pointerEvents = "none";
+    goLive.style.opacity = "0.55";
+  } else if (used >= max - 2) {
+    pill.classList.add("warn");
+    warn.style.display = "none";
+    goLive.removeAttribute("disabled");
+    goLive.style.pointerEvents = "";
+    goLive.style.opacity = "";
+  } else {
+    warn.style.display = "none";
+    goLive.removeAttribute("disabled");
+    goLive.style.pointerEvents = "";
+    goLive.style.opacity = "";
+  }
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -395,8 +525,9 @@ function applyFiltersAndRender(){
   var sort = $("sortFilter").value;
 
   var list = allStreams.filter(function(s){
-    var st = streamStatus(s);
+    if (mineOnly && (!currentUser || s.ownerUid !== currentUser.uid)) return false;
 
+    var st = streamStatus(s);
     if (statusFilter === 'live' && st.status !== 'live') return false;
     if (statusFilter === 'upcoming' && st.status !== 'upcoming') return false;
     if (statusFilter === 'past' && st.status !== 'past') return false;
@@ -424,13 +555,11 @@ function applyFiltersAndRender(){
     list.sort(function(a, b){ return createdValue(b) - createdValue(a); });
   } else if (sort === "name") {
     list.sort(function(a, b){ return streamTitleOf(a).localeCompare(streamTitleOf(b)); });
-  } else if (sort === "cheapest") {
-    list.sort(function(a, b){ return cheapestPrice(a) - cheapestPrice(b); });
-  } else { /* soonest */
+  } else {
     list.sort(function(a, b){ return sortValue(a) - sortValue(b); });
   }
 
-  var isFiltered = !!(q || platformFilter || statusFilter !== 'live');
+  var isFiltered = !!(q || platformFilter || statusFilter !== 'upcoming' || mineOnly);
   $("filterSummary").style.display = (allStreams.length > 0) ? "flex" : "none";
   $("resultCount").textContent = list.length;
   $("resultLabel").textContent = list.length === 1 ? "stream" : "streams";
@@ -458,8 +587,13 @@ function renderGrid(list){
   if (!list.length) {
     grid.style.display = "none";
     empty.style.display = "block";
-    $("emptyTitle").textContent = "No matches";
-    $("emptyMsg").textContent = "Try clearing a filter or switching to All streams.";
+    if (mineOnly) {
+      $("emptyTitle").textContent = "You have no streams";
+      $("emptyMsg").textContent = "Create your first free stream on Novalink.";
+    } else {
+      $("emptyTitle").textContent = "No matches";
+      $("emptyMsg").textContent = "Try clearing a filter or switching to All streams.";
+    }
     refreshIcons();
     return;
   }
@@ -482,21 +616,18 @@ function buildCard(s){
   card.setAttribute("tabindex", "0");
 
   var st = streamStatus(s);
-  var price = cheapestPrice(s);
-  var priceStr = price > 0 ? formatMoney(price) : "Free";
   var title = streamTitleOf(s);
   var host = streamHostOf(s);
   var dateStr = formatStreamDate(s.startDate, s.startTime);
   var platform = streamPlatformLabel(s.streamPlatform);
+  var sl = statusLine(s);
+  var cta = ctaText(s);
 
-  /* Thumbnail — cover image or fallback gradient */
-  var thumb = card.querySelector(".stream-card-thumb");
   var thumbStyle = "";
   if (s.heroImage) {
     thumbStyle = "background-image:url('" + esc(s.heroImage) + "');background-size:cover;background-position:center;";
   }
 
-  /* Status badge text + class */
   var badgeClass = "upcoming";
   var badgeText = "Upcoming";
   if (st.status === 'live') { badgeClass = "live"; badgeText = "Live now"; }
@@ -505,14 +636,12 @@ function buildCard(s){
     else { badgeClass = "ended"; badgeText = "Ended"; }
   }
 
-  var ctaText = "View";
-  if (st.status === 'live') ctaText = "Watch now";
-  else if (st.status === 'past' && st.replayOk) ctaText = "Watch replay";
-  else if (st.status === 'past') ctaText = "View details";
+  var statusCls = sl.cls ? (" " + sl.cls) : "";
 
   card.innerHTML =
     '<div class="stream-card-thumb" style="' + thumbStyle + '">' +
       '<span class="status-badge ' + badgeClass + '">' + esc(badgeText) + '</span>' +
+      '<span class="free-tag">Free</span>' +
       '<span class="platform-tag">' + esc(platform) + '</span>' +
       '<div class="stream-card-play"><i data-lucide="play"></i></div>' +
     '</div>' +
@@ -521,8 +650,8 @@ function buildCard(s){
       '<div class="stream-card-meta">' + icon("calendar") + ' <span>' + esc(dateStr) + '</span></div>' +
       '<div class="stream-card-meta">' + icon("user") + ' <span>' + esc(host) + '</span></div>' +
       '<div class="stream-card-footer">' +
-        '<div class="stream-card-price"><small>From</small> <strong>' + esc(priceStr) + '</strong></div>' +
-        '<span class="stream-card-cta">' + esc(ctaText) + ' ' + icon("arrow-right") + '</span>' +
+        '<span class="stream-card-status' + statusCls + '">' + icon(sl.ic) + ' <span>' + esc(sl.text) + '</span></span>' +
+        '<span class="stream-card-cta">' + esc(cta) + ' ' + icon("arrow-right") + '</span>' +
       '</div>' +
     '</div>';
 
@@ -538,7 +667,7 @@ function buildCard(s){
 }
 
 /* ══════════════════════════════════════════════════════════════
-   LOAD STREAMS (public read)
+   LOAD STREAMS
    ══════════════════════════════════════════════════════════════ */
 function attachStreamsListener(){
   $("loadingState").style.display = "block";
@@ -558,6 +687,7 @@ function attachStreamsListener(){
         allStreams.push(d);
       });
       applyFiltersAndRender();
+      updateSlotCounter();
     }, function(err){
       console.error("Streams load error:", err);
       $("loadingState").style.display = "none";
@@ -575,6 +705,9 @@ document.addEventListener("DOMContentLoaded", function(){
   $("year").textContent = new Date().getFullYear();
   refreshIcons();
 
+  /* ?mine=1 → only show the signed-in user's streams */
+  mineOnly = getParam("mine") === "1";
+
   $("searchInput").addEventListener("input", applyFiltersAndRender);
   $("statusFilter").addEventListener("change", applyFiltersAndRender);
   $("platformFilter").addEventListener("change", applyFiltersAndRender);
@@ -582,18 +715,27 @@ document.addEventListener("DOMContentLoaded", function(){
 
   $("clearFilters").addEventListener("click", function(){
     $("searchInput").value = "";
-    $("statusFilter").value = "live";
+    $("statusFilter").value = "upcoming";
     $("platformFilter").value = "";
     $("sortFilter").value = "soonest";
     applyFiltersAndRender();
   });
 
+  auth.onAuthStateChanged(function(user){
+    currentUser = user;
+    updateSlotCounter();
+    if (mineOnly) applyFiltersAndRender();
+  });
+
   attachStreamsListener();
 
-  /* Re-run filters every 30s so live/past statuses flip automatically */
-  setInterval(applyFiltersAndRender, 30000);
+  /* Refresh live/past statuses automatically */
+  setInterval(function(){
+    applyFiltersAndRender();
+    updateSlotCounter();
+  }, 30000);
 });
 })();
 </script>
 </body>
-  </html>
+</html>
