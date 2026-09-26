@@ -1,0 +1,599 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#0a0f14" />
+<meta name="description" content="Browse every live stream on Novalink — concerts, workshops, webinars, and online shows." />
+<title>All Streams · Novalink</title>
+
+<script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
+<style>
+:root{
+  --cyan-50:#ecfeff;--cyan-100:#cffafe;--cyan-200:#a5f3fc;--cyan-300:#67e8f9;
+  --cyan-400:#22d3ee;--cyan-500:#06b6d4;--cyan-600:#0891b2;--cyan-700:#0e7490;
+  --bg:#ffffff;--bg-2:#f6f8fb;--surface:#ffffff;--surface-2:#f1f4f8;
+  --border:#e4e9f0;--border-2:#d3dbe5;
+  --text:#0a0f14;--text-2:#2b3644;--text-muted:#6b7787;
+  --radius:14px;--max-width:1180px;
+  --font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --danger:#dc2626;--danger-soft:#fef2f2;
+  --live:#dc2626;--live-soft:#fef2f2;
+  --navy:#1e2f4d;
+  --ease-smooth:cubic-bezier(0.25,0.8,0.25,1);
+  --ease-bounce:cubic-bezier(0.175,0.885,0.32,1.275);
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth}
+a{color:inherit;text-decoration:none}
+button{font:inherit;font-family:inherit;touch-action:manipulation;cursor:pointer}
+body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-height:1.6;-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column}
+.container{max-width:var(--max-width);margin:0 auto;padding:0 24px;width:100%}
+
+.novalink-logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none;margin-left:12px;padding-left:4px}
+.novalink-logo .mark{width:34px;height:42px;flex-shrink:0;display:block}
+.novalink-logo .wordmark{font-weight:800;font-size:1.1rem;letter-spacing:0.02em;color:var(--navy);line-height:1}
+@media (max-width:480px){.novalink-logo{margin-left:16px}.novalink-logo .mark{width:30px;height:37px}.novalink-logo .wordmark{font-size:1.02rem}}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 18px;border-radius:12px;font-weight:600;font-size:14px;border:1px solid transparent;cursor:pointer;transition:all 0.2s var(--ease-smooth);white-space:nowrap;font-family:inherit;text-decoration:none}
+.btn svg,.btn i{width:16px;height:16px}
+.btn-primary{background:#0a0f14;color:#fff}
+.btn-primary:hover{background:#1a2129;transform:translateY(-2px);box-shadow:0 4px 12px rgba(10,15,20,0.15)}
+.btn-accent{background:linear-gradient(135deg,var(--cyan-400),var(--cyan-600));color:#04161c}
+.btn-accent:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(6,182,212,0.35)}
+.btn-ghost{background:transparent;color:var(--text-2);border:1px solid var(--border-2)}
+.btn-ghost:hover{background:var(--surface-2);border-color:var(--cyan-500);color:var(--cyan-700)}
+.btn-sm{padding:8px 12px;font-size:13px}
+.btn:disabled{opacity:0.55;cursor:not-allowed;transform:none!important;box-shadow:none!important}
+
+.site-header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,0.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--border)}
+.header-inner{display:flex;align-items:center;justify-content:space-between;padding:12px 0;gap:12px;flex-wrap:wrap}
+
+.page-wrap{flex:1;padding:32px 0 64px}
+@media (min-width:1024px){.page-wrap{padding:48px 0 80px}}
+
+.page-header{margin-bottom:28px}
+.page-header h1{font-size:clamp(1.8rem,3.6vw,2.6rem);color:var(--navy);letter-spacing:-0.02em;margin-bottom:6px}
+.page-header p{color:var(--text-muted);font-size:15px}
+
+/* FILTERS */
+.filters-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:24px;box-shadow:0 4px 16px rgba(10,15,20,0.04);display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
+@media (min-width:768px){.filters-bar{grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)}}
+.filter-field{display:flex;flex-direction:column;gap:6px;min-width:0}
+.filter-field label{font-size:10.5px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em}
+.filter-field input, .filter-field select{padding:10px 12px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:10px;color:var(--text);font-size:14px;font-family:inherit;transition:border-color 0.2s, box-shadow 0.2s;width:100%;min-width:0}
+.filter-field input:focus, .filter-field select:focus{outline:none;border-color:var(--cyan-500);background:#fff;box-shadow:0 0 0 3px rgba(6,182,212,0.15)}
+.filter-field select{appearance:none;-webkit-appearance:none;padding-right:34px;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7787' stroke-width='3' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;background-size:11px;cursor:pointer}
+
+.filter-summary{font-size:13px;color:var(--text-muted);margin-bottom:18px;display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.filter-summary strong{color:var(--text-2);font-weight:800}
+.filter-clear{background:transparent;border:none;color:var(--cyan-700);font-size:12.5px;font-weight:700;cursor:pointer;padding:4px 8px;border-radius:6px;transition:background 0.15s}
+.filter-clear:hover{background:var(--cyan-50)}
+
+/* GRID */
+.streams-grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fill,minmax(290px,1fr))}
+
+.stream-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);transition:transform 0.3s var(--ease-smooth),box-shadow 0.3s var(--ease-smooth),border-color 0.3s ease;display:flex;flex-direction:column;cursor:pointer}
+.stream-card:hover{transform:translateY(-6px);box-shadow:0 16px 32px rgba(10,15,20,0.12);border-color:var(--cyan-500)}
+
+.stream-card-thumb{
+  aspect-ratio:16/9;
+  background:linear-gradient(135deg,#0a0f14 0%,#0f172a 55%,#0a0f14 100%);
+  background-size:cover;background-position:center;
+  position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;
+}
+.stream-card-thumb::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(10,15,20,0.65),transparent 55%);pointer-events:none}
+
+.stream-card-play{
+  width:64px;height:64px;border-radius:50%;
+  background:rgba(6,182,212,0.22);
+  border:2px solid rgba(34,211,238,0.65);
+  display:flex;align-items:center;justify-content:center;
+  backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);
+  z-index:2;
+  transition:transform 0.3s var(--ease-bounce), background 0.2s ease;
+}
+.stream-card:hover .stream-card-play{transform:scale(1.1);background:rgba(6,182,212,0.38)}
+.stream-card-play i{width:26px;height:26px;color:#67e8f9}
+
+.status-badge{
+  position:absolute;top:12px;left:12px;
+  font-size:10px;font-weight:900;letter-spacing:0.08em;
+  text-transform:uppercase;padding:5px 11px;border-radius:99px;
+  display:inline-flex;align-items:center;gap:6px;z-index:3;
+  box-shadow:0 4px 12px rgba(0,0,0,0.2);
+}
+.status-badge.live{background:#dc2626;color:#fff}
+.status-badge.live::before{content:'';width:7px;height:7px;border-radius:50%;background:#fff;animation:livePulse 1.5s infinite}
+.status-badge.upcoming{background:rgba(10,15,20,0.82);color:#67e8f9;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(103,232,249,0.35)}
+.status-badge.replay{background:rgba(139,92,246,0.92);color:#fff}
+.status-badge.ended{background:rgba(71,85,105,0.85);color:#e2e8f0}
+
+@keyframes livePulse{
+  0%,100%{opacity:1;transform:scale(1)}
+  50%{opacity:0.4;transform:scale(0.85)}
+}
+
+.platform-tag{
+  position:absolute;bottom:12px;right:12px;
+  background:rgba(10,15,20,0.75);color:#fff;
+  font-size:9.5px;font-weight:900;letter-spacing:0.06em;
+  text-transform:uppercase;padding:4px 9px;border-radius:6px;
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:3;
+}
+
+.stream-card-body{padding:15px;display:flex;flex-direction:column;gap:8px;flex:1}
+.stream-card-body h3{font-size:15.5px;font-weight:800;line-height:1.28;color:var(--text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;letter-spacing:-0.005em;word-break:break-word}
+
+.stream-card-meta{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--text-muted);font-weight:500;min-width:0}
+.stream-card-meta i{width:13px;height:13px;flex-shrink:0;color:var(--text-faint)}
+.stream-card-meta span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+
+.stream-card-footer{margin-top:auto;padding-top:10px;border-top:1px dashed var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px}
+.stream-card-price{font-size:13px;font-weight:700;color:#0f172a;display:flex;align-items:baseline;gap:4px}
+.stream-card-price small{font-size:11px;color:var(--text-muted);font-weight:600;text-transform:uppercase;letter-spacing:0.04em}
+.stream-card-price strong{color:var(--cyan-700);font-family:ui-monospace,monospace;font-weight:900;font-size:14.5px}
+.stream-card-cta{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:800;color:var(--cyan-700);letter-spacing:0.02em;transition:transform 0.2s ease}
+.stream-card:hover .stream-card-cta{transform:translateX(3px)}
+.stream-card-cta i{width:13px;height:13px}
+
+/* STATES */
+.loading-state, .empty-state{text-align:center;padding:80px 20px;color:var(--text-muted)}
+.loading-state i{width:32px;height:32px;margin:0 auto 12px;color:var(--cyan-500);animation:spin 1.2s linear infinite;display:block}
+@keyframes spin{to{transform:rotate(360deg)}}
+.empty-state .icon{width:72px;height:72px;border-radius:50%;background:var(--cyan-50);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;color:var(--cyan-600)}
+.empty-state .icon i{width:32px;height:32px}
+.empty-state h2{margin-bottom:8px;color:var(--navy);font-size:1.35rem}
+.empty-state p{margin-bottom:22px;font-size:14.5px;max-width:420px;margin-left:auto;margin-right:auto}
+
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%) translateY(120%);background:#0a0f14;color:#fff;padding:12px 18px;border-radius:12px;font-size:13.5px;z-index:200;transition:transform 0.4s var(--ease-bounce),opacity 0.3s ease;max-width:calc(100vw - 40px);display:flex;align-items:center;gap:10px;pointer-events:none;opacity:0}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.success{background:#065f46}
+.toast.error{background:#991b1b}
+
+.site-footer{background:#0a0f14;color:#c9d2dd;padding:32px 0 22px;margin-top:auto;font-size:13px}
+.footer-links{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;padding-bottom:16px;margin-bottom:14px;border-bottom:1px solid #1f2937}
+.footer-links a{color:#8a96a4;font-size:12.5px;transition:color 0.2s ease}
+.footer-links a:hover{color:#22d3ee}
+.footer-bottom{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;color:#6b7787;font-size:12px}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a href="index.html" class="novalink-logo">
+      <svg class="mark" viewBox="0 0 60 74"><path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/><path fill="#00FFFF" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/></svg>
+      <span class="wordmark">NOVALINK</span>
+    </a>
+    <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+      <a href="index.html" class="btn btn-ghost btn-sm"><i data-lucide="arrow-left"></i> Home</a>
+      <a href="create-streams.html" class="btn btn-accent btn-sm"><i data-lucide="radio"></i> Go live</a>
+    </div>
+  </div>
+</header>
+
+<main class="page-wrap">
+  <div class="container">
+
+    <div class="page-header">
+      <h1>Live streams</h1>
+      <p>Online concerts, workshops, webinars and shows. Buy a ticket, get a private watch link, tune in from anywhere.</p>
+    </div>
+
+    <div class="filters-bar">
+      <div class="filter-field">
+        <label for="searchInput">Search</label>
+        <input type="text" id="searchInput" placeholder="Search streams by title or host…" autocomplete="off" />
+      </div>
+      <div class="filter-field">
+        <label for="statusFilter">Status</label>
+        <select id="statusFilter">
+          <option value="">All streams</option>
+          <option value="live" selected>Live now</option>
+          <option value="upcoming">Upcoming</option>
+          <option value="past">Past &amp; replay</option>
+        </select>
+      </div>
+      <div class="filter-field">
+        <label for="platformFilter">Platform</label>
+        <select id="platformFilter">
+          <option value="">All platforms</option>
+          <option value="youtube">YouTube Live</option>
+          <option value="vimeo">Vimeo Live</option>
+          <option value="twitch">Twitch</option>
+          <option value="custom">Custom Embed</option>
+        </select>
+      </div>
+      <div class="filter-field">
+        <label for="sortFilter">Sort</label>
+        <select id="sortFilter">
+          <option value="soonest" selected>Starting soon</option>
+          <option value="live-first">Live first</option>
+          <option value="newest">Newest added</option>
+          <option value="name">Name A–Z</option>
+          <option value="cheapest">Cheapest first</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="filter-summary" id="filterSummary" style="display:none">
+      <span><strong id="resultCount">0</strong> <span id="resultLabel">streams</span></span>
+      <button type="button" class="filter-clear" id="clearFilters">Clear filters</button>
+    </div>
+
+    <div id="loadingState" class="loading-state">
+      <i data-lucide="loader-2"></i>
+      <p>Loading streams…</p>
+    </div>
+
+    <div id="emptyState" class="empty-state" style="display:none">
+      <div class="icon"><i data-lucide="radio-tower"></i></div>
+      <h2 id="emptyTitle">No streams yet</h2>
+      <p id="emptyMsg">Be the first to go live on Novalink.</p>
+      <a href="create-streams.html" class="btn btn-accent"><i data-lucide="radio"></i> Create a stream</a>
+    </div>
+
+    <div class="streams-grid" id="streamsGrid" style="display:none"></div>
+
+  </div>
+</main>
+
+<footer class="site-footer">
+  <div class="container">
+    <div class="footer-links">
+      <a href="terms.html">Terms &amp; Conditions</a>
+      <a href="privacy.html">Privacy Policy</a>
+      <a href="popia.html">POPIA Notice</a>
+    </div>
+    <div class="footer-bottom">
+      <span>&copy; <span id="year"></span> Novalink. All rights reserved.</span>
+      <span>Johannesburg, South Africa</span>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ══════════════════════════════════════════════════════════════
+   FIREBASE
+   ══════════════════════════════════════════════════════════════ */
+var firebaseConfig = {
+  apiKey: "AIzaSyDSnns131jOlBXAqKo6qy7lTW4Rij-1oWU",
+  authDomain: "novalink-864cf.firebaseapp.com",
+  projectId: "novalink-864cf",
+  storageBucket: "novalink-864cf.firebasestorage.app",
+  messagingSenderId: "602780280140",
+  appId: "1:602780280140:web:5d9ff2351e5a7d5e66dbe9"
+};
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+var db = firebase.firestore();
+var auth = firebase.auth();
+var STREAMS_COLLECTION = "streams";
+
+/* ══════════════════════════════════════════════════════════════
+   STATE
+   ══════════════════════════════════════════════════════════════ */
+var allStreams = [];
+var unsubscribe = null;
+
+/* ══════════════════════════════════════════════════════════════
+   HELPERS
+   ══════════════════════════════════════════════════════════════ */
+function $(id){ return document.getElementById(id); }
+function icon(n){ return '<i data-lucide="'+n+'"></i>'; }
+function refreshIcons(){ if (window.lucide) lucide.createIcons(); }
+function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+function showToast(msg,type,ms){
+  type = type || "info"; ms = ms || 3000;
+  var t = $("toast");
+  var i = type === "error" ? "alert-circle" : (type === "success" ? "check-circle" : "info");
+  t.className = "toast " + type;
+  t.innerHTML = icon(i) + "<span>" + esc(msg) + "</span>";
+  refreshIcons();
+  requestAnimationFrame(function(){ t.classList.add("show"); });
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(function(){ t.classList.remove("show"); }, ms);
+}
+
+function formatMoney(v){
+  if (typeof v !== "number") v = parseFloat(v) || 0;
+  if (v <= 0) return "Free";
+  return "R " + v.toFixed(2).replace(/\.00$/, "");
+}
+
+function formatStreamDate(dateStr, timeStr){
+  if (!dateStr) return "Date TBA";
+  try {
+    var d = new Date(dateStr + "T" + (timeStr || "00:00"));
+    if (isNaN(d.getTime())) return dateStr + (timeStr ? " · " + timeStr : "");
+    var opts = { weekday: "short", day: "numeric", month: "short", year: "numeric" };
+    var out = d.toLocaleDateString("en-ZA", opts);
+    if (timeStr) out += " · " + timeStr;
+    return out;
+  } catch(e){ return dateStr; }
+}
+
+function streamTitleOf(s){
+  return s.streamTitle || s.eventName || "Untitled Stream";
+}
+
+function streamHostOf(s){
+  return s.hostName || s.ownerName || "Host";
+}
+
+function streamPlatformLabel(p){
+  return { youtube:"YouTube", vimeo:"Vimeo", twitch:"Twitch", custom:"Embed" }[p] || "Live";
+}
+
+/* Cheapest paid tier, or 0 for free */
+function cheapestPrice(data){
+  var tiers = data.tierPrices || {};
+  var prices = [];
+  ["black","gold","silver","cyan","tier5","tier6"].forEach(function(t){
+    var v = parseFloat(tiers[t]);
+    if (!isNaN(v) && v > 0) prices.push(v);
+  });
+  if (!prices.length) return 0;
+  return Math.min.apply(null, prices);
+}
+
+/* Where does this stream sit in time?
+   Returns { status: 'live'|'upcoming'|'past', startMs, endMs, replayOk } */
+function streamStatus(s){
+  var dateStr = s.startDate || "";
+  var timeStr = s.startTime || "00:00";
+  var durationMin = parseInt(s.durationMinutes, 10) || 90;
+  var grace = 15 * 60 * 1000; // 15-min grace for late starts
+
+  if (!dateStr) return { status: 'upcoming', startMs: 0, endMs: 0, replayOk: false };
+
+  var startMs = new Date(dateStr + "T" + timeStr + ":00").getTime();
+  if (isNaN(startMs)) return { status: 'upcoming', startMs: 0, endMs: 0, replayOk: false };
+
+  var endMs = startMs + (durationMin * 60 * 1000) + grace;
+  var now = Date.now();
+
+  if (now < startMs) return { status: 'upcoming', startMs: startMs, endMs: endMs, replayOk: false };
+  if (now <= endMs) return { status: 'live', startMs: startMs, endMs: endMs, replayOk: false };
+
+  var replayOk = s.replayEnabled !== false; // default: replay allowed
+  return { status: 'past', startMs: startMs, endMs: endMs, replayOk: replayOk };
+}
+
+function sortValue(s){
+  var st = streamStatus(s);
+  if (st.status === 'live')     return 0;         // live streams bubble to top
+  if (st.status === 'upcoming') return st.startMs; // then soonest upcoming
+  return Number.MAX_SAFE_INTEGER;                  // then past streams
+}
+
+function createdValue(data){
+  if (!data.createdAt) return 0;
+  try {
+    if (typeof data.createdAt === "object" && data.createdAt.toMillis) return data.createdAt.toMillis();
+    return new Date(data.createdAt).getTime() || 0;
+  } catch(e){ return 0; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   RENDER
+   ══════════════════════════════════════════════════════════════ */
+function applyFiltersAndRender(){
+  var q = ($("searchInput").value || "").trim().toLowerCase();
+  var statusFilter = $("statusFilter").value;
+  var platformFilter = $("platformFilter").value;
+  var sort = $("sortFilter").value;
+
+  var list = allStreams.filter(function(s){
+    var st = streamStatus(s);
+
+    if (statusFilter === 'live' && st.status !== 'live') return false;
+    if (statusFilter === 'upcoming' && st.status !== 'upcoming') return false;
+    if (statusFilter === 'past' && st.status !== 'past') return false;
+
+    if (platformFilter && s.streamPlatform !== platformFilter) return false;
+
+    if (q) {
+      var title = streamTitleOf(s).toLowerCase();
+      var host = streamHostOf(s).toLowerCase();
+      var tagline = String(s.eventTagline || "").toLowerCase();
+      if (title.indexOf(q) === -1 && host.indexOf(q) === -1 && tagline.indexOf(q) === -1) return false;
+    }
+    return true;
+  });
+
+  if (sort === "live-first") {
+    list.sort(function(a, b){
+      var sa = streamStatus(a).status;
+      var sb = streamStatus(b).status;
+      var rank = { live: 0, upcoming: 1, past: 2 };
+      if (rank[sa] !== rank[sb]) return rank[sa] - rank[sb];
+      return sortValue(a) - sortValue(b);
+    });
+  } else if (sort === "newest") {
+    list.sort(function(a, b){ return createdValue(b) - createdValue(a); });
+  } else if (sort === "name") {
+    list.sort(function(a, b){ return streamTitleOf(a).localeCompare(streamTitleOf(b)); });
+  } else if (sort === "cheapest") {
+    list.sort(function(a, b){ return cheapestPrice(a) - cheapestPrice(b); });
+  } else { /* soonest */
+    list.sort(function(a, b){ return sortValue(a) - sortValue(b); });
+  }
+
+  var isFiltered = !!(q || platformFilter || statusFilter !== 'live');
+  $("filterSummary").style.display = (allStreams.length > 0) ? "flex" : "none";
+  $("resultCount").textContent = list.length;
+  $("resultLabel").textContent = list.length === 1 ? "stream" : "streams";
+  $("clearFilters").style.display = isFiltered ? "inline-flex" : "none";
+
+  renderGrid(list);
+}
+
+function renderGrid(list){
+  var grid = $("streamsGrid");
+  var empty = $("emptyState");
+  var loading = $("loadingState");
+
+  loading.style.display = "none";
+
+  if (!allStreams.length) {
+    grid.style.display = "none";
+    empty.style.display = "block";
+    $("emptyTitle").textContent = "No streams yet";
+    $("emptyMsg").textContent = "Be the first to go live on Novalink.";
+    refreshIcons();
+    return;
+  }
+
+  if (!list.length) {
+    grid.style.display = "none";
+    empty.style.display = "block";
+    $("emptyTitle").textContent = "No matches";
+    $("emptyMsg").textContent = "Try clearing a filter or switching to All streams.";
+    refreshIcons();
+    return;
+  }
+
+  empty.style.display = "none";
+  grid.style.display = "grid";
+  grid.innerHTML = "";
+
+  list.forEach(function(s){
+    grid.appendChild(buildCard(s));
+  });
+
+  refreshIcons();
+}
+
+function buildCard(s){
+  var card = document.createElement("div");
+  card.className = "stream-card";
+  card.setAttribute("role", "button");
+  card.setAttribute("tabindex", "0");
+
+  var st = streamStatus(s);
+  var price = cheapestPrice(s);
+  var priceStr = price > 0 ? formatMoney(price) : "Free";
+  var title = streamTitleOf(s);
+  var host = streamHostOf(s);
+  var dateStr = formatStreamDate(s.startDate, s.startTime);
+  var platform = streamPlatformLabel(s.streamPlatform);
+
+  /* Thumbnail — cover image or fallback gradient */
+  var thumb = card.querySelector(".stream-card-thumb");
+  var thumbStyle = "";
+  if (s.heroImage) {
+    thumbStyle = "background-image:url('" + esc(s.heroImage) + "');background-size:cover;background-position:center;";
+  }
+
+  /* Status badge text + class */
+  var badgeClass = "upcoming";
+  var badgeText = "Upcoming";
+  if (st.status === 'live') { badgeClass = "live"; badgeText = "Live now"; }
+  else if (st.status === 'past') {
+    if (st.replayOk) { badgeClass = "replay"; badgeText = "Replay"; }
+    else { badgeClass = "ended"; badgeText = "Ended"; }
+  }
+
+  var ctaText = "View";
+  if (st.status === 'live') ctaText = "Watch now";
+  else if (st.status === 'past' && st.replayOk) ctaText = "Watch replay";
+  else if (st.status === 'past') ctaText = "View details";
+
+  card.innerHTML =
+    '<div class="stream-card-thumb" style="' + thumbStyle + '">' +
+      '<span class="status-badge ' + badgeClass + '">' + esc(badgeText) + '</span>' +
+      '<span class="platform-tag">' + esc(platform) + '</span>' +
+      '<div class="stream-card-play"><i data-lucide="play"></i></div>' +
+    '</div>' +
+    '<div class="stream-card-body">' +
+      '<h3>' + esc(title) + '</h3>' +
+      '<div class="stream-card-meta">' + icon("calendar") + ' <span>' + esc(dateStr) + '</span></div>' +
+      '<div class="stream-card-meta">' + icon("user") + ' <span>' + esc(host) + '</span></div>' +
+      '<div class="stream-card-footer">' +
+        '<div class="stream-card-price"><small>From</small> <strong>' + esc(priceStr) + '</strong></div>' +
+        '<span class="stream-card-cta">' + esc(ctaText) + ' ' + icon("arrow-right") + '</span>' +
+      '</div>' +
+    '</div>';
+
+  function go(){
+    window.location.href = "view-stream.html?id=" + encodeURIComponent(s.id);
+  }
+  card.addEventListener("click", go);
+  card.addEventListener("keydown", function(ev){
+    if (ev.key === "Enter" || ev.key === " ") { ev.preventDefault(); go(); }
+  });
+
+  return card;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   LOAD STREAMS (public read)
+   ══════════════════════════════════════════════════════════════ */
+function attachStreamsListener(){
+  $("loadingState").style.display = "block";
+  $("streamsGrid").style.display = "none";
+  $("emptyState").style.display = "none";
+
+  if (unsubscribe) { try { unsubscribe(); } catch(e){} }
+
+  unsubscribe = db.collection(STREAMS_COLLECTION)
+    .orderBy("createdAt", "desc")
+    .limit(500)
+    .onSnapshot(function(snap){
+      allStreams = [];
+      snap.forEach(function(doc){
+        var d = doc.data() || {};
+        d.id = doc.id;
+        allStreams.push(d);
+      });
+      applyFiltersAndRender();
+    }, function(err){
+      console.error("Streams load error:", err);
+      $("loadingState").style.display = "none";
+      $("emptyState").style.display = "block";
+      $("emptyTitle").textContent = "Could not load streams";
+      $("emptyMsg").textContent = err.message || "Please refresh and try again.";
+      refreshIcons();
+    });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   BOOT
+   ══════════════════════════════════════════════════════════════ */
+document.addEventListener("DOMContentLoaded", function(){
+  $("year").textContent = new Date().getFullYear();
+  refreshIcons();
+
+  $("searchInput").addEventListener("input", applyFiltersAndRender);
+  $("statusFilter").addEventListener("change", applyFiltersAndRender);
+  $("platformFilter").addEventListener("change", applyFiltersAndRender);
+  $("sortFilter").addEventListener("change", applyFiltersAndRender);
+
+  $("clearFilters").addEventListener("click", function(){
+    $("searchInput").value = "";
+    $("statusFilter").value = "live";
+    $("platformFilter").value = "";
+    $("sortFilter").value = "soonest";
+    applyFiltersAndRender();
+  });
+
+  attachStreamsListener();
+
+  /* Re-run filters every 30s so live/past statuses flip automatically */
+  setInterval(applyFiltersAndRender, 30000);
+});
+})();
+</script>
+</body>
+  </html>
