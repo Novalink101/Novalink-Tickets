@@ -1,0 +1,1197 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="theme-color" content="#0a0f14" />
+<title>Manage Ads · Novalink Admin</title>
+<script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<style>
+:root{
+  --cy:#00FFFF;--cy2:#00CCCC;--cy3:#009999;--cyf:#e6ffff;
+  --bg:#f6f8fb;--sf:#ffffff;--sf2:#f1f4f8;
+  --bd:#e4e9f0;--bd2:#d3dbe5;
+  --tx:#0a0f14;--tx2:#2b3644;--mut:#6b7787;
+  --rd:14px;--font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --dg:#dc2626;--dgf:#fef2f2;--sv:#059669;--svf:#ecfdf5;--nv:#1e2f4d;
+  --ink:#0a0f14;
+  --ease:cubic-bezier(0.25,0.8,0.25,1);
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{-webkit-text-size-adjust:100%}
+body{font-family:var(--font);background:var(--bg);color:var(--tx);line-height:1.6;min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
+.container{max-width:1480px;margin:0 auto;padding:0 20px;width:100%}
+h1,h2,h3{line-height:1.15;font-weight:700}
+a{color:inherit;text-decoration:none}
+button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation}
+input,select,textarea{font-family:inherit;font-size:14px}
+
+/* HEADER */
+.site-header{background:var(--sf);border-bottom:1px solid var(--bd);padding:12px 0;position:sticky;top:0;z-index:40}
+.hdr{max-width:1480px;margin:0 auto;padding:0 20px;display:flex;align-items:center;gap:16px;justify-content:space-between;flex-wrap:wrap}
+.logo{display:inline-flex;align-items:center;gap:11px;flex-shrink:0;color:var(--nv)}
+.logo svg{width:26px;height:32px;display:block}
+.logo b{font-weight:800;font-size:1.15rem;letter-spacing:-.01em}
+.admin-tag{display:inline-flex;align-items:center;gap:6px;background:var(--ink);color:var(--cy);font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;padding:6px 11px;border-radius:99px;margin-left:8px}
+.admin-tag i{width:12px;height:12px}
+.hdr-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap}
+.hdr-btn{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border-radius:99px;background:var(--sf2);border:1px solid var(--bd);color:var(--tx);font-size:12.5px;font-weight:800;transition:.15s;white-space:nowrap}
+.hdr-btn:hover{border-color:var(--cy);background:#fff;box-shadow:0 0 0 3px rgba(0,255,255,.14)}
+.hdr-btn i{width:14px;height:14px}
+
+/* HERO */
+.hero{background:
+  radial-gradient(circle at 78% 30%, rgba(0,255,255,.14), transparent 55%),
+  radial-gradient(circle at 12% 82%, rgba(0,255,255,.08), transparent 45%),
+  linear-gradient(160deg,#0a0f14 0%,#0f172a 45%,#0a0f14 100%);
+  color:#fff;padding:40px 0 42px;position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;inset:0;background-image:radial-gradient(circle at 1px 1px, rgba(255,255,255,.035) 1px, transparent 0);background-size:24px 24px;pointer-events:none}
+.hero-in{max-width:1480px;margin:0 auto;padding:0 20px;position:relative;z-index:1}
+.hero-tag{display:inline-flex;align-items:center;gap:9px;border:1px solid rgba(0,255,255,.42);background:rgba(0,255,255,.1);color:var(--cy);font-size:11px;font-weight:900;letter-spacing:.11em;text-transform:uppercase;padding:8px 15px;border-radius:99px;margin-bottom:16px}
+.hero-tag i{width:13px;height:13px}
+.hero h1{font-size:clamp(1.7rem,3.6vw,2.5rem);font-weight:900;line-height:1.1;letter-spacing:-.02em;margin-bottom:10px;max-width:720px}
+.hero h1 span{color:var(--cy)}
+.hero p{color:#94a3b8;font-size:14.5px;font-weight:500;max-width:640px;line-height:1.6}
+
+/* TABS */
+.tabbar{padding:22px 0 0;background:var(--bg)}
+.tabbar-in{max-width:1480px;margin:0 auto;padding:0 20px}
+.pills{display:inline-flex;background:var(--sf);border-radius:99px;padding:5px;gap:2px;box-shadow:0 6px 20px rgba(15,23,42,.07);max-width:100%;overflow-x:auto;scrollbar-width:none}
+.pills::-webkit-scrollbar{display:none}
+.pill{padding:11px 18px;border-radius:99px;font-weight:800;font-size:13px;color:var(--mut);display:inline-flex;gap:8px;align-items:center;white-space:nowrap;transition:.15s;border:none;background:transparent}
+.pill i{width:15px;height:15px;flex-shrink:0}
+.pill:hover:not(.active){color:var(--tx2)}
+.pill.active{background:var(--ink);color:#fff}
+@media (max-width:560px){.pill{padding:10px 14px;font-size:12px}.pill .lbl{display:none}}
+
+/* LAYOUT */
+main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
+@media (max-width:560px){main{padding:14px 14px 44px}}
+.view{display:none}
+.view.active{display:block;animation:fadeUp .3s cubic-bezier(.22,.9,.3,1)}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+
+/* FORM + LIST LAYOUT */
+.split{display:grid;grid-template-columns:minmax(0,1fr);gap:22px;align-items:start}
+@media (min-width:960px){.split{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}}
+@media (min-width:1280px){.split{grid-template-columns:minmax(0,2fr) minmax(0,1fr)}}
+.col{min-width:0}
+.col-right{display:flex;flex-direction:column;gap:16px}
+
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rd);padding:20px;box-shadow:0 4px 14px rgba(15,23,42,.05)}
+.card + .card{margin-top:16px}
+.card-title{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:var(--cy3);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.card-title i{width:15px;height:15px}
+
+.field{margin-bottom:14px}
+.field label{display:block;font-size:10.5px;font-weight:900;color:var(--tx2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em}
+.field input,.field select,.field textarea{width:100%;padding:11px 14px;background:var(--sf2);border:1px solid var(--bd2);border-radius:10px;color:var(--tx);font-size:14px;font-family:inherit;transition:border-color .15s,box-shadow .15s;min-width:0}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--cy);background:#fff;box-shadow:0 0 0 3px rgba(0,255,255,.15)}
+.field textarea{resize:vertical;min-height:80px;line-height:1.6;padding:12px 14px}
+.field select{appearance:none;-webkit-appearance:none;padding-right:38px;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7787' stroke-width='3'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:12px;cursor:pointer}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+@media (max-width:600px){.field-row,.field-row-3{grid-template-columns:1fr}}
+.hint{font-size:11px;color:var(--mut);margin-top:5px;line-height:1.5;font-style:italic;word-break:break-word}
+
+.section-divider{margin:20px 0;border-top:1px dashed var(--bd);position:relative;text-align:center}
+.section-divider span{background:var(--sf);padding:0 12px;font-size:10.5px;font-weight:900;color:var(--mut);text-transform:uppercase;position:relative;top:-9px;letter-spacing:.08em}
+
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--sf2);border:1px solid var(--bd);border-radius:11px;margin-bottom:11px;gap:12px}
+.toggle-row .tl{font-size:12.5px;font-weight:800;color:var(--tx);flex:1;min-width:0}
+.toggle-row .tl small{display:block;font-size:10.5px;font-weight:500;color:var(--mut);margin-top:2px;line-height:1.35}
+.toggle{position:relative;display:inline-block;width:46px;height:26px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0;position:absolute}
+.toggle .slider{position:absolute;cursor:pointer;inset:0;background:#cbd5e1;transition:.25s;border-radius:34px}
+.toggle .slider:before{content:"";position:absolute;height:20px;width:20px;left:3px;top:3px;background:#fff;transition:.25s;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.toggle input:checked + .slider{background:var(--cy2)}
+.toggle input:checked + .slider:before{transform:translateX(20px)}
+
+/* RADIO PILLS */
+.radio-pills{display:inline-flex;background:var(--sf2);border:1px solid var(--bd);border-radius:10px;padding:3px;gap:2px}
+.radio-pills input{position:absolute;opacity:0;pointer-events:none}
+.radio-pills label{padding:8px 14px;border-radius:8px;font-size:12.5px;font-weight:800;color:var(--mut);cursor:pointer;transition:.15s;white-space:nowrap}
+.radio-pills input:checked + label{background:var(--ink);color:#fff}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:11px 17px;border-radius:11px;font-weight:800;font-size:13px;border:1px solid transparent;transition:.15s;white-space:nowrap;font-family:inherit;text-decoration:none;cursor:pointer}
+.btn i{width:15px;height:15px}
+.btn-accent{background:var(--cy);color:#04161c}
+.btn-accent:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(0,255,255,.35)}
+.btn-ghost{background:var(--sf);color:var(--tx2);border-color:var(--bd2)}
+.btn-ghost:hover{border-color:var(--cy);color:var(--cy3)}
+.btn-danger{background:var(--dgf);color:var(--dg);border-color:#fecaca}
+.btn-danger:hover{background:var(--dg);color:#fff;border-color:var(--dg)}
+.btn-sm{padding:8px 12px;font-size:12px;border-radius:9px}
+.btn-block{width:100%}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important}
+
+/* AD LIST */
+.ad-list{display:flex;flex-direction:column;gap:12px}
+.ad-item{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:14px;display:grid;grid-template-columns:88px 1fr auto;gap:14px;align-items:center;transition:.15s}
+.ad-item:hover{border-color:var(--cy);box-shadow:0 6px 20px rgba(6,182,212,.08)}
+.ad-thumb{width:88px;height:56px;border-radius:8px;overflow:hidden;background:#0a0f14;display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative}
+.ad-thumb img, .ad-thumb video{width:100%;height:100%;object-fit:cover;display:block}
+.ad-thumb i{width:24px;height:24px;color:var(--cy);opacity:.7}
+.ad-info{min-width:0}
+.ad-title{font-size:13.5px;font-weight:800;color:var(--tx);word-break:break-word;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:2px}
+.ad-meta{font-size:11.5px;color:var(--mut);display:flex;gap:12px;flex-wrap:wrap;font-weight:500}
+.ad-meta strong{color:var(--tx2);font-weight:800}
+.ad-meta .stat{font-family:var(--mono);font-weight:700;color:var(--tx2)}
+.ad-status{display:inline-flex;align-items:center;gap:4px;font-size:9.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;padding:3px 8px;border-radius:99px;font-family:var(--font)}
+.ad-status.active{background:var(--svf);color:#065f46;border:1px solid #a7f3d0}
+.ad-status.paused{background:#f1f4f8;color:#4b5563;border:1px solid var(--bd2)}
+.ad-status.expired{background:var(--dgf);color:#991b1b;border:1px solid #fecaca}
+.ad-status.scheduled{background:#fffbeb;color:#92400e;border:1px solid #fcd34d}
+.ad-actions{display:flex;gap:6px;flex-shrink:0}
+@media (max-width:640px){
+  .ad-item{grid-template-columns:1fr;gap:10px}
+  .ad-thumb{width:100%;height:120px}
+  .ad-actions{flex-wrap:wrap}
+}
+
+/* EMPTY LIST */
+.empty-list{text-align:center;padding:44px 20px;color:var(--mut)}
+.empty-list i{width:40px;height:40px;color:var(--bd2);margin:0 auto 10px;display:block}
+.empty-list h3{font-size:14.5px;font-weight:800;color:var(--tx2);margin-bottom:4px}
+.empty-list p{font-size:12.5px;line-height:1.55}
+
+/* PREVIEW BOX */
+.ad-preview{aspect-ratio:16/9;background:linear-gradient(135deg,#0a0f14,#0f172a);border-radius:12px;overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;border:1px solid var(--bd)}
+.ad-preview img, .ad-preview video{width:100%;height:100%;object-fit:contain;display:block}
+.ad-preview .ap-empty{display:flex;flex-direction:column;align-items:center;gap:6px;color:rgba(255,255,255,.5);font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase}
+.ad-preview .ap-empty i{width:28px;height:28px;color:var(--cy);opacity:.7}
+.ad-preview .ap-badge{position:absolute;top:10px;left:10px;background:linear-gradient(90deg, #00FFFF, #00CCCC);color:#04161c;font-size:9px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;padding:4px 9px;border-radius:99px}
+.ad-preview .ap-skip{position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,.6);border:1px solid rgba(255,255,255,.25);color:#fff;font-size:10px;font-weight:800;padding:5px 10px;border-radius:8px}
+
+/* STATS */
+.stat-grid{display:grid;gap:14px;grid-template-columns:repeat(auto-fit,minmax(180px,1fr))}
+.stat-card{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:18px 20px}
+.stat-label{font-size:10.5px;font-weight:900;color:var(--mut);text-transform:uppercase;letter-spacing:.08em;margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.stat-label i{width:14px;height:14px;color:var(--cy3)}
+.stat-value{font-size:26px;font-weight:900;color:var(--tx);font-family:var(--mono);letter-spacing:-.02em;line-height:1}
+.stat-sub{font-size:11.5px;color:var(--mut);margin-top:6px;font-weight:500}
+
+/* TOAST */
+#toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,18px);background:var(--ink);color:var(--cy);font-size:13px;font-weight:800;padding:13px 22px;border-radius:99px;box-shadow:0 14px 34px rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:.22s;z-index:200;max-width:90vw;text-align:center;display:flex;align-items:center;gap:9px}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#toast svg{width:15px;height:15px;flex-shrink:0}
+#toast.success{background:#065f46;color:#d1fae5}
+#toast.error{background:#991b1b;color:#fef2f2}
+
+/* ACCESS SCREEN */
+.access-screen{max-width:520px;margin:80px auto;background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:44px 32px;text-align:center;box-shadow:0 8px 24px rgba(15,23,42,.06)}
+.access-screen .ico{width:56px;height:56px;border-radius:16px;background:var(--dgf);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;color:var(--dg)}
+.access-screen .ico i{width:28px;height:28px}
+.access-screen h2{font-size:1.3rem;font-weight:900;color:var(--nv);margin-bottom:8px}
+.access-screen p{font-size:13.5px;color:var(--mut);margin-bottom:22px;line-height:1.6}
+.access-screen .actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.access-screen.loading .ico{background:var(--cyf);color:var(--cy3)}
+.access-screen.loading .ico i{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner-lg{width:28px;height:28px;border:3px solid rgba(0,255,255,.2);border-top-color:var(--cy);border-radius:50%;animation:spin .8s linear infinite;display:inline-block}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(10,15,20,.6);backdrop-filter:blur(8px);display:none;align-items:flex-start;justify-content:center;z-index:100;padding:24px 20px;overflow-y:auto}
+.modal-overlay.open{display:flex}
+.modal{background:var(--sf);border:1px solid var(--bd);border-radius:18px;max-width:640px;width:100%;padding:26px 24px;position:relative;margin:auto;box-shadow:0 24px 60px rgba(10,15,20,.25)}
+.modal-close{position:absolute;top:14px;right:14px;background:var(--sf2);border:1px solid var(--bd);color:var(--tx2);padding:6px;border-radius:10px;display:flex;align-items:center;justify-content:center}
+.modal-close:hover{background:var(--dgf);color:var(--dg)}
+.modal h3{font-size:1.15rem;margin-bottom:6px}
+.modal .sub{color:var(--mut);font-size:13px;margin-bottom:18px}
+
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:6px;border:2px solid var(--bg)}
+::-webkit-scrollbar-track{background:transparent}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="hdr">
+    <a href="index.html" class="logo" aria-label="Novalink home">
+      <svg viewBox="0 0 60 74"><path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/><path fill="#00FFFF" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/></svg>
+      <b>NOVALINK</b>
+      <span class="admin-tag"><i data-lucide="shield-check"></i> Admin</span>
+    </a>
+    <div class="hdr-actions">
+      <a href="streams.html" class="hdr-btn" type="button"><i data-lucide="radio"></i><span>All streams</span></a>
+      <a href="index.html" class="hdr-btn" type="button"><i data-lucide="home"></i><span>Home</span></a>
+      <button class="hdr-btn" id="signOutBtn" type="button"><i data-lucide="log-out"></i><span>Sign out</span></button>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-in">
+    <span class="hero-tag"><i data-lucide="megaphone"></i>Ad Manager</span>
+    <h1>Control <span>every ad</span> on Novalink.</h1>
+    <p>Add advertiser creatives, set the house ad, tune pre/mid/post-roll defaults. Impressions and clicks tracked automatically.</p>
+  </div>
+</section>
+
+<nav class="tabbar">
+  <div class="tabbar-in">
+    <div class="pills" role="tablist">
+      <button class="pill active" data-view="ads" role="tab" type="button"><i data-lucide="list"></i><span class="lbl">Ads</span></button>
+      <button class="pill" data-view="settings" role="tab" type="button"><i data-lucide="settings"></i><span class="lbl">Settings</span></button>
+      <button class="pill" data-view="stats" role="tab" type="button"><i data-lucide="bar-chart-3"></i><span class="lbl">Stats</span></button>
+    </div>
+  </div>
+</nav>
+
+<main>
+
+  <!-- Loading / Access gate -->
+  <div id="accessGate">
+    <div class="access-screen loading" id="accessLoading">
+      <div class="ico"><i data-lucide="loader-2"></i></div>
+      <h2>Checking access…</h2>
+      <p>Verifying your account.</p>
+    </div>
+
+    <div class="access-screen" id="accessDenied" style="display:none">
+      <div class="ico"><i data-lucide="shield-alert"></i></div>
+      <h2>You don't have access</h2>
+      <p>This page is restricted to Novalink administrators. If you believe this is a mistake, contact support.</p>
+      <div class="actions">
+        <a href="index.html" class="btn btn-accent"><i data-lucide="home"></i> Home</a>
+        <a href="streams.html" class="btn btn-ghost"><i data-lucide="radio"></i> All streams</a>
+      </div>
+    </div>
+
+    <div class="access-screen" id="accessSignedOut" style="display:none">
+      <div class="ico"><i data-lucide="lock"></i></div>
+      <h2>Sign in required</h2>
+      <p>Only the Novalink admin account can access this page.</p>
+      <div class="actions">
+        <a href="index.html" class="btn btn-accent"><i data-lucide="log-in"></i> Go to sign in</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="adminContent" style="display:none">
+
+    <!-- ═══════════ VIEW: ADS ═══════════ -->
+    <section class="view active" id="view-ads">
+      <div class="split">
+
+        <div class="col">
+          <div class="card">
+            <div class="card-title"><i data-lucide="list"></i> Ad inventory <span id="adCount" style="color:var(--mut);font-weight:600;text-transform:none;letter-spacing:0;margin-left:auto;font-size:12px;">0 ads</span></div>
+            <div class="ad-list" id="adList">
+              <div class="empty-list">
+                <i data-lucide="inbox"></i>
+                <h3>No ads yet</h3>
+                <p>Use the form on the right to add your first ad.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="col-right">
+          <div class="card" id="editorCard">
+            <div class="card-title"><i data-lucide="plus-circle"></i> <span id="editorTitle">Add new ad</span></div>
+
+            <div class="field">
+              <label for="adTitle">Ad title (internal)</label>
+              <input type="text" id="adTitle" placeholder="e.g., Summer Sale Promo" maxlength="80" />
+            </div>
+
+            <div class="field">
+              <label for="adType">Ad type</label>
+              <select id="adType">
+                <option value="preroll">Pre-roll (before stream)</option>
+                <option value="midroll">Mid-roll (during stream)</option>
+                <option value="postroll">Post-roll (after stream)</option>
+                <option value="any" selected>Any slot (rotates through all)</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label>Media source</label>
+              <div class="radio-pills" style="display:flex;width:100%;">
+                <input type="radio" name="mediaSrc" id="srcUrl" value="url" checked />
+                <label for="srcUrl" style="flex:1;text-align:center;">Paste URL</label>
+                <input type="radio" name="mediaSrc" id="srcUpload" value="upload" />
+                <label for="srcUpload" style="flex:1;text-align:center;">Upload file</label>
+              </div>
+            </div>
+
+            <div class="field" id="urlField">
+              <label for="adMediaUrl">Media URL</label>
+              <input type="url" id="adMediaUrl" placeholder="https://yourbrand.com/ad.jpg or .mp4" />
+              <p class="hint">Direct link to an image (.jpg / .png / .webp / .gif) or video (.mp4 / .webm). Advertisers usually host these themselves.</p>
+            </div>
+
+            <div class="field" id="uploadField" style="display:none;">
+              <label for="adMediaFile">Upload creative</label>
+              <input type="file" id="adMediaFile" accept="image/*,video/*" />
+              <p class="hint" id="uploadHint">Images: auto-compressed. Videos: keep under 15 seconds. Max 700 KB per file. Use a URL for larger files.</p>
+            </div>
+
+            <div class="field">
+              <label for="adMediaType">Media type</label>
+              <select id="adMediaType">
+                <option value="auto" selected>Auto-detect</option>
+                <option value="image">Image</option>
+                <option value="video">Video</option>
+              </select>
+            </div>
+
+            <div class="field">
+              <label for="adClickUrl">Click URL (where the ad sends viewers)</label>
+              <input type="url" id="adClickUrl" placeholder="https://advertiser.com" />
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label for="adCtaLabel">CTA button label</label>
+                <input type="text" id="adCtaLabel" placeholder="Learn more" maxlength="24" />
+              </div>
+              <div class="field">
+                <label for="adSkipAfter">Skip after</label>
+                <select id="adSkipAfter">
+                  <option value="3">3 seconds</option>
+                  <option value="5" selected>5 seconds</option>
+                  <option value="8">8 seconds</option>
+                  <option value="10">10 seconds</option>
+                  <option value="-1">No skip</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label for="adStartDate">Start date (optional)</label>
+                <input type="date" id="adStartDate" />
+              </div>
+              <div class="field">
+                <label for="adEndDate">End date (optional)</label>
+                <input type="date" id="adEndDate" />
+              </div>
+            </div>
+
+            <div class="field">
+              <label for="adWeight">Rotation weight</label>
+              <input type="number" id="adWeight" min="1" max="10" value="1" step="1" />
+              <p class="hint">Higher weight = shown more often when multiple ads are active for the same slot.</p>
+            </div>
+
+            <div class="toggle-row">
+              <span class="tl">Active<small>Turn off to pause this ad without deleting it.</small></span>
+              <label class="toggle"><input type="checkbox" id="adActive" checked /><span class="slider"></span></label>
+            </div>
+
+            <div style="display:flex;gap:8px;margin-top:14px;">
+              <button class="btn btn-accent" id="saveAdBtn" type="button" style="flex:1;">
+                <i data-lucide="save"></i> <span id="saveAdLbl">Save ad</span>
+              </button>
+              <button class="btn btn-ghost" id="cancelEditBtn" type="button" style="display:none;">Cancel</button>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title"><i data-lucide="eye"></i> Preview</div>
+            <div class="ad-preview" id="adPreview">
+              <span class="ap-badge">Sponsored</span>
+              <div class="ap-empty"><i data-lucide="image-plus"></i> Add media to preview</div>
+              <span class="ap-skip">Skip ad</span>
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </section>
+
+    <!-- ═══════════ VIEW: SETTINGS ═══════════ -->
+    <section class="view" id="view-settings">
+      <div class="split">
+        <div class="col">
+          <div class="card">
+            <div class="card-title"><i data-lucide="home"></i> House ad (fallback)</div>
+            <p class="hint" style="margin-bottom:14px;font-style:normal;">Shown to viewers when no advertiser ad is available for a slot. Promotes Novalink's own ad space.</p>
+
+            <div class="field">
+              <label for="houseTitle">Title</label>
+              <input type="text" id="houseTitle" placeholder="Advertise on Novalink" maxlength="60" />
+            </div>
+
+            <div class="field">
+              <label for="houseText">Body text</label>
+              <textarea id="houseText" placeholder="Reach thousands of live viewers. Feature your brand before, during, or after every stream." maxlength="200"></textarea>
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label for="houseCtaLabel">CTA button label</label>
+                <input type="text" id="houseCtaLabel" placeholder="Advertise here" maxlength="24" />
+              </div>
+              <div class="field">
+                <label for="houseUrl">CTA link</label>
+                <input type="text" id="houseUrl" placeholder="mailto:ads@novalink.com" />
+              </div>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title"><i data-lucide="settings-2"></i> Global defaults</div>
+            <p class="hint" style="margin-bottom:14px;font-style:normal;">Applied to new streams unless the host overrides them.</p>
+
+            <div class="toggle-row">
+              <span class="tl">Pre-roll ads enabled<small>Shown before the stream starts.</small></span>
+              <label class="toggle"><input type="checkbox" id="globalPreroll" checked /><span class="slider"></span></label>
+            </div>
+
+            <div class="toggle-row">
+              <span class="tl">Mid-roll ads enabled<small>Shown during the stream.</small></span>
+              <label class="toggle"><input type="checkbox" id="globalMidroll" checked /><span class="slider"></span></label>
+            </div>
+
+            <div class="toggle-row">
+              <span class="tl">Post-roll ads enabled<small>Shown after the stream ends.</small></span>
+              <label class="toggle"><input type="checkbox" id="globalPostroll" checked /><span class="slider"></span></label>
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label for="globalMidrollMinute">Default mid-roll timing</label>
+                <select id="globalMidrollMinute">
+                  <option value="15">At 15 minutes</option>
+                  <option value="30" selected>At 30 minutes</option>
+                  <option value="45">At 45 minutes</option>
+                  <option value="60">At 60 minutes</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="globalSkipSeconds">Default skip-after</label>
+                <select id="globalSkipSeconds">
+                  <option value="3">3 seconds</option>
+                  <option value="5" selected>5 seconds</option>
+                  <option value="8">8 seconds</option>
+                  <option value="10">10 seconds</option>
+                </select>
+              </div>
+            </div>
+
+            <button class="btn btn-accent btn-block" id="saveSettingsBtn" type="button" style="margin-top:14px;">
+              <i data-lucide="save"></i> Save settings
+            </button>
+          </div>
+        </div>
+
+        <div class="col-right">
+          <div class="card">
+            <div class="card-title"><i data-lucide="info"></i> How it works</div>
+            <div style="font-size:12.5px;color:var(--tx2);line-height:1.7;font-weight:500;">
+              <p style="margin-bottom:10px;">Viewers see full-screen ads at three moments:</p>
+              <ol style="padding-left:18px;margin-bottom:10px;">
+                <li style="margin-bottom:6px;"><strong>Pre-roll</strong> — before the stream loads</li>
+                <li style="margin-bottom:6px;"><strong>Mid-roll</strong> — 30 min in by default</li>
+                <li><strong>Post-roll</strong> — when the stream ends</li>
+              </ol>
+              <p style="margin-bottom:10px;">If no advertiser ad is scheduled for a slot, the <strong>house ad</strong> plays instead.</p>
+              <p>Ads with matching type (or type <strong>"Any"</strong>) rotate randomly, weighted by their <strong>weight</strong> value.</p>
+            </div>
+          </div>
+
+          <div class="card">
+            <div class="card-title"><i data-lucide="lightbulb"></i> Tips</div>
+            <div style="font-size:12.5px;color:var(--tx2);line-height:1.7;font-weight:500;">
+              <p style="margin-bottom:8px;">• <strong>Best results:</strong> Use image URLs hosted by the advertiser. Fast loading, no storage cost.</p>
+              <p style="margin-bottom:8px;">• <strong>Video ads:</strong> Keep them short (10–15s). Muted autoplay works on all browsers.</p>
+              <p style="margin-bottom:8px;">• <strong>Scheduling:</strong> Set start/end dates so campaigns expire automatically.</p>
+              <p>• <strong>Skip timing:</strong> 5 seconds is the industry standard — long enough to register, short enough to not annoy.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════ VIEW: STATS ═══════════ -->
+    <section class="view" id="view-stats">
+      <div class="stat-grid" style="margin-bottom:20px;">
+        <div class="stat-card">
+          <div class="stat-label"><i data-lucide="megaphone"></i> Total ads</div>
+          <div class="stat-value" id="statTotal">0</div>
+          <div class="stat-sub" id="statActive">0 active</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label"><i data-lucide="eye"></i> Impressions</div>
+          <div class="stat-value" id="statImpressions">0</div>
+          <div class="stat-sub">Across all ads</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label"><i data-lucide="mouse-pointer-click"></i> Clicks</div>
+          <div class="stat-value" id="statClicks">0</div>
+          <div class="stat-sub">Total clicks</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label"><i data-lucide="trending-up"></i> CTR</div>
+          <div class="stat-value" id="statCtr">0.00%</div>
+          <div class="stat-sub">Clicks ÷ impressions</div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-title"><i data-lucide="bar-chart-3"></i> Per-ad breakdown</div>
+        <div class="ad-list" id="statsList">
+          <div class="empty-list">
+            <i data-lucide="bar-chart-3"></i>
+            <h3>No data yet</h3>
+            <p>Add ads and they'll start collecting impressions.</p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+  </div>
+
+</main>
+
+<div id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ══════════════════════════════════════════════════════════════
+   CONFIG
+   ══════════════════════════════════════════════════════════════ */
+var ADMIN_EMAIL = "nylnathan340@gmail.com";
+var ADS = "ads";
+var SETTINGS = "settings";
+var SETTINGS_DOC = "ads";
+var MAX_UPLOAD_BYTES = 700 * 1024;   // 700 KB per file (Firestore doc limit ~1 MB)
+
+var SETTINGS_DEFAULTS = {
+  prerollEnabled: true,
+  midrollEnabled: true,
+  postrollEnabled: true,
+  midrollMinute: 30,
+  skipAfterSeconds: 5,
+  houseAdTitle: "Advertise on Novalink",
+  houseAdText: "Reach thousands of live viewers. Feature your brand before, during, or after every stream.",
+  houseAdCtaLabel: "Advertise here",
+  houseAdUrl: "mailto:ads@novalink.com"
+};
+
+/* ══════════════════════════════════════════════════════════════
+   FIREBASE
+   ══════════════════════════════════════════════════════════════ */
+var firebaseConfig = {
+  apiKey: "AIzaSyDSnns131jOlBXAqKo6qy7lTW4Rij-1oWU",
+  authDomain: "novalink-864cf.firebaseapp.com",
+  projectId: "novalink-864cf",
+  storageBucket: "novalink-864cf.firebasestorage.app",
+  messagingSenderId: "602780280140",
+  appId: "1:602780280140:web:5d9ff2351e5a7d5e66dbe9"
+};
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+var db = firebase.firestore();
+var auth = firebase.auth();
+
+/* ══════════════════════════════════════════════════════════════
+   UTILITIES
+   ══════════════════════════════════════════════════════════════ */
+var $ = function(id){ return document.getElementById(id); };
+var $$ = function(s){ return Array.from(document.querySelectorAll(s)); };
+var esc = function(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
+var refreshIcons = function(){ if (window.lucide) lucide.createIcons(); };
+var icon = function(n){ return '<i data-lucide="'+n+'"></i>'; };
+
+function toast(msg, type, ms){
+  type = type || 'info'; ms = ms || 3200;
+  var t = $('toast');
+  var ic = type === 'error' ? 'alert-circle' : (type === 'success' ? 'check-circle' : 'info');
+  t.className = type;
+  t.innerHTML = icon(ic) + '<span>' + esc(msg) + '</span>';
+  refreshIcons();
+  requestAnimationFrame(function(){ t.classList.add('show'); });
+  clearTimeout(toast._t);
+  toast._t = setTimeout(function(){ t.classList.remove('show'); }, ms);
+}
+
+function numberWithCommas(n){
+  return Number(n || 0).toLocaleString('en-ZA');
+}
+
+/* ══════════════════════════════════════════════════════════════
+   STATE
+   ══════════════════════════════════════════════════════════════ */
+var currentUser = null;
+var allAds = [];
+var editingAdId = null;   // when not null, form is in edit mode
+var adsUnsub = null;
+var uploadedDataUrl = null;  // base64 string when upload mode is used
+
+/* ══════════════════════════════════════════════════════════════
+   ACCESS GATE
+   ══════════════════════════════════════════════════════════════ */
+function checkAccess(){
+  var gate = $('accessGate');
+  var loading = $('accessLoading');
+  var denied = $('accessDenied');
+  var signedOut = $('accessSignedOut');
+  var content = $('adminContent');
+
+  if (!currentUser) {
+    loading.style.display = 'none';
+    denied.style.display = 'none';
+    signedOut.style.display = 'block';
+    content.style.display = 'none';
+    return false;
+  }
+  if (String(currentUser.email).toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+    loading.style.display = 'none';
+    denied.style.display = 'block';
+    signedOut.style.display = 'none';
+    content.style.display = 'none';
+    return false;
+  }
+  loading.style.display = 'none';
+  denied.style.display = 'none';
+  signedOut.style.display = 'none';
+  content.style.display = 'block';
+  return true;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   TABS
+   ══════════════════════════════════════════════════════════════ */
+function goToView(view){
+  $$('.pill').forEach(function(t){ t.classList.toggle('active', t.dataset.view === view); });
+  $$('.view').forEach(function(v){ v.classList.toggle('active', v.id === 'view-' + view); });
+  window.scrollTo({ top: document.querySelector('.tabbar').offsetTop - 80, behavior: 'smooth' });
+  refreshIcons();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   MEDIA HANDLING — read uploaded file into base64
+   ══════════════════════════════════════════════════════════════ */
+function fileToBase64(file){
+  return new Promise(function(resolve, reject){
+    var isImage = /^image\//.test(file.type);
+    var isVideo = /^video\//.test(file.type);
+    if (!isImage && !isVideo) { reject(new Error('Use an image or video file.')); return; }
+    if (file.size > MAX_UPLOAD_BYTES) {
+      reject(new Error('File too large — max ' + Math.round(MAX_UPLOAD_BYTES/1024) + ' KB. Use a URL instead.'));
+      return;
+    }
+
+    var reader = new FileReader();
+    reader.onload = function(e){
+      var dataUrl = e.target.result;
+
+      // Images get compressed to save space
+      if (isImage) {
+        var img = new Image();
+        img.onload = function(){
+          var maxDim = 1400;
+          var w = img.naturalWidth, h = img.naturalHeight;
+          if (w > maxDim || h > maxDim) {
+            if (w >= h) { h = Math.round(h/w * maxDim); w = maxDim; }
+            else { w = Math.round(w/h * maxDim); h = maxDim; }
+          }
+          var c = document.createElement('canvas'); c.width = w; c.height = h;
+          c.getContext('2d').drawImage(img, 0, 0, w, h);
+          var compressed = c.toDataURL('image/jpeg', 0.7);
+          var b64 = compressed.split(',')[1] || '';
+          var bytes = Math.floor(b64.length * 3 / 4);
+          if (bytes > MAX_UPLOAD_BYTES) {
+            compressed = c.toDataURL('image/jpeg', 0.5);
+          }
+          resolve(compressed);
+        };
+        img.onerror = function(){ reject(new Error('Image decode failed.')); };
+        img.src = dataUrl;
+      } else {
+        // Videos pass through (already size-checked)
+        resolve(dataUrl);
+      }
+    };
+    reader.onerror = function(){ reject(new Error('Could not read file.')); };
+    reader.readAsDataURL(file);
+  });
+}
+
+function detectMediaType(urlOrData, fallback){
+  if (fallback !== 'auto') return fallback;
+  var u = String(urlOrData || '').toLowerCase();
+  if (u.indexOf('data:video') === 0) return 'video';
+  if (u.indexOf('data:image') === 0) return 'image';
+  if (/\.(mp4|webm|ogg|mov|m4v)(\?|#|$)/.test(u)) return 'video';
+  return 'image';
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FORM
+   ══════════════════════════════════════════════════════════════ */
+function getMediaSrc(){ return document.querySelector('input[name="mediaSrc"]:checked').value; }
+
+function syncMediaSourceUI(){
+  var mode = getMediaSrc();
+  $('urlField').style.display = mode === 'url' ? 'block' : 'none';
+  $('uploadField').style.display = mode === 'upload' ? 'block' : 'none';
+}
+
+function syncAdTypeUI(){
+  // Nothing dynamic right now — but keep hook for future
+}
+
+function clearForm(){
+  editingAdId = null;
+  uploadedDataUrl = null;
+  $('adTitle').value = '';
+  $('adType').value = 'any';
+  $('srcUrl').checked = true;
+  syncMediaSourceUI();
+  $('adMediaUrl').value = '';
+  $('adMediaFile').value = '';
+  $('adMediaType').value = 'auto';
+  $('adClickUrl').value = '';
+  $('adCtaLabel').value = '';
+  $('adSkipAfter').value = '5';
+  $('adStartDate').value = '';
+  $('adEndDate').value = '';
+  $('adWeight').value = '1';
+  $('adActive').checked = true;
+  $('editorTitle').textContent = 'Add new ad';
+  $('saveAdLbl').textContent = 'Save ad';
+  $('cancelEditBtn').style.display = 'none';
+  renderPreview();
+}
+
+function loadAdIntoForm(ad){
+  editingAdId = ad.id;
+  uploadedDataUrl = null;
+  $('adTitle').value = ad.title || '';
+  $('adType').value = ad.type || 'any';
+
+  var isUpload = ad.mediaSource === 'upload';
+  if (isUpload) {
+    $('srcUpload').checked = true;
+    $('adMediaUrl').value = '';
+  } else {
+    $('srcUrl').checked = true;
+    $('adMediaUrl').value = ad.mediaUrl || '';
+  }
+  syncMediaSourceUI();
+
+  $('adMediaType').value = ad.mediaType || 'auto';
+  $('adClickUrl').value = ad.clickUrl || '';
+  $('adCtaLabel').value = ad.ctaLabel || '';
+  $('adSkipAfter').value = String(typeof ad.skipAfterSeconds === 'number' ? ad.skipAfterSeconds : 5);
+  $('adStartDate').value = ad.startDate || '';
+  $('adEndDate').value = ad.endDate || '';
+  $('adWeight').value = String(ad.weight || 1);
+  $('adActive').checked = ad.active !== false;
+  $('editorTitle').textContent = 'Edit ad';
+  $('saveAdLbl').textContent = 'Update ad';
+  $('cancelEditBtn').style.display = 'inline-flex';
+  renderPreview();
+  window.scrollTo({ top: document.querySelector('#editorCard').offsetTop - 100, behavior: 'smooth' });
+}
+
+function renderPreview(){
+  var preview = $('adPreview');
+  var mode = getMediaSrc();
+  var url = mode === 'url' ? $('adMediaUrl').value.trim() : (uploadedDataUrl || '');
+  var type = detectMediaType(url, $('adMediaType').value);
+  var skip = $('adSkipAfter').value;
+
+  var html = '<span class="ap-badge">Sponsored</span>';
+
+  if (!url) {
+    html += '<div class="ap-empty">' + icon('image-plus') + ' Add media to preview</div>';
+  } else if (type === 'video') {
+    html += '<video src="' + esc(url) + '" muted playsinline autoplay loop></video>';
+  } else {
+    html += '<img src="' + esc(url) + '" alt="Ad preview" onerror="this.outerHTML=\'<div class=&quot;ap-empty&quot;>' + icon('alert-circle') + ' Preview failed</div>\'" />';
+  }
+
+  if (skip !== '-1') {
+    html += '<span class="ap-skip">Skip in ' + esc(skip) + 's</span>';
+  } else {
+    html += '<span class="ap-skip">No skip</span>';
+  }
+
+  preview.innerHTML = html;
+  refreshIcons();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SAVE AD
+   ══════════════════════════════════════════════════════════════ */
+function saveAd(){
+  if (!currentUser || String(currentUser.email).toLowerCase() !== ADMIN_EMAIL.toLowerCase()) {
+    toast('Not authorized.', 'error');
+    return;
+  }
+
+  var title = $('adTitle').value.trim();
+  if (!title) { toast('Ad title is required.', 'error'); $('adTitle').focus(); return; }
+
+  var mode = getMediaSrc();
+  var mediaUrl = '';
+  var mediaSource = mode;
+
+  if (mode === 'url') {
+    mediaUrl = $('adMediaUrl').value.trim();
+    if (!mediaUrl) { toast('Paste a media URL.', 'error'); $('adMediaUrl').focus(); return; }
+  } else {
+    if (uploadedDataUrl) {
+      mediaUrl = uploadedDataUrl;
+    } else if (editingAdId) {
+      // Editing but didn't upload a new file — keep the existing media
+      var existing = allAds.find(function(a){ return a.id === editingAdId; });
+      mediaUrl = existing ? (existing.mediaUrl || '') : '';
+      if (!mediaUrl) { toast('Upload a file first.', 'error'); return; }
+    } else {
+      toast('Upload a file first.', 'error');
+      return;
+    }
+  }
+
+  var mediaType = detectMediaType(mediaUrl, $('adMediaType').value);
+  var skip = parseInt($('adSkipAfter').value, 10);
+
+  var payload = {
+    title: title,
+    type: $('adType').value,
+    mediaSource: mediaSource,
+    mediaUrl: mediaUrl,
+    mediaType: mediaType,
+    clickUrl: $('adClickUrl').value.trim(),
+    ctaLabel: $('adCtaLabel').value.trim() || 'Learn more',
+    skipAfterSeconds: isNaN(skip) ? 5 : skip,
+    startDate: $('adStartDate').value || '',
+    endDate: $('adEndDate').value || '',
+    weight: parseInt($('adWeight').value, 10) || 1,
+    active: $('adActive').checked,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  var btn = $('saveAdBtn');
+  btn.disabled = true;
+
+  var ref = editingAdId ? db.collection(ADS).doc(editingAdId) : db.collection(ADS).doc();
+  var isNew = !editingAdId;
+
+  if (isNew) {
+    payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+    payload.impressions = 0;
+    payload.clicks = 0;
+  }
+
+  ref.set(payload, { merge: true }).then(function(){
+    toast(isNew ? 'Ad created.' : 'Ad updated.', 'success');
+    clearForm();
+  }).catch(function(err){
+    console.error(err);
+    toast('Save failed: ' + err.message, 'error', 5000);
+  }).then(function(){
+    btn.disabled = false;
+  });
+}
+
+function deleteAd(id, title){
+  if (!confirm('Delete ad "' + title + '"? This cannot be undone.')) return;
+  db.collection(ADS).doc(id).delete()
+    .then(function(){ toast('Ad deleted.', 'success'); })
+    .catch(function(err){ toast('Delete failed: ' + err.message, 'error', 5000); });
+}
+
+function toggleAdActive(ad){
+  var newVal = !ad.active;
+  db.collection(ADS).doc(ad.id).set({
+    active: newVal,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }, { merge: true }).then(function(){
+    toast(newVal ? 'Ad resumed.' : 'Ad paused.', 'success', 2000);
+  }).catch(function(err){
+    toast('Update failed: ' + err.message, 'error', 4000);
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   RENDER LIST
+   ══════════════════════════════════════════════════════════════ */
+function adStatus(ad){
+  if (ad.active === false) return { cls: 'paused', label: 'Paused' };
+  var now = Date.now();
+  if (ad.startDate) {
+    var s = new Date(ad.startDate + 'T00:00').getTime();
+    if (!isNaN(s) && now < s) return { cls: 'scheduled', label: 'Scheduled' };
+  }
+  if (ad.endDate) {
+    var e = new Date(ad.endDate + 'T23:59:59').getTime();
+    if (!isNaN(e) && now > e) return { cls: 'expired', label: 'Expired' };
+  }
+  return { cls: 'active', label: 'Active' };
+}
+
+function typeLabel(t){
+  return { preroll: 'Pre-roll', midroll: 'Mid-roll', postroll: 'Post-roll', any: 'Any slot' }[t] || 'Any';
+}
+
+function renderList(){
+  var list = $('adList');
+  var count = $('adCount');
+  count.textContent = allAds.length + ' ad' + (allAds.length === 1 ? '' : 's');
+
+  if (!allAds.length) {
+    list.innerHTML =
+      '<div class="empty-list">' +
+        icon('inbox') +
+        '<h3>No ads yet</h3>' +
+        '<p>Use the form on the right to add your first ad.</p>' +
+      '</div>';
+    refreshIcons();
+    return;
+  }
+
+  list.innerHTML = '';
+  allAds.forEach(function(ad){
+    var st = adStatus(ad);
+    var item = document.createElement('div');
+    item.className = 'ad-item';
+
+    var thumbHtml = '';
+    if (ad.mediaType === 'video') {
+      thumbHtml = '<video src="' + esc(ad.mediaUrl) + '" muted playsinline></video>';
+    } else if (ad.mediaUrl) {
+      thumbHtml = '<img src="' + esc(ad.mediaUrl) + '" alt="" />';
+    } else {
+      thumbHtml = icon('image');
+    }
+
+    item.innerHTML =
+      '<div class="ad-thumb">' + thumbHtml + '</div>' +
+      '<div class="ad-info">' +
+        '<div class="ad-title">' +
+          esc(ad.title || 'Untitled ad') +
+          '<span class="ad-status ' + st.cls + '">' + st.label + '</span>' +
+        '</div>' +
+        '<div class="ad-meta">' +
+          '<span><strong>' + esc(typeLabel(ad.type)) + '</strong></span>' +
+          '<span>' + (ad.mediaType === 'video' ? 'Video' : 'Image') + '</span>' +
+          '<span class="stat">' + numberWithCommas(ad.impressions || 0) + ' imp · ' + numberWithCommas(ad.clicks || 0) + ' clicks</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="ad-actions">' +
+        '<button class="btn btn-ghost btn-sm" data-action="edit" data-id="' + esc(ad.id) + '" title="Edit">' + icon('pencil') + '</button>' +
+        '<button class="btn btn-ghost btn-sm" data-action="toggle" data-id="' + esc(ad.id) + '" title="' + (ad.active === false ? 'Resume' : 'Pause') + '">' + icon(ad.active === false ? 'play' : 'pause') + '</button>' +
+        '<button class="btn btn-danger btn-sm" data-action="delete" data-id="' + esc(ad.id) + '" title="Delete">' + icon('trash-2') + '</button>' +
+      '</div>';
+
+    list.appendChild(item);
+  });
+
+  // Wire up actions
+  list.querySelectorAll('[data-action]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var action = btn.getAttribute('data-action');
+      var id = btn.getAttribute('data-id');
+      var ad = allAds.find(function(a){ return a.id === id; });
+      if (!ad) return;
+      if (action === 'edit')   loadAdIntoForm(ad);
+      if (action === 'toggle') toggleAdActive(ad);
+      if (action === 'delete') deleteAd(ad.id, ad.title);
+    });
+  });
+
+  refreshIcons();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   RENDER STATS
+   ══════════════════════════════════════════════════════════════ */
+function renderStats(){
+  var total = allAds.length;
+  var active = allAds.filter(function(a){ return adStatus(a).cls === 'active'; }).length;
+  var impressions = allAds.reduce(function(sum, a){ return sum + (a.impressions || 0); }, 0);
+  var clicks = allAds.reduce(function(sum, a){ return sum + (a.clicks || 0); }, 0);
+  var ctr = impressions > 0 ? (clicks / impressions * 100) : 0;
+
+  $('statTotal').textContent = numberWithCommas(total);
+  $('statActive').textContent = active + ' active';
+  $('statImpressions').textContent = numberWithCommas(impressions);
+  $('statClicks').textContent = numberWithCommas(clicks);
+  $('statCtr').textContent = ctr.toFixed(2) + '%';
+
+  var list = $('statsList');
+  if (!allAds.length) {
+    list.innerHTML =
+      '<div class="empty-list">' +
+        icon('bar-chart-3') +
+        '<h3>No data yet</h3>' +
+        '<p>Add ads and they\'ll start collecting impressions.</p>' +
+      '</div>';
+    refreshIcons();
+    return;
+  }
+
+  // Sort by impressions descending
+  var sorted = allAds.slice().sort(function(a, b){ return (b.impressions || 0) - (a.impressions || 0); });
+
+  list.innerHTML = '';
+  sorted.forEach(function(ad){
+    var imp = ad.impressions || 0;
+    var clk = ad.clicks || 0;
+    var adCtr = imp > 0 ? (clk / imp * 100).toFixed(2) : '0.00';
+    var st = adStatus(ad);
+
+    var item = document.createElement('div');
+    item.className = 'ad-item';
+    item.innerHTML =
+      '<div class="ad-thumb">' +
+        (ad.mediaType === 'video'
+          ? '<video src="' + esc(ad.mediaUrl) + '" muted playsinline></video>'
+          : (ad.mediaUrl ? '<img src="' + esc(ad.mediaUrl) + '" alt="" />' : icon('image'))) +
+      '</div>' +
+      '<div class="ad-info">' +
+        '<div class="ad-title">' + esc(ad.title || 'Untitled') + '<span class="ad-status ' + st.cls + '">' + st.label + '</span></div>' +
+        '<div class="ad-meta">' +
+          '<span><strong>Impressions:</strong> <span class="stat">' + numberWithCommas(imp) + '</span></span>' +
+          '<span><strong>Clicks:</strong> <span class="stat">' + numberWithCommas(clk) + '</span></span>' +
+          '<span><strong>CTR:</strong> <span class="stat">' + adCtr + '%</span></span>' +
+        '</div>' +
+      '</div>' +
+      '<div></div>';
+    list.appendChild(item);
+  });
+
+  refreshIcons();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SETTINGS
+   ══════════════════════════════════════════════════════════════ */
+function loadSettings(){
+  db.collection(SETTINGS).doc(SETTINGS_DOC).get().then(function(snap){
+    var s = snap.exists ? Object.assign({}, SETTINGS_DEFAULTS, snap.data()) : SETTINGS_DEFAULTS;
+    $('houseTitle').value = s.houseAdTitle || '';
+    $('houseText').value = s.houseAdText || '';
+    $('houseCtaLabel').value = s.houseAdCtaLabel || '';
+    $('houseUrl').value = s.houseAdUrl || '';
+    $('globalPreroll').checked = s.prerollEnabled !== false;
+    $('globalMidroll').checked = s.midrollEnabled !== false;
+    $('globalPostroll').checked = s.postrollEnabled !== false;
+    $('globalMidrollMinute').value = String(s.midrollMinute || 30);
+    $('globalSkipSeconds').value = String(s.skipAfterSeconds || 5);
+  }).catch(function(err){
+    console.warn('[settings load]', err);
+  });
+}
+
+function saveSettings(){
+  var payload = {
+    prerollEnabled: $('globalPreroll').checked,
+    midrollEnabled: $('globalMidroll').checked,
+    postrollEnabled: $('globalPostroll').checked,
+    midrollMinute: parseInt($('globalMidrollMinute').value, 10) || 30,
+    skipAfterSeconds: parseInt($('globalSkipSeconds').value, 10) || 5,
+    houseAdTitle: $('houseTitle').value.trim(),
+    houseAdText: $('houseText').value.trim(),
+    houseAdCtaLabel: $('houseCtaLabel').value.trim(),
+    houseAdUrl: $('houseUrl').value.trim(),
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  $('saveSettingsBtn').disabled = true;
+  db.collection(SETTINGS).doc(SETTINGS_DOC).set(payload, { merge: true })
+    .then(function(){ toast('Settings saved.', 'success'); })
+    .catch(function(err){ toast('Save failed: ' + err.message, 'error', 5000); })
+    .then(function(){ $('saveSettingsBtn').disabled = false; });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FIRESTORE LISTENER
+   ══════════════════════════════════════════════════════════════ */
+function attachAdsListener(){
+  if (adsUnsub) { try { adsUnsub(); } catch(e){} }
+  adsUnsub = db.collection(ADS)
+    .orderBy("createdAt", "desc")
+    .onSnapshot(function(snap){
+      allAds = [];
+      snap.forEach(function(doc){
+        var d = doc.data() || {};
+        d.id = doc.id;
+        allAds.push(d);
+      });
+      renderList();
+      renderStats();
+    }, function(err){
+      console.error('[ads listener]', err);
+      toast('Could not load ads: ' + err.message, 'error', 5000);
+    });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   WIRE UP
+   ══════════════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', function(){
+  refreshIcons();
+
+  $$('.pill').forEach(function(t){ t.addEventListener('click', function(){ goToView(t.dataset.view); }); });
+
+  /* Media source toggle */
+  $$('input[name="mediaSrc"]').forEach(function(r){ r.addEventListener('change', syncMediaSourceUI); });
+  syncMediaSourceUI();
+
+  /* Ad form fields → preview */
+  ['adMediaUrl','adMediaType','adSkipAfter'].forEach(function(id){
+    var el = $(id);
+    if (el) el.addEventListener('input', renderPreview);
+    if (el) el.addEventListener('change', renderPreview);
+  });
+
+  /* Upload file */
+  $('adMediaFile').addEventListener('change', function(e){
+    var f = e.target.files[0];
+    if (!f) return;
+    fileToBase64(f).then(function(dataUrl){
+      uploadedDataUrl = dataUrl;
+      renderPreview();
+      toast('File ready.', 'success', 1800);
+    }).catch(function(err){
+      toast(err.message, 'error', 4000);
+    });
+    // do not reset value so user can retry
+  });
+
+  $('saveAdBtn').addEventListener('click', saveAd);
+  $('cancelEditBtn').addEventListener('click', function(){ clearForm(); });
+  $('saveSettingsBtn').addEventListener('click', saveSettings);
+
+  $('signOutBtn').addEventListener('click', function(){
+    auth.signOut().then(function(){ toast('Signed out.', 'success'); });
+  });
+
+  /* Auth */
+  auth.onAuthStateChanged(function(user){
+    currentUser = user;
+    var allowed = checkAccess();
+    if (allowed) {
+      attachAdsListener();
+      loadSettings();
+      clearForm();
+    } else {
+      if (adsUnsub) { try { adsUnsub(); } catch(e){} adsUnsub = null; }
+    }
+    refreshIcons();
+  });
+
+  window.addEventListener('beforeunload', function(){
+    if (adsUnsub) { try { adsUnsub(); } catch(e){} }
+  });
+});
+})();
+</script>
+</body>
+  </html>
