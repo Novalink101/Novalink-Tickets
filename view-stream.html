@@ -96,12 +96,12 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .player-wrap{background:#0a0f14;border-radius:var(--rd);overflow:hidden;aspect-ratio:16/9;position:relative;border:1px solid var(--bd)}
 .player-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0;z-index:1}
 
-/* Novalink logo overlay — top-right of the player */
+/* Novalink logo overlay — top-right */
 .player-logo{
   position:absolute;
   top:14px;
   right:14px;
-  z-index:5;
+  z-index:6;
   display:inline-flex;
   align-items:center;
   gap:8px;
@@ -130,6 +130,52 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
   text-transform:uppercase;
   line-height:1;
   text-shadow:0 1px 4px rgba(0,0,0,.5);
+}
+
+/* Fullscreen button — bottom-right, above ad banner */
+.player-fs-btn{
+  position:absolute;
+  right:14px;
+  bottom:56px;   /* 46px banner + 10px gap */
+  z-index:7;
+  width:38px;
+  height:38px;
+  border-radius:10px;
+  background:rgba(10,15,20,.62);
+  border:1px solid rgba(0,255,255,.32);
+  color:#e6ffff;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  opacity:0;
+  transform:translateY(4px);
+  transition:opacity .25s ease, transform .25s ease, background .15s ease, box-shadow .2s ease;
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  padding:0;
+  font-family:inherit;
+}
+.player-fs-btn i{
+  width:17px;height:17px;
+  stroke-width:2.5;
+}
+.player-fs-btn:hover{
+  background:rgba(10,15,20,.85);
+  box-shadow:0 6px 18px rgba(0,255,255,.28);
+}
+.player-fs-btn:active{transform:scale(.94)}
+
+/* Show the button when the mouse is over the player */
+.player-wrap:hover .player-fs-btn,
+.player-fs-btn:focus-visible{
+  opacity:1;
+  transform:translateY(0);
+}
+
+/* On touch devices, show it always so users know it exists */
+@media (hover: none){
+  .player-fs-btn{opacity:.85;transform:none}
 }
 
 /* Scrolling bottom ad banner */
@@ -199,6 +245,34 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
   0%{transform:translateX(0)}
   100%{transform:translateX(-100%)}
 }
+
+/* Fullscreen state — the wrapper is fullscreen, not the iframe */
+.player-wrap:fullscreen,
+.player-wrap:-webkit-full-screen{
+  border-radius:0;
+  border:none;
+  aspect-ratio:auto;
+  width:100vw;
+  height:100vh;
+  max-width:none;
+}
+.player-wrap:fullscreen .player-fs-btn,
+.player-wrap:-webkit-full-screen .player-fs-btn{
+  bottom:60px;
+  right:18px;
+  opacity:.85;
+}
+.player-wrap:fullscreen .player-logo,
+.player-wrap:-webkit-full-screen .player-logo{
+  top:18px;
+  right:18px;
+  opacity:.85;
+}
+.player-wrap:fullscreen .player-ad-banner,
+.player-wrap:-webkit-full-screen .player-ad-banner{
+  height:52px;
+}
+
 @media (max-width:640px){
   .player-ad-banner{height:38px}
   .player-ad-track{font-size:11px;gap:40px}
@@ -206,6 +280,8 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
   .player-logo{padding:5px 9px 5px 7px;gap:6px;top:10px;right:10px}
   .player-logo .wordmark{font-size:10px}
   .player-logo .mark{width:15px;height:19px}
+  .player-fs-btn{width:34px;height:34px;bottom:46px;right:10px}
+  .player-fs-btn i{width:15px;height:15px}
 }
 
 .player-curtain{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:24px;color:#fff;z-index:2}
@@ -439,12 +515,13 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 /* ══════════════════════════════════════════════════════════════
    GLOBAL SETTINGS — tune these in one place
    ══════════════════════════════════════════════════════════════ */
-var GLOBAL_REPLAY_DAYS      = 30;    // replay available for N days after stream ends
-var GLOBAL_LOGO_OVERLAY     = true;  // show Novalink logo top-right on player
-var GLOBAL_BOTTOM_AD        = true;  // show scrolling bottom ad banner
-var GLOBAL_AD_TEXT          = "Advertise on Novalink · Reach thousands of live viewers · ads@novalink.com";
-var GLOBAL_AD_URL           = "mailto:ads@novalink.com";
-var GLOBAL_AD_SPEED         = 22;    // seconds per full scroll loop (higher = slower)
+var GLOBAL_REPLAY_DAYS   = 30;
+var GLOBAL_LOGO_OVERLAY  = true;
+var GLOBAL_BOTTOM_AD     = true;
+var GLOBAL_AD_TEXT       = "Advertise on Novalink · Reach thousands of live viewers · ads@novalink.com";
+var GLOBAL_AD_URL        = "mailto:ads@novalink.com";
+var GLOBAL_AD_SPEED      = 22;
+var GLOBAL_FULLSCREEN    = true;   /* show our own fullscreen button */
 
 /* ══════════════════════════════════════════════════════════════
    FIREBASE
@@ -569,7 +646,8 @@ function currentPhase(){
 }
 
 /* ══════════════════════════════════════════════════════════════
-   EMBED URL
+   EMBED URL — fs=0 hides YouTube's native fullscreen button
+   so viewers use our fullscreen (keeps the ad banner visible)
    ══════════════════════════════════════════════════════════════ */
 function buildEmbedUrl(){
   if (!streamData) return null;
@@ -591,8 +669,9 @@ function buildEmbedUrl(){
       else if (m4) vId = m4[1];
       else if (m5) vId = m5[1];
       if (vId) {
+        /* fs=0 disables YouTube's native fullscreen button */
         return "https://www.youtube-nocookie.com/embed/" + vId +
-               "?autoplay=1&rel=0&modestbranding=1&playsinline=1&iv_load_policy=3&fs=1";
+               "?autoplay=1&rel=0&modestbranding=1&playsinline=1&iv_load_policy=3&fs=0";
       }
       return url;
     }
@@ -616,9 +695,7 @@ function buildEmbedUrl(){
 }
 
 /* ══════════════════════════════════════════════════════════════
-   PLAYER OVERLAYS
-   Logo (top-right) + scrolling bottom ad banner.
-   Injected only when an iframe is present (live / replay).
+   OVERLAYS — logo, ad banner, fullscreen button
    ══════════════════════════════════════════════════════════════ */
 function buildLogoOverlay(){
   if (!GLOBAL_LOGO_OVERLAY) return null;
@@ -657,7 +734,6 @@ function buildAdBanner(){
   var track = document.createElement("span");
   track.className = "player-ad-track";
   track.style.setProperty("--ad-speed", GLOBAL_AD_SPEED + "s");
-  /* Duplicate the message with a dot separator for a seamless loop */
   var chunk = '<span>' + esc(text) + '</span><span class="dot"></span>';
   track.innerHTML = chunk + chunk + chunk;
 
@@ -667,13 +743,22 @@ function buildAdBanner(){
   return wrap;
 }
 
+function buildFullscreenBtn(){
+  if (!GLOBAL_FULLSCREEN) return null;
+  var btn = document.createElement("button");
+  btn.type = "button";
+  btn.className = "player-fs-btn";
+  btn.setAttribute("aria-label", "Toggle fullscreen");
+  btn.innerHTML = '<i data-lucide="maximize"></i>';
+  btn.addEventListener("click", toggleFullscreen);
+  return btn;
+}
+
 function clearOverlays(){
   var wrap = $("playerWrap");
   if (!wrap) return;
-  var logos = wrap.querySelectorAll(".player-logo");
-  var banners = wrap.querySelectorAll(".player-ad-banner");
-  for (var i=0;i<logos.length;i++) logos[i].remove();
-  for (var j=0;j<banners.length;j++) banners[j].remove();
+  var sel = ".player-logo, .player-ad-banner, .player-fs-btn";
+  wrap.querySelectorAll(sel).forEach(function(el){ el.remove(); });
 }
 
 function injectOverlays(){
@@ -682,9 +767,63 @@ function injectOverlays(){
   if (!wrap) return;
   var logo = buildLogoOverlay();
   var banner = buildAdBanner();
+  var fsBtn = buildFullscreenBtn();
   if (logo) wrap.appendChild(logo);
   if (banner) wrap.appendChild(banner);
+  if (fsBtn) wrap.appendChild(fsBtn);
+  refreshIcons();
 }
+
+/* ══════════════════════════════════════════════════════════════
+   FULLSCREEN
+   Fullscreens the wrapper (not the iframe) so our logo + ad banner
+   stay visible on top of the video.
+   ══════════════════════════════════════════════════════════════ */
+function isFullscreen(){
+  return !!(document.fullscreenElement || document.webkitFullscreenElement);
+}
+
+function toggleFullscreen(){
+  var wrap = $("playerWrap");
+  if (!wrap) return;
+
+  if (!isFullscreen()) {
+    var req = wrap.requestFullscreen
+           || wrap.webkitRequestFullscreen
+           || wrap.webkitRequestFullScreen
+           || wrap.mozRequestFullScreen
+           || wrap.msRequestFullscreen;
+    if (req) {
+      var p = req.call(wrap);
+      if (p && p.catch) p.catch(function(err){
+        console.warn("[fullscreen] request failed:", err);
+        showToast("Fullscreen not available", "error", 2500);
+      });
+    } else {
+      showToast("Fullscreen not supported on this device", "error", 2500);
+    }
+  } else {
+    var exit = document.exitFullscreen
+            || document.webkitExitFullscreen
+            || document.webkitCancelFullScreen
+            || document.mozCancelFullScreen
+            || document.msExitFullscreen;
+    if (exit) exit.call(document);
+  }
+}
+
+function syncFullscreenIcon(){
+  var btn = document.querySelector(".player-fs-btn");
+  if (!btn) return;
+  var i = btn.querySelector("i");
+  if (!i) return;
+  i.setAttribute("data-lucide", isFullscreen() ? "minimize" : "maximize");
+  if (window.lucide && window.lucide.createIcons) lucide.createIcons();
+}
+
+["fullscreenchange","webkitfullscreenchange","mozfullscreenchange","MSFullscreenChange"].forEach(function(ev){
+  document.addEventListener(ev, syncFullscreenIcon);
+});
 
 /* ══════════════════════════════════════════════════════════════
    RENDER — HERO
@@ -725,7 +864,6 @@ function renderHero(){
     $("heroBg").style.backgroundImage = "url('" + streamData.heroImage.replace(/'/g, "\\'") + "')";
   }
 
-  /* Badges */
   var badges = [];
   var phase = currentPhase();
   if (phase === "live")            badges.push('<span class="badge live">Live now</span>');
@@ -771,11 +909,15 @@ function renderWatch(){
   var curtain = $("playerCurtain");
 
   bannerWrap.innerHTML = "";
-  /* Remove any previous iframe + overlays */
   playerWrap.querySelectorAll("iframe").forEach(function(f){ f.remove(); });
   clearOverlays();
 
-  /* ---- Curtains (no player, no overlays) ---- */
+  /* Exit fullscreen if we're switching away from a playable state */
+  if (isFullscreen()) {
+    var exit = document.exitFullscreen || document.webkitExitFullscreen;
+    if (exit) try { exit.call(document); } catch(e){}
+  }
+
   if (phase === "upcoming" || phase === "unknown" || !t || !t.valid) {
     curtain.style.display = "flex";
     curtain.innerHTML =
@@ -796,18 +938,17 @@ function renderWatch(){
     return;
   }
 
-  /* ---- Iframe + overlays ---- */
   var embedUrl = buildEmbedUrl();
   if (embedUrl) {
     var iframe = document.createElement("iframe");
     iframe.src = embedUrl;
-    iframe.allow = "autoplay; fullscreen; picture-in-picture; encrypted-media";
-    iframe.allowFullscreen = true;
+    /* Note: we deliberately do NOT put "fullscreen" in allow so the iframe
+       cannot steal fullscreen from our wrapper. Our button handles it. */
+    iframe.allow = "autoplay; picture-in-picture; encrypted-media";
     iframe.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
     playerWrap.appendChild(iframe);
     curtain.style.display = "none";
 
-    /* Overlays go on top of the iframe — logo top-right, ad banner bottom */
     injectOverlays();
   } else {
     curtain.style.display = "flex";
@@ -819,7 +960,6 @@ function renderWatch(){
     return;
   }
 
-  /* ---- Watch banner above player ---- */
   var bannerClass = phase === "live" ? "watch-banner live" : "watch-banner";
   var bannerLabel = phase === "live" ? "Live now" : (phase === "replay" ? "Replay" : "Starting soon");
   var bannerNote = phase === "live"
@@ -981,4 +1121,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-            </html>
+</html>
