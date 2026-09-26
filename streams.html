@@ -43,14 +43,12 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
 
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 18px;border-radius:12px;font-weight:600;font-size:14px;border:1px solid transparent;cursor:pointer;transition:all 0.2s var(--ease-smooth);white-space:nowrap;font-family:inherit;text-decoration:none}
 .btn svg,.btn i{width:16px;height:16px}
-.btn-primary{background:#0a0f14;color:#fff}
-.btn-primary:hover{background:#1a2129;transform:translateY(-2px);box-shadow:0 4px 12px rgba(10,15,20,0.15)}
 .btn-accent{background:linear-gradient(135deg,var(--cyan-400),var(--cyan-600));color:#04161c}
 .btn-accent:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(6,182,212,0.35)}
 .btn-ghost{background:transparent;color:var(--text-2);border:1px solid var(--border-2)}
 .btn-ghost:hover{background:var(--surface-2);border-color:var(--cyan-500);color:var(--cyan-700)}
 .btn-sm{padding:8px 12px;font-size:13px}
-.btn:disabled{opacity:0.55;cursor:not-allowed;transform:none!important;box-shadow:none!important}
+.btn:disabled{opacity:0.55;cursor:not-allowed;transform:none!important}
 
 .site-header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,0.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--border)}
 .header-inner{display:flex;align-items:center;justify-content:space-between;padding:12px 0;gap:12px;flex-wrap:wrap}
@@ -87,6 +85,7 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
 
 .filters-bar{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;margin-bottom:24px;box-shadow:0 4px 16px rgba(10,15,20,0.04);display:grid;grid-template-columns:minmax(0,1fr);gap:12px}
 @media (min-width:768px){.filters-bar{grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)}}
+@media (min-width:1100px){.filters-bar{grid-template-columns:minmax(0,2fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr) minmax(0,1fr)}}
 .filter-field{display:flex;flex-direction:column;gap:6px;min-width:0}
 .filter-field label{font-size:10.5px;font-weight:800;color:var(--text-muted);text-transform:uppercase;letter-spacing:0.08em}
 .filter-field input, .filter-field select{padding:10px 12px;background:var(--bg-2);border:1px solid var(--border-2);border-radius:10px;color:var(--text);font-size:14px;font-family:inherit;transition:border-color 0.2s, box-shadow 0.2s;width:100%;min-width:0}
@@ -98,21 +97,39 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
 .filter-clear{background:transparent;border:none;color:var(--cyan-700);font-size:12.5px;font-weight:700;cursor:pointer;padding:4px 8px;border-radius:6px;transition:background 0.15s}
 .filter-clear:hover{background:var(--cyan-50)}
 
-.streams-grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fill,minmax(290px,1fr))}
+/* ══════════════════════════════════════════════════
+   DStv-style RECTANGULAR STREAM CARDS
+   Wider, thumbnail-first, minimal metadata
+   ══════════════════════════════════════════════════ */
+.streams-grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fill,minmax(380px,1fr))}
+@media (max-width:520px){.streams-grid{grid-template-columns:1fr;gap:14px}}
 
-.stream-card{background:var(--surface);border:1px solid var(--border);border-radius:16px;overflow:hidden;box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);transition:transform 0.3s var(--ease-smooth),box-shadow 0.3s var(--ease-smooth),border-color 0.3s ease;display:flex;flex-direction:column;cursor:pointer}
-.stream-card:hover{transform:translateY(-6px);box-shadow:0 16px 32px rgba(10,15,20,0.12);border-color:var(--cyan-500)}
+.stream-card{
+  background:var(--surface);
+  border:1px solid var(--border);
+  border-radius:16px;
+  overflow:hidden;
+  box-shadow:0 4px 6px -1px rgba(0,0,0,0.05);
+  transition:transform 0.3s var(--ease-smooth),box-shadow 0.3s var(--ease-smooth),border-color 0.3s ease;
+  display:flex;
+  flex-direction:column;
+  cursor:pointer;
+  position:relative;
+}
+.stream-card:hover{transform:translateY(-4px);box-shadow:0 16px 32px rgba(10,15,20,0.12);border-color:var(--cyan-500)}
 
 .stream-card-thumb{
-  aspect-ratio:16/9;
+  aspect-ratio:21/9;             /* wider than 16:9 — DStv feel */
   background:linear-gradient(135deg,#0a0f14 0%,#0f172a 55%,#0a0f14 100%);
   background-size:cover;background-position:center;
-  position:relative;overflow:hidden;display:flex;align-items:center;justify-content:center;
+  position:relative;overflow:hidden;
+  display:flex;align-items:center;justify-content:center;
 }
-.stream-card-thumb::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(10,15,20,0.65),transparent 55%);pointer-events:none}
+.stream-card-thumb::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(10,15,20,0.7),transparent 60%);pointer-events:none}
 
+/* Play icon */
 .stream-card-play{
-  width:64px;height:64px;border-radius:50%;
+  width:56px;height:56px;border-radius:50%;
   background:rgba(6,182,212,0.22);
   border:2px solid rgba(34,211,238,0.65);
   display:flex;align-items:center;justify-content:center;
@@ -121,14 +138,33 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
   transition:transform 0.3s var(--ease-bounce), background 0.2s ease;
 }
 .stream-card:hover .stream-card-play{transform:scale(1.1);background:rgba(6,182,212,0.38)}
-.stream-card-play i{width:26px;height:26px;color:#67e8f9}
+.stream-card-play i{width:22px;height:22px;color:#67e8f9}
 
-.status-badge{
+/* Channel name pill (top-left of thumbnail) */
+.channel-pill{
   position:absolute;top:12px;left:12px;
+  background:rgba(10,15,20,0.72);
+  border:1px solid rgba(0,255,255,.35);
+  color:#fff;
+  font-size:10px;font-weight:900;
+  letter-spacing:0.06em;text-transform:uppercase;
+  padding:5px 11px;border-radius:99px;
+  display:inline-flex;align-items:center;gap:6px;
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  z-index:3;max-width:65%;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
+  box-shadow:0 4px 12px rgba(0,0,0,0.25);
+}
+.channel-pill i{width:11px;height:11px;flex-shrink:0;color:#67e8f9}
+
+/* Status badge (top-right of thumbnail) */
+.status-badge{
+  position:absolute;top:12px;right:12px;
   font-size:10px;font-weight:900;letter-spacing:0.08em;
   text-transform:uppercase;padding:5px 11px;border-radius:99px;
   display:inline-flex;align-items:center;gap:6px;z-index:3;
   box-shadow:0 4px 12px rgba(0,0,0,0.2);
+  white-space:nowrap;
 }
 .status-badge.live{background:#dc2626;color:#fff}
 .status-badge.live::before{content:'';width:7px;height:7px;border-radius:50%;background:#fff;animation:livePulse 1.5s infinite}
@@ -141,17 +177,7 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
   50%{opacity:0.4;transform:scale(0.85)}
 }
 
-.free-tag{
-  position:absolute;top:12px;right:12px;
-  background:linear-gradient(135deg, rgba(16,185,129,.95), rgba(5,150,105,.95));
-  color:#fff;
-  font-size:9.5px;font-weight:900;letter-spacing:0.08em;
-  text-transform:uppercase;padding:5px 10px;border-radius:99px;
-  display:inline-flex;align-items:center;gap:5px;
-  box-shadow:0 4px 12px rgba(0,0,0,0.25);z-index:3;
-}
-.free-tag::before{content:'';width:5px;height:5px;border-radius:50%;background:#fff;box-shadow:0 0 6px rgba(255,255,255,.9)}
-
+/* Platform tag (bottom-right of thumbnail) */
 .platform-tag{
   position:absolute;bottom:12px;right:12px;
   background:rgba(10,15,20,0.75);color:#fff;
@@ -160,14 +186,38 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
   backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:3;
 }
 
-.stream-card-body{padding:15px;display:flex;flex-direction:column;gap:8px;flex:1}
-.stream-card-body h3{font-size:15.5px;font-weight:800;line-height:1.28;color:var(--text);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;letter-spacing:-0.005em;word-break:break-word}
+/* Viewers pill (bottom-left of thumbnail) */
+.viewers-pill{
+  position:absolute;bottom:12px;left:12px;
+  background:rgba(10,15,20,0.72);color:#fff;
+  font-size:10.5px;font-weight:800;letter-spacing:0.02em;
+  padding:4px 10px;border-radius:99px;
+  display:inline-flex;align-items:center;gap:5px;
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:3;
+}
+.viewers-pill i{width:11px;height:11px;color:#67e8f9}
 
-.stream-card-meta{display:flex;align-items:center;gap:7px;font-size:12.5px;color:var(--text-muted);font-weight:500;min-width:0}
+/* Card body — DStv style: minimal */
+.stream-card-body{padding:14px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
+
+.stream-card-body h3{
+  font-size:16px;font-weight:800;line-height:1.25;color:var(--text);
+  display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;
+  letter-spacing:-0.005em;word-break:break-word;
+}
+
+.stream-card-meta{
+  display:flex;align-items:center;gap:7px;font-size:12.5px;
+  color:var(--text-muted);font-weight:500;min-width:0;
+}
 .stream-card-meta i{width:13px;height:13px;flex-shrink:0;color:var(--text-muted)}
 .stream-card-meta span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;min-width:0}
+.stream-card-meta .channel-name{color:var(--cyan-700);font-weight:800;letter-spacing:.01em}
 
-.stream-card-footer{margin-top:auto;padding-top:10px;border-top:1px dashed var(--border);display:flex;justify-content:space-between;align-items:center;gap:10px}
+.stream-card-footer{
+  margin-top:auto;padding-top:10px;border-top:1px dashed var(--border);
+  display:flex;justify-content:space-between;align-items:center;gap:10px;
+}
 .stream-card-status{font-size:12px;font-weight:800;color:var(--text-2);display:inline-flex;align-items:center;gap:6px;min-width:0}
 .stream-card-status i{width:13px;height:13px;color:var(--cyan-600);flex-shrink:0}
 .stream-card-status.live{color:#dc2626}
@@ -182,14 +232,20 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
 .stream-card:hover .stream-card-cta{transform:translateX(3px)}
 .stream-card-cta i{width:13px;height:13px}
 
-.stream-card-delete{position:absolute;top:12px;right:12px;z-index:5;background:#dc2626;color:#fff;border:none;width:32px;height:32px;border-radius:50%;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;box-shadow:0 4px 12px rgba(220,38,38,0.4);transition:transform .2s ease, background .2s ease;opacity:0}
+.stream-card-delete{
+  position:absolute;top:12px;right:12px;z-index:5;
+  background:#dc2626;color:#fff;border:none;
+  width:32px;height:32px;border-radius:50%;
+  display:inline-flex;align-items:center;justify-content:center;
+  cursor:pointer;box-shadow:0 4px 12px rgba(220,38,38,0.5);
+  transition:transform .2s ease, background .2s ease;
+  opacity:0;
+}
 .stream-card:hover .stream-card-delete{opacity:1}
 .stream-card-delete:hover{transform:scale(1.12);background:#b91c1c}
 .stream-card-delete i{width:15px;height:15px}
 .stream-card-delete.visible{opacity:1}
-@media (hover: none){
-  .stream-card-delete{opacity:1}
-}
+@media (hover: none){.stream-card-delete{opacity:1}}
 
 .loading-state, .empty-state{text-align:center;padding:80px 20px;color:var(--text-muted)}
 .loading-state i{width:32px;height:32px;margin:0 auto 12px;color:var(--cyan-500);animation:spin 1.2s linear infinite;display:block}
@@ -223,7 +279,7 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
       <span class="slot-pill" id="slotPill" style="display:none">
         <i data-lucide="radio"></i>
         <span class="bar"><span id="slotBarFill" style="width:0%"></span></span>
-        <span id="slotText">0 / 8</span>
+        <span id="slotText">0 / 4</span>
       </span>
       <a href="index.html" class="btn btn-ghost btn-sm"><i data-lucide="arrow-left"></i> Home</a>
       <a href="create-streams.html" class="btn btn-accent btn-sm" id="goLiveBtn"><i data-lucide="radio"></i> Go live</a>
@@ -236,7 +292,7 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
 
     <div class="page-header">
       <h1>Live streams</h1>
-      <p>Concerts, workshops, webinars and shows — all free to watch, all ad-supported. No tickets, no signup.</p>
+      <p>Concerts, sports, workshops, webinars and shows — all free to watch, all ad-supported. No tickets, no signup.</p>
     </div>
 
     <div class="free-banner">
@@ -250,8 +306,8 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
     <div class="slot-warn" id="slotWarn" style="display:none">
       <i data-lucide="alert-triangle"></i>
       <div>
-        <div class="sw-t">You've reached the 8-stream limit</div>
-        <div class="sw-s">You have 8 upcoming or live streams. Delete an old one to create another.</div>
+        <div class="sw-t">You've reached the 4-stream limit</div>
+        <div class="sw-s">You have 4 upcoming or live streams. Delete an old one to create another.</div>
       </div>
       <a href="streams.html?mine=1" class="btn btn-ghost btn-sm sw-act">Manage my streams</a>
     </div>
@@ -259,7 +315,7 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
     <div class="filters-bar">
       <div class="filter-field">
         <label for="searchInput">Search</label>
-        <input type="text" id="searchInput" placeholder="Search streams by title or host…" autocomplete="off" />
+        <input type="text" id="searchInput" placeholder="Search by channel or stream name…" autocomplete="off" />
       </div>
       <div class="filter-field">
         <label for="statusFilter">Status</label>
@@ -268,6 +324,24 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
           <option value="live">Live now</option>
           <option value="upcoming">Upcoming</option>
           <option value="past">Past &amp; replay</option>
+        </select>
+      </div>
+      <div class="filter-field">
+        <label for="categoryFilter">Category</label>
+        <select id="categoryFilter">
+          <option value="">All categories</option>
+          <option value="sports">Sports</option>
+          <option value="gaming">Gaming</option>
+          <option value="music">Music</option>
+          <option value="entertainment">Entertainment</option>
+          <option value="news">News</option>
+          <option value="education">Education</option>
+          <option value="talk">Talk Shows</option>
+          <option value="concerts">Concerts</option>
+          <option value="movies">Movies</option>
+          <option value="business">Business</option>
+          <option value="creative">Creative</option>
+          <option value="other">Other</option>
         </select>
       </div>
       <div class="filter-field">
@@ -283,9 +357,10 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
       <div class="filter-field">
         <label for="sortFilter">Sort</label>
         <select id="sortFilter">
-          <option value="soonest" selected>Starting soon</option>
-          <option value="live-first">Live first</option>
+          <option value="live-first" selected>Live first</option>
+          <option value="soonest">Starting soon</option>
           <option value="newest">Newest added</option>
+          <option value="viewers">Most viewers</option>
           <option value="name">Name A–Z</option>
         </select>
       </div>
@@ -334,9 +409,9 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
 'use strict';
 
 /* ══════════════════════════════════════════════════════════════
-   GLOBAL SETTINGS — keep in sync with view-stream.html
+   GLOBAL SETTINGS
    ══════════════════════════════════════════════════════════════ */
-var GLOBAL_MAX_STREAMS = 8;
+var GLOBAL_MAX_STREAMS = 4;   /* ← now 4, was 8 */
 var GLOBAL_REPLAY_DAYS = 30;
 
 /* ══════════════════════════════════════════════════════════════
@@ -397,7 +472,7 @@ function formatStreamDate(dateStr, timeStr){
 }
 
 function streamTitleOf(s){ return s.streamTitle || s.eventName || "Untitled Stream"; }
-function streamHostOf(s){ return s.hostName || s.ownerName || "Host"; }
+function streamChannelName(s){ return s.channelName || s.hostName || s.ownerName || "Channel"; }
 function streamPlatformLabel(p){ return { youtube:"YouTube", vimeo:"Vimeo", twitch:"Twitch", custom:"Embed" }[p] || "Live"; }
 
 function streamStatus(s){
@@ -464,6 +539,14 @@ function ctaText(s){
   return 'View';
 }
 
+function categoryLabel(c){
+  return {
+    sports:'Sports', gaming:'Gaming', music:'Music', entertainment:'Entertainment',
+    news:'News', education:'Education', talk:'Talk Shows', concerts:'Concerts',
+    movies:'Movies', business:'Business', creative:'Creative', other:'Other'
+  }[c] || '';
+}
+
 /* ══════════════════════════════════════════════════════════════
    SLOT COUNTER
    ══════════════════════════════════════════════════════════════ */
@@ -502,7 +585,7 @@ function updateSlotCounter(){
     goLive.setAttribute("disabled", "disabled");
     goLive.style.pointerEvents = "none";
     goLive.style.opacity = "0.55";
-  } else if (used >= max - 2) {
+  } else if (used >= max - 1) {
     pill.classList.add("warn");
     warn.style.display = "none";
     goLive.removeAttribute("disabled");
@@ -522,6 +605,7 @@ function updateSlotCounter(){
 function applyFiltersAndRender(){
   var q = ($("searchInput").value || "").trim().toLowerCase();
   var statusFilter = $("statusFilter").value;
+  var categoryFilter = $("categoryFilter").value;
   var platformFilter = $("platformFilter").value;
   var sort = $("sortFilter").value;
 
@@ -533,13 +617,15 @@ function applyFiltersAndRender(){
     if (statusFilter === 'upcoming' && st.status !== 'upcoming') return false;
     if (statusFilter === 'past' && st.status !== 'past') return false;
 
+    if (categoryFilter && (s.channelCategory || 'other') !== categoryFilter) return false;
     if (platformFilter && s.streamPlatform !== platformFilter) return false;
 
     if (q) {
       var title = streamTitleOf(s).toLowerCase();
-      var host = streamHostOf(s).toLowerCase();
+      var channel = streamChannelName(s).toLowerCase();
       var tagline = String(s.eventTagline || "").toLowerCase();
-      if (title.indexOf(q) === -1 && host.indexOf(q) === -1 && tagline.indexOf(q) === -1) return false;
+      var cat = categoryLabel(s.channelCategory).toLowerCase();
+      if (title.indexOf(q) === -1 && channel.indexOf(q) === -1 && tagline.indexOf(q) === -1 && cat.indexOf(q) === -1) return false;
     }
     return true;
   });
@@ -552,16 +638,17 @@ function applyFiltersAndRender(){
       if (rank[sa] !== rank[sb]) return rank[sa] - rank[sb];
       return sortValue(a) - sortValue(b);
     });
+  } else if (sort === "soonest") {
+    list.sort(function(a, b){ return sortValue(a) - sortValue(b); });
   } else if (sort === "newest") {
     list.sort(function(a, b){ return createdValue(b) - createdValue(a); });
+  } else if (sort === "viewers") {
+    list.sort(function(a, b){ return (b.viewerCount || 0) - (a.viewerCount || 0); });
   } else if (sort === "name") {
     list.sort(function(a, b){ return streamTitleOf(a).localeCompare(streamTitleOf(b)); });
-  } else {
-    list.sort(function(a, b){ return sortValue(a) - sortValue(b); });
   }
 
-  // "All streams" is the default — only show "Clear filters" if something is actually filtered
-  var isFiltered = !!(q || platformFilter || statusFilter !== '' || mineOnly);
+  var isFiltered = !!(q || statusFilter !== '' || categoryFilter || platformFilter || mineOnly);
   $("filterSummary").style.display = (allStreams.length > 0) ? "flex" : "none";
   $("resultCount").textContent = list.length;
   $("resultLabel").textContent = list.length === 1 ? "stream" : "streams";
@@ -619,11 +706,12 @@ function buildCard(s){
 
   var st = streamStatus(s);
   var title = streamTitleOf(s);
-  var host = streamHostOf(s);
+  var channel = streamChannelName(s);
   var dateStr = formatStreamDate(s.startDate, s.startTime);
   var platform = streamPlatformLabel(s.streamPlatform);
   var sl = statusLine(s);
   var cta = ctaText(s);
+  var viewerCount = s.viewerCount || 0;
 
   var thumbStyle = "";
   if (s.heroImage) {
@@ -640,7 +728,6 @@ function buildCard(s){
 
   var statusCls = sl.cls ? (" " + sl.cls) : "";
 
-  // Delete button — only for owner or admin
   var isOwner = currentUser && (s.ownerUid === currentUser.uid);
   var isAdmin = currentUser && currentUser.email === "nylnathan340@gmail.com";
   var canDelete = isOwner || isAdmin;
@@ -649,18 +736,25 @@ function buildCard(s){
     ? '<button class="stream-card-delete" data-id="' + esc(s.id) + '" title="Delete stream">' + icon("trash-2") + '</button>'
     : '';
 
+  /* Viewers pill — only on live streams */
+  var viewersPillHTML = "";
+  if (st.status === 'live') {
+    viewersPillHTML = '<span class="viewers-pill">' + icon("eye") + ' <span>' + viewerCount.toLocaleString() + '</span></span>';
+  }
+
   card.innerHTML =
     '<div class="stream-card-thumb" style="' + thumbStyle + '">' +
+      '<span class="channel-pill">' + icon("badge") + ' <span>' + esc(channel) + '</span></span>' +
       '<span class="status-badge ' + badgeClass + '">' + esc(badgeText) + '</span>' +
-      '<span class="free-tag">Free</span>' +
       '<span class="platform-tag">' + esc(platform) + '</span>' +
+      viewersPillHTML +
       '<div class="stream-card-play"><i data-lucide="play"></i></div>' +
       deleteBtnHTML +
     '</div>' +
     '<div class="stream-card-body">' +
       '<h3>' + esc(title) + '</h3>' +
+      '<div class="stream-card-meta">' + icon("badge") + ' <span class="channel-name">' + esc(channel) + '</span></div>' +
       '<div class="stream-card-meta">' + icon("calendar") + ' <span>' + esc(dateStr) + '</span></div>' +
-      '<div class="stream-card-meta">' + icon("user") + ' <span>' + esc(host) + '</span></div>' +
       '<div class="stream-card-footer">' +
         '<span class="stream-card-status' + statusCls + '">' + icon(sl.ic) + ' <span>' + esc(sl.text) + '</span></span>' +
         '<span class="stream-card-cta">' + esc(cta) + ' ' + icon("arrow-right") + '</span>' +
@@ -753,14 +847,16 @@ document.addEventListener("DOMContentLoaded", function(){
 
   $("searchInput").addEventListener("input", applyFiltersAndRender);
   $("statusFilter").addEventListener("change", applyFiltersAndRender);
+  $("categoryFilter").addEventListener("change", applyFiltersAndRender);
   $("platformFilter").addEventListener("change", applyFiltersAndRender);
   $("sortFilter").addEventListener("change", applyFiltersAndRender);
 
   $("clearFilters").addEventListener("click", function(){
     $("searchInput").value = "";
-    $("statusFilter").value = "";   /* now resets to All streams */
+    $("statusFilter").value = "";
+    $("categoryFilter").value = "";
     $("platformFilter").value = "";
-    $("sortFilter").value = "soonest";
+    $("sortFilter").value = "live-first";
     applyFiltersAndRender();
   });
 
@@ -773,7 +869,7 @@ document.addEventListener("DOMContentLoaded", function(){
 
   attachStreamsListener();
 
-  /* Auto-refresh live/past statuses every 30 s */
+  /* Auto-refresh every 30 s so live/past flips without a reload */
   setInterval(function(){
     applyFiltersAndRender();
     bindDeleteButtons();
@@ -783,4 +879,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-</html>
+  </html>
