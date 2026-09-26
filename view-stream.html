@@ -9,6 +9,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://player.vimeo.com/api/player.js"></script>
 <style>
 :root{
   --cy:#00FFFF;--cy2:#00CCCC;--cy3:#009999;--cyf:#e6ffff;
@@ -93,14 +94,34 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .card-title{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:var(--cy3);margin-bottom:12px}
 
 /* PLAYER */
-.player-wrap{background:#0a0f14;border-radius:var(--rd);overflow:hidden;aspect-ratio:16/9;position:relative;border:1px solid var(--bd)}
-.player-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0;z-index:1}
+.player-wrap{
+  background:#0a0f14;
+  border-radius:var(--rd);
+  overflow:hidden;
+  aspect-ratio:16/9;
+  position:relative;
+  border:1px solid var(--bd);
+  user-select:none;
+  -webkit-user-select:none;
+  -webkit-touch-callout:none;
+}
+.player-wrap iframe{position:absolute;inset:0;width:100%;height:100%;border:0;z-index:1;pointer-events:none}
 
+/* Click-shield — sits between viewer and iframe */
+.click-shield{
+  position:absolute;
+  inset:0;
+  z-index:5;
+  background:transparent;
+  cursor:pointer;
+}
+
+/* Novalink logo overlay */
 .player-logo{
   position:absolute;
   top:14px;
   right:14px;
-  z-index:6;
+  z-index:8;
   display:inline-flex;
   align-items:center;
   gap:8px;
@@ -115,54 +136,126 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
   transition:opacity .2s ease, transform .2s ease, box-shadow .2s ease;
   pointer-events:auto;
 }
-.player-logo:hover{
-  opacity:1;
-  transform:translateY(-1px);
-  box-shadow:0 6px 20px rgba(0,255,255,.3);
-}
+.player-logo:hover{opacity:1;transform:translateY(-1px);box-shadow:0 6px 20px rgba(0,255,255,.3);}
 .player-logo .mark{width:18px;height:22px;flex-shrink:0;display:block}
-.player-logo .wordmark{
-  font-weight:900;
-  font-size:11px;
-  letter-spacing:.08em;
-  color:#fff;
-  text-transform:uppercase;
-  line-height:1;
-  text-shadow:0 1px 4px rgba(0,0,0,.5);
-}
+.player-logo .wordmark{font-weight:900;font-size:11px;letter-spacing:.08em;color:#fff;text-transform:uppercase;line-height:1;text-shadow:0 1px 4px rgba(0,0,0,.5);}
 
-.player-fs-btn{
+/* LIVE pill top-left */
+.live-pill{
+  position:absolute;top:14px;left:14px;z-index:8;
+  display:inline-flex;align-items:center;gap:6px;
+  background:#dc2626;color:#fff;
+  font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;
+  padding:5px 11px;border-radius:99px;
+  box-shadow:0 4px 14px rgba(220,38,38,.4);
+  pointer-events:none;
+  opacity:.85;
+  transition:opacity .2s ease;
+}
+.live-pill::before{content:'';width:6px;height:6px;border-radius:50%;background:#fff;animation:livePulse 1.5s infinite}
+
+/* Custom control bar (Novalink) */
+.ctrl-bar{
   position:absolute;
-  right:14px;
-  bottom:14px;
-  z-index:7;
-  width:38px;
-  height:38px;
-  border-radius:10px;
-  background:rgba(10,15,20,.62);
-  border:1px solid rgba(0,255,255,.32);
-  color:#e6ffff;
+  left:0;right:0;bottom:0;
+  z-index:9;
+  padding:14px 16px 12px;
+  background:linear-gradient(0deg, rgba(10,15,20,.92) 0%, rgba(10,15,20,.55) 60%, rgba(10,15,20,0) 100%);
   display:flex;
   align-items:center;
-  justify-content:center;
-  cursor:pointer;
+  gap:12px;
   opacity:0;
-  transform:translateY(4px);
-  transition:opacity .25s ease, transform .25s ease, background .15s ease, box-shadow .2s ease;
+  transform:translateY(6px);
+  transition:opacity .25s ease, transform .25s ease;
+  pointer-events:none;
+}
+.player-wrap.controls-visible .ctrl-bar{opacity:1;transform:translateY(0);pointer-events:auto;}
+.player-wrap.controls-visible .live-pill{opacity:1;}
+
+.ctrl-btn{
+  width:40px;height:40px;
+  border-radius:12px;
+  background:rgba(0,255,255,.14);
+  border:1px solid rgba(0,255,255,.4);
+  color:#e6ffff;
+  display:inline-flex;align-items:center;justify-content:center;
+  cursor:pointer;
+  transition:transform .15s ease, background .15s ease, box-shadow .2s ease;
+  padding:0;
   backdrop-filter:blur(8px);
   -webkit-backdrop-filter:blur(8px);
-  padding:0;
-  font-family:inherit;
+  flex-shrink:0;
 }
-.player-fs-btn i{width:17px;height:17px;stroke-width:2.5;}
-.player-fs-btn:hover{background:rgba(10,15,20,.85);box-shadow:0 6px 18px rgba(0,255,255,.28);}
-.player-fs-btn:active{transform:scale(.94)}
+.ctrl-btn:hover{background:rgba(0,255,255,.28);box-shadow:0 6px 18px rgba(0,255,255,.3);transform:translateY(-1px);}
+.ctrl-btn:active{transform:scale(.94);}
+.ctrl-btn i{width:18px;height:18px;stroke-width:2.4;}
+.ctrl-btn.primary{
+  width:46px;height:46px;
+  background:linear-gradient(135deg,var(--cy),var(--cy2));
+  border-color:var(--cy);
+  color:#04161c;
+  box-shadow:0 8px 22px rgba(0,255,255,.35);
+}
+.ctrl-btn.primary:hover{background:linear-gradient(135deg,var(--cy2),var(--cy3));transform:scale(1.05);}
+.ctrl-btn.primary i{width:22px;height:22px;stroke-width:2.6;}
 
-.player-wrap:hover .player-fs-btn,
-.player-fs-btn:focus-visible{opacity:1;transform:translateY(0);}
-@media (hover: none){.player-fs-btn{opacity:.85;transform:none}}
+.ctrl-spacer{flex:1;}
 
-/* AD OVERLAY */
+.ctrl-time{
+  font-family:var(--mono);
+  font-size:12px;
+  font-weight:800;
+  color:rgba(255,255,255,.85);
+  letter-spacing:.05em;
+  text-shadow:0 1px 4px rgba(0,0,0,.6);
+}
+
+/* Big center pause overlay */
+.pause-curtain{
+  position:absolute;inset:0;z-index:10;
+  background:rgba(10,15,20,.72);
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:16px;
+  text-align:center;
+  padding:24px;
+  cursor:pointer;
+  animation:fadeIn .2s ease;
+}
+.pause-curtain.visible{display:flex;}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.pause-curtain .pc-mark{width:44px;height:54px;opacity:.55;}
+.pause-curtain .pc-play{
+  width:80px;height:80px;
+  border-radius:50%;
+  background:linear-gradient(135deg,var(--cy),var(--cy2));
+  border:none;
+  color:#04161c;
+  display:flex;align-items:center;justify-content:center;
+  box-shadow:0 12px 40px rgba(0,255,255,.45);
+  transition:transform .2s ease;
+  padding:0;
+  cursor:pointer;
+}
+.pause-curtain .pc-play:hover{transform:scale(1.08);}
+.pause-curtain .pc-play i{width:34px;height:34px;stroke-width:2.8;margin-left:4px;}
+.pause-curtain .pc-label{
+  font-size:12px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--cy);
+}
+.pause-curtain .pc-sub{
+  font-size:12.5px;
+  color:rgba(255,255,255,.6);
+  max-width:300px;
+  line-height:1.5;
+  font-weight:500;
+}
+
+/* AD OVERLAY (unchanged) */
 .ad-overlay{
   position:absolute;
   inset:0;
@@ -191,9 +284,7 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 }
 .ad-overlay-topbar{
   position:absolute;
-  top:0;
-  left:0;
-  right:0;
+  top:0;left:0;right:0;
   z-index:22;
   padding:14px 16px;
   display:flex;
@@ -204,37 +295,25 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
   pointer-events:none;
 }
 .ad-overlay-topbar .ad-lbl{
-  display:inline-flex;
-  align-items:center;
-  gap:6px;
-  font-size:10px;
-  font-weight:900;
-  letter-spacing:.14em;
-  text-transform:uppercase;
+  display:inline-flex;align-items:center;gap:6px;
+  font-size:10px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;
   color:#04161c;
   background:linear-gradient(90deg, #00FFFF, #00CCCC);
-  padding:5px 11px;
-  border-radius:99px;
+  padding:5px 11px;border-radius:99px;
   box-shadow:0 4px 14px rgba(0,255,255,.35);
   pointer-events:auto;
 }
 .ad-overlay-topbar .ad-lbl i{width:11px;height:11px}
 .ad-overlay-topbar .ad-title{
-  font-size:12px;
-  font-weight:800;
+  font-size:12px;font-weight:800;
   color:rgba(255,255,255,.85);
   letter-spacing:.02em;
-  white-space:nowrap;
-  overflow:hidden;
-  text-overflow:ellipsis;
-  max-width:50%;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:50%;
   text-shadow:0 1px 4px rgba(0,0,0,.6);
 }
 .ad-overlay-bottombar{
   position:absolute;
-  bottom:0;
-  left:0;
-  right:0;
+  bottom:0;left:0;right:0;
   z-index:22;
   padding:16px 18px;
   display:flex;
@@ -246,15 +325,11 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 }
 .ad-overlay-cta{
   pointer-events:auto;
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
+  display:inline-flex;align-items:center;gap:8px;
   padding:11px 18px;
   background:linear-gradient(135deg, #00FFFF, #00CCCC);
   color:#04161c;
-  font-size:13px;
-  font-weight:900;
-  letter-spacing:.02em;
+  font-size:13px;font-weight:900;letter-spacing:.02em;
   border-radius:11px;
   text-decoration:none;
   box-shadow:0 8px 22px rgba(0,255,255,.35);
@@ -267,14 +342,10 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
   background:rgba(0,0,0,.55);
   border:1px solid rgba(255,255,255,.25);
   color:#fff;
-  font-size:12.5px;
-  font-weight:800;
-  padding:10px 16px;
-  border-radius:10px;
+  font-size:12.5px;font-weight:800;
+  padding:10px 16px;border-radius:10px;
   cursor:pointer;
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
+  display:inline-flex;align-items:center;gap:8px;
   backdrop-filter:blur(8px);
   -webkit-backdrop-filter:blur(8px);
   transition:background .15s ease, border-color .15s ease;
@@ -284,28 +355,17 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .ad-overlay-skip:disabled{opacity:.65;cursor:not-allowed}
 .ad-overlay-skip i{width:14px;height:14px}
 .ad-overlay-skip .ad-countdown{
-  display:inline-flex;
-  align-items:center;
-  justify-content:center;
-  min-width:22px;
-  height:22px;
-  padding:0 6px;
+  display:inline-flex;align-items:center;justify-content:center;
+  min-width:22px;height:22px;padding:0 6px;
   background:rgba(255,255,255,.15);
   border-radius:6px;
-  font-family:var(--mono);
-  font-size:11px;
+  font-family:var(--mono);font-size:11px;
 }
 
 .ad-house-ad{
-  display:flex;
-  flex-direction:column;
-  align-items:center;
-  justify-content:center;
-  gap:14px;
-  padding:24px;
-  text-align:center;
-  width:100%;
-  height:100%;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:14px;padding:24px;text-align:center;
+  width:100%;height:100%;
   background:
     radial-gradient(circle at 30% 30%, rgba(0,255,255,.18), transparent 55%),
     radial-gradient(circle at 75% 75%, rgba(0,204,204,.14), transparent 50%),
@@ -317,14 +377,11 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .ad-house-ad .hh-s{font-size:12.5px;color:rgba(255,255,255,.72);line-height:1.55;max-width:340px}
 .ad-house-ad .hh-cta{
   margin-top:6px;
-  display:inline-flex;
-  align-items:center;
-  gap:8px;
+  display:inline-flex;align-items:center;gap:8px;
   padding:10px 18px;
   background:linear-gradient(135deg, #00FFFF, #00CCCC);
   color:#04161c;
-  font-size:13px;
-  font-weight:900;
+  font-size:13px;font-weight:900;
   border-radius:11px;
   text-decoration:none;
   box-shadow:0 8px 22px rgba(0,255,255,.35);
@@ -333,31 +390,34 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .ad-house-ad .hh-cta i{width:14px;height:14px}
 
 .player-wrap:fullscreen,
-.player-wrap:-webkit-full-screen{
-  border-radius:0;
-  border:none;
-  aspect-ratio:auto;
-  width:100vw;
-  height:100vh;
-  max-width:none;
-}
-.player-wrap:fullscreen .player-fs-btn,
-.player-wrap:-webkit-full-screen .player-fs-btn{bottom:18px;right:18px;opacity:.85;}
+.player-wrap:-webkit-full-screen{border-radius:0;border:none;aspect-ratio:auto;width:100vw;height:100vh;max-width:none;}
+.player-wrap:fullscreen .ctrl-bar,
+.player-wrap:-webkit-full-screen .ctrl-bar{padding:18px 22px 16px;}
 .player-wrap:fullscreen .player-logo,
 .player-wrap:-webkit-full-screen .player-logo{top:18px;right:18px;opacity:.85;}
+.player-wrap:fullscreen .live-pill,
+.player-wrap:-webkit-full-screen .live-pill{top:18px;left:18px;}
 
 @media (max-width:640px){
-  .player-logo{padding:5px 9px 5px 7px;gap:6px;top:10px;right:10px}
-  .player-logo .wordmark{font-size:10px}
-  .player-logo .mark{width:15px;height:19px}
-  .player-fs-btn{width:34px;height:34px;right:10px;bottom:10px}
-  .player-fs-btn i{width:15px;height:15px}
-  .ad-overlay-topbar{padding:10px 12px}
-  .ad-overlay-topbar .ad-lbl{font-size:9px;padding:4px 9px}
-  .ad-overlay-topbar .ad-title{font-size:11px}
-  .ad-overlay-bottombar{padding:12px 12px;flex-wrap:wrap}
-  .ad-overlay-cta{padding:9px 14px;font-size:12px}
-  .ad-overlay-skip{padding:8px 12px;font-size:11.5px}
+  .player-logo{padding:5px 9px 5px 7px;gap:6px;top:10px;right:10px;}
+  .player-logo .wordmark{font-size:10px;}
+  .player-logo .mark{width:15px;height:19px;}
+  .live-pill{font-size:9px;padding:4px 9px;top:10px;left:10px;}
+  .ctrl-bar{padding:10px 12px 10px;gap:8px;}
+  .ctrl-btn{width:36px;height:36px;}
+  .ctrl-btn i{width:16px;height:16px;}
+  .ctrl-btn.primary{width:42px;height:42px;}
+  .ctrl-btn.primary i{width:20px;height:20px;}
+  .ctrl-time{font-size:11px;}
+  .pause-curtain .pc-play{width:64px;height:64px;}
+  .pause-curtain .pc-play i{width:26px;height:26px;}
+  .pause-curtain .pc-mark{width:36px;height:44px;}
+  .ad-overlay-topbar{padding:10px 12px;}
+  .ad-overlay-topbar .ad-lbl{font-size:9px;padding:4px 9px;}
+  .ad-overlay-topbar .ad-title{font-size:11px;}
+  .ad-overlay-bottombar{padding:12px 12px;flex-wrap:wrap;}
+  .ad-overlay-cta{padding:9px 14px;font-size:12px;}
+  .ad-overlay-skip{padding:8px 12px;font-size:11.5px;}
 }
 
 .player-curtain{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:24px;color:#fff;z-index:2}
@@ -492,6 +552,50 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
                 <p>The player will appear here when the stream begins.</p>
               </div>
 
+              <!-- Click-shield: blocks all interaction with the underlying iframe -->
+              <div class="click-shield" id="clickShield" title="Tap to show controls"></div>
+
+              <!-- LIVE pill top-left -->
+              <span class="live-pill" id="livePill" style="display:none;">LIVE</span>
+
+              <!-- Novalink logo top-right -->
+              <a class="player-logo" id="playerLogo" href="index.html" style="display:none;" aria-label="Novalink">
+                <svg class="mark" viewBox="0 0 60 74" aria-hidden="true">
+                  <path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/>
+                  <path fill="#00FFFF" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/>
+                </svg>
+                <span class="wordmark">Novalink</span>
+              </a>
+
+              <!-- Pause curtain (our own, replaces platform pause UI) -->
+              <div class="pause-curtain" id="pauseCurtain">
+                <svg class="pc-mark" viewBox="0 0 60 74" aria-hidden="true">
+                  <path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/>
+                  <path fill="#00FFFF" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/>
+                </svg>
+                <button class="pc-play" id="pausePlayBtn" aria-label="Play">
+                  <i data-lucide="play"></i>
+                </button>
+                <div class="pc-label">Paused</div>
+                <div class="pc-sub">Tap play to resume watching. Stay on Novalink to keep this stream free.</div>
+              </div>
+
+              <!-- Novalink custom control bar -->
+              <div class="ctrl-bar" id="ctrlBar">
+                <button class="ctrl-btn primary" id="ctrlPlayPause" aria-label="Play / Pause">
+                  <i data-lucide="pause"></i>
+                </button>
+                <button class="ctrl-btn" id="ctrlMute" aria-label="Mute / Unmute">
+                  <i data-lucide="volume-2"></i>
+                </button>
+                <span class="ctrl-time" id="ctrlLive">● LIVE</span>
+                <span class="ctrl-spacer"></span>
+                <button class="ctrl-btn" id="ctrlFullscreen" aria-label="Fullscreen">
+                  <i data-lucide="maximize"></i>
+                </button>
+              </div>
+
+              <!-- Ad overlay -->
               <div class="ad-overlay" id="adOverlay" role="dialog" aria-modal="true" aria-label="Advertisement">
                 <div class="ad-overlay-topbar">
                   <span class="ad-lbl"><i data-lucide="megaphone"></i> Sponsored</span>
@@ -600,9 +704,7 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 /* ══════════════════════════════════════════════════════════════
    GLOBAL SETTINGS
    ══════════════════════════════════════════════════════════════ */
-var GLOBAL_REPLAY_DAYS   = 30;
-var GLOBAL_LOGO_OVERLAY  = true;
-var GLOBAL_FULLSCREEN    = true;
+var GLOBAL_REPLAY_DAYS = 30;
 
 var AD_DEFAULTS = {
   prerollEnabled:    true,
@@ -694,6 +796,15 @@ var adState = {
   firedPreroll: false
 };
 
+/* Custom player state */
+var player = {
+  state: "unknown",        /* "playing" | "paused" | "idle" | "unknown" */
+  muted: true,
+  iframe: null,
+  controlsHideTimer: null,
+  platform: "twitch"
+};
+
 /* ══════════════════════════════════════════════════════════════
    AUTH
    ══════════════════════════════════════════════════════════════ */
@@ -752,7 +863,7 @@ function currentPhase(){
 }
 
 /* ══════════════════════════════════════════════════════════════
-   EMBED URL
+   EMBED URL BUILDER
    ══════════════════════════════════════════════════════════════ */
 function buildEmbedUrl(){
   if (!streamData) return null;
@@ -775,20 +886,20 @@ function buildEmbedUrl(){
       else if (m5) vId = m5[1];
       if (vId) {
         return "https://www.youtube-nocookie.com/embed/" + vId +
-               "?autoplay=1&rel=0&modestbranding=1&playsinline=1&iv_load_policy=3&fs=0&enablejsapi=1";
+               "?autoplay=1&mute=1&rel=0&modestbranding=1&playsinline=1&iv_load_policy=3&fs=0&enablejsapi=1&controls=0&showinfo=0&disablekb=1&color=white";
       }
       return url;
     }
     if (platform === "vimeo") {
       var vm = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
-      if (vm) return "https://player.vimeo.com/video/" + vm[1] + "?autoplay=1";
+      if (vm) return "https://player.vimeo.com/video/" + vm[1] + "?autoplay=1&muted=1&controls=0&background=0";
       return url;
     }
     if (platform === "twitch") {
       var tm = url.match(/twitch\.tv\/([A-Za-z0-9_]+)/);
       if (tm) {
         var host = location.hostname || "localhost";
-        return "https://player.twitch.tv/?channel=" + tm[1] + "&parent=" + host + "&autoplay=true";
+        return "https://player.twitch.tv/?channel=" + tm[1] + "&parent=" + host + "&autoplay=true&muted=true&controls=false";
       }
       return url;
     }
@@ -799,54 +910,118 @@ function buildEmbedUrl(){
 }
 
 /* ══════════════════════════════════════════════════════════════
-   OVERLAYS — logo + fullscreen
+   CUSTOM PLAYER — postMessage control (no APIs needed)
    ══════════════════════════════════════════════════════════════ */
-function buildLogoOverlay(){
-  if (!GLOBAL_LOGO_OVERLAY) return null;
-  var a = document.createElement("a");
-  a.className = "player-logo";
-  a.href = "index.html";
-  a.setAttribute("aria-label", "Novalink");
-  a.innerHTML =
-    '<svg class="mark" viewBox="0 0 60 74" aria-hidden="true">' +
-      '<path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/>' +
-      '<path fill="#00FFFF" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/>' +
-    '</svg>' +
-    '<span class="wordmark">Novalink</span>';
-  return a;
-}
+function sendCommand(cmd){
+  var iframe = player.iframe;
+  if (!iframe || !iframe.contentWindow) return;
+  var platform = player.platform;
 
-function buildFullscreenBtn(){
-  if (!GLOBAL_FULLSCREEN) return null;
-  var btn = document.createElement("button");
-  btn.type = "button";
-  btn.className = "player-fs-btn";
-  btn.setAttribute("aria-label", "Toggle fullscreen");
-  btn.innerHTML = '<i data-lucide="maximize"></i>';
-  btn.addEventListener("click", toggleFullscreen);
-  return btn;
-}
-
-function clearOverlays(){
-  var wrap = $("playerWrap");
-  if (!wrap) return;
-  var sel = ".player-logo, .player-fs-btn";
-  wrap.querySelectorAll(sel).forEach(function(el){ el.remove(); });
-}
-
-function injectOverlays(){
-  clearOverlays();
-  var wrap = $("playerWrap");
-  if (!wrap) return;
-  var logo = buildLogoOverlay();
-  var fsBtn = buildFullscreenBtn();
-  if (logo) wrap.appendChild(logo);
-  if (fsBtn) wrap.appendChild(fsBtn);
-  refreshIcons();
+  try {
+    if (platform === "youtube") {
+      var ytCmd = {
+        play:  '{"event":"command","func":"playVideo","args":""}',
+        pause: '{"event":"command","func":"pauseVideo","args":""}',
+        mute:  '{"event":"command","func":"mute","args":""}',
+        unmute:'{"event":"command","func":"unMute","args":""}'
+      }[cmd];
+      if (ytCmd) iframe.contentWindow.postMessage(ytCmd, "*");
+      return;
+    }
+    if (platform === "twitch") {
+      var twitchCmd = {
+        play:  { eventName: "play" },
+        pause: { eventName: "pause" },
+        mute:  { eventName: "mute" },
+        unmute:{ eventName: "unmute" }
+      }[cmd];
+      if (twitchCmd) iframe.contentWindow.postMessage(twitchCmd, "*");
+      return;
+    }
+    if (platform === "vimeo") {
+      /* Vimeo requires their SDK, but we can call the iframe API directly */
+      var vimeoCmd = {
+        play:  { method: "play" },
+        pause: { method: "pause" },
+        mute:  { method: "setVolume", value: 0 },
+        unmute:{ method: "setVolume", value: 1 }
+      }[cmd];
+      if (vimeoCmd) iframe.contentWindow.postMessage(vimeoCmd, "*");
+      return;
+    }
+  } catch(e){
+    console.warn("[sendCommand]", e);
+  }
 }
 
 /* ══════════════════════════════════════════════════════════════
-   FULLSCREEN
+   PLAYER CONTROLS
+   ══════════════════════════════════════════════════════════════ */
+function setPlayerState(newState){
+  player.state = newState;
+  var playIcons = document.querySelectorAll("#ctrlPlayPause i");
+  if (playIcons.length) {
+    playIcons.forEach(function(i){
+      i.setAttribute("data-lucide", newState === "playing" ? "pause" : "play");
+    });
+    if (window.lucide && window.lucide.createIcons) lucide.createIcons();
+  }
+  /* Pause curtain */
+  var curtain = $("pauseCurtain");
+  if (curtain) {
+    if (newState === "paused") {
+      curtain.classList.add("visible");
+    } else {
+      curtain.classList.remove("visible");
+    }
+  }
+}
+
+function togglePlayPause(){
+  if (player.state === "playing") {
+    sendCommand("pause");
+    setPlayerState("paused");
+  } else {
+    sendCommand("play");
+    setPlayerState("playing");
+  }
+  showControls();
+}
+
+function toggleMute(){
+  player.muted = !player.muted;
+  sendCommand(player.muted ? "mute" : "unmute");
+  var micons = document.querySelectorAll("#ctrlMute i");
+  if (micons.length) {
+    micons.forEach(function(i){
+      i.setAttribute("data-lucide", player.muted ? "volume-x" : "volume-2");
+    });
+    if (window.lucide && window.lucide.createIcons) lucide.createIcons();
+  }
+  showControls();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   CONTROL BAR VISIBILITY
+   ══════════════════════════════════════════════════════════════ */
+function showControls(){
+  var wrap = $("playerWrap");
+  if (!wrap) return;
+  wrap.classList.add("controls-visible");
+  clearTimeout(player.controlsHideTimer);
+  player.controlsHideTimer = setTimeout(hideControls, 3000);
+}
+function hideControls(){
+  var wrap = $("playerWrap");
+  if (!wrap) return;
+  /* Keep controls visible if paused or ad showing */
+  if (player.state === "paused") return;
+  if (adState.currentlyShowing) return;
+  wrap.classList.remove("controls-visible");
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FULLSCREEN + LANDSCAPE
    ══════════════════════════════════════════════════════════════ */
 function isFullscreen(){ return !!(document.fullscreenElement || document.webkitFullscreenElement); }
 function isMobile(){ return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent); }
@@ -861,7 +1036,7 @@ function tryLockLandscape(){
       var p = screen.orientation.lock("landscape");
       if (p && p.catch) p.catch(function(){ /* silent */ });
     }
-  } catch(e){ /* ignore */ }
+  } catch(e){}
 }
 function tryUnlockOrientation(){
   if (!isMobile()) return;
@@ -869,7 +1044,7 @@ function tryUnlockOrientation(){
     if (screen && screen.orientation && typeof screen.orientation.unlock === "function") {
       screen.orientation.unlock();
     }
-  } catch(e){ /* ignore */ }
+  } catch(e){}
 }
 function toggleFullscreen(){
   var wrap = $("playerWrap");
@@ -887,8 +1062,7 @@ function toggleFullscreen(){
         p.then(function(){
           tryLockLandscape();
           if (isIOS()) showToast("Rotate your phone to landscape for a better view", "info", 3500);
-        }).catch(function(err){
-          console.warn("[fullscreen] request failed:", err);
+        }).catch(function(){
           showToast("Fullscreen not available", "error", 2500);
         });
       } else {
@@ -906,21 +1080,45 @@ function toggleFullscreen(){
     if (exit) { try { exit.call(document); } catch(e){} }
     tryUnlockOrientation();
   }
+  showControls();
 }
 function syncFullscreenIcon(){
-  var btn = document.querySelector(".player-fs-btn");
-  if (!btn) return;
-  var i = btn.querySelector("i");
-  if (!i) return;
-  i.setAttribute("data-lucide", isFullscreen() ? "minimize" : "maximize");
-  if (window.lucide && window.lucide.createIcons) lucide.createIcons();
+  var icons = document.querySelectorAll("#ctrlFullscreen i");
+  if (icons.length) {
+    icons.forEach(function(i){
+      i.setAttribute("data-lucide", isFullscreen() ? "minimize" : "maximize");
+    });
+    if (window.lucide && window.lucide.createIcons) lucide.createIcons();
+  }
 }
 ["fullscreenchange","webkitfullscreenchange","mozfullscreenchange","MSFullscreenChange"].forEach(function(ev){
   document.addEventListener(ev, syncFullscreenIcon);
 });
 
 /* ══════════════════════════════════════════════════════════════
-   ADS — fetch settings + pool
+   KEYBOARD SHORTCUTS
+   ══════════════════════════════════════════════════════════════ */
+document.addEventListener("keydown", function(e){
+  /* Only when the player is on screen and no input is focused */
+  if (document.activeElement && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;
+  if (!$("playerWrap")) return;
+  if (adState.currentlyShowing) return;
+
+  var k = e.key.toLowerCase();
+  if (k === " " || k === "k") {
+    e.preventDefault();
+    togglePlayPause();
+  } else if (k === "m") {
+    e.preventDefault();
+    toggleMute();
+  } else if (k === "f") {
+    e.preventDefault();
+    toggleFullscreen();
+  }
+});
+
+/* ══════════════════════════════════════════════════════════════
+   AD SYSTEM (same as before)
    ══════════════════════════════════════════════════════════════ */
 function fetchAdSettings(){
   return db.collection(SETTINGS).doc("ads").get().then(function(snap){
@@ -969,13 +1167,10 @@ function trackAdEvent(ad, eventType){
     var update = {};
     if (eventType === "impression") update.impressions = firebase.firestore.FieldValue.increment(1);
     if (eventType === "click")      update.clicks      = firebase.firestore.FieldValue.increment(1);
-    ref.update(update).catch(function(){ /* silent */ });
-  } catch(e){ /* silent */ }
+    ref.update(update).catch(function(){});
+  } catch(e){}
 }
 
-/* ══════════════════════════════════════════════════════════════
-   AD OVERLAY
-   ══════════════════════════════════════════════════════════════ */
 function showAdOverlay(slot, onComplete){
   var ad = pickAd(slot);
   var overlay = $("adOverlay");
@@ -1032,7 +1227,6 @@ function showAdOverlay(slot, onComplete){
     skipAfter = ad.skipAfterSeconds;
   }
 
-  // -1 means "no skip"
   if (skipAfter === -1) {
     skipBtn.disabled = true;
     skipText.textContent = "Ad";
@@ -1184,10 +1378,17 @@ function renderWatch(){
 
   bannerWrap.innerHTML = "";
   playerWrap.querySelectorAll("iframe").forEach(function(f){ f.remove(); });
-  clearOverlays();
+  player.iframe = null;
+  player.state = "unknown";
   hideAdOverlay();
+  setPlayerState("idle");
   clearTimeout(adState.midrollTimerId);
   adState.midrollTimerId = null;
+
+  var logo = $("playerLogo");
+  var live = $("livePill");
+  if (logo) logo.style.display = "none";
+  if (live) live.style.display = "none";
 
   if (isFullscreen()) {
     var exit = document.exitFullscreen || document.webkitExitFullscreen;
@@ -1225,22 +1426,18 @@ function renderWatch(){
     return;
   }
 
-  /* Replay — no ads */
   if (phase === "replay") {
     loadIframe(embedUrl);
     curtain.style.display = "none";
-    injectOverlays();
     renderWatchBanner("replay");
     return;
   }
 
-  /* Live — check per-stream toggles, then pre-roll */
   if (phase === "live") {
     curtain.style.display = "none";
 
     var perStreamPreroll = streamData.prerollEnabled !== false;
     var perStreamMidroll = streamData.midrollEnabled !== false;
-    var perStreamPostroll = streamData.postrollEnabled !== false;
 
     var doPreroll = adSettings.prerollEnabled && perStreamPreroll && !adState.firedPreroll;
 
@@ -1248,12 +1445,10 @@ function renderWatch(){
       adState.firedPreroll = true;
       showAdOverlay("preroll", function(){
         loadIframe(embedUrl);
-        injectOverlays();
         if (perStreamMidroll) startMidrollTimer(t);
       });
     } else {
       loadIframe(embedUrl);
-      injectOverlays();
       if (perStreamMidroll) startMidrollTimer(t);
     }
     renderWatchBanner("live");
@@ -1264,18 +1459,35 @@ function renderWatch(){
 function loadIframe(embedUrl){
   var playerWrap = $("playerWrap");
   playerWrap.querySelectorAll("iframe").forEach(function(f){ f.remove(); });
+
   var iframe = document.createElement("iframe");
   iframe.src = embedUrl;
   iframe.allow = "autoplay; picture-in-picture; encrypted-media";
   iframe.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
+  iframe.setAttribute("allowfullscreen", "");
   playerWrap.appendChild(iframe);
+
+  player.iframe = iframe;
+  player.platform = streamData.streamPlatform || "twitch";
+  player.muted = true;
+
+  /* Show Novalink overlays now that the iframe is loaded */
+  var logo = $("playerLogo");
+  var live = $("livePill");
+  if (logo) logo.style.display = "inline-flex";
+  if (live) live.style.display = "inline-flex";
+
+  /* Reset controls icon to show pause initially (autoplay starts it) */
+  setPlayerState("playing");
+  showControls();
+
+  refreshIcons();
 }
 
 function startMidrollTimer(t){
   if (!adSettings.midrollEnabled) return;
   if (adState.firedMidroll) return;
 
-  // Prefer per-stream midrollMinute, fall back to global
   var perStream = parseInt(streamData.midrollMinute, 10);
   var midMinute = !isNaN(perStream) && perStream > 0
     ? perStream
@@ -1289,8 +1501,13 @@ function startMidrollTimer(t){
     adState.firedMidroll = true;
     if (adState.currentlyShowing) return;
     showAdOverlay("midroll", function(){
-      // stream continues as-is
+      /* Resuming after mid-roll */
+      setPlayerState("playing");
+      sendCommand("play");
     });
+    /* Pause the stream behind the ad */
+    sendCommand("pause");
+    setPlayerState("paused");
   }, delay);
 }
 
@@ -1313,7 +1530,6 @@ function renderWatchBanner(phase){
   refreshIcons();
 }
 
-/* Watch for phase change live → past so we can fire post-roll */
 function watchForStreamEnd(){
   var poll = setInterval(function(){
     if (!streamData) return;
@@ -1461,6 +1677,55 @@ document.addEventListener("DOMContentLoaded", function(){
   $("year").textContent = new Date().getFullYear();
   refreshIcons();
 
+  /* Shield click shows controls */
+  $("clickShield").addEventListener("click", function(e){
+    e.preventDefault();
+    showControls();
+    /* If paused curtain is showing, don't toggle playback from shield click */
+    if (player.state === "paused") return;
+    /* Ignore clicks that hit the logo, controls, or curtain (they bubble up) */
+    if (e.target.closest(".ctrl-bar, .player-logo, .pause-curtain, .ad-overlay")) return;
+    /* Otherwise toggle play/pause */
+    togglePlayPause();
+  });
+  $("clickShield").addEventListener("contextmenu", function(e){
+    e.preventDefault();
+    showControls();
+  });
+
+  /* Control bar buttons */
+  $("ctrlPlayPause").addEventListener("click", function(e){
+    e.stopPropagation();
+    togglePlayPause();
+  });
+  $("ctrlMute").addEventListener("click", function(e){
+    e.stopPropagation();
+    toggleMute();
+  });
+  $("ctrlFullscreen").addEventListener("click", function(e){
+    e.stopPropagation();
+    toggleFullscreen();
+  });
+
+  /* Pause curtain play button */
+  $("pausePlayBtn").addEventListener("click", function(e){
+    e.stopPropagation();
+    sendCommand("play");
+    setPlayerState("playing");
+    showControls();
+  });
+  $("pauseCurtain").addEventListener("click", function(e){
+    if (e.target.closest("#pausePlayBtn")) return;
+    sendCommand("play");
+    setPlayerState("playing");
+    showControls();
+  });
+
+  /* Show controls on mousemove over the player */
+  $("playerWrap").addEventListener("mousemove", showControls);
+  $("playerWrap").addEventListener("touchstart", showControls);
+
+  /* User menu */
   $("userMenuBtn").addEventListener("click", function(e){
     e.stopPropagation();
     $("userDropdown").classList.toggle("open");
@@ -1482,6 +1747,7 @@ document.addEventListener("DOMContentLoaded", function(){
     clearTimeout(adState.midrollTimerId);
     clearInterval(adState.countdownTimerId);
     clearTimeout(adState.skipTimerId);
+    clearTimeout(player.controlsHideTimer);
   });
 });
 })();
