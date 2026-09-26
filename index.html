@@ -362,7 +362,7 @@ h3{font-size:1.2rem}
 </style>
 </head>
 <body>
-  <header class="site-header">
+    <header class="site-header">
   <div class="container header-inner">
     <span class="novalink-logo" aria-label="Novalink">
       <svg class="mark" viewBox="0 0 60 74" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
@@ -400,6 +400,7 @@ h3{font-size:1.2rem}
         <button class="user-dropdown-item" id="ddCreateStream"><i data-lucide="radio"></i> Go live</button>
         <button class="user-dropdown-item" id="ddMyCards"><i data-lucide="ticket"></i> My cards</button>
         <button class="user-dropdown-item" id="ddScanner"><i data-lucide="scan-line"></i> Scanner</button>
+        <button class="user-dropdown-item" id="ddManageAds" style="display:none;"><i data-lucide="megaphone"></i> Manage ads</button>
         <div class="user-dropdown-separator"></div>
         <button class="user-dropdown-item" id="ddSignOut"><i data-lucide="log-out"></i> Sign out</button>
         <button class="user-dropdown-item danger" id="ddDeleteAccount"><i data-lucide="trash-2"></i> Delete my account</button>
@@ -700,9 +701,9 @@ h3{font-size:1.2rem}
         </div>
         <div class="value-card reveal reveal-delay-2">
           <div class="icon"><i data-lucide="megaphone"></i></div>
-          <h3>Live stream banner ads</h3>
-          <p>Your brand scrolls along the bottom of the player during free live streams — seen by every viewer, on every device.</p>
-          <a href="https://wa.me/message/HHM76GQU6PKGI1?text=Hi%20Novalink%2C%20I%27m%20interested%20in%20stream%20banner%20ads" target="_blank" rel="noopener" class="btn btn-accent btn-block" style="margin-top:8px"><i data-lucide="message-circle"></i> Enquire</a>
+          <h3>In-stream video ads</h3>
+          <p>Full-screen pre-roll, mid-roll and post-roll ads shown across every free live stream on Novalink — seen by every viewer, on every device.</p>
+          <a href="https://wa.me/message/HHM76GQU6PKGI1?text=Hi%20Novalink%2C%20I%27m%20interested%20in%20in-stream%20video%20ads" target="_blank" rel="noopener" class="btn btn-accent btn-block" style="margin-top:8px"><i data-lucide="message-circle"></i> Enquire</a>
         </div>
         <div class="value-card reveal reveal-delay-3">
           <div class="icon"><i data-lucide="handshake"></i></div>
@@ -921,6 +922,12 @@ function applyAuthState(user){
     $("adminBadge").style.display = isAdmin ? "inline-block" : "none";
     $("ddAdminBadge").style.display = isAdmin ? "inline-block" : "none";
 
+    // Show "Manage ads" only for the admin account
+    var manageAdsBtn = $("ddManageAds");
+    if (manageAdsBtn) {
+      manageAdsBtn.style.display = isAdmin ? "flex" : "none";
+    }
+
     // Bootstrap the user doc if it's missing — required by the 8-stream cap rules
     var userRef = db.collection("users").doc(user.uid);
     userRef.get().then(function(snap){
@@ -947,6 +954,8 @@ function applyAuthState(user){
     $("userMenuBtn").style.display = "none";
     $("adminBadge").style.display = "none";
     $("ddAdminBadge").style.display = "none";
+    var manageAdsBtn2 = $("ddManageAds");
+    if (manageAdsBtn2) manageAdsBtn2.style.display = "none";
     $("userDropdown").classList.remove("open");
   }
   refreshIcons();
@@ -1525,6 +1534,7 @@ $("ddCreateEvent").addEventListener("click", function(){ window.location.href = 
 $("ddCreateStream").addEventListener("click", function(){ window.location.href = "create-streams.html"; });
 $("ddMyCards").addEventListener("click", function(){ window.location.href = "my-cards.html"; });
 $("ddScanner").addEventListener("click", function(){ window.location.href = "scanner.html"; });
+$("ddManageAds").addEventListener("click", function(){ window.location.href = "admin-ads.html"; });
 
 /* Delete account */
 $("ddDeleteAccount").addEventListener("click", function(){
@@ -1686,4 +1696,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-                                                                   </html>
+                                                         </html>
