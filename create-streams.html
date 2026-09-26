@@ -392,7 +392,7 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
           <div class="field">
             <label for="channelName">Channel name</label>
             <input type="text" id="channelName" maxlength="40" autocomplete="off" />
-            <p class="hint">The name viewers will see on every card — like a TV channel name. Keep it short and clear.</p>
+            <p class="hint">The name viewers will see on every card — like a TV channel name.</p>
           </div>
 
           <div class="field">
@@ -491,7 +491,6 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
           <div class="field">
             <label for="streamTitle">Stream name</label>
             <input type="text" id="streamTitle" maxlength="120" autocomplete="off" />
-            <p class="hint">This is the name shown on the stream card.</p>
           </div>
 
           <div class="field">
@@ -512,7 +511,7 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
           <div class="field-row-3">
             <div class="field"><label for="streamDate">Date</label><input type="date" id="streamDate" /></div>
             <div class="field"><label for="streamTime">Start Time</label><input type="time" id="streamTime" /></div>
-            <div class="field"><label for="streamDuration">Duration (min)</label><input type="number" id="streamDuration" min="5" max="1440" step="5" value="90" /></div>
+            <div class="field"><label for="streamDuration">Duration (min)</label><input type="number" id="streamDuration" min="5" max="1440" step="5" /></div>
           </div>
 
           <div class="section-divider"><span>Stream cover</span></div>
@@ -576,7 +575,7 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
           <div class="field">
             <label for="streamPlatform">Platform</label>
             <select id="streamPlatform">
-              <option value="twitch" selected>Twitch (recommended — no third-party ads)</option>
+              <option value="twitch" selected>Twitch</option>
               <option value="youtube">YouTube Live</option>
               <option value="vimeo">Vimeo Live</option>
               <option value="custom">Custom Embed URL</option>
@@ -917,9 +916,6 @@ var state = {
 var RE_EDIT_ID = getParam('id');
 var slotCheckUnsub = null;
 
-/* ══════════════════════════════════════════════════════════════
-   AUTH
-   ══════════════════════════════════════════════════════════════ */
 function applyAuth(user){
   state.user = user;
   var inBtn = $('signInBtn'), chip = $('userChip');
@@ -946,7 +942,6 @@ function applyAuth(user){
         });
       }
       var d = snap.data() || {};
-      /* Fill the channel fields with actual saved values */
       if (d.channelName) $('channelName').value = d.channelName;
       if (d.channelCategory) $('channelCategory').value = d.channelCategory;
       if (d.channelTagline) $('channelTagline').value = d.channelTagline;
@@ -968,9 +963,6 @@ function applyAuth(user){
   refreshIcons();
 }
 
-/* ══════════════════════════════════════════════════════════════
-   SLOT COUNTER + WATCHER
-   ══════════════════════════════════════════════════════════════ */
 function isUpcomingOrLive(s){
   var dateStr = s.startDate || '';
   var timeStr = s.startTime || '00:00';
@@ -998,7 +990,6 @@ function startSlotWatcher(){
       var count = all.filter(isUpcomingOrLive).length;
       state.activeStreams = count;
 
-      /* Rebuild slot array from Firestore — authoritative */
       var slots = [null, null, null, null];
       all.forEach(function(s){
         var slotNum = parseInt(s.slotNumber, 10);
@@ -1012,11 +1003,9 @@ function startSlotWatcher(){
       });
       state.slots = slots;
 
-      /* If the currently-edited stream is still one of our slots, refresh its form values */
       if (state.streamId) {
         var stillMine = all.find(function(x){ return x.id === state.streamId; });
         if (stillMine && state.editing) {
-          /* Only update the field if it hasn't been modified by the user since load */
           if (!$('streamTitle').dataset.touched) {
             $('streamTitle').value = stillMine.streamTitle || stillMine.eventName || '';
           }
@@ -1090,9 +1079,6 @@ function updateSlotUI(){
   }
 }
 
-/* ══════════════════════════════════════════════════════════════
-   SLOT GRID
-   ══════════════════════════════════════════════════════════════ */
 function renderSlotGrid(){
   var grid = $('slotGrid');
   if (!grid) return;
@@ -1123,12 +1109,10 @@ function renderSlotGrid(){
         '<div class="sc-status">' + esc(status) + '</div>';
 
       card.addEventListener('click', function(){
-        /* Always reset streamId first to prevent cross-slot contamination */
         state.streamId = null;
         state.editing = false;
 
         if (stream) {
-          /* Filled slot — load that stream */
           state.selectedSlot = idx;
           state.streamId = stream.id;
           state.editing = true;
@@ -1139,7 +1123,6 @@ function renderSlotGrid(){
           return;
         }
 
-        /* Empty slot — start new stream */
         state.selectedSlot = idx;
         clearStreamFields();
         goToView('details');
@@ -1153,9 +1136,6 @@ function renderSlotGrid(){
   refreshIcons();
 }
 
-/* ══════════════════════════════════════════════════════════════
-   FILES
-   ══════════════════════════════════════════════════════════════ */
 var MAX_SRC = 15 * 1024 * 1024;
 var MAX_OUT = 700 * 1024;
 
@@ -1225,9 +1205,6 @@ function renderCover(){
   renderStreamPreview();
 }
 
-/* ══════════════════════════════════════════════════════════════
-   PREVIEWS
-   ══════════════════════════════════════════════════════════════ */
 function renderChannelPreview(){
   var name = $('channelName') ? $('channelName').value.trim() : '';
   var cat = $('channelCategory') ? $('channelCategory').value : '';
@@ -1262,7 +1239,7 @@ function renderStreamPreview(){
 
   if ($('prevStreamTitle')) $('prevStreamTitle').textContent = title || 'Stream title';
   if ($('prevDate')) $('prevDate').textContent = (date || 'Date TBA') + (time ? ' · ' + time : '');
-  if ($('prevDuration')) $('prevDuration').textContent = duration + ' min';
+  if ($('prevDuration')) $('prevDuration').textContent = (duration || '90') + ' min';
 
   if (state.heroImage) {
     if (thumb) {
@@ -1279,9 +1256,6 @@ function renderStreamPreview(){
   renderChannelPreview();
 }
 
-/* ══════════════════════════════════════════════════════════════
-   AUTH MODAL
-   ══════════════════════════════════════════════════════════════ */
 var authMode = 'signin';
 function openAuthModal(mode){
   authMode = mode || 'signin';
@@ -1309,9 +1283,6 @@ function syncAuthTabs(){
   refreshIcons();
 }
 
-/* ══════════════════════════════════════════════════════════════
-   NAV
-   ══════════════════════════════════════════════════════════════ */
 function goToView(view){
   $$('.pill').forEach(function(t){ t.classList.toggle('active', t.dataset.view === view); });
   $$('.view').forEach(function(v){ v.classList.toggle('active', v.id === 'view-' + view); });
@@ -1319,20 +1290,8 @@ function goToView(view){
   refreshIcons();
 }
 
-/* ══════════════════════════════════════════════════════════════
-   PLATFORM / ADS UI
-   ══════════════════════════════════════════════════════════════ */
 function syncPlatformUI(){
   var p = $('streamPlatform').value;
-  var map = {
-    twitch:  { label: 'Stream URL', hint: 'Paste your twitch.tv/your-channel URL. Twitch does not play third-party ads.' },
-    youtube: { label: 'Stream URL', hint: 'Paste the YouTube watch link (youtube.com/watch?v=… or youtube.com/live/…). YouTube also plays its own ads.' },
-    vimeo:   { label: 'Stream URL', hint: 'Paste the vimeo.com URL of your live event.' },
-    custom:  { label: 'Stream URL', hint: 'Any https:// URL you want embedded. Must allow iframe embedding.' }
-  };
-  var info = map[p] || map.twitch;
-  $('streamUrlLabel').textContent = info.label;
-  $('streamUrlHint').textContent = info.hint;
   var ytWarn = $('platformWarnYT');
   if (ytWarn) ytWarn.classList.toggle('show', p === 'youtube');
   var panel = $('goLivePanel');
@@ -1349,9 +1308,6 @@ function syncMidrollTimingVisibility(){
   if (slot) slot.style.display = show ? 'block' : 'none';
 }
 
-/* ══════════════════════════════════════════════════════════════
-   LOAD STREAM INTO FORM
-   ══════════════════════════════════════════════════════════════ */
 function clearStreamFields(){
   $('streamTitle').value = '';
   delete $('streamTitle').dataset.touched;
@@ -1368,15 +1324,29 @@ function clearStreamFields(){
   renderCover();
   $('saveLbl').textContent = 'Save Stream';
   $('submitBtn').innerHTML = icon('shield-check') + ' Save & Publish Stream';
-  var d = new Date(); d.setDate(d.getDate() + 7);
-  $('streamDate').value = d.toISOString().slice(0,10);
-  $('streamTime').value = '20:00';
-  $('streamDuration').value = '90';
+  /* Leave date and time empty too */
+  $('streamDate').value = '';
+  $('streamTime').value = '';
+  $('streamDuration').value = '';
+  $('replayToggle').checked = true;
+  $('dvrToggle').checked = false;
+  $('recordToggle').checked = true;
+  $('countdownToggle').checked = true;
+  $('prerollToggle').checked = true;
+  $('midrollToggle').checked = true;
+  $('postrollToggle').checked = true;
+  $('midrollMinute').value = '30';
+  $('adProvider').value = 'placeholder';
+  $('adClientId').value = '';
+  $('adSlotId').value = '';
+  $('customVastUrl').value = '';
+  syncPlatformUI();
+  syncAdProviderUI();
+  syncMidrollTimingVisibility();
   renderStreamPreview();
 }
 
 function loadStreamIntoForm(d){
-  /* Load EXACT saved values — no fallbacks to other fields */
   $('streamTitle').value = d.streamTitle || d.eventName || '';
   delete $('streamTitle').dataset.touched;
   $('streamTagline').value = d.eventTagline || '';
@@ -1384,7 +1354,7 @@ function loadStreamIntoForm(d){
   $('descCounter').textContent = ($('streamDescription').value.length) + ' / 2000';
   $('streamDate').value = d.startDate || '';
   $('streamTime').value = d.startTime || '';
-  $('streamDuration').value = d.durationMinutes || 90;
+  $('streamDuration').value = d.durationMinutes != null ? d.durationMinutes : '';
   $('streamPlatform').value = d.streamPlatform || 'twitch';
   $('streamUrl').value = d.streamUrl || '';
   $('rtmpUrl').value = d.rtmpUrl || '';
@@ -1398,6 +1368,9 @@ function loadStreamIntoForm(d){
   if (typeof d.postrollEnabled === 'boolean') $('postrollToggle').checked = d.postrollEnabled;
   if (d.midrollMinute) $('midrollMinute').value = d.midrollMinute;
   if (d.adProvider) $('adProvider').value = d.adProvider;
+  if (d.adClientId) $('adClientId').value = d.adClientId;
+  if (d.adSlotId) $('adSlotId').value = d.adSlotId;
+  if (d.customVastUrl) $('customVastUrl').value = d.customVastUrl;
   if (d.heroImage) { state.heroImage = d.heroImage; renderCover(); }
   $('saveLbl').textContent = 'Update Stream';
   $('submitBtn').innerHTML = icon('save') + ' Update Stream';
@@ -1408,9 +1381,6 @@ function loadStreamIntoForm(d){
   refreshIcons();
 }
 
-/* ══════════════════════════════════════════════════════════════
-   SAVE
-   ══════════════════════════════════════════════════════════════ */
 function saveStream(){
   if (!state.user) { toast('Sign in to save your stream.', 'error'); setTimeout(function(){ openAuthModal('signin'); }, 500); return; }
 
@@ -1439,7 +1409,6 @@ function saveStream(){
   btn.disabled = true;
   lbl.textContent = 'Saving…';
 
-  /* Save channel fields to user doc */
   var userRef = db.collection(USERS).doc(state.user.uid);
   var channelSave = userRef.set({
     channelName: channelName,
@@ -1510,7 +1479,7 @@ function saveStream(){
 
     btn.classList.add('saved');
     lbl.textContent = 'Saved ✓';
-    toast('Stream saved — now live on your channel.', 'success', 4000);
+    toast('Stream saved.', 'success', 4000);
     renderSlotGrid();
     setTimeout(function(){
       btn.classList.remove('saved');
@@ -1525,9 +1494,6 @@ function saveStream(){
   });
 }
 
-/* ══════════════════════════════════════════════════════════════
-   LOAD FOR EDIT via ?id=
-   ══════════════════════════════════════════════════════════════ */
 function loadForEdit(id){
   db.collection(STREAMS).doc(id).get().then(function(snap){
     if (!snap.exists) { toast('Stream not found.', 'error'); return; }
@@ -1545,9 +1511,6 @@ function loadForEdit(id){
   });
 }
 
-/* ══════════════════════════════════════════════════════════════
-   WIRE UP
-   ══════════════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', function(){
   refreshIcons();
 
@@ -1558,7 +1521,6 @@ document.addEventListener('DOMContentLoaded', function(){
   $('heroGoLive').addEventListener('click', function(){ goToView('details'); });
   $('heroGoAds').addEventListener('click', function(){ goToView('ads'); });
 
-  /* Banner */
   $('bannerChoose').addEventListener('click', function(e){ e.stopPropagation(); $('bannerFile').click(); });
   $('bannerPreview').addEventListener('click', function(){ $('bannerFile').click(); });
   $('bannerFile').addEventListener('change', function(e){
@@ -1578,7 +1540,6 @@ document.addEventListener('DOMContentLoaded', function(){
     renderBanner();
   });
 
-  /* Cover */
   $('coverChoose').addEventListener('click', function(e){ e.stopPropagation(); $('coverFile').click(); });
   $('coverPreview').addEventListener('click', function(){ $('coverFile').click(); });
   $('coverFile').addEventListener('change', function(e){
@@ -1598,20 +1559,17 @@ document.addEventListener('DOMContentLoaded', function(){
     renderCover();
   });
 
-  /* Channel field preview */
   ['channelName','channelCategory','channelTagline'].forEach(function(id){
     var el = $(id);
     if (el) el.addEventListener('input', renderChannelPreview);
     if (el) el.addEventListener('change', renderChannelPreview);
   });
 
-  /* Stream field preview */
   ['streamTitle','streamDate','streamTime','streamDuration'].forEach(function(id){
     var el = $(id);
     if (el) el.addEventListener('input', renderStreamPreview);
   });
 
-  /* Mark streamTitle as touched so the live listener doesn't clobber user typing */
   $('streamTitle').addEventListener('input', function(){
     $('streamTitle').dataset.touched = '1';
   });
@@ -1637,7 +1595,6 @@ document.addEventListener('DOMContentLoaded', function(){
     if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 's') { e.preventDefault(); saveStream(); }
   });
 
-  /* Auth */
   $('signInBtn').addEventListener('click', function(){ openAuthModal('signin'); });
   $('userChip').addEventListener('click', function(){
     if (!state.user) { openAuthModal('signin'); return; }
@@ -1697,12 +1654,6 @@ document.addEventListener('DOMContentLoaded', function(){
     .then(function(){ btn.disabled = false; syncAuthTabs(); });
   });
 
-  /* Defaults */
-  var d = new Date(); d.setDate(d.getDate() + 7);
-  $('streamDate').value = d.toISOString().slice(0,10);
-  $('streamTime').value = '20:00';
-  $('descCounter').textContent = '0 / 2000';
-
   syncPlatformUI();
   syncAdProviderUI();
   syncMidrollTimingVisibility();
@@ -1732,4 +1683,4 @@ document.addEventListener('DOMContentLoaded', function(){
 })();
 </script>
 </body>
-  </html>
+        </html>
