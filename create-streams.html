@@ -204,6 +204,19 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
 .slot-card.editing{border-color:#8b5cf6;background:linear-gradient(135deg,#ede9fe,#fff)}
 .slot-card.editing .sc-num{color:#7c3aed}
 
+/* Stream type picker */
+.stream-type-row{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:4px}
+@media (max-width:520px){.stream-type-row{grid-template-columns:1fr}}
+.type-opt{background:var(--sf2);border:2px solid var(--bd);border-radius:11px;padding:12px 14px;cursor:pointer;transition:.15s;text-align:left;font-family:inherit;display:flex;flex-direction:column;gap:3px;position:relative}
+.type-opt:hover{border-color:var(--cy)}
+.type-opt.active{border-color:var(--cy);background:linear-gradient(135deg,var(--cyf),#fff);box-shadow:0 0 0 3px rgba(0,255,255,.18)}
+.type-opt .to-head{display:flex;align-items:center;gap:7px;margin-bottom:2px}
+.type-opt .to-head i{width:15px;height:15px;color:var(--cy3);flex-shrink:0}
+.type-opt.active .to-head i{color:var(--cy2)}
+.type-opt .to-t{font-size:13px;font-weight:800;color:var(--tx);line-height:1.2}
+.type-opt .to-s{font-size:11px;color:var(--mut);line-height:1.4;font-weight:500}
+.type-opt.active .to-s{color:var(--tx2)}
+
 .stream-card{background:var(--sf);border:1px solid var(--bd);border-radius:14px;overflow:hidden;box-shadow:0 10px 30px rgba(15,23,42,.06)}
 .stream-thumb{aspect-ratio:16/9;background:linear-gradient(135deg,#0a0f14,#0f172a);position:relative;display:flex;align-items:center;justify-content:center;color:#fff;background-size:cover;background-position:center;overflow:hidden}
 .stream-thumb .live-dot{position:absolute;top:10px;left:10px;background:#dc2626;color:#fff;font-size:9.5px;font-weight:900;padding:4px 9px;border-radius:99px;letter-spacing:.08em;display:flex;align-items:center;gap:5px;text-transform:uppercase;z-index:3}
@@ -475,7 +488,7 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
 
         <div class="step-card">
           <span class="step-num">2</span>
-          <div class="step-info"><div class="step-title">Stream Details</div><div class="step-sub">Slot · Title · Schedule · Cover</div></div>
+          <div class="step-info"><div class="step-title">Stream Details</div><div class="step-sub">Slot · Title · Type · Schedule · Cover</div></div>
         </div>
 
         <div class="form-card">
@@ -493,6 +506,21 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
           <div class="field">
             <label for="streamTitle">Stream name</label>
             <input type="text" id="streamTitle" maxlength="120" autocomplete="off" placeholder="e.g., Weekend Match Showcase" />
+          </div>
+
+          <div class="field">
+            <label>Stream type</label>
+            <div class="stream-type-row" id="streamTypeRow">
+              <button type="button" class="type-opt active" data-type="live">
+                <span class="to-head"><i data-lucide="radio"></i><span class="to-t">Live broadcast</span></span>
+                <span class="to-s">Real live stream — no pause, no seek, LIVE badge</span>
+              </button>
+              <button type="button" class="type-opt" data-type="highlight">
+                <span class="to-head"><i data-lucide="film"></i><span class="to-t">Highlight</span></span>
+                <span class="to-s">Pre-recorded — pause and seek work, HIGHLIGHT badge</span>
+              </button>
+            </div>
+            <p class="hint">You know what this is — YouTube's API can't tell us reliably, so tell us once and it's always right.</p>
           </div>
 
           <div class="field">
@@ -887,6 +915,34 @@ var refreshIcons = function(){ if (window.lucide) lucide.createIcons(); };
 var icon = function(n){ return '<i data-lucide="'+n+'"></i>'; };
 var getParam = function(n){ try { return new URLSearchParams(location.search).get(n); } catch(e){ return null; } };
 
+function getSelectedStreamType(){
+  var row = $('streamTypeRow');
+  if (!row) return 'live';
+  var active = row.querySelector('.type-opt.active');
+  return active ? (active.dataset.type || 'live') : 'live';
+}
+function setSelectedStreamType(type){
+  var row = $('streamTypeRow');
+  if (!row) return;
+  var val = (type === 'highlight') ? 'highlight' : 'live';
+  row.querySelectorAll('.type-opt').forEach(function(btn){
+    btn.classList.toggle('active', btn.dataset.type === val);
+  });
+  renderStreamTypePreview();
+}
+function renderStreamTypePreview(){
+  var badge = document.querySelector('#streamThumb .live-dot');
+  if (!badge) return;
+  var t = getSelectedStreamType();
+  if (t === 'highlight') {
+    badge.textContent = 'Highlight';
+    badge.style.background = 'linear-gradient(135deg,rgba(139,92,246,.95),rgba(124,58,237,.95))';
+  } else {
+    badge.textContent = 'Live';
+    badge.style.background = '';
+  }
+}
+
 function toast(msg, type, ms){
   type = type || 'info'; ms = ms || 3200;
   var t = $('toast');
@@ -1256,6 +1312,7 @@ function renderStreamPreview(){
   }
 
   renderChannelPreview();
+  renderStreamTypePreview();
 }
 
 var authMode = 'signin';
@@ -1313,6 +1370,7 @@ function syncMidrollTimingVisibility(){
 function clearStreamFields(){
   $('streamTitle').value = '';
   delete $('streamTitle').dataset.touched;
+  setSelectedStreamType('live');
   $('streamTagline').value = '';
   $('streamDescription').value = '';
   $('descCounter').textContent = '0 / 2000';
@@ -1350,6 +1408,7 @@ function clearStreamFields(){
 function loadStreamIntoForm(d){
   $('streamTitle').value = d.streamTitle || d.eventName || '';
   delete $('streamTitle').dataset.touched;
+  setSelectedStreamType(d.streamType === 'highlight' ? 'highlight' : 'live');
   $('streamTagline').value = d.eventTagline || '';
   $('streamDescription').value = d.eventDescription || '';
   $('descCounter').textContent = ($('streamDescription').value.length) + ' / 2000';
@@ -1423,6 +1482,7 @@ function saveStream(){
     kind: 'stream',
     eventName: title,
     streamTitle: title,
+    streamType: getSelectedStreamType(),
     eventTagline: $('streamTagline').value.trim(),
     eventDescription: $('streamDescription').value.trim(),
     startDate: date,
@@ -1580,6 +1640,15 @@ document.addEventListener('DOMContentLoaded', function(){
     $('descCounter').textContent = desc.value.length + ' / 2000';
   });
 
+  var typeRow = $('streamTypeRow');
+  if (typeRow) {
+    typeRow.querySelectorAll('.type-opt').forEach(function(btn){
+      btn.addEventListener('click', function(){
+        setSelectedStreamType(btn.dataset.type);
+      });
+    });
+  }
+
   $('streamPlatform').addEventListener('change', syncPlatformUI);
   $('midrollToggle').addEventListener('change', syncMidrollTimingVisibility);
   $('adProvider').addEventListener('change', syncAdProviderUI);
@@ -1684,4 +1753,4 @@ document.addEventListener('DOMContentLoaded', function(){
 })();
 </script>
 </body>
-  </html>
+                  </html>
