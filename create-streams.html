@@ -89,6 +89,18 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .slot-s{font-size:12.5px;color:var(--tx2);font-weight:500;line-height:1.5}
 .slot-act{margin-left:auto;flex-shrink:0}
 
+/* Admin lock banner */
+.admin-lock{max-width:1480px;margin:0 auto;padding:0 20px 16px;display:none}
+.admin-lock.show{display:block}
+.admin-lock-in{display:flex;gap:14px;align-items:flex-start;padding:16px 18px;background:linear-gradient(135deg,rgba(220,38,38,.08),rgba(220,38,38,.02));border:1px solid rgba(220,38,38,.3);border-radius:12px}
+.admin-lock-in i{width:22px;height:22px;color:#dc2626;flex-shrink:0;margin-top:2px}
+.admin-lock-t{font-size:13.5px;font-weight:900;color:#991b1b;margin-bottom:4px}
+.admin-lock-s{font-size:12.5px;color:var(--tx2);line-height:1.55;font-weight:500}
+.admin-lock-s a{color:#dc2626;font-weight:800}
+
+/* Locked state for main content */
+main.locked{pointer-events:none;opacity:0.42;filter:grayscale(0.55);user-select:none}
+
 .tabbar{padding:22px 0 0}
 .tabbar-in{max-width:1480px;margin:0 auto;padding:0 20px}
 .pills{display:inline-flex;background:var(--sf);border-radius:99px;padding:5px;gap:2px;box-shadow:0 6px 20px rgba(15,23,42,.07);max-width:100%;overflow-x:auto;scrollbar-width:none}
@@ -401,6 +413,21 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
   </div>
 </div>
 
+<!-- Admin-only lock banner (shown to non-admins) -->
+<div class="admin-lock" id="adminLockBanner">
+  <div class="admin-lock-in">
+    <i data-lucide="shield-alert"></i>
+    <div>
+      <div class="admin-lock-t">Stream Studio is restricted</div>
+      <div class="admin-lock-s">
+        Only Novalink admin accounts can create or edit streams.
+        If you believe you should have access, contact
+        <a href="mailto:customerservicesnovalink@gmail.com">customerservicesnovalink@gmail.com</a>.
+      </div>
+    </div>
+  </div>
+</div>
+
 <nav class="tabbar">
   <div class="tabbar-in">
     <div class="pills" role="tablist">
@@ -412,7 +439,7 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
   </div>
 </nav>
 
-<main>
+<main id="mainContent">
 
   <section class="view active" id="view-channel">
     <div class="form-layout">
@@ -1037,6 +1064,12 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
 var GLOBAL_MAX_STREAMS = 4;
 var DEFAULT_MIDROLL_MINUTE = 30;
 
+/* ─── Admin emails — Stream Studio access only ─── */
+var ADMIN_EMAILS = [
+  "nylnathan340@gmail.com",
+  "customerservicesnovalink@gmail.com"
+];
+
 var PLATFORM_CONFIG = {
   youtube: {
     label: 'YouTube Live',
@@ -1100,6 +1133,13 @@ var esc = function(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').r
 var refreshIcons = function(){ if (window.lucide) lucide.createIcons(); };
 var icon = function(n){ return '<i data-lucide="'+n+'"></i>'; };
 var getParam = function(n){ try { return new URLSearchParams(location.search).get(n); } catch(e){ return null; } };
+
+/* ─── Admin check ─── */
+function isStreamAdmin(user){
+  if (!user || !user.email) return false;
+  var email = String(user.email).toLowerCase().trim();
+  return ADMIN_EMAILS.some(function(e){ return e.toLowerCase() === email; });
+}
 
 function getSelectedStreamType(){
   var row = $('streamTypeRow');
@@ -1172,6 +1212,7 @@ function initials(name, email){
 
 var state = {
   user: null,
+  isAdmin: false,
   streamId: null,
   editing: false,
   heroImage: '',
@@ -1183,7 +1224,35 @@ var state = {
 var RE_EDIT_ID = getParam('id');
 var slotCheckUnsub = null;
 
-/* ── Confirmation checkbox state ─────────────────────────── */
+/* ── Admin UI lock ───────────────────────────────────────── */
+function applyAdminLock(user){
+  var allowed = isStreamAdmin(user);
+  var pill = $('slotPill');
+  var saveBtn = $('saveStreamBtn');
+  var main = $('mainContent');
+  var lockBanner = $('adminLockBanner');
+  var tabbar = document.querySelector('.tabbar');
+  var heroActions = document.querySelector('.hero-actions');
+
+  state.isAdmin = allowed;
+
+  if (allowed) {
+    if (main) main.classList.remove('locked');
+    if (lockBanner) lockBanner.classList.remove('show');
+    if (pill && user) pill.style.display = '';
+    if (saveBtn) saveBtn.style.display = '';
+    if (tabbar) tabbar.style.display = '';
+    if (heroActions) heroActions.style.display = '';
+  } else {
+    if (main) main.classList.add('locked');
+    if (lockBanner) lockBanner.classList.add('show');
+    if (pill) pill.style.display = 'none';
+    if (saveBtn) saveBtn.style.display = 'none';
+    if (tabbar) tabbar.style.display = 'none';
+    if (heroActions) heroActions.style.display = 'none';
+  }
+}
+
 function isConfirmed(){
   var cb = $('confirmCheckbox');
   return !!(cb && cb.checked);
@@ -1194,7 +1263,7 @@ function updateSaveEnabled(){
   var lockNote = $('saveLockNote');
   var block = $('confirmBlock');
 
-  var ok = isConfirmed() && !!state.user;
+  var ok = isConfirmed() && !!state.user && state.isAdmin;
   var userOK = !!state.user;
   var slotOK = !(!state.editing && state.slots.filter(function(s){ return s !== null; }).length >= GLOBAL_MAX_STREAMS);
 
@@ -1208,6 +1277,7 @@ function updateSaveEnabled(){
 
 function applyAuth(user){
   state.user = user;
+
   var inBtn = $('signInBtn'), chip = $('userChip');
   if (user) {
     inBtn.style.display = 'none';
@@ -1250,6 +1320,8 @@ function applyAuth(user){
     updateSlotUI();
     stopSlotWatcher();
   }
+
+  applyAdminLock(user);
   updateSaveEnabled();
   refreshIcons();
 }
@@ -1323,7 +1395,7 @@ function updateSlotUI(){
   var bannerTitle = $('slotBannerTitle');
   var bannerSub = $('slotBannerSub');
 
-  if (!state.user) {
+  if (!state.user || !state.isAdmin) {
     pill.style.display = 'none';
     banner.classList.remove('show');
     return;
@@ -1558,13 +1630,13 @@ function syncAuthTabs(){
   $$('.tab').forEach(function(t){ t.classList.toggle('active', t.dataset.mode === authMode); });
   if (authMode === 'signup') {
     $('authTitle').textContent = 'Create account';
-    $('authSub').textContent = 'Join Novalink to publish free streams.';
+    $('authSub').textContent = 'Join Novalink to start ticketing.';
     $('nameGroup').style.display = 'block';
     $('authSubmit').innerHTML = icon('user-plus') + ' Create account';
     $('authPassword').autocomplete = 'new-password';
   } else {
     $('authTitle').textContent = 'Welcome back';
-    $('authSub').textContent = 'Sign in to save your stream.';
+    $('authSub').textContent = 'Sign in to continue.';
     $('nameGroup').style.display = 'none';
     $('authSubmit').innerHTML = icon('log-in') + ' Sign in';
     $('authPassword').autocomplete = 'current-password';
@@ -1573,6 +1645,7 @@ function syncAuthTabs(){
 }
 
 function goToView(view){
+  if (!state.isAdmin) return;
   $$('.pill').forEach(function(t){ t.classList.toggle('active', t.dataset.view === view); });
   $$('.view').forEach(function(v){ v.classList.toggle('active', v.id === 'view-' + view); });
   window.scrollTo({ top: document.querySelector('.tabbar').offsetTop - 80, behavior: 'smooth' });
@@ -1619,7 +1692,6 @@ function clearStreamFields(){
   $('adClientId').value = '';
   $('adSlotId').value = '';
   $('customVastUrl').value = '';
-  /* Reset confirmation on new stream */
   $('confirmCheckbox').checked = false;
   syncPlatformUI();
   syncAdProviderUI();
@@ -1653,7 +1725,6 @@ function loadStreamIntoForm(d){
   if (d.adSlotId) $('adSlotId').value = d.adSlotId;
   if (d.customVastUrl) $('customVastUrl').value = d.customVastUrl;
   if (d.heroImage) { state.heroImage = d.heroImage; renderCover(); }
-  /* Confirmation stays unticked even when loading — host must re-confirm on edit */
   $('confirmCheckbox').checked = false;
   $('saveLbl').textContent = 'Update Stream';
   $('submitBtn').innerHTML = icon('save') + ' Update Stream';
@@ -1666,7 +1737,16 @@ function loadStreamIntoForm(d){
 }
 
 function saveStream(){
-  if (!state.user) { toast('Sign in to save your stream.', 'error'); setTimeout(function(){ openAuthModal('signin'); }, 500); return; }
+  if (!state.user) {
+    toast('Sign in to save your stream.', 'error');
+    setTimeout(function(){ openAuthModal('signin'); }, 500);
+    return;
+  }
+  /* Admin-only gate */
+  if (!isStreamAdmin(state.user)) {
+    toast('Stream Studio is restricted to Novalink admins.', 'error', 5000);
+    return;
+  }
   if (!isConfirmed()) { toast('Tick the confirmation before saving.', 'error'); goToView('source'); return; }
 
   var channelName = $('channelName').value.trim();
@@ -1782,6 +1862,12 @@ function saveStream(){
 }
 
 function loadForEdit(id){
+  /* Admin-only gate */
+  if (!isStreamAdmin(state.user)) {
+    toast('Stream Studio is restricted to Novalink admins.', 'error', 5000);
+    setTimeout(function(){ location.href = 'streams.html'; }, 900);
+    return;
+  }
   db.collection(STREAMS).doc(id).get().then(function(snap){
     if (!snap.exists) { toast('Stream not found.', 'error'); return; }
     var d = snap.data() || {};
@@ -1801,12 +1887,12 @@ function loadForEdit(id){
 document.addEventListener('DOMContentLoaded', function(){
   refreshIcons();
 
-  $$('.pill').forEach(function(t){ t.addEventListener('click', function(){ goToView(t.dataset.view); }); });
-  $$('[data-next]').forEach(function(b){ b.addEventListener('click', function(){ goToView(b.dataset.next); }); });
-  $$('[data-prev]').forEach(function(b){ b.addEventListener('click', function(){ goToView(b.dataset.prev); }); });
+  $$('.pill').forEach(function(t){ t.addEventListener('click', function(){ if (state.isAdmin) goToView(t.dataset.view); }); });
+  $$('[data-next]').forEach(function(b){ b.addEventListener('click', function(){ if (state.isAdmin) goToView(b.dataset.next); }); });
+  $$('[data-prev]').forEach(function(b){ b.addEventListener('click', function(){ if (state.isAdmin) goToView(b.dataset.prev); }); });
 
-  $('heroGoLive').addEventListener('click', function(){ goToView('details'); });
-  $('heroGoAds').addEventListener('click', function(){ goToView('ads'); });
+  $('heroGoLive').addEventListener('click', function(){ if (state.isAdmin) goToView('details'); });
+  $('heroGoAds').addEventListener('click', function(){ if (state.isAdmin) goToView('ads'); });
 
   $('bannerChoose').addEventListener('click', function(e){ e.stopPropagation(); $('bannerFile').click(); });
   $('bannerPreview').addEventListener('click', function(){ $('bannerFile').click(); });
@@ -1875,7 +1961,6 @@ document.addEventListener('DOMContentLoaded', function(){
     });
   }
 
-  /* Confirmation checkbox — flip its visual state */
   var confirmBox = $('confirmCheckbox');
   if (confirmBox) {
     confirmBox.addEventListener('change', function(){
@@ -1996,4 +2081,4 @@ document.addEventListener('DOMContentLoaded', function(){
 })();
 </script>
 </body>
-                  </html>
+  </html>
