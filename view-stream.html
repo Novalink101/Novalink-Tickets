@@ -89,18 +89,27 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 
 .click-shield{position:absolute;inset:0;z-index:5;background:transparent;cursor:pointer;}
 
-/* YouTube chrome mask — hides YouTube's own title bar, logo watermark,
-   "More videos" chip, and end-screen carousel. Two dark gradient strips
-   layered ABOVE the iframe but BELOW our controls. pointer-events:none
-   so they never block taps. Higher z-index to win any conflict. */
-.yt-chrome-mask{position:absolute!important;inset:0!important;z-index:7!important;pointer-events:none!important;display:block!important;}
+/* YouTube chrome mask — HIDDEN by default, flashes ON for 7s on interaction.
+   Instant fade-in (0s) so it covers YT chrome immediately; smooth 300ms
+   fade-out so it disappears gracefully. z-index 7 = above iframe (1),
+   above shield (5), below ctrl-bar (9). */
+.yt-chrome-mask{
+  position:absolute!important;inset:0!important;z-index:7!important;
+  pointer-events:none!important;display:block!important;
+  opacity:0;
+  transition:opacity .3s ease;
+}
+.yt-chrome-mask.visible{
+  opacity:1;
+  transition:opacity 0s;
+}
 .yt-chrome-mask .mask-top{
   position:absolute;top:0;left:0;right:0;height:90px;
-  background:linear-gradient(180deg, rgba(10,15,20,.98) 0%, rgba(10,15,20,.85) 40%, rgba(10,15,20,.4) 75%, rgba(10,15,20,0) 100%);
+  background:linear-gradient(180deg, rgba(10,15,20,.95) 0%, rgba(10,15,20,.8) 40%, rgba(10,15,20,.35) 75%, rgba(10,15,20,0) 100%);
 }
 .yt-chrome-mask .mask-bottom{
-  position:absolute;bottom:0;left:0;right:0;height:150px;
-  background:linear-gradient(0deg, rgba(10,15,20,.99) 0%, rgba(10,15,20,.9) 30%, rgba(10,15,20,.55) 60%, rgba(10,15,20,0) 100%);
+  position:absolute;bottom:0;left:0;right:0;height:140px;
+  background:linear-gradient(0deg, rgba(10,15,20,.98) 0%, rgba(10,15,20,.9) 35%, rgba(10,15,20,.5) 65%, rgba(10,15,20,0) 100%);
 }
 @media (max-width:640px){
   .yt-chrome-mask .mask-top{height:70px}
@@ -508,7 +517,7 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 
               <div class="click-shield" id="clickShield"></div>
 
-              <div class="yt-chrome-mask" aria-hidden="true">
+              <div class="yt-chrome-mask" id="ytChromeMask" aria-hidden="true">
                 <div class="mask-top"></div>
                 <div class="mask-bottom"></div>
               </div>
@@ -715,6 +724,7 @@ var SKIP_KEY_SMALL = 5;
 var SKIP_KEY_LARGE = 10;
 var LIVE_CHIP_FADE_MS = 5000;
 var LIVE_EDGE_DRIFT_SECONDS = 30;
+var CHROME_MASK_FLASH_MS = 7000;   /* how long the YT chrome mask stays visible after an interaction */
 var UNMUTE_PREF_KEY = 'novalink_audio_enabled';
 
 var AD_DEFAULTS = {
@@ -803,6 +813,7 @@ var streamId = null;
 var siblingStreams = [];
 var countdownTimer = null;
 var upcomingCountdownTimer = null;
+var chromeMaskTimer = null;
 var adSettings = Object.assign({}, AD_DEFAULTS);
 var adPool = { preroll: [], midroll: [], postroll: [] };
 var adState = {
@@ -827,6 +838,24 @@ var player = {
   pauseStartTime: null,
   ytReady: false
 };
+
+/* ══════════════════════════════════════════════════════════════
+   YT CHROME MASK — timed flash
+   ══════════════════════════════════════════════════════════════
+   YouTube shows its own chrome (title bar, logo, "More videos" chip)
+   for ~6 seconds after load and after any interaction. We can't remove
+   it, but we can cover it with gradient strips during those windows.
+   The mask is invisible by default and flashes ON for 7s whenever the
+   user interacts with the player. After 7s it fades away. */
+function flashChromeMask(){
+  var mask = $("ytChromeMask");
+  if (!mask) return;
+  mask.classList.add("visible");
+  clearTimeout(chromeMaskTimer);
+  chromeMaskTimer = setTimeout(function(){
+    mask.classList.remove("visible");
+  }, CHROME_MASK_FLASH_MS);
+}
 
 function applyAuth(user){
   currentUser = user;
@@ -932,6 +961,9 @@ function onPlayerReady(event){
   } catch(e){ console.warn("[yt iframe]", e); }
 
   applyDeclaredStreamType();
+
+  /* Flash the mask to cover YT's initial chrome reveal */
+  flashChromeMask();
 
   if (localStorage.getItem(UNMUTE_PREF_KEY) === "1") {
     tryUnmute();
@@ -1124,6 +1156,7 @@ function seekBy(seconds){
   sendCommand("seek", target);
   player.currentTime = target;
   updateTimeDisplay();
+  flashChromeMask();
   showControls();
 }
 
@@ -1137,6 +1170,7 @@ function jumpToLive(){
       showToast("Jumped to live", "success", 1500);
     }
   } catch(err){}
+  flashChromeMask();
   showControls();
 }
 
@@ -1152,6 +1186,9 @@ function showControls(keepOpen){
   var wrap = $("playerWrap");
   if (!wrap) return;
   wrap.classList.add("controls-visible");
+  /* Every time our own controls are shown, YT also shows its chrome.
+     Flash the mask in sync so the two overlap. */
+  flashChromeMask();
   clearTimeout(player.controlsHideTimer);
   if (!keepOpen) player.controlsHideTimer = setTimeout(hideControls, 3000);
 }
@@ -1185,13 +1222,15 @@ function toggleFullscreen(){
         p.then(function(){
           tryLockLandscape();
           if (isIOS()) showToast("Rotate your phone to landscape for a better view", "info", 3500);
+          flashChromeMask();
         }).catch(function(){ showToast("Fullscreen not available", "error", 2500); });
-      } else tryLockLandscape();
+      } else { tryLockLandscape(); flashChromeMask(); }
     } else showToast("Fullscreen not supported on this device", "error", 2500);
   } else {
     var exit = document.exitFullscreen || document.webkitExitFullscreen || document.webkitCancelFullScreen || document.mozCancelFullScreen || document.msExitFullscreen;
     if (exit) { try { exit.call(document); } catch(e){} }
     tryUnlockOrientation();
+    flashChromeMask();
   }
   showControls();
 }
@@ -1238,6 +1277,7 @@ function handleShieldTap(e){
   }
   player.lastTapTime = now;
   player.tapPosition = side;
+  flashChromeMask();
   showControls();
 }
 function showSeekRipple(side){
@@ -1670,6 +1710,11 @@ function renderWatch(){
   adState.midrollTimerId = null;
   stopUpcomingCountdown();
 
+  /* Reset mask flash state */
+  var mask = $("ytChromeMask");
+  if (mask) mask.classList.remove("visible");
+  clearTimeout(chromeMaskTimer);
+
   var watermark = $("playerWatermark");
   var live = $("livePill");
   var hl = $("highlightPill");
@@ -1720,6 +1765,7 @@ function renderWatch(){
       loadPlainIframe(finalUrl);
     }
     if (watermark) watermark.classList.add("visible");
+    flashChromeMask();
   }
 
   if (phase === "live") {
@@ -1999,6 +2045,7 @@ document.addEventListener("DOMContentLoaded", function(){
     clearTimeout(adState.skipTimerId);
     clearTimeout(player.controlsHideTimer);
     clearTimeout(player.liveChipFadeTimer);
+    clearTimeout(chromeMaskTimer);
   });
 });
 })();
