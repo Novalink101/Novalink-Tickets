@@ -177,6 +177,7 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
       </button>
       <div class="dd" id="userDropdown">
         <button class="dd-item" id="ddCreateEvent"><i data-lucide="plus-circle"></i> Create an event</button>
+        <button class="dd-item" id="ddCreateStream" style="display:none;"><i data-lucide="radio"></i> Go live</button>
         <button class="dd-item" id="ddMyCards"><i data-lucide="ticket"></i> My cards</button>
         <button class="dd-item" id="ddScanner"><i data-lucide="scan-line"></i> Scanner</button>
         <button class="dd-item" id="ddSignOut"><i data-lucide="log-out"></i> Sign out</button>
@@ -188,13 +189,11 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 <main class="page">
   <div class="container">
 
-    <!-- Loading -->
     <div id="loadingState" class="ls">
       <i data-lucide="loader-2"></i>
       <p>Loading dashboard…</p>
     </div>
 
-    <!-- Error -->
     <div id="errorState" class="es" style="display:none">
       <div class="ic"><i data-lucide="alert-circle" id="errorIcon"></i></div>
       <h2 id="errorTitle">Could not load</h2>
@@ -204,7 +203,6 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
       </div>
     </div>
 
-    <!-- Sign-in -->
     <div id="signinState" class="es" style="display:none">
       <div class="ic"><i data-lucide="lock"></i></div>
       <h2>Sign in required</h2>
@@ -215,7 +213,6 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
       </div>
     </div>
 
-    <!-- No events -->
     <div id="emptyState" class="es" style="display:none">
       <div class="ic"><i data-lucide="calendar-x" style="color:var(--cyan-600)"></i></div>
       <h2>No events yet</h2>
@@ -226,7 +223,6 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
       </div>
     </div>
 
-    <!-- Dashboard content -->
     <div id="dashboardContent" style="display:none">
 
       <div class="page-head">
@@ -235,7 +231,6 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
         <p>Pick an event to see real-time ticket sales, revenue, and the full attendee list.</p>
       </div>
 
-      <!-- Event picker -->
       <div class="picker-bar">
         <div class="picker-field">
           <label for="eventSelect">Your Event</label>
@@ -254,7 +249,6 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
         </div>
       </div>
 
-      <!-- Stat cards -->
       <div class="stats">
         <div class="stat sold">
           <span class="lbl">Tickets Sold</span>
@@ -283,7 +277,6 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
         </div>
       </div>
 
-      <!-- Two-column: Tier breakdown + Recent sales -->
       <div style="display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:20px;" class="two-col">
 
         <div class="card">
@@ -308,7 +301,6 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 
       </div>
 
-      <!-- Attendee list -->
       <div class="card">
         <div class="card-head">
           <h2><i data-lucide="users"></i> Attendee List</h2>
@@ -387,7 +379,14 @@ if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 var db = firebase.firestore();
 var auth = firebase.auth();
 var EVENTS = "events";
-var ADMINS = ["nylnathan340@gmail.com"];
+
+/* ══════════════════════════════════════════════════════════════
+   ADMIN EMAILS — both Novalink admins
+   ══════════════════════════════════════════════════════════════ */
+var ADMINS = [
+  "nylnathan340@gmail.com",
+  "customerservicesnovalink@gmail.com"
+];
 
 /* ============================================================
    STATE
@@ -481,6 +480,7 @@ function statusClass(s){
 function applyAuth(user){
   currentUser = user;
   isAdmin = !!(user && ADMINS.map(function(e){ return e.toLowerCase(); }).indexOf(String(user.email).toLowerCase()) !== -1);
+
   if (user) {
     var display = user.displayName || user.email.split("@")[0];
     $("userMenuBtn").style.display = "inline-flex";
@@ -488,6 +488,12 @@ function applyAuth(user){
     $("userAvatar").textContent = initialsFrom(user.displayName, user.email);
   } else {
     $("userMenuBtn").style.display = "none";
+  }
+
+  /* Show "Go live" only for admins */
+  var ddCreateStream = $("ddCreateStream");
+  if (ddCreateStream) {
+    ddCreateStream.style.display = isAdmin ? "flex" : "none";
   }
 }
 
@@ -561,7 +567,6 @@ function loadMyEvents(){
     }
     populateEventPicker();
     showDashboard();
-    /* Auto-select from query or first event */
     var pre = getParam("event");
     if (pre && myEvents.some(function(e){ return e.id === pre; })) {
       $("eventSelect").value = pre;
@@ -597,7 +602,6 @@ function selectEvent(eventId){
   currentEvent = myEvents.find(function(e){ return e.id === eventId; }) || null;
   if (!currentEvent) { showError("Event not found", "That event is no longer available.", "alert-circle"); return; }
 
-  /* Reset stats while loading */
   allTickets = [];
   filteredTickets = [];
   renderStats();
@@ -605,10 +609,8 @@ function selectEvent(eventId){
   renderRecentFeed();
   renderAttendeeTable();
 
-  /* Unsubscribe old listener */
   if (liveTicketUnsub) { try { liveTicketUnsub(); } catch(e){} }
 
-  /* Live listen to tickets */
   liveTicketUnsub = db.collection(EVENTS).doc(eventId).collection("tickets")
     .onSnapshot(function(snap){
       allTickets = [];
@@ -617,7 +619,6 @@ function selectEvent(eventId){
         t.id = doc.id;
         allTickets.push(t);
       });
-      /* Sort by createdAt desc (newest first) */
       allTickets.sort(function(a, b){
         var ta = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
         var tb = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
@@ -642,7 +643,6 @@ function renderStats(){
   var planFeePct = (ev.plan && ev.plan.fee) || (ev.revenue && ev.revenue.planFeePct) || 7;
   var capacity = ev.totalAttendees || 0;
 
-  /* Count only valid + checked-in tickets (exclude cancelled) */
   var liveTickets = allTickets.filter(function(t){
     return t.status !== "cancelled";
   });
@@ -687,7 +687,6 @@ function renderTierBreakdown(){
     return;
   }
 
-  /* Group by tier */
   var byTier = {};
   liveTickets.forEach(function(t){
     var k = t.tier || "cyan";
@@ -697,7 +696,6 @@ function renderTierBreakdown(){
     if (!isNaN(p) && p > 0) byTier[k].revenue += p;
   });
 
-  /* Sort tiers by count desc */
   var tierKeys = Object.keys(byTier).sort(function(a, b){
     return byTier[b].count - byTier[a].count;
   });
@@ -764,7 +762,8 @@ function renderRecentFeed(){
   feed.innerHTML = html;
   $("recentMeta").textContent = "Showing " + recent.length + " of " + allTickets.length + " tickets";
   }
-    /* ============================================================
+
+/* ============================================================
    ATTENDEE TABLE
    ============================================================ */
 function renderAttendeeTable(){
@@ -873,7 +872,6 @@ function exportCsv(){
    ============================================================ */
 function wireListeners(){
 
-  /* User menu */
   $("userMenuBtn").addEventListener("click", function(e){
     e.stopPropagation();
     $("userDropdown").classList.toggle("open");
@@ -887,29 +885,32 @@ function wireListeners(){
   $("ddMyCards").addEventListener("click", function(){ window.location.href = "my-cards.html"; });
   $("ddScanner").addEventListener("click", function(){ window.location.href = "scanner.html"; });
 
-  /* Event picker */
+  /* Admin-only — Go live */
+  if ($("ddCreateStream")) {
+    $("ddCreateStream").addEventListener("click", function(){
+      if (!isAdmin) { showToast("Stream Studio is restricted to admins.", "error"); return; }
+      window.location.href = "create-streams.html";
+    });
+  }
+
   $("eventSelect").addEventListener("change", function(){
     $("attSearchInput").value = "";
     selectEvent(this.value);
   });
 
-  /* Refresh button */
   $("refreshBtn").addEventListener("click", function(){
     if (!currentEventId) return;
     showToast("Refreshing…", "info", 1200);
     selectEvent(currentEventId);
   });
 
-  /* View event */
   $("viewEventBtn").addEventListener("click", function(){
     if (!currentEventId) return;
     window.location.href = "view-event.html?id=" + encodeURIComponent(currentEventId);
   });
 
-  /* Export CSV */
   $("exportCsvBtn").addEventListener("click", exportCsv);
 
-  /* Attendee search (debounced) */
   var searchDebounce = null;
   $("attSearchInput").addEventListener("input", function(){
     clearTimeout(searchDebounce);
@@ -945,7 +946,6 @@ document.addEventListener("DOMContentLoaded", function(){
   });
 });
 
-/* Cleanup on page unload */
 window.addEventListener("beforeunload", function(){
   if (liveTicketUnsub) { try { liveTicketUnsub(); } catch(e){} }
 });
@@ -953,4 +953,4 @@ window.addEventListener("beforeunload", function(){
 })();
 </script>
 </body>
-  </html>
+</html>
