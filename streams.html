@@ -98,10 +98,6 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
 .filter-clear{background:transparent;border:none;color:var(--cyan-700);font-size:12.5px;font-weight:700;cursor:pointer;padding:4px 8px;border-radius:6px;transition:background 0.15s}
 .filter-clear:hover{background:var(--cyan-50)}
 
-/* ══════════════════════════════════════════════════
-   DStv-style RECTANGULAR STREAM CARDS
-   Wider, thumbnail-first, minimal metadata
-   ══════════════════════════════════════════════════ */
 .streams-grid{display:grid;gap:20px;grid-template-columns:repeat(auto-fill,minmax(380px,1fr))}
 @media (max-width:520px){.streams-grid{grid-template-columns:1fr;gap:14px}}
 
@@ -120,7 +116,7 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
 .stream-card:hover{transform:translateY(-4px);box-shadow:0 16px 32px rgba(10,15,20,0.12);border-color:var(--cyan-500)}
 
 .stream-card-thumb{
-  aspect-ratio:21/9;             /* wider than 16:9 — DStv feel */
+  aspect-ratio:21/9;
   background:linear-gradient(135deg,#0a0f14 0%,#0f172a 55%,#0a0f14 100%);
   background-size:cover;background-position:center;
   position:relative;overflow:hidden;
@@ -128,7 +124,6 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
 }
 .stream-card-thumb::after{content:'';position:absolute;inset:0;background:linear-gradient(to top,rgba(10,15,20,0.7),transparent 60%);pointer-events:none}
 
-/* Play icon */
 .stream-card-play{
   width:56px;height:56px;border-radius:50%;
   background:rgba(6,182,212,0.22);
@@ -141,7 +136,6 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
 .stream-card:hover .stream-card-play{transform:scale(1.1);background:rgba(6,182,212,0.38)}
 .stream-card-play i{width:22px;height:22px;color:#67e8f9}
 
-/* Channel name pill (top-left of thumbnail) */
 .channel-pill{
   position:absolute;top:12px;left:12px;
   background:rgba(10,15,20,0.72);
@@ -158,7 +152,6 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
 }
 .channel-pill i{width:11px;height:11px;flex-shrink:0;color:#67e8f9}
 
-/* Status badge (top-right of thumbnail) */
 .status-badge{
   position:absolute;top:12px;right:12px;
   font-size:10px;font-weight:900;letter-spacing:0.08em;
@@ -180,7 +173,6 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
   50%{opacity:0.4;transform:scale(0.85)}
 }
 
-/* Platform tag (bottom-right of thumbnail) */
 .platform-tag{
   position:absolute;bottom:12px;right:12px;
   background:rgba(10,15,20,0.75);color:#fff;
@@ -189,7 +181,6 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
   backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);z-index:3;
 }
 
-/* Viewers pill (bottom-left of thumbnail) */
 .viewers-pill{
   position:absolute;bottom:12px;left:12px;
   background:rgba(10,15,20,0.72);color:#fff;
@@ -200,7 +191,6 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
 }
 .viewers-pill i{width:11px;height:11px;color:#67e8f9}
 
-/* Card body — DStv style: minimal */
 .stream-card-body{padding:14px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
 
 .stream-card-body h3{
@@ -287,7 +277,7 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
         <span id="slotText">0 / 4</span>
       </span>
       <a href="index.html" class="btn btn-ghost btn-sm"><i data-lucide="arrow-left"></i> Home</a>
-      <a href="create-streams.html" class="btn btn-accent btn-sm" id="goLiveBtn"><i data-lucide="radio"></i> Go live</a>
+      <a href="create-streams.html" class="btn btn-accent btn-sm" id="goLiveBtn" style="display:none;"><i data-lucide="radio"></i> Go live</a>
     </div>
   </div>
 </header>
@@ -385,7 +375,7 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
       <div class="icon"><i data-lucide="radio-tower"></i></div>
       <h2 id="emptyTitle">No streams yet</h2>
       <p id="emptyMsg">Be the first to go live on Novalink.</p>
-      <a href="create-streams.html" class="btn btn-accent"><i data-lucide="radio"></i> Create a stream</a>
+      <a href="create-streams.html" class="btn btn-accent" id="emptyCta" style="display:none;"><i data-lucide="radio"></i> Create a stream</a>
     </div>
 
     <div class="streams-grid" id="streamsGrid" style="display:none"></div>
@@ -416,8 +406,16 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
 /* ══════════════════════════════════════════════════════════════
    GLOBAL SETTINGS
    ══════════════════════════════════════════════════════════════ */
-var GLOBAL_MAX_STREAMS = 4;   /* ← now 4, was 8 */
+var GLOBAL_MAX_STREAMS = 4;
 var GLOBAL_REPLAY_DAYS = 30;
+
+/* ══════════════════════════════════════════════════════════════
+   ADMIN EMAILS — both Novalink admins
+   ══════════════════════════════════════════════════════════════ */
+var ADMIN_EMAILS = [
+  "nylnathan340@gmail.com",
+  "customerservicesnovalink@gmail.com"
+];
 
 /* ══════════════════════════════════════════════════════════════
    FIREBASE
@@ -441,6 +439,7 @@ var STREAMS_COLLECTION = "streams";
 var allStreams = [];
 var unsubscribe = null;
 var currentUser = null;
+var isAdmin = false;
 var mineOnly = false;
 
 /* ══════════════════════════════════════════════════════════════
@@ -451,6 +450,12 @@ function icon(n){ return '<i data-lucide="'+n+'"></i>'; }
 function refreshIcons(){ if (window.lucide) lucide.createIcons(); }
 function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 function getParam(n){ try { return new URLSearchParams(location.search).get(n); } catch(e){ return null; } }
+
+function isAdminEmail(user){
+  if (!user || !user.email) return false;
+  var email = String(user.email).toLowerCase().trim();
+  return ADMIN_EMAILS.some(function(e){ return e.toLowerCase() === email; });
+}
 
 function showToast(msg,type,ms){
   type = type || "info"; ms = ms || 3000;
@@ -480,7 +485,6 @@ function streamTitleOf(s){ return s.streamTitle || s.eventName || "Untitled Stre
 function streamChannelName(s){ return s.channelName || s.hostName || s.ownerName || "Channel"; }
 function streamPlatformLabel(p){ return { youtube:"YouTube", vimeo:"Vimeo", twitch:"Twitch", custom:"Embed" }[p] || "Live"; }
 
-/* Host-declared stream type — "live" or "highlight". Missing → "live". */
 function streamTypeOf(s){
   return s.streamType === "highlight" ? "highlight" : "live";
 }
@@ -565,19 +569,42 @@ function categoryLabel(c){
 }
 
 /* ══════════════════════════════════════════════════════════════
-   SLOT COUNTER
+   ADMIN UI GATE — show/hide admin-only buttons
+   ══════════════════════════════════════════════════════════════ */
+function applyAdminUI(){
+  var goLive = $("goLiveBtn");
+  var emptyCta = $("emptyCta");
+  var slotPill = $("slotPill");
+  var slotWarn = $("slotWarn");
+
+  var allowed = !!isAdmin;
+
+  if (goLive)   goLive.style.display   = allowed ? "inline-flex" : "none";
+  if (emptyCta) emptyCta.style.display = allowed ? "inline-flex" : "none";
+
+  /* Slot pill + slot warning only make sense for admins (only they can create streams) */
+  if (!allowed) {
+    if (slotPill) slotPill.style.display = "none";
+    if (slotWarn) slotWarn.style.display = "none";
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SLOT COUNTER (admin-only, hidden for everyone else)
    ══════════════════════════════════════════════════════════════ */
 function updateSlotCounter(){
   var pill = $("slotPill");
   var warn = $("slotWarn");
   var goLive = $("goLiveBtn");
 
-  if (!currentUser) {
+  if (!currentUser || !isAdmin) {
     pill.style.display = "none";
     warn.style.display = "none";
-    goLive.removeAttribute("disabled");
-    goLive.style.pointerEvents = "";
-    goLive.style.opacity = "";
+    if (goLive) {
+      goLive.removeAttribute("disabled");
+      goLive.style.pointerEvents = "";
+      goLive.style.opacity = "";
+    }
     return;
   }
 
@@ -685,7 +712,9 @@ function renderGrid(list){
     grid.style.display = "none";
     empty.style.display = "block";
     $("emptyTitle").textContent = "No streams yet";
-    $("emptyMsg").textContent = "Be the first to go live on Novalink.";
+    $("emptyMsg").textContent = isAdmin
+      ? "Be the first to go live on Novalink."
+      : "Check back soon — streams will appear here.";
     refreshIcons();
     return;
   }
@@ -695,7 +724,9 @@ function renderGrid(list){
     empty.style.display = "block";
     if (mineOnly) {
       $("emptyTitle").textContent = "You have no streams";
-      $("emptyMsg").textContent = "Create your first free stream on Novalink.";
+      $("emptyMsg").textContent = isAdmin
+        ? "Create your first free stream on Novalink."
+        : "Check back soon.";
     } else {
       $("emptyTitle").textContent = "No matches";
       $("emptyMsg").textContent = "Try clearing a filter or switching to All streams.";
@@ -737,12 +768,6 @@ function buildCard(s){
     thumbStyle = "background-image:url('" + esc(s.heroImage) + "');background-size:cover;background-position:center;";
   }
 
-  /* Top-right badge:
-     - live phase + declared live → "Live now" (red, pulsing)
-     - live phase + declared highlight → "Highlight" (purple)
-     - upcoming → "Upcoming"
-     - past + replay ok → "Replay"
-     - past + no replay → "Ended" */
   var badgeClass = "upcoming";
   var badgeText = "Upcoming";
   if (st.status === 'live') {
@@ -756,14 +781,12 @@ function buildCard(s){
   var statusCls = sl.cls ? (" " + sl.cls) : "";
 
   var isOwner = currentUser && (s.ownerUid === currentUser.uid);
-  var isAdmin = currentUser && currentUser.email === "nylnathan340@gmail.com";
   var canDelete = isOwner || isAdmin;
 
   var deleteBtnHTML = canDelete
     ? '<button class="stream-card-delete" data-id="' + esc(s.id) + '" title="Delete stream">' + icon("trash-2") + '</button>'
     : '';
 
-  /* Viewers pill — only on live streams */
   var viewersPillHTML = "";
   if (st.status === 'live') {
     viewersPillHTML = '<span class="viewers-pill">' + icon("eye") + ' <span>' + viewerCount.toLocaleString() + '</span></span>';
@@ -872,6 +895,9 @@ document.addEventListener("DOMContentLoaded", function(){
 
   mineOnly = getParam("mine") === "1";
 
+  /* Start every admin button hidden — revealed only for confirmed admins */
+  applyAdminUI();
+
   $("searchInput").addEventListener("input", applyFiltersAndRender);
   $("statusFilter").addEventListener("change", applyFiltersAndRender);
   $("categoryFilter").addEventListener("change", applyFiltersAndRender);
@@ -889,6 +915,8 @@ document.addEventListener("DOMContentLoaded", function(){
 
   auth.onAuthStateChanged(function(user){
     currentUser = user;
+    isAdmin = isAdminEmail(user);
+    applyAdminUI();
     updateSlotCounter();
     applyFiltersAndRender();
     bindDeleteButtons();
@@ -906,4 +934,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-  </html>
+</html>
