@@ -619,9 +619,6 @@ var SKIP_KEY_SMALL = 5;
 var SKIP_KEY_LARGE = 10;
 var LIVE_CHIP_FADE_MS = 5000;
 var UNMUTE_PREF_KEY = 'novalink_audio_enabled';
-var LIVE_DETECT_DELAY_MS = 4000;   /* wait this long before sampling duration twice */
-var LIVE_DETECT_GAP_MS = 3000;     /* gap between the two duration samples */
-var LIVE_DETECT_GROWTH_THRESHOLD = 1; /* seconds of growth required to be considered live */
 
 var AD_DEFAULTS = {
   prerollEnabled:    true,
@@ -722,7 +719,6 @@ var player = {
   ytPlayer: null,
   platform: "youtube",
   isLive: true,
-  videoIsActuallyLive: null,
   seekable: false,
   currentTime: 0,
   duration: 0,
@@ -732,9 +728,7 @@ var player = {
   lastTapTime: 0,
   tapPosition: null,
   pauseStartTime: null,
-  ytReady: false,
-  detectionTimer1: null,
-  detectionTimer2: null
+  ytReady: false
 };
 
 /* ══════════════════════════════════════════════════════════════
@@ -790,6 +784,23 @@ function currentPhase(){
 }
 
 /* ══════════════════════════════════════════════════════════════
+   STREAM TYPE  (host-declared, not auto-detected)
+   ══════════════════════════════════════════════════════════════
+   The stream type is chosen by the host at creation time and stored on
+   the stream doc as streamType: "live" or "highlight". We do NOT try to
+   auto-detect, because YouTube's IFrame API doesn't reliably expose
+   live status. Missing field defaults to "live" (safe default).
+*/
+function getDeclaredStreamType(){
+  if (!streamData) return "live";
+  return streamData.streamType === "highlight" ? "highlight" : "live";
+}
+function applyDeclaredStreamType(){
+  var t = getDeclaredStreamType();
+  applyLiveStatus(t === "live");
+}
+
+/* ══════════════════════════════════════════════════════════════
    YOUTUBE API
    ══════════════════════════════════════════════════════════════ */
 function extractYouTubeId(url){
@@ -840,9 +851,8 @@ function onPlayerReady(event){
     }
   } catch(e){ console.warn("[yt iframe]", e); }
 
-  /* Assume LIVE by default during detection window */
-  player.videoIsActuallyLive = true;
-  applyLiveStatus(true, "assumed");
+  /* Apply the host-declared stream type */
+  applyDeclaredStreamType();
 
   /* Try auto-unmute if preference saved */
   if (localStorage.getItem(UNMUTE_PREF_KEY) === "1") {
@@ -851,38 +861,9 @@ function onPlayerReady(event){
     showUnmutePrompt();
   }
   playerStateSync("playing");
-
-  /* Start the 2-sample live detection */
-  startLiveDetection();
 }
 
-function startLiveDetection(){
-  /* Clear any previous detection */
-  clearTimeout(player.detectionTimer1);
-  clearTimeout(player.detectionTimer2);
-
-  var firstDuration = null;
-
-  /* Wait for the player to stabilise, then sample duration */
-  player.detectionTimer1 = setTimeout(function(){
-    if (!player.ytPlayer || !player.ytReady) return;
-    try { firstDuration = player.ytPlayer.getDuration() || 0; } catch(e){ return; }
-
-    /* Sample again after the gap */
-    player.detectionTimer2 = setTimeout(function(){
-      if (!player.ytPlayer || !player.ytReady) return;
-      var secondDuration = 0;
-      try { secondDuration = player.ytPlayer.getDuration() || 0; } catch(e){ return; }
-
-      var grew = (secondDuration - firstDuration) >= LIVE_DETECT_GROWTH_THRESHOLD;
-      var isLive = grew;
-      player.videoIsActuallyLive = isLive;
-      applyLiveStatus(isLive, "detected");
-    }, LIVE_DETECT_GAP_MS);
-  }, LIVE_DETECT_DELAY_MS);
-}
-
-function applyLiveStatus(isLive, source){
+function applyLiveStatus(isLive){
   if (isLive) {
     player.seekable = false;
     player.isLive = true;
@@ -898,7 +879,6 @@ function applyLiveStatus(isLive, source){
       clearTimeout(player.liveChipFadeTimer);
       player.liveChipFadeTimer = setTimeout(function(){ chip.classList.add("faded"); }, LIVE_CHIP_FADE_MS);
     }
-    if (source === "detected") persistStreamType("live");
   } else {
     player.seekable = true;
     player.isLive = false;
@@ -909,18 +889,8 @@ function applyLiveStatus(isLive, source){
     if ($("ctrlPlayPause")) $("ctrlPlayPause").style.display = "inline-flex";
     var chip2 = $("liveTimeChip");
     if (chip2) chip2.classList.remove("visible");
-    if (source === "detected") persistStreamType("highlight");
   }
   renderWatchBanner();
-}
-
-function persistStreamType(type){
-  if (!streamId || !streamData) return;
-  if (streamData.streamType === type) return;
-  streamData.streamType = type;
-  try {
-    db.collection(STREAMS).doc(streamId).set({ streamType: type }, { merge: true }).catch(function(){});
-  } catch(e){}
 }
 
 function onPlayerStateChange(event){
@@ -966,14 +936,23 @@ function loadPlainIframe(embedUrl){
   host.appendChild(iframe);
   player.iframe = iframe;
   player.platform = streamData.streamPlatform || "youtube";
-  player.seekable = (player.platform === "twitch" && streamData.dvrEnabled !== false);
-  player.isLive = currentPhase() === "live";
-  if ($("ctrlBack")) $("ctrlBack").disabled = !player.seekable;
-  if ($("ctrlForward")) $("ctrlForward").disabled = !player.seekable;
-  if ($("ctrlPlayPause")) $("ctrlPlayPause").style.display = "inline-flex";
-  if (player.isLive) { if ($("livePill")) $("livePill").classList.add("visible"); }
-  else { if ($("highlightPill")) $("highlightPill").classList.add("visible"); }
-  /* Show unmute prompt if preference not saved */
+
+  var declared = getDeclaredStreamType();
+  var isLiveDeclared = (declared === "live");
+  player.isLive = isLiveDeclared;
+  player.seekable = !isLiveDeclared;
+
+  if ($("ctrlBack")) $("ctrlBack").disabled = isLiveDeclared;
+  if ($("ctrlForward")) $("ctrlForward").disabled = isLiveDeclared;
+  if ($("ctrlPlayPause")) $("ctrlPlayPause").style.display = isLiveDeclared ? "none" : "inline-flex";
+  if (isLiveDeclared) {
+    if ($("livePill")) $("livePill").classList.add("visible");
+    if ($("highlightPill")) $("highlightPill").classList.remove("visible");
+  } else {
+    if ($("livePill")) $("livePill").classList.remove("visible");
+    if ($("highlightPill")) $("highlightPill").classList.add("visible");
+  }
+
   if (localStorage.getItem(UNMUTE_PREF_KEY) === "1") {
     /* nothing */
   } else {
@@ -1367,7 +1346,7 @@ function renderHero(){
 
   var ctaEl = $("nowPlayingCta");
   if (ctaEl) {
-    var isHL = streamData.streamType === "highlight" || player.videoIsActuallyLive === false;
+    var isHL = getDeclaredStreamType() === "highlight";
     if (st === "live") {
       ctaEl.textContent = isHL ? "Highlight" : "Live now";
       ctaEl.className = isHL ? "np-cta highlight" : "np-cta";
@@ -1525,9 +1504,6 @@ function renderWatch(){
   player.iframe = null;
   player.state = "unknown";
   player.pauseStartTime = null;
-  player.videoIsActuallyLive = null;
-  clearTimeout(player.detectionTimer1);
-  clearTimeout(player.detectionTimer2);
   hideAdOverlay();
   hideUnmutePrompt();
   playerStateSync("idle");
@@ -1589,7 +1565,8 @@ function renderWatch(){
   }
 
   if (phase === "live") {
-    player.isLive = true;
+    var declared = getDeclaredStreamType();
+    player.isLive = (declared === "live");
     var perStreamPreroll = streamData.prerollEnabled !== false;
     var perStreamMidroll = streamData.midrollEnabled !== false;
     var doPreroll = adSettings.prerollEnabled && perStreamPreroll && !adState.firedPreroll;
@@ -1651,7 +1628,7 @@ function renderWatchBanner(){
   var bannerWrap = $("watchBannerWrap");
   if (!bannerWrap) return;
   var phase = currentPhase();
-  var isHL = player.videoIsActuallyLive === false || (streamData && streamData.streamType === "highlight" && player.videoIsActuallyLive === null);
+  var isHL = getDeclaredStreamType() === "highlight";
   var bannerClass = "watch-banner";
   var bannerLabel = "Live now";
   var bannerIcon = "radio";
@@ -1858,8 +1835,6 @@ document.addEventListener("DOMContentLoaded", function(){
     clearTimeout(adState.skipTimerId);
     clearTimeout(player.controlsHideTimer);
     clearTimeout(player.liveChipFadeTimer);
-    clearTimeout(player.detectionTimer1);
-    clearTimeout(player.detectionTimer2);
   });
 });
 })();
