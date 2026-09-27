@@ -84,7 +84,14 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 
 .click-shield{position:absolute;inset:0;z-index:5;background:transparent;cursor:pointer;}
 
-/* Top + Bottom black bars — hide ALL YouTube chrome. Only for YouTube streams. */
+/* ══════════════════════════════════════════════════════════════
+   YOUTUBE CHROME MASK BARS — fade in with controls, fade out slowly
+   ══════════════════════════════════════════════════════════════
+   The bars are always present in the DOM but at opacity 0 by default.
+   When the user taps the screen, our control bar becomes visible and
+   these bars fade in over 200ms to cover YouTube's chrome. When the
+   user stops interacting, both our controls AND these bars fade out
+   over 600ms so the transition feels smooth and unhurried. */
 .yt-top-bar{
   display:none;
   position:absolute;top:0;left:0;right:0;
@@ -92,6 +99,8 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
   background:#000;
   z-index:7;
   pointer-events:none;
+  opacity:0;
+  transition:opacity .6s ease;
 }
 .yt-bottom-bar{
   display:none;
@@ -100,9 +109,14 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
   background:#000;
   z-index:7;
   pointer-events:none;
+  opacity:0;
+  transition:opacity .6s ease;
 }
 .player-wrap[data-platform="youtube"] .yt-top-bar{display:block;}
 .player-wrap[data-platform="youtube"] .yt-bottom-bar{display:block;}
+.player-wrap.controls-visible .yt-top-bar{opacity:1;transition:opacity .2s ease;}
+.player-wrap.controls-visible .yt-bottom-bar{opacity:1;transition:opacity .2s ease;}
+
 @media (max-width:640px){
   .yt-top-bar{height:44px;}
   .yt-bottom-bar{height:34px;}
@@ -183,8 +197,8 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .player-watermark .mark{width:18px;height:22px;flex-shrink:0;display:block;filter:drop-shadow(0 2px 6px rgba(0,0,0,.7));}
 .player-watermark .wordmark{font-weight:900;font-size:12px;letter-spacing:.14em;color:#fff;text-transform:uppercase;line-height:1;}
 
-.ctrl-bar{position:absolute;left:0;right:0;bottom:0;z-index:9;padding:20px 18px 14px;background:linear-gradient(0deg, rgba(10,15,20,.96) 0%, rgba(10,15,20,.7) 50%, rgba(10,15,20,0) 100%);display:flex;align-items:center;gap:10px;opacity:0;transform:translateY(8px);transition:opacity .3s ease, transform .3s ease;pointer-events:none;}
-.player-wrap.controls-visible .ctrl-bar{opacity:1;transform:translateY(0);pointer-events:auto;}
+.ctrl-bar{position:absolute;left:0;right:0;bottom:0;z-index:9;padding:20px 18px 14px;background:linear-gradient(0deg, rgba(10,15,20,.96) 0%, rgba(10,15,20,.7) 50%, rgba(10,15,20,0) 100%);display:flex;align-items:center;gap:10px;opacity:0;transform:translateY(8px);transition:opacity .6s ease, transform .6s ease;pointer-events:none;}
+.player-wrap.controls-visible .ctrl-bar{opacity:1;transform:translateY(0);pointer-events:auto;transition:opacity .2s ease, transform .2s ease;}
 
 .ctrl-btn{width:42px;height:42px;border-radius:11px;background:rgba(0,255,255,.12);border:1px solid rgba(0,255,255,.4);color:#e6ffff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s ease, background .15s ease, box-shadow .2s ease, opacity .2s ease;padding:0;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);flex-shrink:0;position:relative;}
 .ctrl-btn:hover:not(:disabled){background:rgba(0,255,255,.3);box-shadow:0 8px 24px rgba(0,255,255,.35);transform:translateY(-1px);}
@@ -2017,4 +2031,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-            </html>
+      </html>
