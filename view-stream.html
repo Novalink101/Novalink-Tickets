@@ -77,10 +77,11 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .card + .card{margin-top:18px}
 .card-title{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:var(--cy3);margin-bottom:12px}
 
-.player-wrap{background:#000;border-radius:16px;overflow:hidden;aspect-ratio:16/9;position:relative;border:1px solid var(--bd);user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;box-shadow:0 16px 48px -12px rgba(10,15,20,.35);}
+/* PLAYER — LEGAL. YouTube's player is untouched. No overlays block it. */
+.player-wrap{background:#000;border-radius:16px;overflow:hidden;aspect-ratio:16/9;position:relative;border:1px solid var(--bd);box-shadow:0 16px 48px -12px rgba(10,15,20,.35);}
 .player-wrap iframe,
 .player-wrap #ytPlayer,
-.player-wrap #ytPlayer iframe{position:absolute!important;inset:0;width:100%;height:100%;border:0;z-index:1!important;pointer-events:none;background:#000}
+.player-wrap #ytPlayer iframe{position:absolute!important;inset:0;width:100%;height:100%;border:0;z-index:1!important;background:#000}
 
 @media (max-width:900px) and (orientation:landscape){
   .player-wrap{
@@ -102,50 +103,19 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
   .more-on-channel{display:none;}
 }
 
-.click-shield{position:absolute;inset:0;z-index:5;background:transparent;cursor:pointer;}
-
-.yt-top-bar{
-  display:none;
-  position:absolute;top:0;left:0;right:0;
-  height:52px;
-  background:#000;
-  z-index:7;
-  pointer-events:none;
-  opacity:0;
-  transition:opacity .6s ease;
-}
-.yt-bottom-bar{
-  display:none;
-  position:absolute;left:0;right:0;bottom:0;
-  height:40px;
-  background:#000;
-  z-index:7;
-  pointer-events:none;
-  opacity:0;
-  transition:opacity .6s ease;
-}
-.player-wrap[data-platform="youtube"] .yt-top-bar{display:block;}
-.player-wrap[data-platform="youtube"] .yt-bottom-bar{display:block;}
-.player-wrap.controls-visible .yt-top-bar{opacity:1;transition:opacity .2s ease;}
-.player-wrap.controls-visible .yt-bottom-bar{opacity:1;transition:opacity .2s ease;}
-
-@media (max-width:640px){
-  .yt-top-bar{height:44px;}
-  .yt-bottom-bar{height:34px;}
-}
-
+/* Entry loader — appears for a few seconds before YouTube loads. Then disappears and never returns. */
 .player-loader{
-  position:absolute!important;inset:0!important;z-index:15!important;
+  position:absolute;inset:0;z-index:4;
   background:#000;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   gap:20px;
   opacity:0;visibility:hidden;
-  transition:opacity .25s ease, visibility 0s linear .25s;
+  transition:opacity .4s ease, visibility 0s linear .4s;
   pointer-events:none;
 }
 .player-loader.visible{
   opacity:1;visibility:visible;
-  transition:opacity .15s ease, visibility 0s linear 0s;
+  transition:opacity .25s ease, visibility 0s linear 0s;
   pointer-events:auto;
 }
 .player-loader .pl-mark{
@@ -182,15 +152,7 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
   .player-loader .pl-sub{font-size:10px}
 }
 
-.unmute-prompt{position:absolute;inset:0;z-index:12;display:none;align-items:center;justify-content:center;background:rgba(10,15,20,.55);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);animation:fadeIn .3s ease;}
-.unmute-prompt.visible{display:flex;}
-.unmute-btn{display:inline-flex;align-items:center;gap:14px;padding:18px 26px;background:linear-gradient(135deg,var(--cy),var(--cy2));color:#04161c;border:none;border-radius:99px;font-family:inherit;font-weight:900;font-size:16px;letter-spacing:.02em;cursor:pointer;box-shadow:0 20px 60px rgba(0,255,255,.45), 0 0 0 6px rgba(0,255,255,.15);transition:transform .2s ease, box-shadow .2s ease;animation:unmutePulse 2.4s ease-in-out infinite;}
-.unmute-btn:hover{transform:scale(1.05);box-shadow:0 24px 70px rgba(0,255,255,.55), 0 0 0 8px rgba(0,255,255,.2);}
-.unmute-btn:active{transform:scale(.98);}
-.unmute-btn i{width:26px;height:26px;stroke-width:2.6;}
-@keyframes unmutePulse{0%,100%{transform:scale(1);}50%{transform:scale(1.03);}}
-@keyframes fadeIn{from{opacity:0}to{opacity:1}}
-
+/* LIVE pill + watermark — small badges in the corner. They don't cover YouTube's controls or UI. */
 .live-pill{position:absolute;top:14px;left:14px;z-index:8;display:none;align-items:center;gap:6px;background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff;font-size:10px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;padding:5px 11px;border-radius:6px;box-shadow:0 4px 14px rgba(220,38,38,.5), inset 0 1px 0 rgba(255,255,255,.15);pointer-events:none;}
 .live-pill.visible{display:inline-flex;}
 .live-pill::before{content:'';width:6px;height:6px;border-radius:50%;background:#fff;animation:livePulse 1.5s infinite;flex-shrink:0;}
@@ -199,51 +161,16 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .highlight-pill.visible{display:inline-flex;}
 .highlight-pill i{width:11px;height:11px;}
 
-.live-time-chip{position:absolute;top:44px;left:14px;z-index:8;display:none;align-items:center;background:rgba(10,15,20,.7);border:1px solid rgba(255,255,255,.1);color:rgba(255,255,255,.9);font-family:var(--mono);font-size:10.5px;font-weight:800;letter-spacing:.04em;padding:4px 9px;border-radius:6px;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);pointer-events:none;transition:opacity .3s ease;}
-.live-time-chip.visible{display:inline-flex;}
-.live-time-chip.faded{opacity:0;}
-
-.player-watermark{position:absolute;top:16px;right:16px;z-index:16;display:none;align-items:center;gap:7px;text-decoration:none;opacity:.85;transition:opacity .25s ease, transform .25s ease;pointer-events:auto;text-shadow:0 2px 8px rgba(0,0,0,.85);}
+.player-watermark{position:absolute;top:16px;right:16px;z-index:8;display:none;align-items:center;gap:7px;text-decoration:none;opacity:.85;transition:opacity .25s ease;pointer-events:none;text-shadow:0 2px 8px rgba(0,0,0,.85);}
 .player-watermark.visible{display:inline-flex;}
-.player-watermark:hover{opacity:1;transform:translateY(-1px);}
 .player-watermark .mark{width:18px;height:22px;flex-shrink:0;display:block;filter:drop-shadow(0 2px 6px rgba(0,0,0,.7));}
 .player-watermark .wordmark{font-weight:900;font-size:12px;letter-spacing:.14em;color:#fff;text-transform:uppercase;line-height:1;}
 
-.ctrl-bar{position:absolute;left:0;right:0;bottom:0;z-index:9;padding:20px 18px 14px;background:linear-gradient(0deg, rgba(10,15,20,.96) 0%, rgba(10,15,20,.7) 50%, rgba(10,15,20,0) 100%);display:flex;align-items:center;gap:10px;opacity:0;transform:translateY(8px);transition:opacity .6s ease, transform .6s ease;pointer-events:none;}
-.player-wrap.controls-visible .ctrl-bar{opacity:1;transform:translateY(0);pointer-events:auto;transition:opacity .2s ease, transform .2s ease;}
-
-.ctrl-btn{width:42px;height:42px;border-radius:11px;background:rgba(0,255,255,.12);border:1px solid rgba(0,255,255,.4);color:#e6ffff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s ease, background .15s ease, box-shadow .2s ease, opacity .2s ease;padding:0;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);flex-shrink:0;position:relative;}
-.ctrl-btn:hover:not(:disabled){background:rgba(0,255,255,.3);box-shadow:0 8px 24px rgba(0,255,255,.35);transform:translateY(-1px);}
-.ctrl-btn:active:not(:disabled){transform:scale(.94);}
-.ctrl-btn:disabled{opacity:.28;cursor:not-allowed;}
-.ctrl-btn i{width:18px;height:18px;stroke-width:2.4;}
-.ctrl-btn.primary{width:50px;height:50px;background:linear-gradient(135deg,var(--cy),var(--cy2));border-color:var(--cy);color:#04161c;box-shadow:0 10px 28px rgba(0,255,255,.45);}
-.ctrl-btn.primary:hover:not(:disabled){background:linear-gradient(135deg,var(--cy2),var(--cy3));transform:scale(1.06);box-shadow:0 12px 32px rgba(0,255,255,.6);}
-.ctrl-btn.primary i{width:24px;height:24px;stroke-width:2.6;}
-.ctrl-btn .skip-num{position:absolute;bottom:3px;right:4px;font-size:8.5px;font-weight:900;font-family:var(--mono);color:rgba(230,255,255,.85);letter-spacing:0;pointer-events:none;line-height:1;}
-
-.ctrl-btn.ctrl-live-jump{background:rgba(220,38,38,.18);border-color:rgba(220,38,38,.5);color:#fecaca;width:auto;padding:0 14px;gap:6px;font-size:11.5px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;}
-.ctrl-btn.ctrl-live-jump:hover:not(:disabled){background:rgba(220,38,38,.35);box-shadow:0 8px 24px rgba(220,38,38,.4);}
-.ctrl-btn.ctrl-live-jump i{width:14px;height:14px}
-
-.ctrl-spacer{flex:1;}
-.ctrl-time{font-family:var(--mono);font-size:11.5px;font-weight:800;color:rgba(255,255,255,.85);letter-spacing:.04em;text-shadow:0 1px 4px rgba(0,0,0,.6);padding:0 8px;white-space:nowrap;}
-
-.seek-ripple{position:absolute;top:50%;width:120px;height:120px;margin-top:-60px;border-radius:50%;background:rgba(0,255,255,.16);border:2px solid rgba(0,255,255,.55);display:none;align-items:center;justify-content:center;flex-direction:column;gap:4px;color:var(--cy);font-family:var(--mono);font-weight:900;font-size:14px;pointer-events:none;z-index:11;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px);}
-.seek-ripple.left{left:8%;}
-.seek-ripple.right{right:8%;}
-.seek-ripple.show{display:flex;animation:rippleFade .7s ease forwards;}
-.seek-ripple i{width:26px;height:26px;stroke-width:2.6;}
-@keyframes rippleFade{0%{opacity:0;transform:scale(.8)}30%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.1)}}
-
-.pause-curtain{position:absolute;inset:0;z-index:10;background:rgba(10,15,20,.75);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px;text-align:center;padding:24px;cursor:pointer;animation:fadeIn .25s ease;}
+.pause-curtain{position:absolute;inset:0;z-index:4;background:rgba(10,15,20,.75);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px;text-align:center;padding:24px;cursor:pointer;}
 .pause-curtain.visible{display:flex;}
 .pause-curtain .pc-brand{display:inline-flex;align-items:center;gap:10px;padding:9px 16px 9px 12px;background:rgba(0,255,255,.08);border:1px solid rgba(0,255,255,.35);border-radius:99px;margin-bottom:4px;}
 .pause-curtain .pc-brand .mark{width:22px;height:27px;display:block;}
 .pause-curtain .pc-brand .wm{font-weight:900;font-size:12px;letter-spacing:.1em;color:#e6ffff;text-transform:uppercase;line-height:1;}
-.pause-curtain .pc-play{width:88px;height:88px;border-radius:50%;background:linear-gradient(135deg,var(--cy),var(--cy2));border:none;color:#04161c;display:flex;align-items:center;justify-content:center;box-shadow:0 16px 48px rgba(0,255,255,.5);transition:transform .25s ease;padding:0;cursor:pointer;}
-.pause-curtain .pc-play:hover{transform:scale(1.08);}
-.pause-curtain .pc-play i{width:38px;height:38px;stroke-width:2.8;margin-left:5px;}
 .pause-curtain .pc-label{font-size:13px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:var(--cy);}
 .pause-curtain .pc-sub{font-size:12.5px;color:rgba(255,255,255,.65);max-width:340px;line-height:1.55;font-weight:500;}
 
@@ -262,6 +189,7 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
   .countdown-sub{font-size:11.5px}
 }
 
+/* Ad overlay — covers the player between YouTube sessions. Legal. */
 .ad-overlay{position:absolute;inset:0;z-index:20;background:#000;display:none;flex-direction:column;overflow:hidden;}
 .ad-overlay.visible{display:flex;}
 .ad-overlay-media{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#000;overflow:hidden;}
@@ -298,39 +226,19 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 
 .player-wrap:fullscreen,
 .player-wrap:-webkit-full-screen{border-radius:0;border:none;aspect-ratio:auto;width:100vw;height:100vh;max-width:none;}
-.player-wrap:fullscreen .ctrl-bar,
-.player-wrap:-webkit-full-screen .ctrl-bar{padding:24px 28px 20px;}
 .player-wrap:fullscreen .player-watermark,
 .player-wrap:-webkit-full-screen .player-watermark{top:22px;right:22px;}
 .player-wrap:fullscreen .live-pill,
 .player-wrap:-webkit-full-screen .live-pill,
 .player-wrap:fullscreen .highlight-pill,
 .player-wrap:-webkit-full-screen .highlight-pill{top:22px;left:22px;}
-.player-wrap:fullscreen .live-time-chip,
-.player-wrap:-webkit-full-screen .live-time-chip{top:52px;left:22px;}
-.player-wrap:fullscreen .yt-top-bar,
-.player-wrap:-webkit-full-screen .yt-top-bar{height:64px;}
-.player-wrap:fullscreen .yt-bottom-bar,
-.player-wrap:-webkit-full-screen .yt-bottom-bar{height:52px;}
 
 @media (max-width:640px){
   .live-pill,.highlight-pill{font-size:9px;padding:4px 9px;top:10px;left:10px;gap:5px;}
   .live-pill::before{width:5px;height:5px;}
-  .live-time-chip{top:36px;left:10px;font-size:9.5px;padding:3px 7px;}
   .player-watermark{top:10px;right:10px;gap:6px;opacity:.85;}
   .player-watermark .wordmark{font-size:10.5px;letter-spacing:.12em;}
   .player-watermark .mark{width:15px;height:19px;}
-  .ctrl-bar{padding:14px 12px 12px;gap:7px;}
-  .ctrl-btn{width:38px;height:38px;border-radius:10px;}
-  .ctrl-btn i{width:16px;height:16px;}
-  .ctrl-btn.primary{width:46px;height:46px;}
-  .ctrl-btn.primary i{width:22px;height:22px;}
-  .ctrl-btn .skip-num{font-size:7.5px;bottom:2px;right:3px;}
-  .ctrl-btn.ctrl-live-jump{padding:0 10px;font-size:10.5px;}
-  .ctrl-btn.ctrl-live-jump i{width:12px;height:12px}
-  .ctrl-time{font-size:10.5px;padding:0 5px;}
-  .pause-curtain .pc-play{width:68px;height:68px;}
-  .pause-curtain .pc-play i{width:28px;height:28px;}
   .pause-curtain .pc-brand{padding:7px 12px 7px 9px;gap:8px;}
   .pause-curtain .pc-brand .mark{width:18px;height:22px;}
   .pause-curtain .pc-brand .wm{font-size:10.5px;}
@@ -341,17 +249,12 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
   .ad-overlay-bottombar{padding:12px 12px;flex-wrap:wrap;}
   .ad-overlay-cta{padding:9px 14px;font-size:12px;}
   .ad-overlay-skip{padding:8px 12px;font-size:11.5px;}
-  .seek-ripple{width:96px;height:96px;margin-top:-48px;}
-  .seek-ripple i{width:22px;height:22px;}
-  .seek-ripple span{font-size:12px;}
   .channel-hero-info{padding:16px 20px 20px;}
   .channel-name-big{font-size:clamp(1.5rem,5vw,2rem);}
   .channel-meta-row{font-size:12px;gap:10px;}
-  .unmute-btn{padding:14px 20px;gap:10px;font-size:14px;}
-  .unmute-btn i{width:22px;height:22px;}
 }
 
-.player-curtain{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:24px;color:#fff;z-index:4}
+.player-curtain{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:24px;color:#fff;z-index:3}
 .player-curtain .pc-icon{width:64px;height:64px;border-radius:50%;background:rgba(0,255,255,.15);border:2px solid rgba(0,255,255,.5);display:flex;align-items:center;justify-content:center}
 .player-curtain .pc-icon i{width:28px;height:28px;color:var(--cy)}
 .player-curtain h3{font-size:1.1rem;font-weight:900;color:#fff;margin:0}
@@ -527,11 +430,6 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 
               <div id="ytPlayerHost"></div>
 
-              <div class="click-shield" id="clickShield"></div>
-
-              <div class="yt-top-bar" aria-hidden="true"></div>
-              <div class="yt-bottom-bar" aria-hidden="true"></div>
-
               <div class="player-loader" id="playerLoader" aria-hidden="true">
                 <svg class="pl-mark" viewBox="0 0 60 74" aria-hidden="true">
                   <path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/>
@@ -543,7 +441,6 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 
               <span class="live-pill" id="livePill">LIVE</span>
               <span class="highlight-pill" id="highlightPill"><i data-lucide="film"></i> Highlight</span>
-              <span class="live-time-chip" id="liveTimeChip">00:00:00</span>
 
               <a class="player-watermark" id="playerWatermark" href="index.html" aria-label="Novalink">
                 <svg class="mark" viewBox="0 0 60 74" aria-hidden="true">
@@ -552,63 +449,6 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
                 </svg>
                 <span class="wordmark">Novalink</span>
               </a>
-
-              <div class="unmute-prompt" id="unmutePrompt">
-                <button type="button" class="unmute-btn" id="unmuteBtn">
-                  <i data-lucide="volume-2"></i>
-                  <span>Tap to unmute</span>
-                </button>
-              </div>
-
-              <div class="seek-ripple left" id="seekRippleLeft">
-                <i data-lucide="chevrons-left"></i>
-                <span>10s</span>
-              </div>
-              <div class="seek-ripple right" id="seekRippleRight">
-                <i data-lucide="chevrons-right"></i>
-                <span>10s</span>
-              </div>
-
-              <div class="pause-curtain" id="pauseCurtain">
-                <div class="pc-brand">
-                  <svg class="mark" viewBox="0 0 60 74" aria-hidden="true">
-                    <path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/>
-                    <path fill="#00FFFF" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/>
-                  </svg>
-                  <span class="wm">Novalink</span>
-                </div>
-                <button class="pc-play" id="pausePlayBtn" aria-label="Play">
-                  <i data-lucide="play"></i>
-                </button>
-                <div class="pc-label">Paused</div>
-                <div class="pc-sub">Tap play to resume watching. Stay on Novalink to keep this stream free.</div>
-              </div>
-
-              <div class="ctrl-bar" id="ctrlBar">
-                <button class="ctrl-btn" id="ctrlBack" aria-label="Seek back 10 seconds">
-                  <i data-lucide="chevron-left"></i>
-                  <span class="skip-num">10</span>
-                </button>
-                <button class="ctrl-btn primary" id="ctrlPlayPause" aria-label="Play / Pause">
-                  <i data-lucide="pause"></i>
-                </button>
-                <button class="ctrl-btn" id="ctrlForward" aria-label="Seek forward 10 seconds">
-                  <i data-lucide="chevron-right"></i>
-                  <span class="skip-num">10</span>
-                </button>
-                <button class="ctrl-btn ctrl-live-jump" id="ctrlLiveJump" aria-label="Jump to live" style="display:none">
-                  <i data-lucide="radio"></i>
-                  <span>Live</span>
-                </button>
-                <button class="ctrl-btn" id="ctrlMute" aria-label="Mute / Unmute">
-                  <i data-lucide="volume-x"></i>
-                </button>
-                <span class="ctrl-time" id="ctrlTime"></span>
-                <span class="ctrl-spacer"></span>
-                <button class="ctrl-btn" id="ctrlFullscreen" aria-label="Fullscreen">
-                  <i data-lucide="maximize"></i>
-                </button>
-              </div>
 
               <div class="ad-overlay" id="adOverlay" role="dialog" aria-modal="true" aria-label="Advertisement">
                 <div class="ad-overlay-topbar">
@@ -738,26 +578,9 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 'use strict';
 
 var GLOBAL_REPLAY_DAYS = 30;
-var SKIP_BUTTON_SECONDS = 10;
-var SKIP_KEY_SMALL = 5;
-var SKIP_KEY_LARGE = 10;
-var LIVE_CHIP_FADE_MS = 5000;
-var LIVE_EDGE_DRIFT_SECONDS = 30;
 var UNMUTE_PREF_KEY = 'novalink_audio_enabled';
-
 var LOADER_ENTRY_MIN_MS = 3500;
-var LOADER_ENTRY_TAIL_MS = 400;
-var LOADER_SEEK_MS = 1500;
-var LOADER_FULLSCREEN_MS = 600;
 var LOADER_MAX_MS = 8000;
-
-/* How long the bars stay up after a seek / jump-to-live.
-   YouTube keeps its chrome visible for ~3s after a seek, so we hold
-   the bars for that long to keep it hidden. */
-var BARS_HOLD_AFTER_SEEK_MS = 3000;
-
-/* Standard window for our control bar + bars when user taps the screen */
-var CONTROLS_IDLE_HIDE_MS = 3000;
 
 var AD_DEFAULTS = {
   prerollEnabled:    true,
@@ -825,15 +648,6 @@ function categoryLabel(c){
     movies:'Movies', business:'Business', creative:'Creative', other:'Other'
   }[c] || 'Live';
 }
-function pad2(n){ return String(n).padStart(2, "0"); }
-function formatTime(sec){
-  sec = Math.max(0, Math.floor(sec || 0));
-  var h = Math.floor(sec / 3600);
-  var m = Math.floor((sec % 3600) / 60);
-  var s = Math.floor(sec % 60);
-  if (h > 0) return h + ":" + pad2(m) + ":" + pad2(s);
-  return m + ":" + pad2(s);
-}
 
 var currentUser = null;
 var isAdmin = false;
@@ -853,33 +667,8 @@ var loader = {
   visible: false,
   shownAt: 0,
   hideTimer: null,
-  maxTimer: null,
-  entryPhase: false
+  maxTimer: null
 };
-
-var player = {
-  state: "unknown",
-  muted: true,
-  iframe: null,
-  ytPlayer: null,
-  platform: "youtube",
-  isLive: true,
-  currentTime: 0,
-  duration: 0,
-  timeTicker: null,
-  controlsHideTimer: null,
-  liveChipFadeTimer: null,
-  lastTapTime: 0,
-  tapPosition: null,
-  pauseStartTime: null,
-  ytReady: false
-};
-
-function setPlayerPlatformAttr(platform){
-  var wrap = $("playerWrap");
-  if (!wrap) return;
-  wrap.setAttribute("data-platform", platform || "youtube");
-}
 
 function showLoader(subText){
   var el = $("playerLoader");
@@ -903,15 +692,6 @@ function hideLoader(){
   clearTimeout(loader.hideTimer);
   loader.hideTimer = null;
   loader.maxTimer = null;
-}
-function scheduleLoaderHide(minMs, tailMs, resetEntry){
-  clearTimeout(loader.hideTimer);
-  var elapsed = Date.now() - loader.shownAt;
-  var wait = Math.max(0, minMs - elapsed) + (tailMs || 0);
-  loader.hideTimer = setTimeout(function(){
-    hideLoader();
-    if (resetEntry) loader.entryPhase = false;
-  }, wait);
 }
 
 function applyAuth(user){
@@ -966,7 +746,15 @@ function getDeclaredStreamType(){
 }
 function applyDeclaredStreamType(){
   var t = getDeclaredStreamType();
-  applyLiveStatus(t === "live");
+  var isLive = (t === "live");
+  if (isLive) {
+    if ($("livePill")) $("livePill").classList.add("visible");
+    if ($("highlightPill")) $("highlightPill").classList.remove("visible");
+  } else {
+    if ($("livePill")) $("livePill").classList.remove("visible");
+    if ($("highlightPill")) $("highlightPill").classList.add("visible");
+  }
+  renderWatchBanner();
 }
 
 function extractYouTubeId(url){
@@ -987,19 +775,17 @@ function extractYouTubeId(url){
 function loadYouTubePlayer(videoId){
   var host = $("ytPlayerHost");
   host.innerHTML = '<div id="ytPlayer"></div>';
-  player.ytPlayer = new YT.Player("ytPlayer", {
+  new YT.Player("ytPlayer", {
     videoId: videoId,
     playerVars: {
       autoplay: 1,
       mute: 1,
       rel: 0,
-      modestbranding: 1,
       playsinline: 1,
       iv_load_policy: 3,
-      fs: 0,
-      controls: 0,
-      showinfo: 0,
-      disablekb: 1,
+      fs: 1,
+      controls: 1,
+      modestbranding: 1,
       color: "white"
     },
     events: {
@@ -1010,440 +796,12 @@ function loadYouTubePlayer(videoId){
 }
 
 function onPlayerReady(event){
-  player.ytReady = true;
-  try {
-    if (typeof player.ytPlayer.getIframe === "function") {
-      player.iframe = player.ytPlayer.getIframe();
-    }
-  } catch(e){ console.warn("[yt iframe]", e); }
-
-  applyDeclaredStreamType();
-
-  loader.entryPhase = true;
-
-  if (localStorage.getItem(UNMUTE_PREF_KEY) === "1") {
-    tryUnmute();
-  } else {
-    showUnmutePrompt();
-  }
-  playerStateSync("playing");
+  /* Give a short grace period after ready so our loader covers the initial chrome reveal */
+  setTimeout(hideLoader, 1500);
 }
-
-function applyLiveStatus(isLive){
-  player.isLive = isLive;
-
-  if (isLive) {
-    if ($("livePill")) $("livePill").classList.add("visible");
-    if ($("highlightPill")) $("highlightPill").classList.remove("visible");
-    if ($("ctrlPlayPause")) $("ctrlPlayPause").style.display = "none";
-    var chip = $("liveTimeChip");
-    if (chip) {
-      chip.classList.add("visible");
-      chip.classList.remove("faded");
-      clearTimeout(player.liveChipFadeTimer);
-      player.liveChipFadeTimer = setTimeout(function(){ chip.classList.add("faded"); }, LIVE_CHIP_FADE_MS);
-    }
-  } else {
-    if ($("livePill")) $("livePill").classList.remove("visible");
-    if ($("highlightPill")) $("highlightPill").classList.add("visible");
-    if ($("ctrlPlayPause")) $("ctrlPlayPause").style.display = "inline-flex";
-    var chip2 = $("liveTimeChip");
-    if (chip2) chip2.classList.remove("visible");
-    if ($("ctrlLiveJump")) $("ctrlLiveJump").style.display = "none";
-  }
-
-  if ($("ctrlBack")) $("ctrlBack").disabled = false;
-  if ($("ctrlForward")) $("ctrlForward").disabled = false;
-
-  renderWatchBanner();
-}
-
 function onPlayerStateChange(event){
-  if (event.data === -1) {
-    showLoader("Preparing stream…");
-    scheduleLoaderHide(0, 0, false);
-    return;
-  }
-  if (event.data === 3) {
-    showLoader("Buffering…");
-    clearTimeout(loader.hideTimer);
-    return;
-  }
-  if (event.data === 1) {
-    if (loader.entryPhase) {
-      scheduleLoaderHide(LOADER_ENTRY_MIN_MS, LOADER_ENTRY_TAIL_MS, true);
-    } else {
-      scheduleLoaderHide(0, LOADER_ENTRY_TAIL_MS, false);
-    }
-    playerStateSync("playing");
-    return;
-  }
-  if (event.data === 2) {
-    playerStateSync("paused");
-    return;
-  }
-  if (event.data === 0) {
-    playerStateSync("idle");
-  }
-}
-
-function sendCommand(cmd, value){
-  try {
-    if (player.ytPlayer && player.ytReady) {
-      if (cmd === "play")   player.ytPlayer.playVideo();
-      if (cmd === "pause")  player.ytPlayer.pauseVideo();
-      if (cmd === "mute")   player.ytPlayer.mute();
-      if (cmd === "unmute") player.ytPlayer.unMute();
-      if (cmd === "seek")   player.ytPlayer.seekTo(Math.max(0, value|0), true);
-    }
-  } catch(e){ console.warn("[sendCommand]", e); }
-}
-function playerStateSync(newState){
-  player.state = newState;
-  var playIcons = document.querySelectorAll("#ctrlPlayPause i");
-  if (playIcons.length) {
-    playIcons.forEach(function(i){ i.setAttribute("data-lucide", newState === "playing" ? "pause" : "play"); });
-    if (window.lucide && window.lucide.createIcons) lucide.createIcons();
-  }
-  var curtain = $("pauseCurtain");
-  if (curtain) {
-    if (newState === "paused" && !player.isLive) curtain.classList.add("visible");
-    else curtain.classList.remove("visible");
-  }
-  if (newState === "paused") showControls(true);
-}
-function pausePlayer(){
-  if (player.isLive) return;
-  player.pauseStartTime = Date.now();
-  sendCommand("pause");
-  playerStateSync("paused");
-  showControls();
-}
-function playPlayer(){
-  sendCommand("play");
-  playerStateSync("playing");
-  player.pauseStartTime = null;
-  showControls();
-}
-function togglePlayPause(){
-  if (player.isLive) return;
-  if (player.state === "playing") pausePlayer();
-  else playPlayer();
-}
-function toggleMute(){
-  player.muted = !player.muted;
-  sendCommand(player.muted ? "mute" : "unmute");
-  var micons = document.querySelectorAll("#ctrlMute i");
-  if (micons.length) {
-    micons.forEach(function(i){ i.setAttribute("data-lucide", player.muted ? "volume-x" : "volume-2"); });
-    if (window.lucide && window.lucide.createIcons) lucide.createIcons();
-  }
-  if (!player.muted) {
-    if ($("unmutePrompt")) $("unmutePrompt").classList.remove("visible");
-    localStorage.setItem(UNMUTE_PREF_KEY, "1");
-  }
-  showControls();
-}
-function tryUnmute(){
-  player.muted = false;
-  sendCommand("unmute");
-  var micons = document.querySelectorAll("#ctrlMute i");
-  micons.forEach(function(i){ i.setAttribute("data-lucide", "volume-2"); });
-  if (window.lucide && window.lucide.createIcons) lucide.createIcons();
-  localStorage.setItem(UNMUTE_PREF_KEY, "1");
-  if ($("unmutePrompt")) $("unmutePrompt").classList.remove("visible");
-}
-function showUnmutePrompt(){ if ($("unmutePrompt")) $("unmutePrompt").classList.add("visible"); }
-function hideUnmutePrompt(){ if ($("unmutePrompt")) $("unmutePrompt").classList.remove("visible"); }
-
-/* Hold bars + controls visible for BARS_HOLD_AFTER_SEEK_MS.
-   Used after seeks and jump-to-live so YouTube's lingering chrome
-   stays covered. */
-function holdBars(){
-  var wrap = $("playerWrap");
-  if (!wrap) return;
-  wrap.classList.add("controls-visible");
-  clearTimeout(player.controlsHideTimer);
-  player.controlsHideTimer = setTimeout(function(){
-    wrap.classList.remove("controls-visible");
-  }, BARS_HOLD_AFTER_SEEK_MS);
-}
-
-function seekBy(seconds){
-  if (!player.ytPlayer) return;
-  var target = Math.max(0, player.currentTime + seconds);
-  if (player.duration > 0) target = Math.min(target, player.duration);
-  showLoader("Seeking…");
-  scheduleLoaderHide(LOADER_SEEK_MS, 0, false);
-  holdBars();
-  sendCommand("seek", target);
-  player.currentTime = target;
-  updateTimeDisplay();
-}
-
-function jumpToLive(){
-  if (!player.ytPlayer || !player.ytReady) return;
-  try {
-    var dur = player.ytPlayer.getDuration() || 0;
-    if (dur > 0) {
-      showLoader("Jumping to live…");
-      scheduleLoaderHide(LOADER_SEEK_MS, 0, false);
-      holdBars();
-      player.ytPlayer.seekTo(dur, true);
-      player.ytPlayer.playVideo();
-      showToast("Jumped to live", "success", 1500);
-    }
-  } catch(err){}
-}
-
-function updateTimeDisplay(){
-  var t = $("ctrlTime");
-  if (!t) return;
-  if (player.isLive) { t.textContent = ""; return; }
-  if (player.duration > 0) t.textContent = formatTime(player.currentTime) + " / " + formatTime(player.duration);
-  else t.textContent = formatTime(player.currentTime);
-}
-
-function showControls(keepOpen){
-  var wrap = $("playerWrap");
-  if (!wrap) return;
-  wrap.classList.add("controls-visible");
-  clearTimeout(player.controlsHideTimer);
-  if (!keepOpen) player.controlsHideTimer = setTimeout(hideControls, CONTROLS_IDLE_HIDE_MS);
-}
-function hideControls(){
-  var wrap = $("playerWrap");
-  if (!wrap) return;
-  if (player.state === "paused") return;
-  if (adState.currentlyShowing) return;
-  wrap.classList.remove("controls-visible");
-}
-
-function isFullscreen(){ return !!(document.fullscreenElement || document.webkitFullscreenElement); }
-function isMobile(){ return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent); }
-function isIOS(){ return /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1); }
-function tryLockLandscape(){
-  if (!isMobile()) return;
-  try { if (screen && screen.orientation && typeof screen.orientation.lock === "function") { var p = screen.orientation.lock("landscape"); if (p && p.catch) p.catch(function(){}); } } catch(e){}
-}
-function tryUnlockOrientation(){
-  if (!isMobile()) return;
-  try { if (screen && screen.orientation && typeof screen.orientation.unlock === "function") screen.orientation.unlock(); } catch(e){}
-}
-function toggleFullscreen(){
-  var wrap = $("playerWrap");
-  if (!wrap) return;
-  showLoader(isFullscreen() ? "Exiting fullscreen…" : "Entering fullscreen…");
-  scheduleLoaderHide(LOADER_FULLSCREEN_MS, 0, false);
-
-  if (!isFullscreen()) {
-    var req = wrap.requestFullscreen || wrap.webkitRequestFullscreen || wrap.webkitRequestFullScreen || wrap.mozRequestFullScreen || wrap.msRequestFullscreen;
-    if (req) {
-      var p = req.call(wrap);
-      if (p && p.then) {
-        p.then(function(){
-          tryLockLandscape();
-          if (isIOS()) showToast("Rotate your phone to landscape for a better view", "info", 3500);
-        }).catch(function(){ showToast("Fullscreen not available", "error", 2500); });
-      } else tryLockLandscape();
-    } else showToast("Fullscreen not supported on this device", "error", 2500);
-  } else {
-    var exit = document.exitFullscreen || document.webkitExitFullscreen || document.webkitCancelFullScreen || document.mozCancelFullScreen || document.msExitFullscreen;
-    if (exit) { try { exit.call(document); } catch(e){} }
-    tryUnlockOrientation();
-  }
-  showControls();
-}
-function syncFullscreenIcon(){
-  var icons = document.querySelectorAll("#ctrlFullscreen i");
-  if (icons.length) {
-    icons.forEach(function(i){ i.setAttribute("data-lucide", isFullscreen() ? "minimize" : "maximize"); });
-    if (window.lucide && window.lucide.createIcons) lucide.createIcons();
-  }
-}
-["fullscreenchange","webkitfullscreenchange","mozfullscreenchange","MSFullscreenChange"].forEach(function(ev){
-  document.addEventListener(ev, syncFullscreenIcon);
-});
-
-document.addEventListener("keydown", function(e){
-  if (document.activeElement && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;
-  if (!$("playerWrap")) return;
-  if (adState.currentlyShowing) return;
-  var k = e.key.toLowerCase();
-  if (k === " " || k === "k") { e.preventDefault(); togglePlayPause(); }
-  else if (k === "m") { e.preventDefault(); toggleMute(); }
-  else if (k === "f") { e.preventDefault(); toggleFullscreen(); }
-  else if (k === "arrowleft") { e.preventDefault(); seekBy(-SKIP_KEY_SMALL); }
-  else if (k === "arrowright") { e.preventDefault(); seekBy(SKIP_KEY_SMALL); }
-  else if (k === "j") { e.preventDefault(); seekBy(-SKIP_KEY_LARGE); }
-  else if (k === "l") { e.preventDefault(); seekBy(SKIP_KEY_LARGE); }
-});
-
-function handleShieldTap(e){
-  var now = Date.now();
-  var wrap = $("playerWrap");
-  if (!wrap) return;
-  var rect = wrap.getBoundingClientRect();
-  var x = (e.touches && e.touches[0] ? e.touches[0].clientX : e.clientX) - rect.left;
-  var half = rect.width / 2;
-  var side = x < half ? "left" : "right";
-  var timeSinceLast = now - player.lastTapTime;
-  if (timeSinceLast < 320 && player.tapPosition === side) {
-    if (side === "left") { seekBy(-SKIP_BUTTON_SECONDS); showSeekRipple("left"); }
-    else { seekBy(SKIP_BUTTON_SECONDS); showSeekRipple("right"); }
-    player.lastTapTime = 0;
-    player.tapPosition = null;
-    return;
-  }
-  player.lastTapTime = now;
-  player.tapPosition = side;
-  showControls();
-}
-function showSeekRipple(side){
-  var el = side === "left" ? $("seekRippleLeft") : $("seekRippleRight");
-  if (!el) return;
-  el.classList.remove("show");
-  void el.offsetWidth;
-  el.classList.add("show");
-  setTimeout(function(){ el.classList.remove("show"); }, 750);
-}
-
-function fetchAdSettings(){
-  return db.collection(SETTINGS).doc("ads").get().then(function(snap){
-    if (snap.exists) adSettings = Object.assign({}, AD_DEFAULTS, snap.data() || {});
-  }).catch(function(err){ console.warn("[ad settings] using defaults:", err && err.message); });
-}
-function fetchAdPool(){
-  return db.collection(ADS).where("active", "==", true).limit(50).get()
-    .then(function(snap){
-      var now = Date.now();
-      snap.forEach(function(doc){
-        var d = doc.data() || {};
-        d.id = doc.id;
-        if (d.startDate) { var s = new Date(d.startDate + "T00:00").getTime(); if (!isNaN(s) && now < s) return; }
-        if (d.endDate) { var e = new Date(d.endDate + "T23:59:59").getTime(); if (!isNaN(e) && now > e) return; }
-        var t = d.type || "any";
-        if (t === "preroll" || t === "any")  adPool.preroll.push(d);
-        if (t === "midroll" || t === "any")  adPool.midroll.push(d);
-        if (t === "postroll" || t === "any") adPool.postroll.push(d);
-      });
-    }).catch(function(err){ console.warn("[ad pool] unavailable:", err && err.message); });
-}
-function pickAd(slot){
-  var pool = adPool[slot] || [];
-  if (!pool.length) return null;
-  return pool[Math.floor(Math.random() * pool.length)];
-}
-function trackAdEvent(ad, eventType){
-  if (!ad || !ad.id) return;
-  try {
-    var ref = db.collection(ADS).doc(ad.id);
-    var update = {};
-    if (eventType === "impression") update.impressions = firebase.firestore.FieldValue.increment(1);
-    if (eventType === "click")      update.clicks      = firebase.firestore.FieldValue.increment(1);
-    ref.update(update).catch(function(){});
-  } catch(e){}
-}
-function showAdOverlay(slot, onComplete){
-  var ad = pickAd(slot);
-  var overlay = $("adOverlay");
-  var media = $("adMedia");
-  var title = $("adTitle");
-  var cta = $("adCta");
-  var ctaLabel = $("adCtaLabel");
-  var skipBtn = $("adSkipBtn");
-  var skipText = $("adSkipText");
-  var countdownEl = $("adCountdown");
-  if (!overlay || !media) { if (onComplete) onComplete(); return; }
-  adState.currentlyShowing = slot;
-  overlay.classList.add("visible");
-  media.innerHTML = "";
-  hideUnmutePrompt();
-
-  if (player.state === "playing") {
-    sendCommand("pause");
-    player.state = "paused";
-    player.pauseStartTime = null;
-    var playIcons = document.querySelectorAll("#ctrlPlayPause i");
-    playIcons.forEach(function(i){ i.setAttribute("data-lucide", "play"); });
-    if (window.lucide && window.lucide.createIcons) lucide.createIcons();
-  }
-
-  if (ad) {
-    title.textContent = ad.title || "Advertisement";
-    cta.href = ad.clickUrl || "#";
-    ctaLabel.textContent = ad.ctaLabel || "Learn more";
-    if (ad.mediaType === "video" && ad.mediaUrl) {
-      var vid = document.createElement("video");
-      vid.src = ad.mediaUrl;
-      vid.autoplay = true; vid.muted = true; vid.playsInline = true;
-      vid.setAttribute("playsinline", ""); vid.setAttribute("webkit-playsinline", "");
-      media.appendChild(vid);
-    } else if (ad.mediaUrl) {
-      var img = document.createElement("img");
-      img.src = ad.mediaUrl;
-      img.alt = ad.title || "Advertisement";
-      media.appendChild(img);
-    } else media.appendChild(buildHouseAd());
-    trackAdEvent(ad, "impression");
-  } else {
-    title.textContent = adSettings.houseAdTitle || "Advertise on Novalink";
-    cta.href = adSettings.houseAdUrl || "mailto:ads@novalink.com";
-    ctaLabel.textContent = adSettings.houseAdCtaLabel || "Advertise here";
-    media.appendChild(buildHouseAd());
-  }
-  cta.onclick = function(){ if (ad) trackAdEvent(ad, "click"); };
-
-  var skipAfter = parseInt(adSettings.skipAfterSeconds, 10) || 5;
-  if (ad && typeof ad.skipAfterSeconds === "number" && ad.skipAfterSeconds >= 0) skipAfter = ad.skipAfterSeconds;
-
-  if (skipAfter === -1) {
-    skipBtn.disabled = true; skipText.textContent = "Ad"; countdownEl.textContent = "";
-  } else {
-    var remaining = skipAfter;
-    skipBtn.disabled = true; skipText.textContent = "Skip in"; countdownEl.textContent = remaining;
-    clearInterval(adState.countdownTimerId);
-    adState.countdownTimerId = setInterval(function(){
-      remaining--;
-      if (remaining <= 0) {
-        clearInterval(adState.countdownTimerId);
-        skipBtn.disabled = false; skipText.textContent = "Skip ad"; countdownEl.textContent = "";
-      } else countdownEl.textContent = remaining;
-    }, 1000);
-  }
-  skipBtn.onclick = function(){ if (skipBtn.disabled) return; hideAdOverlay(); if (onComplete) onComplete(); };
-  clearTimeout(adState.skipTimerId);
-  adState.skipTimerId = setTimeout(function(){ hideAdOverlay(); if (onComplete) onComplete(); }, 30000);
-  refreshIcons();
-}
-function buildHouseAd(){
-  var wrap = document.createElement("div");
-  wrap.className = "ad-house-ad";
-  wrap.innerHTML =
-    '<div class="hh-brand">' +
-      '<svg class="mark" viewBox="0 0 60 74" aria-hidden="true">' +
-        '<path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/>' +
-        '<path fill="#00FFFF" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/>' +
-      '</svg>' +
-      '<span class="wm">Novalink</span>' +
-    '</div>' +
-    '<div class="hh-t">' + esc(adSettings.houseAdTitle || "Advertise on Novalink") + '</div>' +
-    '<div class="hh-s">' + esc(adSettings.houseAdText || "Reach thousands of live viewers across South Africa.") + '</div>' +
-    '<a class="hh-cta" href="' + esc(adSettings.houseAdUrl || "mailto:ads@novalink.com") + '" target="_blank" rel="noopener noreferrer">' +
-      '<i data-lucide="message-circle"></i> ' + esc(adSettings.houseAdCtaLabel || "Advertise here") +
-    '</a>';
-  return wrap;
-}
-function hideAdOverlay(){
-  var overlay = $("adOverlay");
-  if (!overlay) return;
-  overlay.classList.remove("visible");
-  var media = $("adMedia");
-  if (media) media.innerHTML = "";
-  clearInterval(adState.countdownTimerId);
-  clearTimeout(adState.skipTimerId);
-  adState.currentlyShowing = null;
-  if (player.muted && localStorage.getItem(UNMUTE_PREF_KEY) !== "1") showUnmutePrompt();
+  /* Hide the loader as soon as playback actually begins */
+  if (event.data === 1) hideLoader();
 }
 
 function renderHero(){
@@ -1710,36 +1068,21 @@ function renderWatch(){
   var phase = currentPhase();
   var t = getTiming();
   var bannerWrap = $("watchBannerWrap");
-  var playerWrap = $("playerWrap");
   var curtain = $("playerCurtain");
 
   bannerWrap.innerHTML = "";
   var host = $("ytPlayerHost");
   if (host) host.innerHTML = "";
-  if (player.ytPlayer && player.ytPlayer.destroy) { try { player.ytPlayer.destroy(); } catch(e){} }
-  player.ytPlayer = null;
-  player.ytReady = false;
-  player.iframe = null;
-  player.state = "unknown";
-  player.pauseStartTime = null;
   hideAdOverlay();
-  hideUnmutePrompt();
   hideLoader();
-  playerStateSync("idle");
-  clearTimeout(adState.midrollTimerId);
-  adState.midrollTimerId = null;
   stopUpcomingCountdown();
 
   var watermark = $("playerWatermark");
   var live = $("livePill");
   var hl = $("highlightPill");
-  var chip = $("liveTimeChip");
-  var jump = $("ctrlLiveJump");
   if (watermark) watermark.classList.remove("visible");
   if (live) live.classList.remove("visible");
   if (hl) hl.classList.remove("visible");
-  if (chip) chip.classList.remove("visible");
-  if (jump) jump.style.display = "none";
 
   if (phase === "upcoming" || phase === "unknown" || !t || !t.valid) {
     curtain.style.display = "flex";
@@ -1756,8 +1099,6 @@ function renderWatch(){
     return;
   }
 
-  player.platform = "youtube";
-  setPlayerPlatformAttr("youtube");
   var url = (streamData.streamUrl || "").trim();
   var ytId = extractYouTubeId(url);
   if (!ytId) {
@@ -1772,15 +1113,13 @@ function renderWatch(){
 
   function startPlayback(){
     curtain.style.display = "none";
-    loader.entryPhase = true;
     showLoader("Connecting to the source");
     loadYouTubePlayer(ytId);
     if (watermark) watermark.classList.add("visible");
+    applyDeclaredStreamType();
   }
 
   if (phase === "live") {
-    var declared = getDeclaredStreamType();
-    player.isLive = (declared === "live");
     var perStreamPreroll = streamData.prerollEnabled !== false;
     var perStreamMidroll = streamData.midrollEnabled !== false;
     var doPreroll = adSettings.prerollEnabled && perStreamPreroll && !adState.firedPreroll;
@@ -1796,22 +1135,18 @@ function renderWatch(){
       if (perStreamMidroll) startMidrollTimer(t);
     }
     renderWatchBanner();
-    startTimeTicker();
     return;
   }
 
   if (phase === "replay") {
-    player.isLive = false;
     startPlayback();
     renderWatchBanner();
-    startTimeTicker();
     return;
   }
 
   if (phase === "unlocking") {
     curtain.style.display = "flex";
     renderCountdownIntoCurtain(curtain);
-    startTimeTicker();
     return;
   }
 }
@@ -1827,10 +1162,7 @@ function startMidrollTimer(t){
   adState.midrollTimerId = setTimeout(function(){
     adState.firedMidroll = true;
     if (adState.currentlyShowing) return;
-    showAdOverlay("midroll", function(){
-      playerStateSync("playing");
-      sendCommand("play");
-    });
+    showAdOverlay("midroll", function(){ /* resume is automatic on YouTube */ });
   }, delay);
 }
 
@@ -1864,42 +1196,6 @@ function renderWatchBanner(){
   refreshIcons();
 }
 
-function startTimeTicker(){
-  if (player.timeTicker) clearInterval(player.timeTicker);
-  var t = getTiming();
-  player.timeTicker = setInterval(function(){
-    var chip = $("liveTimeChip");
-    if (player.isLive && t && t.valid) {
-      var elapsed = Math.max(0, Date.now() - t.startMs);
-      var h = Math.floor(elapsed / 3600000);
-      var m = Math.floor((elapsed % 3600000) / 60000);
-      var s = Math.floor((elapsed % 60000) / 1000);
-      if (chip) chip.textContent = pad2(h) + ":" + pad2(m) + ":" + pad2(s);
-
-      try {
-        if (player.ytPlayer && player.ytReady && typeof player.ytPlayer.getCurrentTime === "function") {
-          var ct = player.ytPlayer.getCurrentTime() || 0;
-          var dur = player.ytPlayer.getDuration() || 0;
-          if (dur > 0) {
-            var drift = dur - ct;
-            var showJump = drift > LIVE_EDGE_DRIFT_SECONDS;
-            var btn = $("ctrlLiveJump");
-            if (btn) btn.style.display = showJump ? "inline-flex" : "none";
-          }
-        }
-      } catch(e){}
-    } else {
-      if (player.ytPlayer && player.ytReady && typeof player.ytPlayer.getCurrentTime === "function") {
-        player.currentTime = player.ytPlayer.getCurrentTime() || 0;
-        player.duration = player.ytPlayer.getDuration() || 0;
-      }
-      updateTimeDisplay();
-      var btn2 = $("ctrlLiveJump");
-      if (btn2) btn2.style.display = "none";
-    }
-  }, 1000);
-}
-
 function watchForStreamEnd(){
   var poll = setInterval(function(){
     if (!streamData) return;
@@ -1923,12 +1219,139 @@ function startCountdown(){
     if (phase !== lastPhase) {
       lastPhase = phase;
       if (phase === "live" || phase === "replay" || phase === "ended") {
-        if (!player.iframe && !player.ytPlayer) renderWatch();
+        if (!$("ytPlayerHost").children.length) renderWatch();
       }
     }
   }
   tick();
   countdownTimer = setInterval(tick, 1000);
+}
+
+function fetchAdSettings(){
+  return db.collection(SETTINGS).doc("ads").get().then(function(snap){
+    if (snap.exists) adSettings = Object.assign({}, AD_DEFAULTS, snap.data() || {});
+  }).catch(function(err){ console.warn("[ad settings] using defaults:", err && err.message); });
+}
+function fetchAdPool(){
+  return db.collection(ADS).where("active", "==", true).limit(50).get()
+    .then(function(snap){
+      var now = Date.now();
+      snap.forEach(function(doc){
+        var d = doc.data() || {};
+        d.id = doc.id;
+        if (d.startDate) { var s = new Date(d.startDate + "T00:00").getTime(); if (!isNaN(s) && now < s) return; }
+        if (d.endDate) { var e = new Date(d.endDate + "T23:59:59").getTime(); if (!isNaN(e) && now > e) return; }
+        var t = d.type || "any";
+        if (t === "preroll" || t === "any")  adPool.preroll.push(d);
+        if (t === "midroll" || t === "any")  adPool.midroll.push(d);
+        if (t === "postroll" || t === "any") adPool.postroll.push(d);
+      });
+    }).catch(function(err){ console.warn("[ad pool] unavailable:", err && err.message); });
+}
+function pickAd(slot){
+  var pool = adPool[slot] || [];
+  if (!pool.length) return null;
+  return pool[Math.floor(Math.random() * pool.length)];
+}
+function trackAdEvent(ad, eventType){
+  if (!ad || !ad.id) return;
+  try {
+    var ref = db.collection(ADS).doc(ad.id);
+    var update = {};
+    if (eventType === "impression") update.impressions = firebase.firestore.FieldValue.increment(1);
+    if (eventType === "click")      update.clicks      = firebase.firestore.FieldValue.increment(1);
+    ref.update(update).catch(function(){});
+  } catch(e){}
+}
+function showAdOverlay(slot, onComplete){
+  var ad = pickAd(slot);
+  var overlay = $("adOverlay");
+  var media = $("adMedia");
+  var title = $("adTitle");
+  var cta = $("adCta");
+  var ctaLabel = $("adCtaLabel");
+  var skipBtn = $("adSkipBtn");
+  var skipText = $("adSkipText");
+  var countdownEl = $("adCountdown");
+  if (!overlay || !media) { if (onComplete) onComplete(); return; }
+  adState.currentlyShowing = slot;
+  overlay.classList.add("visible");
+  media.innerHTML = "";
+
+  if (ad) {
+    title.textContent = ad.title || "Advertisement";
+    cta.href = ad.clickUrl || "#";
+    ctaLabel.textContent = ad.ctaLabel || "Learn more";
+    if (ad.mediaType === "video" && ad.mediaUrl) {
+      var vid = document.createElement("video");
+      vid.src = ad.mediaUrl;
+      vid.autoplay = true; vid.muted = true; vid.playsInline = true;
+      vid.setAttribute("playsinline", ""); vid.setAttribute("webkit-playsinline", "");
+      media.appendChild(vid);
+    } else if (ad.mediaUrl) {
+      var img = document.createElement("img");
+      img.src = ad.mediaUrl;
+      img.alt = ad.title || "Advertisement";
+      media.appendChild(img);
+    } else media.appendChild(buildHouseAd());
+    trackAdEvent(ad, "impression");
+  } else {
+    title.textContent = adSettings.houseAdTitle || "Advertise on Novalink";
+    cta.href = adSettings.houseAdUrl || "mailto:ads@novalink.com";
+    ctaLabel.textContent = adSettings.houseAdCtaLabel || "Advertise here";
+    media.appendChild(buildHouseAd());
+  }
+  cta.onclick = function(){ if (ad) trackAdEvent(ad, "click"); };
+
+  var skipAfter = parseInt(adSettings.skipAfterSeconds, 10) || 5;
+  if (ad && typeof ad.skipAfterSeconds === "number" && ad.skipAfterSeconds >= 0) skipAfter = ad.skipAfterSeconds;
+
+  if (skipAfter === -1) {
+    skipBtn.disabled = true; skipText.textContent = "Ad"; countdownEl.textContent = "";
+  } else {
+    var remaining = skipAfter;
+    skipBtn.disabled = true; skipText.textContent = "Skip in"; countdownEl.textContent = remaining;
+    clearInterval(adState.countdownTimerId);
+    adState.countdownTimerId = setInterval(function(){
+      remaining--;
+      if (remaining <= 0) {
+        clearInterval(adState.countdownTimerId);
+        skipBtn.disabled = false; skipText.textContent = "Skip ad"; countdownEl.textContent = "";
+      } else countdownEl.textContent = remaining;
+    }, 1000);
+  }
+  skipBtn.onclick = function(){ if (skipBtn.disabled) return; hideAdOverlay(); if (onComplete) onComplete(); };
+  clearTimeout(adState.skipTimerId);
+  adState.skipTimerId = setTimeout(function(){ hideAdOverlay(); if (onComplete) onComplete(); }, 30000);
+  refreshIcons();
+}
+function buildHouseAd(){
+  var wrap = document.createElement("div");
+  wrap.className = "ad-house-ad";
+  wrap.innerHTML =
+    '<div class="hh-brand">' +
+      '<svg class="mark" viewBox="0 0 60 74" aria-hidden="true">' +
+        '<path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/>' +
+        '<path fill="#00FFFF" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/>' +
+      '</svg>' +
+      '<span class="wm">Novalink</span>' +
+    '</div>' +
+    '<div class="hh-t">' + esc(adSettings.houseAdTitle || "Advertise on Novalink") + '</div>' +
+    '<div class="hh-s">' + esc(adSettings.houseAdText || "Reach thousands of live viewers across South Africa.") + '</div>' +
+    '<a class="hh-cta" href="' + esc(adSettings.houseAdUrl || "mailto:ads@novalink.com") + '" target="_blank" rel="noopener noreferrer">' +
+      '<i data-lucide="message-circle"></i> ' + esc(adSettings.houseAdCtaLabel || "Advertise here") +
+    '</a>';
+  return wrap;
+}
+function hideAdOverlay(){
+  var overlay = $("adOverlay");
+  if (!overlay) return;
+  overlay.classList.remove("visible");
+  var media = $("adMedia");
+  if (media) media.innerHTML = "";
+  clearInterval(adState.countdownTimerId);
+  clearTimeout(adState.skipTimerId);
+  adState.currentlyShowing = null;
 }
 
 function loadStream(){
@@ -1940,8 +1363,6 @@ function loadStream(){
   }).then(function(doc){
     if (!doc.exists) { showError("Stream not found", "This stream may have been deleted or the link is broken."); return; }
     streamData = Object.assign({ id: doc.id }, doc.data() || {});
-
-    setPlayerPlatformAttr("youtube");
 
     var query;
     if (streamData.channelName) {
@@ -2006,33 +1427,6 @@ document.addEventListener("DOMContentLoaded", function(){
   $("year").textContent = new Date().getFullYear();
   refreshIcons();
 
-  var shield = $("clickShield");
-  $("playerWrap").addEventListener("mousemove", showControls);
-  $("playerWrap").addEventListener("touchstart", function(){ showControls(); }, { passive: true });
-
-  shield.addEventListener("click", function(e){
-    e.preventDefault();
-    showControls();
-    if (player.state === "paused") return;
-    if (e.target.closest(".ctrl-bar, .player-watermark, .pause-curtain, .ad-overlay, .seek-ripple, .unmute-prompt")) return;
-  });
-  shield.addEventListener("contextmenu", function(e){ e.preventDefault(); showControls(); });
-  shield.addEventListener("touchstart", function(e){ handleShieldTap(e); }, { passive: true });
-
-  $("ctrlPlayPause").addEventListener("click", function(e){ e.stopPropagation(); togglePlayPause(); });
-  $("ctrlBack").addEventListener("click", function(e){ e.stopPropagation(); seekBy(-SKIP_BUTTON_SECONDS); });
-  $("ctrlForward").addEventListener("click", function(e){ e.stopPropagation(); seekBy(SKIP_BUTTON_SECONDS); });
-  $("ctrlLiveJump").addEventListener("click", function(e){ e.stopPropagation(); jumpToLive(); });
-  $("ctrlMute").addEventListener("click", function(e){ e.stopPropagation(); toggleMute(); });
-  $("ctrlFullscreen").addEventListener("click", function(e){ e.stopPropagation(); toggleFullscreen(); });
-
-  $("pausePlayBtn").addEventListener("click", function(e){ e.stopPropagation(); playPlayer(); });
-  $("pauseCurtain").addEventListener("click", function(e){
-    if (e.target.closest("#pausePlayBtn")) return;
-    playPlayer();
-  });
-  $("unmuteBtn").addEventListener("click", function(e){ e.stopPropagation(); tryUnmute(); });
-
   $("userMenuBtn").addEventListener("click", function(e){
     e.stopPropagation();
     $("userDropdown").classList.toggle("open");
@@ -2051,12 +1445,9 @@ document.addEventListener("DOMContentLoaded", function(){
   window.addEventListener("beforeunload", function(){
     if (countdownTimer) clearInterval(countdownTimer);
     if (upcomingCountdownTimer) clearInterval(upcomingCountdownTimer);
-    if (player.timeTicker) clearInterval(player.timeTicker);
     clearTimeout(adState.midrollTimerId);
     clearInterval(adState.countdownTimerId);
     clearTimeout(adState.skipTimerId);
-    clearTimeout(player.controlsHideTimer);
-    clearTimeout(player.liveChipFadeTimer);
     clearTimeout(loader.hideTimer);
     clearTimeout(loader.maxTimer);
   });
@@ -2064,4 +1455,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-                       </html>
+  </html>
