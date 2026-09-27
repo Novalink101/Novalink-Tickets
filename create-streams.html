@@ -42,7 +42,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .hdr-btn .avatar{width:22px;height:22px;border-radius:50%;background:linear-gradient(135deg,var(--cy),var(--cy2));color:#04161c;display:flex;align-items:center;justify-content:center;font-size:10px;font-weight:900;flex-shrink:0;font-family:var(--mono)}
 .btn-save{display:inline-flex;align-items:center;gap:7px;background:var(--cy);color:#04161c;font-weight:900;font-size:13px;padding:10px 18px;border-radius:99px;transition:.15s;white-space:nowrap;box-shadow:0 4px 12px rgba(0,255,255,.25);border:none}
 .btn-save:hover{transform:translateY(-1px);box-shadow:0 8px 20px rgba(0,255,255,.38)}
-.btn-save:disabled{opacity:.55;cursor:progress;transform:none!important}
+.btn-save:disabled{opacity:.55;cursor:not-allowed;transform:none!important;box-shadow:none}
 .btn-save.saved{background:#10b981;color:#fff}
 .btn-save i{width:15px;height:15px}
 @media (max-width:560px){.hdr-btn .lbl,.btn-save .lbl{display:none}.btn-save{padding:10px 14px}}
@@ -187,6 +187,36 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
 .platform-info i{width:17px;height:17px;color:var(--cy3);flex-shrink:0;margin-top:2px}
 .platform-info .pi-t{font-size:12.5px;font-weight:900;color:var(--tx);margin-bottom:2px}
 .platform-info .pi-s{font-size:11.5px;color:var(--tx2);line-height:1.5;font-weight:500}
+
+/* CONTENT RULES CARD */
+.rules-card{display:flex;gap:14px;align-items:flex-start;padding:16px 18px;background:linear-gradient(135deg,rgba(220,38,38,.06),rgba(220,38,38,.02));border:1px solid rgba(220,38,38,.28);border-radius:12px;margin-bottom:14px}
+.rules-card i.rc-icon{width:22px;height:22px;color:var(--dg);flex-shrink:0;margin-top:2px}
+.rules-card .rc-t{font-size:13px;font-weight:900;color:#991b1b;margin-bottom:6px}
+.rules-card .rc-s{font-size:12px;color:var(--tx2);line-height:1.55;font-weight:500}
+.rules-card .rc-s b{color:#991b1b;font-weight:800}
+.rules-list{list-style:none;margin:8px 0 0;padding:0;display:grid;gap:6px}
+.rules-list li{display:flex;gap:8px;font-size:12px;line-height:1.5;color:var(--tx2);font-weight:500}
+.rules-list li::before{content:'✕';color:var(--dg);font-weight:900;flex-shrink:0;font-size:12px;line-height:1.5}
+
+/* REQUIRED CONFIRMATION CHECKBOX */
+.confirm-block{display:flex;gap:12px;align-items:flex-start;padding:16px 18px;background:linear-gradient(135deg,rgba(0,255,255,.06),rgba(0,255,255,.02));border:2px solid rgba(0,255,255,.35);border-radius:12px;margin:16px 0;cursor:pointer;transition:.15s;user-select:none}
+.confirm-block:hover{border-color:var(--cy);background:#fff}
+.confirm-block.checked{border-color:var(--sv);background:linear-gradient(135deg,rgba(16,185,129,.08),rgba(0,255,255,.04))}
+.confirm-block .cb{position:relative;width:24px;height:24px;flex-shrink:0;margin-top:2px}
+.confirm-block .cb input{position:absolute;opacity:0;width:100%;height:100%;cursor:pointer;margin:0}
+.confirm-block .cb-box{position:absolute;inset:0;border:2px solid var(--bd2);border-radius:7px;background:#fff;transition:.15s;display:flex;align-items:center;justify-content:center}
+.confirm-block .cb-box i{width:16px;height:16px;stroke-width:3.2;color:#fff;opacity:0;transition:.15s}
+.confirm-block .cb input:checked + .cb-box{background:var(--sv);border-color:var(--sv)}
+.confirm-block .cb input:checked + .cb-box i{opacity:1}
+.confirm-block .cf-text{flex:1;min-width:0}
+.confirm-block .cf-t{font-size:13px;font-weight:900;color:var(--tx);margin-bottom:4px;line-height:1.3}
+.confirm-block .cf-s{font-size:11.5px;color:var(--tx2);line-height:1.5;font-weight:500}
+.confirm-block.checked .cf-t{color:#065f46}
+
+.save-lock-note{display:none;gap:10px;align-items:center;padding:11px 14px;background:#fffbeb;border:1px solid #fbbf24;border-radius:10px;margin-bottom:12px}
+.save-lock-note.show{display:flex}
+.save-lock-note i{width:15px;height:15px;color:#d97706;flex-shrink:0}
+.save-lock-note span{font-size:12px;color:#92400e;font-weight:700;line-height:1.4}
 
 .slot-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:10px}
 @media (max-width:520px){.slot-grid{grid-template-columns:1fr}}
@@ -343,7 +373,7 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
       </span>
       <button class="hdr-btn" id="signInBtn" type="button"><i data-lucide="log-in"></i><span class="lbl">Sign in</span></button>
       <button class="hdr-btn" id="userChip" type="button" style="display:none;"><span class="avatar" id="userAvatar">?</span><span class="lbl" id="userName">User</span></button>
-      <button class="btn-save" id="saveStreamBtn" type="button"><i data-lucide="save"></i><span class="lbl" id="saveLbl">Save Stream</span></button>
+      <button class="btn-save" id="saveStreamBtn" type="button" disabled><i data-lucide="save"></i><span class="lbl" id="saveLbl">Save Stream</span></button>
     </div>
   </div>
 </header>
@@ -593,10 +623,32 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
       <div class="form-col">
         <div class="step-card">
           <span class="step-num">3</span>
-          <div class="step-info"><div class="step-title">Stream Source</div><div class="step-sub">Platform · URL · Delivery · Ad breaks</div></div>
+          <div class="step-info"><div class="step-title">Stream Source</div><div class="step-sub">Platform · URL · Content rules · Delivery</div></div>
         </div>
 
         <div class="form-card">
+
+          <!-- CONTENT RULES — required reading -->
+          <div class="rules-card">
+            <i class="rc-icon" data-lucide="shield-alert"></i>
+            <div>
+              <div class="rc-t">What you can and cannot stream</div>
+              <div class="rc-s">Novalink only allows <b>your own original content</b>. If you stream any of the following, your YouTube/Twitch account gets a copyright strike, your stream dies, and your Novalink channel goes offline.</div>
+              <ul class="rules-list">
+                <li>Someone else's movie, TV show, or sports match</li>
+                <li>Someone else's YouTube, Twitch, or Facebook live feed</li>
+                <li>Music you don't own the rights to (Spotify, Apple Music, YouTube Music)</li>
+                <li>Nudity, sexual content, or pornography</li>
+                <li>Hate speech, racism, threats, or harassment</li>
+                <li>Real violence, gore, fights, or graphic injuries</li>
+                <li>Terrorism, extremism, weapons, or bomb-making instructions</li>
+                <li>Drug use, drug-selling, or illegal acts</li>
+                <li>Dangerous fake news or medical misinformation</li>
+              </ul>
+              <div class="rc-s" style="margin-top:10px;"><b>One rule:</b> if you did not create it, do not stream it.</div>
+            </div>
+          </div>
+
           <div class="field">
             <label for="streamPlatform">Platform</label>
             <select id="streamPlatform">
@@ -804,6 +856,18 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
             <label class="toggle"><input type="checkbox" id="postrollToggle" checked /><span class="slider"></span></label>
           </div>
 
+          <!-- REQUIRED CONFIRMATION -->
+          <label class="confirm-block" id="confirmBlock" for="confirmCheckbox">
+            <span class="cb">
+              <input type="checkbox" id="confirmCheckbox" />
+              <span class="cb-box"><i data-lucide="check"></i></span>
+            </span>
+            <div class="cf-text">
+              <div class="cf-t">I confirm this stream is my own original content.</div>
+              <div class="cf-s">I am not streaming anyone else's TV channel, movie, music, sports match, YouTube feed, Twitch feed, or another creator's stream. I understand Novalink will remove my channel and my streaming account may be terminated if I break this rule.</div>
+            </div>
+          </label>
+
           <div class="step-nav">
             <button class="btn btn-ghost" type="button" data-prev="details">← Back</button>
             <button class="btn btn-accent" type="button" data-next="ads">Next: Ads →</button>
@@ -895,6 +959,10 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
           </div>
 
           <div class="section-divider"><span>Save</span></div>
+          <div class="save-lock-note" id="saveLockNote">
+            <i data-lucide="lock"></i>
+            <span>Tick the confirmation on the Source tab before saving.</span>
+          </div>
           <button class="btn btn-accent btn-block" id="submitBtn" type="button" style="padding:14px;font-size:14px;">
             <i data-lucide="shield-check"></i> Save &amp; Publish Stream
           </button>
@@ -1065,16 +1133,13 @@ function syncPlatformUI(){
   var p = $('streamPlatform').value || 'youtube';
   var cfg = PLATFORM_CONFIG[p] || PLATFORM_CONFIG.youtube;
 
-  // Update URL field
   $('streamUrlLabel').textContent = cfg.urlLabel;
   $('streamUrl').placeholder = cfg.urlPlaceholder;
   $('streamUrlHint').textContent = cfg.urlHint;
 
-  // Update info box
   $('platformInfoTitle').textContent = cfg.infoTitle;
   $('platformInfoText').textContent = cfg.infoText;
 
-  // Show the correct Go Live panel
   ['YT','Twitch','Vimeo','Facebook','Custom'].forEach(function(key){
     var panel = $('goLivePanel' + key);
     if (!panel) return;
@@ -1117,6 +1182,29 @@ var state = {
 };
 var RE_EDIT_ID = getParam('id');
 var slotCheckUnsub = null;
+
+/* ── Confirmation checkbox state ─────────────────────────── */
+function isConfirmed(){
+  var cb = $('confirmCheckbox');
+  return !!(cb && cb.checked);
+}
+function updateSaveEnabled(){
+  var saveBtn = $('saveStreamBtn');
+  var submitBtn = $('submitBtn');
+  var lockNote = $('saveLockNote');
+  var block = $('confirmBlock');
+
+  var ok = isConfirmed() && !!state.user;
+  var userOK = !!state.user;
+  var slotOK = !(!state.editing && state.slots.filter(function(s){ return s !== null; }).length >= GLOBAL_MAX_STREAMS);
+
+  var canSave = ok && slotOK;
+
+  saveBtn.disabled = !canSave;
+  if (submitBtn) submitBtn.disabled = !canSave;
+  if (lockNote) lockNote.classList.toggle('show', userOK && !isConfirmed());
+  if (block) block.classList.toggle('checked', isConfirmed());
+}
 
 function applyAuth(user){
   state.user = user;
@@ -1162,6 +1250,7 @@ function applyAuth(user){
     updateSlotUI();
     stopSlotWatcher();
   }
+  updateSaveEnabled();
   refreshIcons();
 }
 
@@ -1217,6 +1306,7 @@ function startSlotWatcher(){
       updateSlotUI();
       renderSlotGrid();
       renderChannelPreview();
+      updateSaveEnabled();
     }, function(err){
       console.warn('[slot watcher]', err);
     });
@@ -1232,12 +1322,10 @@ function updateSlotUI(){
   var bannerIn = $('slotBannerIn');
   var bannerTitle = $('slotBannerTitle');
   var bannerSub = $('slotBannerSub');
-  var saveBtn = $('saveStreamBtn');
 
   if (!state.user) {
     pill.style.display = 'none';
     banner.classList.remove('show');
-    saveBtn.removeAttribute('disabled');
     return;
   }
 
@@ -1258,26 +1346,22 @@ function updateSlotUI(){
     bannerIn.classList.add('full');
     bannerTitle.textContent = "You've reached the 4-stream limit";
     bannerSub.textContent = 'Delete an old stream or wait for one to end to free a slot.';
-    saveBtn.setAttribute('disabled', 'disabled');
   } else if (used >= max - 1) {
     pill.classList.add('warn');
     banner.classList.add('show');
     bannerIn.classList.add('warn');
     bannerTitle.textContent = 'Almost at your limit';
     bannerSub.textContent = 'You have ' + (max - used) + ' slot' + ((max - used) === 1 ? '' : 's') + ' left.';
-    saveBtn.removeAttribute('disabled');
   } else if (used > 0) {
     banner.classList.add('show');
     bannerIn.classList.add('ok');
     bannerTitle.textContent = used + ' of ' + max + ' stream slots used';
     bannerSub.textContent = (max - used) + ' slot' + ((max - used) === 1 ? '' : 's') + ' remaining.';
-    saveBtn.removeAttribute('disabled');
   } else {
     banner.classList.add('show');
     bannerIn.classList.add('ok');
     bannerTitle.textContent = 'All ' + max + ' stream slots available';
     bannerSub.textContent = 'You can add up to ' + max + ' streams to your channel at once.';
-    saveBtn.removeAttribute('disabled');
   }
 }
 
@@ -1321,6 +1405,7 @@ function renderSlotGrid(){
           loadStreamIntoForm(stream);
           goToView('details');
           renderSlotGrid();
+          updateSaveEnabled();
           toast('Editing "' + (stream.streamTitle || 'stream') + '"', 'info', 2000);
           return;
         }
@@ -1329,6 +1414,7 @@ function renderSlotGrid(){
         clearStreamFields();
         goToView('details');
         renderSlotGrid();
+        updateSaveEnabled();
         toast('New stream in Slot ' + (idx + 1), 'info', 2000);
       });
 
@@ -1533,10 +1619,13 @@ function clearStreamFields(){
   $('adClientId').value = '';
   $('adSlotId').value = '';
   $('customVastUrl').value = '';
+  /* Reset confirmation on new stream */
+  $('confirmCheckbox').checked = false;
   syncPlatformUI();
   syncAdProviderUI();
   syncMidrollTimingVisibility();
   renderStreamPreview();
+  updateSaveEnabled();
 }
 
 function loadStreamIntoForm(d){
@@ -1564,17 +1653,21 @@ function loadStreamIntoForm(d){
   if (d.adSlotId) $('adSlotId').value = d.adSlotId;
   if (d.customVastUrl) $('customVastUrl').value = d.customVastUrl;
   if (d.heroImage) { state.heroImage = d.heroImage; renderCover(); }
+  /* Confirmation stays unticked even when loading — host must re-confirm on edit */
+  $('confirmCheckbox').checked = false;
   $('saveLbl').textContent = 'Update Stream';
   $('submitBtn').innerHTML = icon('save') + ' Update Stream';
   syncPlatformUI();
   syncAdProviderUI();
   syncMidrollTimingVisibility();
   renderStreamPreview();
+  updateSaveEnabled();
   refreshIcons();
 }
 
 function saveStream(){
   if (!state.user) { toast('Sign in to save your stream.', 'error'); setTimeout(function(){ openAuthModal('signin'); }, 500); return; }
+  if (!isConfirmed()) { toast('Tick the confirmation before saving.', 'error'); goToView('source'); return; }
 
   var channelName = $('channelName').value.trim();
   if (!channelName) { toast('Channel name is required.', 'error'); goToView('channel'); $('channelName').focus(); return; }
@@ -1643,7 +1736,9 @@ function saveStream(){
     ownerEmail: state.user.email || '',
     ownerName: state.user.displayName || '',
     status: 'published',
-    source: 'user'
+    source: 'user',
+    contentConfirmed: true,
+    contentConfirmedAt: firebase.firestore.FieldValue.serverTimestamp()
   };
 
   var ref = state.streamId ? db.collection(STREAMS).doc(state.streamId) : db.collection(STREAMS).doc();
@@ -1675,12 +1770,14 @@ function saveStream(){
       btn.classList.remove('saved');
       btn.disabled = false;
       lbl.textContent = 'Update Stream';
+      updateSaveEnabled();
     }, 2200);
   }).catch(function(err){
     console.error('Save failed:', err);
     toast('Save failed: ' + (err.message || err.code || 'unknown error'), 'error', 6000);
     btn.disabled = false;
     lbl.textContent = state.editing ? 'Update Stream' : 'Save Stream';
+    updateSaveEnabled();
   });
 }
 
@@ -1778,6 +1875,16 @@ document.addEventListener('DOMContentLoaded', function(){
     });
   }
 
+  /* Confirmation checkbox — flip its visual state */
+  var confirmBox = $('confirmCheckbox');
+  if (confirmBox) {
+    confirmBox.addEventListener('change', function(){
+      var block = $('confirmBlock');
+      if (block) block.classList.toggle('checked', confirmBox.checked);
+      updateSaveEnabled();
+    });
+  }
+
   $('streamPlatform').addEventListener('change', syncPlatformUI);
   $('midrollToggle').addEventListener('change', syncMidrollTimingVisibility);
   $('adProvider').addEventListener('change', syncAdProviderUI);
@@ -1868,6 +1975,7 @@ document.addEventListener('DOMContentLoaded', function(){
   renderChannelPreview();
   renderSlotGrid();
   updateSlotUI();
+  updateSaveEnabled();
 
   auth.getRedirectResult().then(function(result){
     if (result && result.user) { toast('Signed in with Google.', 'success'); closeAuthModal(); }
@@ -1888,4 +1996,4 @@ document.addEventListener('DOMContentLoaded', function(){
 })();
 </script>
 </body>
-  </html>
+                  </html>
