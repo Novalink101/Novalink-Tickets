@@ -89,31 +89,71 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 
 .click-shield{position:absolute;inset:0;z-index:5;background:transparent;cursor:pointer;}
 
-/* YouTube chrome mask — HIDDEN by default, flashes ON for 7s on interaction.
-   Instant fade-in (0s) so it covers YT chrome immediately; smooth 300ms
-   fade-out so it disappears gracefully. z-index 7 = above iframe (1),
-   above shield (5), below ctrl-bar (9). */
-.yt-chrome-mask{
-  position:absolute!important;inset:0!important;z-index:7!important;
-  pointer-events:none!important;display:block!important;
-  opacity:0;
-  transition:opacity .3s ease;
+/* ══════════════════════════════════════════════════════════════
+   FULL BLACK LOADING OVERLAY
+   ══════════════════════════════════════════════════════════════
+   Solid opaque black rectangle covering the entire player. Hides
+   YouTube's chrome (title bar, logo, "More videos" chip, buffering
+   spinner) completely during: entry, buffering, seek, jump-to-live,
+   and fullscreen transitions. Contains Novalink-branded spinner
+   and "Loading stream…" label. z-index 15 = above iframe (1),
+   above shield (5), below ad overlay (20). */
+.player-loader{
+  position:absolute!important;inset:0!important;z-index:15!important;
+  background:#000;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  gap:20px;
+  opacity:0;visibility:hidden;
+  transition:opacity .25s ease, visibility 0s linear .25s;
+  pointer-events:none;
 }
-.yt-chrome-mask.visible{
-  opacity:1;
-  transition:opacity 0s;
+.player-loader.visible{
+  opacity:1;visibility:visible;
+  transition:opacity .15s ease, visibility 0s linear 0s;
+  pointer-events:auto;
 }
-.yt-chrome-mask .mask-top{
-  position:absolute;top:0;left:0;right:0;height:90px;
-  background:linear-gradient(180deg, rgba(10,15,20,.95) 0%, rgba(10,15,20,.8) 40%, rgba(10,15,20,.35) 75%, rgba(10,15,20,0) 100%);
+.player-loader .pl-mark{
+  width:64px;height:80px;
+  display:block;
+  animation:plPulse 1.8s ease-in-out infinite;
+  filter:drop-shadow(0 6px 22px rgba(0,255,255,.45));
 }
-.yt-chrome-mask .mask-bottom{
-  position:absolute;bottom:0;left:0;right:0;height:140px;
-  background:linear-gradient(0deg, rgba(10,15,20,.98) 0%, rgba(10,15,20,.9) 35%, rgba(10,15,20,.5) 65%, rgba(10,15,20,0) 100%);
+@keyframes plPulse{
+  0%,100%{transform:scale(1);opacity:1}
+  50%{transform:scale(1.06);opacity:.85}
+}
+.player-loader .pl-spinner{
+  width:44px;height:44px;
+  border-radius:50%;
+  border:3px solid rgba(0,255,255,.18);
+  border-top-color:var(--cy);
+  border-right-color:var(--cy2);
+  animation:plSpin 0.85s linear infinite;
+  display:none;
+}
+@keyframes plSpin{to{transform:rotate(360deg)}}
+.player-loader .pl-label{
+  font-family:var(--mono);
+  font-size:11.5px;
+  font-weight:900;
+  letter-spacing:.22em;
+  text-transform:uppercase;
+  color:var(--cy);
+  opacity:.9;
+  text-shadow:0 2px 10px rgba(0,255,255,.35);
+}
+.player-loader .pl-sub{
+  font-size:11px;
+  color:rgba(255,255,255,.4);
+  font-weight:500;
+  letter-spacing:.02em;
+  margin-top:-10px;
 }
 @media (max-width:640px){
-  .yt-chrome-mask .mask-top{height:70px}
-  .yt-chrome-mask .mask-bottom{height:110px}
+  .player-loader{gap:16px}
+  .player-loader .pl-mark{width:52px;height:65px}
+  .player-loader .pl-label{font-size:10.5px;letter-spacing:.18em}
+  .player-loader .pl-sub{font-size:10px}
 }
 
 /* Unmute prompt */
@@ -292,10 +332,6 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .player-wrap:-webkit-full-screen .highlight-pill{top:22px;left:22px;}
 .player-wrap:fullscreen .live-time-chip,
 .player-wrap:-webkit-full-screen .live-time-chip{top:52px;left:22px;}
-.player-wrap:fullscreen .yt-chrome-mask .mask-top,
-.player-wrap:-webkit-full-screen .yt-chrome-mask .mask-top{height:110px;}
-.player-wrap:fullscreen .yt-chrome-mask .mask-bottom,
-.player-wrap:-webkit-full-screen .yt-chrome-mask .mask-bottom{height:180px;}
 
 @media (max-width:640px){
   .live-pill,.highlight-pill{font-size:9px;padding:4px 9px;top:10px;left:10px;gap:5px;}
@@ -517,9 +553,15 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 
               <div class="click-shield" id="clickShield"></div>
 
-              <div class="yt-chrome-mask" id="ytChromeMask" aria-hidden="true">
-                <div class="mask-top"></div>
-                <div class="mask-bottom"></div>
+              <!-- Full black loading overlay — covers YouTube chrome during entry, buffering, seek, jump-to-live, fullscreen -->
+              <div class="player-loader" id="playerLoader" aria-hidden="true">
+                <svg class="pl-mark" viewBox="0 0 60 74" aria-hidden="true">
+                  <path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/>
+                  <path fill="#00FFFF" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/>
+                </svg>
+                <div class="pl-spinner"></div>
+                <div class="pl-label">Loading stream…</div>
+                <div class="pl-sub" id="plSub">Connecting to the source</div>
               </div>
 
               <span class="live-pill" id="livePill">LIVE</span>
@@ -724,8 +766,14 @@ var SKIP_KEY_SMALL = 5;
 var SKIP_KEY_LARGE = 10;
 var LIVE_CHIP_FADE_MS = 5000;
 var LIVE_EDGE_DRIFT_SECONDS = 30;
-var CHROME_MASK_FLASH_MS = 7000;   /* how long the YT chrome mask stays visible after an interaction */
 var UNMUTE_PREF_KEY = 'novalink_audio_enabled';
+
+/* Loader timing (ms) */
+var LOADER_ENTRY_MIN_MS = 1500;      /* min time the loader stays up on entry */
+var LOADER_ENTRY_TAIL_MS = 400;      /* extra tail after YT says "playing" on entry */
+var LOADER_SEEK_MS = 800;            /* fixed time on any seek / jump-to-live */
+var LOADER_FULLSCREEN_MS = 600;      /* fixed time on fullscreen enter/exit */
+var LOADER_MAX_MS = 5000;            /* hard cap so the viewer is never stuck */
 
 var AD_DEFAULTS = {
   prerollEnabled:    true,
@@ -813,12 +861,19 @@ var streamId = null;
 var siblingStreams = [];
 var countdownTimer = null;
 var upcomingCountdownTimer = null;
-var chromeMaskTimer = null;
 var adSettings = Object.assign({}, AD_DEFAULTS);
 var adPool = { preroll: [], midroll: [], postroll: [] };
 var adState = {
   currentlyShowing: null, midrollTimerId: null, skipTimerId: null,
   countdownTimerId: null, firedMidroll: false, firedPostroll: false, firedPreroll: false
+};
+
+var loader = {
+  visible: false,
+  shownAt: 0,
+  hideTimer: null,
+  maxTimer: null,
+  entryPhase: false
 };
 
 var player = {
@@ -840,21 +895,40 @@ var player = {
 };
 
 /* ══════════════════════════════════════════════════════════════
-   YT CHROME MASK — timed flash
-   ══════════════════════════════════════════════════════════════
-   YouTube shows its own chrome (title bar, logo, "More videos" chip)
-   for ~6 seconds after load and after any interaction. We can't remove
-   it, but we can cover it with gradient strips during those windows.
-   The mask is invisible by default and flashes ON for 7s whenever the
-   user interacts with the player. After 7s it fades away. */
-function flashChromeMask(){
-  var mask = $("ytChromeMask");
-  if (!mask) return;
-  mask.classList.add("visible");
-  clearTimeout(chromeMaskTimer);
-  chromeMaskTimer = setTimeout(function(){
-    mask.classList.remove("visible");
-  }, CHROME_MASK_FLASH_MS);
+   FULL BLACK LOADER
+   ══════════════════════════════════════════════════════════════ */
+function showLoader(subText){
+  var el = $("playerLoader");
+  if (!el) return;
+  var sub = $("plSub");
+  if (sub) sub.textContent = subText || "Loading stream…";
+  el.classList.add("visible");
+  el.setAttribute("aria-hidden", "false");
+  loader.visible = true;
+  loader.shownAt = Date.now();
+  clearTimeout(loader.maxTimer);
+  /* Safety: never leave the loader up longer than LOADER_MAX_MS */
+  loader.maxTimer = setTimeout(function(){ hideLoader(); }, LOADER_MAX_MS);
+}
+function hideLoader(){
+  var el = $("playerLoader");
+  if (!el) return;
+  el.classList.remove("visible");
+  el.setAttribute("aria-hidden", "true");
+  loader.visible = false;
+  clearTimeout(loader.maxTimer);
+  clearTimeout(loader.hideTimer);
+  loader.hideTimer = null;
+  loader.maxTimer = null;
+}
+function scheduleLoaderHide(minMs, tailMs, resetEntry){
+  clearTimeout(loader.hideTimer);
+  var elapsed = Date.now() - loader.shownAt;
+  var wait = Math.max(0, minMs - elapsed) + (tailMs || 0);
+  loader.hideTimer = setTimeout(function(){
+    hideLoader();
+    if (resetEntry) loader.entryPhase = false;
+  }, wait);
 }
 
 function applyAuth(user){
@@ -962,8 +1036,8 @@ function onPlayerReady(event){
 
   applyDeclaredStreamType();
 
-  /* Flash the mask to cover YT's initial chrome reveal */
-  flashChromeMask();
+  /* Keep the loader up for its entry minimum, then hide once YT reports playing */
+  loader.entryPhase = true;
 
   if (localStorage.getItem(UNMUTE_PREF_KEY) === "1") {
     tryUnmute();
@@ -1003,9 +1077,36 @@ function applyLiveStatus(isLive){
 }
 
 function onPlayerStateChange(event){
-  if (event.data === 0) playerStateSync("idle");
-  else if (event.data === 1) playerStateSync("playing");
-  else if (event.data === 2) playerStateSync("paused");
+  if (event.data === -1) {
+    /* unstarted — treat like buffering */
+    showLoader("Preparing stream…");
+    scheduleLoaderHide(0, 0, false);
+    return;
+  }
+  if (event.data === 3) {
+    /* buffering */
+    showLoader("Buffering…");
+    /* No hide timer set here — will hide when we get PLAYING */
+    clearTimeout(loader.hideTimer);
+    return;
+  }
+  if (event.data === 1) {
+    /* playing — hide the loader once the minimum entry time has passed */
+    if (loader.entryPhase) {
+      scheduleLoaderHide(LOADER_ENTRY_MIN_MS, LOADER_ENTRY_TAIL_MS, true);
+    } else {
+      scheduleLoaderHide(0, LOADER_ENTRY_TAIL_MS, false);
+    }
+    playerStateSync("playing");
+    return;
+  }
+  if (event.data === 2) {
+    playerStateSync("paused");
+    return;
+  }
+  if (event.data === 0) {
+    playerStateSync("idle");
+  }
 }
 
 function buildEmbedUrl(){
@@ -1059,6 +1160,10 @@ function loadPlainIframe(embedUrl){
     if ($("highlightPill")) $("highlightPill").classList.add("visible");
     if ($("ctrlLiveJump")) $("ctrlLiveJump").style.display = "none";
   }
+
+  /* Hide loader after entry minimum for non-YT iframes (no state events) */
+  loader.entryPhase = true;
+  scheduleLoaderHide(LOADER_ENTRY_MIN_MS, LOADER_ENTRY_TAIL_MS, true);
 
   if (localStorage.getItem(UNMUTE_PREF_KEY) === "1") {
     /* nothing */
@@ -1153,10 +1258,11 @@ function seekBy(seconds){
   if (!player.ytPlayer && !player.iframe) return;
   var target = Math.max(0, player.currentTime + seconds);
   if (player.duration > 0) target = Math.min(target, player.duration);
+  showLoader("Seeking…");
+  scheduleLoaderHide(LOADER_SEEK_MS, 0, false);
   sendCommand("seek", target);
   player.currentTime = target;
   updateTimeDisplay();
-  flashChromeMask();
   showControls();
 }
 
@@ -1165,12 +1271,13 @@ function jumpToLive(){
   try {
     var dur = player.ytPlayer.getDuration() || 0;
     if (dur > 0) {
+      showLoader("Jumping to live…");
+      scheduleLoaderHide(LOADER_SEEK_MS, 0, false);
       player.ytPlayer.seekTo(dur, true);
       player.ytPlayer.playVideo();
       showToast("Jumped to live", "success", 1500);
     }
   } catch(err){}
-  flashChromeMask();
   showControls();
 }
 
@@ -1186,9 +1293,6 @@ function showControls(keepOpen){
   var wrap = $("playerWrap");
   if (!wrap) return;
   wrap.classList.add("controls-visible");
-  /* Every time our own controls are shown, YT also shows its chrome.
-     Flash the mask in sync so the two overlap. */
-  flashChromeMask();
   clearTimeout(player.controlsHideTimer);
   if (!keepOpen) player.controlsHideTimer = setTimeout(hideControls, 3000);
 }
@@ -1214,6 +1318,10 @@ function tryUnlockOrientation(){
 function toggleFullscreen(){
   var wrap = $("playerWrap");
   if (!wrap) return;
+  /* Cover YT's chrome during the resize */
+  showLoader(isFullscreen() ? "Exiting fullscreen…" : "Entering fullscreen…");
+  scheduleLoaderHide(LOADER_FULLSCREEN_MS, 0, false);
+
   if (!isFullscreen()) {
     var req = wrap.requestFullscreen || wrap.webkitRequestFullscreen || wrap.webkitRequestFullScreen || wrap.mozRequestFullScreen || wrap.msRequestFullscreen;
     if (req) {
@@ -1222,15 +1330,13 @@ function toggleFullscreen(){
         p.then(function(){
           tryLockLandscape();
           if (isIOS()) showToast("Rotate your phone to landscape for a better view", "info", 3500);
-          flashChromeMask();
         }).catch(function(){ showToast("Fullscreen not available", "error", 2500); });
-      } else { tryLockLandscape(); flashChromeMask(); }
+      } else tryLockLandscape();
     } else showToast("Fullscreen not supported on this device", "error", 2500);
   } else {
     var exit = document.exitFullscreen || document.webkitExitFullscreen || document.webkitCancelFullScreen || document.mozCancelFullScreen || document.msExitFullscreen;
     if (exit) { try { exit.call(document); } catch(e){} }
     tryUnlockOrientation();
-    flashChromeMask();
   }
   showControls();
 }
@@ -1277,7 +1383,6 @@ function handleShieldTap(e){
   }
   player.lastTapTime = now;
   player.tapPosition = side;
-  flashChromeMask();
   showControls();
 }
 function showSeekRipple(side){
@@ -1705,15 +1810,11 @@ function renderWatch(){
   player.pauseStartTime = null;
   hideAdOverlay();
   hideUnmutePrompt();
+  hideLoader();
   playerStateSync("idle");
   clearTimeout(adState.midrollTimerId);
   adState.midrollTimerId = null;
   stopUpcomingCountdown();
-
-  /* Reset mask flash state */
-  var mask = $("ytChromeMask");
-  if (mask) mask.classList.remove("visible");
-  clearTimeout(chromeMaskTimer);
 
   var watermark = $("playerWatermark");
   var live = $("livePill");
@@ -1758,6 +1859,9 @@ function renderWatch(){
 
   function startPlayback(){
     curtain.style.display = "none";
+    /* Show the loader immediately for entry — covers YT's initial chrome reveal */
+    loader.entryPhase = true;
+    showLoader("Connecting to the source");
     if (platform === "youtube" && ytId && window.YT && window.YT.Player) {
       loadYouTubePlayer(ytId);
     } else {
@@ -1765,7 +1869,6 @@ function renderWatch(){
       loadPlainIframe(finalUrl);
     }
     if (watermark) watermark.classList.add("visible");
-    flashChromeMask();
   }
 
   if (phase === "live") {
@@ -2045,10 +2148,11 @@ document.addEventListener("DOMContentLoaded", function(){
     clearTimeout(adState.skipTimerId);
     clearTimeout(player.controlsHideTimer);
     clearTimeout(player.liveChipFadeTimer);
-    clearTimeout(chromeMaskTimer);
+    clearTimeout(loader.hideTimer);
+    clearTimeout(loader.maxTimer);
   });
 });
 })();
 </script>
 </body>
-  </html>
+            </html>
