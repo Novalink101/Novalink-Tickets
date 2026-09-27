@@ -90,35 +90,29 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .click-shield{position:absolute;inset:0;z-index:5;background:transparent;cursor:pointer;}
 
 /* ══════════════════════════════════════════════════════════════
-   YOUTUBE BOTTOM BAR
+   YOUTUBE BOTTOM BAR — SLIM VERSION
    ══════════════════════════════════════════════════════════════
-   Solid black rectangle at the very bottom of the player. Covers
-   YouTube's "More videos" chip, YouTube logo, title bar, and
-   progress hint bar. Shown ONLY for YouTube streams (Live or
-   Highlight). Every other platform (Twitch, Vimeo, Custom Embed)
+   Solid black bar at the very bottom of the player. Just tall
+   enough to cover YouTube's "More videos" chip, YouTube logo, and
+   title bar. Shown ONLY on YouTube streams. Every other platform
    shows a clean picture with no bar.
    z-index 7 = above iframe (1), above shield (5), below controls (9). */
 .yt-bottom-bar{
   display:none;
   position:absolute;left:0;right:0;bottom:0;
-  height:90px;
+  height:56px;
   background:#000;
   z-index:7;
   pointer-events:none;
 }
 .player-wrap[data-platform="youtube"] .yt-bottom-bar{display:block;}
 @media (max-width:640px){
-  .yt-bottom-bar{height:80px;}
+  .yt-bottom-bar{height:48px;}
 }
 
 /* ══════════════════════════════════════════════════════════════
    FULL BLACK LOADING OVERLAY
-   ══════════════════════════════════════════════════════════════
-   Solid opaque black rectangle covering the entire player. Hides
-   YouTube's chrome (title bar, logo, "More videos" chip, buffering
-   spinner) completely during: entry, buffering, seek, jump-to-live,
-   and fullscreen transitions. z-index 15 = above iframe (1),
-   above shield (5), above bar (7), below ad overlay (20). */
+   ══════════════════════════════════════════════════════════════ */
 .player-loader{
   position:absolute!important;inset:0!important;z-index:15!important;
   background:#000;
@@ -354,7 +348,7 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .player-wrap:fullscreen .live-time-chip,
 .player-wrap:-webkit-full-screen .live-time-chip{top:52px;left:22px;}
 .player-wrap:fullscreen .yt-bottom-bar,
-.player-wrap:-webkit-full-screen .yt-bottom-bar{height:110px;}
+.player-wrap:-webkit-full-screen .yt-bottom-bar{height:72px;}
 
 @media (max-width:640px){
   .live-pill,.highlight-pill{font-size:9px;padding:4px 9px;top:10px;left:10px;gap:5px;}
@@ -576,7 +570,6 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 
               <div class="click-shield" id="clickShield"></div>
 
-              <!-- YouTube-only bottom bar — covers YT chrome (More videos, logo, title bar). Hidden for all other platforms. -->
               <div class="yt-bottom-bar" aria-hidden="true"></div>
 
               <div class="player-loader" id="playerLoader" aria-hidden="true">
@@ -918,20 +911,12 @@ var player = {
   ytReady: false
 };
 
-/* ══════════════════════════════════════════════════════════════
-   PLATFORM → PLAYER-WRAP ATTRIBUTE
-   ══════════════════════════════════════════════════════════════
-   The yt-bottom-bar only shows when data-platform="youtube".
-   Set on the wrap every time we know the platform. */
 function setPlayerPlatformAttr(platform){
   var wrap = $("playerWrap");
   if (!wrap) return;
   wrap.setAttribute("data-platform", platform || "youtube");
 }
 
-/* ══════════════════════════════════════════════════════════════
-   FULL BLACK LOADER
-   ══════════════════════════════════════════════════════════════ */
 function showLoader(subText){
   var el = $("playerLoader");
   if (!el) return;
@@ -1173,7 +1158,6 @@ function loadPlainIframe(embedUrl){
   player.iframe = iframe;
   player.platform = streamData.streamPlatform || "youtube";
 
-  /* Set platform on the wrap so CSS knows whether to show the YT bar */
   setPlayerPlatformAttr(player.platform);
 
   var declared = getDeclaredStreamType();
@@ -2064,7 +2048,6 @@ function loadStream(){
     if (!doc.exists) { showError("Stream not found", "This stream may have been deleted or the link is broken."); return; }
     streamData = Object.assign({ id: doc.id }, doc.data() || {});
 
-    /* Set platform on the wrap as soon as we know it — before the player even mounts */
     setPlayerPlatformAttr(streamData.streamPlatform || "youtube");
 
     var query;
