@@ -91,12 +91,7 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 
 /* ══════════════════════════════════════════════════════════════
    YOUTUBE BOTTOM BAR — MINIMAL
-   ══════════════════════════════════════════════════════════════
-   Slim black bar at the very bottom of the player. Just tall
-   enough to cover YouTube's "More videos" chip, YouTube logo,
-   and title strip. Shown ONLY on YouTube streams. Hidden on
-   Twitch, Vimeo, Custom Embed.
-   z-index 7 = above iframe (1), above shield (5), below controls (9). */
+   Shown ONLY on YouTube streams. Hidden on every other platform. */
 .yt-bottom-bar{
   display:none;
   position:absolute;left:0;right:0;bottom:0;
@@ -200,9 +195,25 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .player-watermark .mark{width:18px;height:22px;flex-shrink:0;display:block;filter:drop-shadow(0 2px 6px rgba(0,0,0,.7));}
 .player-watermark .wordmark{font-weight:900;font-size:12px;letter-spacing:.14em;color:#fff;text-transform:uppercase;line-height:1;}
 
-/* Control bar */
+/* Control bar — hidden entirely on non-YouTube platforms via data-platform attr */
 .ctrl-bar{position:absolute;left:0;right:0;bottom:0;z-index:9;padding:20px 18px 14px;background:linear-gradient(0deg, rgba(10,15,20,.96) 0%, rgba(10,15,20,.7) 50%, rgba(10,15,20,0) 100%);display:flex;align-items:center;gap:10px;opacity:0;transform:translateY(8px);transition:opacity .3s ease, transform .3s ease;pointer-events:none;}
 .player-wrap.controls-visible .ctrl-bar{opacity:1;transform:translateY(0);pointer-events:auto;}
+.player-wrap[data-platform="twitch"] .ctrl-bar,
+.player-wrap[data-platform="vimeo"] .ctrl-bar,
+.player-wrap[data-platform="custom"] .ctrl-bar{display:none!important;}
+
+/* Hide click-shield on native platforms so taps reach the iframe directly */
+.player-wrap[data-platform="twitch"] .click-shield,
+.player-wrap[data-platform="vimeo"] .click-shield,
+.player-wrap[data-platform="custom"] .click-shield{display:none!important;}
+
+/* Hide pause curtain and seek ripples on native platforms */
+.player-wrap[data-platform="twitch"] .pause-curtain,
+.player-wrap[data-platform="vimeo"] .pause-curtain,
+.player-wrap[data-platform="custom"] .pause-curtain,
+.player-wrap[data-platform="twitch"] .seek-ripple,
+.player-wrap[data-platform="vimeo"] .seek-ripple,
+.player-wrap[data-platform="custom"] .seek-ripple{display:none!important;}
 
 .ctrl-btn{width:42px;height:42px;border-radius:11px;background:rgba(0,255,255,.12);border:1px solid rgba(0,255,255,.4);color:#e6ffff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s ease, background .15s ease, box-shadow .2s ease, opacity .2s ease;padding:0;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);flex-shrink:0;position:relative;}
 .ctrl-btn:hover:not(:disabled){background:rgba(0,255,255,.3);box-shadow:0 8px 24px rgba(0,255,255,.35);transform:translateY(-1px);}
@@ -657,6 +668,7 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
                   <span class="ad-title-group">
                     <svg class="mark" viewBox="0 0 60 74" aria-hidden="true">
                       <path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/>
+                      <path fill="#00FFFF" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/>
                     </svg>
                     <span class="ad-title" id="adTitle">Advertisement</span>
                   </span>
@@ -910,6 +922,11 @@ var player = {
   ytReady: false
 };
 
+/* Native platforms = not YouTube. We back off and let the platform's own player run. */
+function isNativePlatform(p){
+  return p === "twitch" || p === "vimeo" || p === "custom";
+}
+
 function setPlayerPlatformAttr(platform){
   var wrap = $("playerWrap");
   if (!wrap) return;
@@ -1137,7 +1154,7 @@ function buildEmbedUrl(){
       var tm = url.match(/twitch\.tv\/([A-Za-z0-9_]+)/);
       if (tm) {
         var host = location.hostname || "localhost";
-        return "https://player.twitch.tv/?channel=" + tm[1] + "&parent=" + host + "&autoplay=true&muted=true&controls=false";
+        return "https://player.twitch.tv/?channel=" + tm[1] + "&parent=" + host + "&autoplay=true&muted=true";
       }
       return url;
     }
@@ -1150,9 +1167,13 @@ function loadPlainIframe(embedUrl){
   host.innerHTML = "";
   var iframe = document.createElement("iframe");
   iframe.src = embedUrl;
-  iframe.allow = "autoplay; picture-in-picture; encrypted-media";
+  iframe.allow = "autoplay; picture-in-picture; encrypted-media; fullscreen";
   iframe.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
   iframe.setAttribute("allowfullscreen", "");
+  /* Native platforms need pointer events to reach the iframe directly so the viewer can tap play */
+  if (isNativePlatform(player.platform)) {
+    iframe.style.pointerEvents = "auto";
+  }
   host.appendChild(iframe);
   player.iframe = iframe;
   player.platform = streamData.streamPlatform || "youtube";
