@@ -85,26 +85,26 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .player-wrap{background:#000;border-radius:16px;overflow:hidden;aspect-ratio:16/9;position:relative;border:1px solid var(--bd);user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;box-shadow:0 16px 48px -12px rgba(10,15,20,.35);}
 .player-wrap iframe,
 .player-wrap #ytPlayer,
-.player-wrap #ytPlayer iframe{position:absolute;inset:0;width:100%;height:100%;border:0;z-index:1;pointer-events:none;background:#000}
+.player-wrap #ytPlayer iframe{position:absolute!important;inset:0;width:100%;height:100%;border:0;z-index:1!important;pointer-events:none;background:#000}
 
 .click-shield{position:absolute;inset:0;z-index:5;background:transparent;cursor:pointer;}
 
 /* YouTube chrome mask — hides YouTube's own title bar, logo watermark,
    "More videos" chip, and end-screen carousel. Two dark gradient strips
-   layered above the iframe but below our controls. pointer-events:none
-   so they never block taps. */
-.yt-chrome-mask{position:absolute;inset:0;z-index:6;pointer-events:none;}
+   layered ABOVE the iframe but BELOW our controls. pointer-events:none
+   so they never block taps. Higher z-index to win any conflict. */
+.yt-chrome-mask{position:absolute!important;inset:0!important;z-index:7!important;pointer-events:none!important;display:block!important;}
 .yt-chrome-mask .mask-top{
-  position:absolute;top:0;left:0;right:0;height:80px;
-  background:linear-gradient(180deg, rgba(10,15,20,.85) 0%, rgba(10,15,20,.55) 45%, rgba(10,15,20,0) 100%);
+  position:absolute;top:0;left:0;right:0;height:90px;
+  background:linear-gradient(180deg, rgba(10,15,20,.98) 0%, rgba(10,15,20,.85) 40%, rgba(10,15,20,.4) 75%, rgba(10,15,20,0) 100%);
 }
 .yt-chrome-mask .mask-bottom{
-  position:absolute;bottom:0;left:0;right:0;height:120px;
-  background:linear-gradient(0deg, rgba(10,15,20,.95) 0%, rgba(10,15,20,.75) 35%, rgba(10,15,20,0) 100%);
+  position:absolute;bottom:0;left:0;right:0;height:150px;
+  background:linear-gradient(0deg, rgba(10,15,20,.99) 0%, rgba(10,15,20,.9) 30%, rgba(10,15,20,.55) 60%, rgba(10,15,20,0) 100%);
 }
 @media (max-width:640px){
-  .yt-chrome-mask .mask-top{height:60px}
-  .yt-chrome-mask .mask-bottom{height:90px}
+  .yt-chrome-mask .mask-top{height:70px}
+  .yt-chrome-mask .mask-bottom{height:110px}
 }
 
 /* Unmute prompt */
@@ -130,7 +130,7 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .live-time-chip.visible{display:inline-flex;}
 .live-time-chip.faded{opacity:0;}
 
-.player-watermark{position:absolute;top:16px;right:16px;z-index:8;display:none;align-items:center;gap:7px;text-decoration:none;opacity:.6;transition:opacity .25s ease, transform .25s ease;pointer-events:auto;text-shadow:0 2px 8px rgba(0,0,0,.85);}
+.player-watermark{position:absolute;top:16px;right:16px;z-index:8;display:none;align-items:center;gap:7px;text-decoration:none;opacity:.85;transition:opacity .25s ease, transform .25s ease;pointer-events:auto;text-shadow:0 2px 8px rgba(0,0,0,.85);}
 .player-watermark.visible{display:inline-flex;}
 .player-watermark:hover{opacity:1;transform:translateY(-1px);}
 .player-watermark .mark{width:18px;height:22px;flex-shrink:0;display:block;filter:drop-shadow(0 2px 6px rgba(0,0,0,.7));}
@@ -283,12 +283,16 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .player-wrap:-webkit-full-screen .highlight-pill{top:22px;left:22px;}
 .player-wrap:fullscreen .live-time-chip,
 .player-wrap:-webkit-full-screen .live-time-chip{top:52px;left:22px;}
+.player-wrap:fullscreen .yt-chrome-mask .mask-top,
+.player-wrap:-webkit-full-screen .yt-chrome-mask .mask-top{height:110px;}
+.player-wrap:fullscreen .yt-chrome-mask .mask-bottom,
+.player-wrap:-webkit-full-screen .yt-chrome-mask .mask-bottom{height:180px;}
 
 @media (max-width:640px){
   .live-pill,.highlight-pill{font-size:9px;padding:4px 9px;top:10px;left:10px;gap:5px;}
   .live-pill::before{width:5px;height:5px;}
   .live-time-chip{top:36px;left:10px;font-size:9.5px;padding:3px 7px;}
-  .player-watermark{top:10px;right:10px;gap:6px;opacity:.7;}
+  .player-watermark{top:10px;right:10px;gap:6px;opacity:.85;}
   .player-watermark .wordmark{font-size:10.5px;letter-spacing:.12em;}
   .player-watermark .mark{width:15px;height:19px;}
   .ctrl-bar{padding:14px 12px 12px;gap:7px;}
@@ -322,7 +326,7 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
   .unmute-btn i{width:22px;height:22px;}
 }
 
-.player-curtain{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:24px;color:#fff;z-index:2}
+.player-curtain{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:12px;text-align:center;padding:24px;color:#fff;z-index:4}
 .player-curtain .pc-icon{width:64px;height:64px;border-radius:50%;background:rgba(0,255,255,.15);border:2px solid rgba(0,255,255,.5);display:flex;align-items:center;justify-content:center}
 .player-curtain .pc-icon i{width:28px;height:28px;color:var(--cy)}
 .player-curtain h3{font-size:1.1rem;font-weight:900;color:#fff;margin:0}
@@ -710,7 +714,7 @@ var SKIP_BUTTON_SECONDS = 10;
 var SKIP_KEY_SMALL = 5;
 var SKIP_KEY_LARGE = 10;
 var LIVE_CHIP_FADE_MS = 5000;
-var LIVE_EDGE_DRIFT_SECONDS = 30;   /* how far behind live before we show the "Live" jump button */
+var LIVE_EDGE_DRIFT_SECONDS = 30;
 var UNMUTE_PREF_KEY = 'novalink_audio_enabled';
 
 var AD_DEFAULTS = {
@@ -798,7 +802,7 @@ var streamData = null;
 var streamId = null;
 var siblingStreams = [];
 var countdownTimer = null;
-var upcomingCountdownTimer = null;   /* ticks the visible countdown in the player curtain */
+var upcomingCountdownTimer = null;
 var adSettings = Object.assign({}, AD_DEFAULTS);
 var adPool = { preroll: [], midroll: [], postroll: [] };
 var adState = {
@@ -824,9 +828,6 @@ var player = {
   ytReady: false
 };
 
-/* ══════════════════════════════════════════════════════════════
-   AUTH
-   ══════════════════════════════════════════════════════════════ */
 function applyAuth(user){
   currentUser = user;
   isAdmin = !!(user && ADMINS.map(function(e){ return e.toLowerCase(); }).indexOf(String(user.email).toLowerCase()) !== -1);
@@ -847,9 +848,6 @@ function isOwner(){
   return streamData.ownerUid && streamData.ownerUid === currentUser.uid;
 }
 
-/* ══════════════════════════════════════════════════════════════
-   TIME / PHASE
-   ══════════════════════════════════════════════════════════════ */
 function getTiming(){
   if (!streamData) return { valid: false };
   var dateStr = streamData.startDate || "";
@@ -876,9 +874,6 @@ function currentPhase(){
   return "ended";
 }
 
-/* ══════════════════════════════════════════════════════════════
-   STREAM TYPE  (host-declared, not auto-detected)
-   ══════════════════════════════════════════════════════════════ */
 function getDeclaredStreamType(){
   if (!streamData) return "live";
   return streamData.streamType === "highlight" ? "highlight" : "live";
@@ -888,9 +883,6 @@ function applyDeclaredStreamType(){
   applyLiveStatus(t === "live");
 }
 
-/* ══════════════════════════════════════════════════════════════
-   YOUTUBE API
-   ══════════════════════════════════════════════════════════════ */
 function extractYouTubeId(url){
   if (!url) return null;
   var m1 = url.match(/[?&]v=([A-Za-z0-9_-]{6,})/);
@@ -949,7 +941,6 @@ function onPlayerReady(event){
   playerStateSync("playing");
 }
 
-/* Seek stays enabled everywhere. Only pause is hidden on live. */
 function applyLiveStatus(isLive){
   player.isLive = isLive;
 
@@ -970,11 +961,9 @@ function applyLiveStatus(isLive){
     if ($("ctrlPlayPause")) $("ctrlPlayPause").style.display = "inline-flex";
     var chip2 = $("liveTimeChip");
     if (chip2) chip2.classList.remove("visible");
-    /* highlight streams never need the jump-to-live button */
     if ($("ctrlLiveJump")) $("ctrlLiveJump").style.display = "none";
   }
 
-  /* Seek buttons are always enabled */
   if ($("ctrlBack")) $("ctrlBack").disabled = false;
   if ($("ctrlForward")) $("ctrlForward").disabled = false;
 
@@ -987,9 +976,6 @@ function onPlayerStateChange(event){
   else if (event.data === 2) playerStateSync("paused");
 }
 
-/* ══════════════════════════════════════════════════════════════
-   FALLBACK IFRAME (twitch/vimeo/custom)
-   ══════════════════════════════════════════════════════════════ */
 function buildEmbedUrl(){
   if (!streamData) return null;
   var platform = streamData.streamPlatform || "youtube";
@@ -1029,11 +1015,8 @@ function loadPlainIframe(embedUrl){
   var isLiveDeclared = (declared === "live");
   player.isLive = isLiveDeclared;
 
-  /* Seek always enabled */
   if ($("ctrlBack")) $("ctrlBack").disabled = false;
   if ($("ctrlForward")) $("ctrlForward").disabled = false;
-
-  /* Pause button hidden on live */
   if ($("ctrlPlayPause")) $("ctrlPlayPause").style.display = isLiveDeclared ? "none" : "inline-flex";
 
   if (isLiveDeclared) {
@@ -1042,7 +1025,6 @@ function loadPlainIframe(embedUrl){
   } else {
     if ($("livePill")) $("livePill").classList.remove("visible");
     if ($("highlightPill")) $("highlightPill").classList.add("visible");
-    /* highlight streams never need jump-to-live */
     if ($("ctrlLiveJump")) $("ctrlLiveJump").style.display = "none";
   }
 
@@ -1056,9 +1038,6 @@ function loadPlainIframe(embedUrl){
   refreshIcons();
 }
 
-/* ══════════════════════════════════════════════════════════════
-   PLAYER CONTROLS
-   ══════════════════════════════════════════════════════════════ */
 function sendCommand(cmd, value){
   try {
     if (player.ytPlayer && player.ytReady) {
@@ -1138,7 +1117,6 @@ function tryUnmute(){
 function showUnmutePrompt(){ if ($("unmutePrompt")) $("unmutePrompt").classList.add("visible"); }
 function hideUnmutePrompt(){ if ($("unmutePrompt")) $("unmutePrompt").classList.remove("visible"); }
 
-/* Seek works on live too — forward pushes toward live edge, back rewinds into DVR */
 function seekBy(seconds){
   if (!player.ytPlayer && !player.iframe) return;
   var target = Math.max(0, player.currentTime + seconds);
@@ -1185,9 +1163,6 @@ function hideControls(){
   wrap.classList.remove("controls-visible");
 }
 
-/* ══════════════════════════════════════════════════════════════
-   FULLSCREEN
-   ══════════════════════════════════════════════════════════════ */
 function isFullscreen(){ return !!(document.fullscreenElement || document.webkitFullscreenElement); }
 function isMobile(){ return /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent); }
 function isIOS(){ return /iPhone|iPad|iPod/i.test(navigator.userAgent) || (navigator.platform === "MacIntel" && navigator.maxTouchPoints > 1); }
@@ -1231,9 +1206,6 @@ function syncFullscreenIcon(){
   document.addEventListener(ev, syncFullscreenIcon);
 });
 
-/* ══════════════════════════════════════════════════════════════
-   KEYBOARD
-   ══════════════════════════════════════════════════════════════ */
 document.addEventListener("keydown", function(e){
   if (document.activeElement && /INPUT|TEXTAREA|SELECT/.test(document.activeElement.tagName)) return;
   if (!$("playerWrap")) return;
@@ -1248,9 +1220,6 @@ document.addEventListener("keydown", function(e){
   else if (k === "l") { e.preventDefault(); seekBy(SKIP_KEY_LARGE); }
 });
 
-/* ══════════════════════════════════════════════════════════════
-   SHIELD TAP
-   ══════════════════════════════════════════════════════════════ */
 function handleShieldTap(e){
   var now = Date.now();
   var wrap = $("playerWrap");
@@ -1261,7 +1230,6 @@ function handleShieldTap(e){
   var side = x < half ? "left" : "right";
   var timeSinceLast = now - player.lastTapTime;
   if (timeSinceLast < 320 && player.tapPosition === side) {
-    /* Double-tap seek works on live too */
     if (side === "left") { seekBy(-SKIP_BUTTON_SECONDS); showSeekRipple("left"); }
     else { seekBy(SKIP_BUTTON_SECONDS); showSeekRipple("right"); }
     player.lastTapTime = 0;
@@ -1281,9 +1249,6 @@ function showSeekRipple(side){
   setTimeout(function(){ el.classList.remove("show"); }, 750);
 }
 
-/* ══════════════════════════════════════════════════════════════
-   ADS
-   ══════════════════════════════════════════════════════════════ */
 function fetchAdSettings(){
   return db.collection(SETTINGS).doc("ads").get().then(function(snap){
     if (snap.exists) adSettings = Object.assign({}, AD_DEFAULTS, snap.data() || {});
@@ -1422,9 +1387,6 @@ function hideAdOverlay(){
   if (player.muted && localStorage.getItem(UNMUTE_PREF_KEY) !== "1") showUnmutePrompt();
 }
 
-/* ══════════════════════════════════════════════════════════════
-   HERO
-   ══════════════════════════════════════════════════════════════ */
 function renderHero(){
   var title = streamData.streamTitle || streamData.eventName || "Untitled Stream";
   var channel = streamData.channelName || streamData.hostName || streamData.ownerName || "Channel";
@@ -1494,9 +1456,6 @@ function renderOwnerActions(){
   if (streamData) renderHero();
 }
 
-/* ══════════════════════════════════════════════════════════════
-   SIBLINGS
-   ══════════════════════════════════════════════════════════════ */
 function renderSiblings(){
   var wrap = $("moreOnChannel");
   var list = $("siblingList");
@@ -1591,9 +1550,6 @@ function buildSiblingRow(s){
   return row;
 }
 
-/* ══════════════════════════════════════════════════════════════
-   COUNTDOWN (upcoming streams)
-   ══════════════════════════════════════════════════════════════ */
 function formatCountdownParts(msRemaining){
   var s = Math.max(0, Math.floor(msRemaining / 1000));
   var days = Math.floor(s / 86400);
@@ -1609,7 +1565,7 @@ function formatCountdownParts(msRemaining){
 }
 
 function renderCountdownIntoCurtain(curtain){
-  var enabled = streamData.countdownEnabled !== false;   /* default true */
+  var enabled = streamData.countdownEnabled !== false;
   var t = getTiming();
   if (!enabled || !t || !t.valid) {
     curtain.innerHTML =
@@ -1650,7 +1606,6 @@ function updateCountdownDisplay(){
   var subEl = $("countdownSub");
   if (!hEl || !mEl || !sEl) return;
 
-  /* If more than 24h away, show DD:HH:MM instead of HH:MM:SS */
   if (parts.days > 0) {
     hEl.textContent = String(parts.days).padStart(2, "0");
     mEl.textContent = parts.hh;
@@ -1677,7 +1632,6 @@ function startUpcomingCountdown(){
     if (remaining <= 0) {
       clearInterval(upcomingCountdownTimer);
       upcomingCountdownTimer = null;
-      /* Auto-load the player — no refresh needed */
       renderWatch();
       renderHero();
       return;
@@ -1693,9 +1647,6 @@ function stopUpcomingCountdown(){
   }
 }
 
-/* ══════════════════════════════════════════════════════════════
-   RENDER WATCH
-   ══════════════════════════════════════════════════════════════ */
 function renderWatch(){
   var phase = currentPhase();
   var t = getTiming();
@@ -1869,8 +1820,6 @@ function startTimeTicker(){
       var s = Math.floor((elapsed % 60000) / 1000);
       if (chip) chip.textContent = pad2(h) + ":" + pad2(m) + ":" + pad2(s);
 
-      /* On declared-live streams, show the "Live" jump button when the viewer
-         has drifted more than LIVE_EDGE_DRIFT_SECONDS behind the live edge. */
       try {
         if (player.ytPlayer && player.ytReady && typeof player.ytPlayer.getCurrentTime === "function") {
           var ct = player.ytPlayer.getCurrentTime() || 0;
@@ -1907,7 +1856,6 @@ function watchForStreamEnd(){
   }, 10000);
 }
 
-/* Legacy stub kept for safety — no longer relies on a missing #countdownVal element */
 function startCountdown(){
   if (countdownTimer) clearInterval(countdownTimer);
   var lastPhase = null;
@@ -1927,9 +1875,6 @@ function startCountdown(){
   countdownTimer = setInterval(tick, 1000);
 }
 
-/* ══════════════════════════════════════════════════════════════
-   LOAD
-   ══════════════════════════════════════════════════════════════ */
 function loadStream(){
   streamId = getParam("id");
   if (!streamId) { showError("Missing stream ID", "The link is missing a stream identifier."); return; }
@@ -1997,9 +1942,6 @@ function deleteStream(){
     });
 }
 
-/* ══════════════════════════════════════════════════════════════
-   WIRING
-   ══════════════════════════════════════════════════════════════ */
 window.onYouTubeIframeAPIReady = function(){ /* ready when needed */ };
 
 document.addEventListener("DOMContentLoaded", function(){
