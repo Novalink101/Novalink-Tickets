@@ -133,6 +133,24 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 
 .ctrl-btn .skip-num{position:absolute;bottom:3px;right:4px;font-size:8.5px;font-weight:900;font-family:var(--mono);color:rgba(230,255,255,.85);letter-spacing:0;pointer-events:none;line-height:1;}
 
+.ctrl-btn.ctrl-live-jump{
+  background:rgba(220,38,38,.18);
+  border-color:rgba(220,38,38,.5);
+  color:#fecaca;
+  width:auto;
+  padding:0 14px;
+  gap:6px;
+  font-size:11.5px;
+  font-weight:900;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+.ctrl-btn.ctrl-live-jump:hover:not(:disabled){
+  background:rgba(220,38,38,.35);
+  box-shadow:0 8px 24px rgba(220,38,38,.4);
+}
+.ctrl-btn.ctrl-live-jump i{width:14px;height:14px}
+
 .ctrl-spacer{flex:1;}
 .ctrl-time{font-family:var(--mono);font-size:11.5px;font-weight:800;color:rgba(255,255,255,.85);letter-spacing:.04em;text-shadow:0 1px 4px rgba(0,0,0,.6);padding:0 8px;white-space:nowrap;}
 
@@ -216,6 +234,8 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
   .ctrl-btn.primary{width:46px;height:46px;}
   .ctrl-btn.primary i{width:22px;height:22px;}
   .ctrl-btn .skip-num{font-size:7.5px;bottom:2px;right:3px;}
+  .ctrl-btn.ctrl-live-jump{padding:0 10px;font-size:10.5px;}
+  .ctrl-btn.ctrl-live-jump i{width:12px;height:12px}
   .ctrl-time{font-size:10.5px;padding:0 5px;}
   .pause-curtain .pc-play{width:68px;height:68px;}
   .pause-curtain .pc-play i{width:28px;height:28px;}
@@ -476,6 +496,10 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
                   <i data-lucide="chevron-right"></i>
                   <span class="skip-num">10</span>
                 </button>
+                <button class="ctrl-btn ctrl-live-jump" id="ctrlLiveJump" aria-label="Jump to live" style="display:none">
+                  <i data-lucide="radio"></i>
+                  <span>Live</span>
+                </button>
                 <button class="ctrl-btn" id="ctrlMute" aria-label="Mute / Unmute">
                   <i data-lucide="volume-x"></i>
                 </button>
@@ -618,6 +642,7 @@ var SKIP_BUTTON_SECONDS = 10;
 var SKIP_KEY_SMALL = 5;
 var SKIP_KEY_LARGE = 10;
 var LIVE_CHIP_FADE_MS = 5000;
+var LIVE_EDGE_DRIFT_SECONDS = 30;   /* how far behind live before we show the "Live" jump button */
 var UNMUTE_PREF_KEY = 'novalink_audio_enabled';
 
 var AD_DEFAULTS = {
@@ -719,7 +744,6 @@ var player = {
   ytPlayer: null,
   platform: "youtube",
   isLive: true,
-  seekable: false,
   currentTime: 0,
   duration: 0,
   timeTicker: null,
@@ -785,12 +809,7 @@ function currentPhase(){
 
 /* ══════════════════════════════════════════════════════════════
    STREAM TYPE  (host-declared, not auto-detected)
-   ══════════════════════════════════════════════════════════════
-   The stream type is chosen by the host at creation time and stored on
-   the stream doc as streamType: "live" or "highlight". We do NOT try to
-   auto-detect, because YouTube's IFrame API doesn't reliably expose
-   live status. Missing field defaults to "live" (safe default).
-*/
+   ══════════════════════════════════════════════════════════════ */
 function getDeclaredStreamType(){
   if (!streamData) return "live";
   return streamData.streamType === "highlight" ? "highlight" : "live";
@@ -851,10 +870,8 @@ function onPlayerReady(event){
     }
   } catch(e){ console.warn("[yt iframe]", e); }
 
-  /* Apply the host-declared stream type */
   applyDeclaredStreamType();
 
-  /* Try auto-unmute if preference saved */
   if (localStorage.getItem(UNMUTE_PREF_KEY) === "1") {
     tryUnmute();
   } else {
@@ -863,14 +880,13 @@ function onPlayerReady(event){
   playerStateSync("playing");
 }
 
+/* Seek stays enabled everywhere. Only pause is hidden on live. */
 function applyLiveStatus(isLive){
+  player.isLive = isLive;
+
   if (isLive) {
-    player.seekable = false;
-    player.isLive = true;
     if ($("livePill")) $("livePill").classList.add("visible");
     if ($("highlightPill")) $("highlightPill").classList.remove("visible");
-    if ($("ctrlBack")) $("ctrlBack").disabled = true;
-    if ($("ctrlForward")) $("ctrlForward").disabled = true;
     if ($("ctrlPlayPause")) $("ctrlPlayPause").style.display = "none";
     var chip = $("liveTimeChip");
     if (chip) {
@@ -880,16 +896,19 @@ function applyLiveStatus(isLive){
       player.liveChipFadeTimer = setTimeout(function(){ chip.classList.add("faded"); }, LIVE_CHIP_FADE_MS);
     }
   } else {
-    player.seekable = true;
-    player.isLive = false;
     if ($("livePill")) $("livePill").classList.remove("visible");
     if ($("highlightPill")) $("highlightPill").classList.add("visible");
-    if ($("ctrlBack")) $("ctrlBack").disabled = false;
-    if ($("ctrlForward")) $("ctrlForward").disabled = false;
     if ($("ctrlPlayPause")) $("ctrlPlayPause").style.display = "inline-flex";
     var chip2 = $("liveTimeChip");
     if (chip2) chip2.classList.remove("visible");
+    /* highlight streams never need the jump-to-live button */
+    if ($("ctrlLiveJump")) $("ctrlLiveJump").style.display = "none";
   }
+
+  /* Seek buttons are always enabled */
+  if ($("ctrlBack")) $("ctrlBack").disabled = false;
+  if ($("ctrlForward")) $("ctrlForward").disabled = false;
+
   renderWatchBanner();
 }
 
@@ -940,17 +959,22 @@ function loadPlainIframe(embedUrl){
   var declared = getDeclaredStreamType();
   var isLiveDeclared = (declared === "live");
   player.isLive = isLiveDeclared;
-  player.seekable = !isLiveDeclared;
 
-  if ($("ctrlBack")) $("ctrlBack").disabled = isLiveDeclared;
-  if ($("ctrlForward")) $("ctrlForward").disabled = isLiveDeclared;
+  /* Seek always enabled */
+  if ($("ctrlBack")) $("ctrlBack").disabled = false;
+  if ($("ctrlForward")) $("ctrlForward").disabled = false;
+
+  /* Pause button hidden on live */
   if ($("ctrlPlayPause")) $("ctrlPlayPause").style.display = isLiveDeclared ? "none" : "inline-flex";
+
   if (isLiveDeclared) {
     if ($("livePill")) $("livePill").classList.add("visible");
     if ($("highlightPill")) $("highlightPill").classList.remove("visible");
   } else {
     if ($("livePill")) $("livePill").classList.remove("visible");
     if ($("highlightPill")) $("highlightPill").classList.add("visible");
+    /* highlight streams never need jump-to-live */
+    if ($("ctrlLiveJump")) $("ctrlLiveJump").style.display = "none";
   }
 
   if (localStorage.getItem(UNMUTE_PREF_KEY) === "1") {
@@ -1045,8 +1069,8 @@ function tryUnmute(){
 function showUnmutePrompt(){ if ($("unmutePrompt")) $("unmutePrompt").classList.add("visible"); }
 function hideUnmutePrompt(){ if ($("unmutePrompt")) $("unmutePrompt").classList.remove("visible"); }
 
+/* Seek works on live too — forward pushes toward live edge, back rewinds into DVR */
 function seekBy(seconds){
-  if (!player.seekable) return;
   if (!player.ytPlayer && !player.iframe) return;
   var target = Math.max(0, player.currentTime + seconds);
   if (player.duration > 0) target = Math.min(target, player.duration);
@@ -1055,6 +1079,20 @@ function seekBy(seconds){
   updateTimeDisplay();
   showControls();
 }
+
+function jumpToLive(){
+  if (!player.ytPlayer || !player.ytReady) return;
+  try {
+    var dur = player.ytPlayer.getDuration() || 0;
+    if (dur > 0) {
+      player.ytPlayer.seekTo(dur, true);
+      player.ytPlayer.playVideo();
+      showToast("Jumped to live", "success", 1500);
+    }
+  } catch(err){}
+  showControls();
+}
+
 function updateTimeDisplay(){
   var t = $("ctrlTime");
   if (!t) return;
@@ -1154,10 +1192,9 @@ function handleShieldTap(e){
   var side = x < half ? "left" : "right";
   var timeSinceLast = now - player.lastTapTime;
   if (timeSinceLast < 320 && player.tapPosition === side) {
-    if (player.seekable) {
-      if (side === "left") { seekBy(-SKIP_BUTTON_SECONDS); showSeekRipple("left"); }
-      else { seekBy(SKIP_BUTTON_SECONDS); showSeekRipple("right"); }
-    }
+    /* Double-tap seek works on live too */
+    if (side === "left") { seekBy(-SKIP_BUTTON_SECONDS); showSeekRipple("left"); }
+    else { seekBy(SKIP_BUTTON_SECONDS); showSeekRipple("right"); }
     player.lastTapTime = 0;
     player.tapPosition = null;
     return;
@@ -1514,10 +1551,12 @@ function renderWatch(){
   var live = $("livePill");
   var hl = $("highlightPill");
   var chip = $("liveTimeChip");
+  var jump = $("ctrlLiveJump");
   if (watermark) watermark.classList.remove("visible");
   if (live) live.classList.remove("visible");
   if (hl) hl.classList.remove("visible");
   if (chip) chip.classList.remove("visible");
+  if (jump) jump.style.display = "none";
 
   if (phase === "upcoming" || phase === "unknown" || !t || !t.valid) {
     curtain.style.display = "flex";
@@ -1665,12 +1704,30 @@ function startTimeTicker(){
       var m = Math.floor((elapsed % 3600000) / 60000);
       var s = Math.floor((elapsed % 60000) / 1000);
       if (chip) chip.textContent = pad2(h) + ":" + pad2(m) + ":" + pad2(s);
+
+      /* On declared-live streams, check how far behind the live edge we are.
+         Show a "Live" jump button when the viewer has drifted back >30s. */
+      try {
+        if (player.ytPlayer && player.ytReady && typeof player.ytPlayer.getCurrentTime === "function") {
+          var ct = player.ytPlayer.getCurrentTime() || 0;
+          var dur = player.ytPlayer.getDuration() || 0;
+          if (dur > 0) {
+            var drift = dur - ct;
+            var showJump = drift > LIVE_EDGE_DRIFT_SECONDS;
+            var btn = $("ctrlLiveJump");
+            if (btn) btn.style.display = showJump ? "inline-flex" : "none";
+          }
+        }
+      } catch(e){}
     } else {
       if (player.ytPlayer && player.ytReady && typeof player.ytPlayer.getCurrentTime === "function") {
         player.currentTime = player.ytPlayer.getCurrentTime() || 0;
         player.duration = player.ytPlayer.getDuration() || 0;
       }
       updateTimeDisplay();
+      /* Highlight streams never show the jump button */
+      var btn2 = $("ctrlLiveJump");
+      if (btn2) btn2.style.display = "none";
     }
   }, 1000);
 }
@@ -1802,6 +1859,7 @@ document.addEventListener("DOMContentLoaded", function(){
   $("ctrlPlayPause").addEventListener("click", function(e){ e.stopPropagation(); togglePlayPause(); });
   $("ctrlBack").addEventListener("click", function(e){ e.stopPropagation(); seekBy(-SKIP_BUTTON_SECONDS); });
   $("ctrlForward").addEventListener("click", function(e){ e.stopPropagation(); seekBy(SKIP_BUTTON_SECONDS); });
+  $("ctrlLiveJump").addEventListener("click", function(e){ e.stopPropagation(); jumpToLive(); });
   $("ctrlMute").addEventListener("click", function(e){ e.stopPropagation(); toggleMute(); });
   $("ctrlFullscreen").addEventListener("click", function(e){ e.stopPropagation(); toggleFullscreen(); });
 
