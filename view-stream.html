@@ -89,6 +89,24 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 
 .click-shield{position:absolute;inset:0;z-index:5;background:transparent;cursor:pointer;}
 
+/* YouTube chrome mask — hides YouTube's own title bar, logo watermark,
+   "More videos" chip, and end-screen carousel. Two dark gradient strips
+   layered above the iframe but below our controls. pointer-events:none
+   so they never block taps. */
+.yt-chrome-mask{position:absolute;inset:0;z-index:6;pointer-events:none;}
+.yt-chrome-mask .mask-top{
+  position:absolute;top:0;left:0;right:0;height:80px;
+  background:linear-gradient(180deg, rgba(10,15,20,.85) 0%, rgba(10,15,20,.55) 45%, rgba(10,15,20,0) 100%);
+}
+.yt-chrome-mask .mask-bottom{
+  position:absolute;bottom:0;left:0;right:0;height:120px;
+  background:linear-gradient(0deg, rgba(10,15,20,.95) 0%, rgba(10,15,20,.75) 35%, rgba(10,15,20,0) 100%);
+}
+@media (max-width:640px){
+  .yt-chrome-mask .mask-top{height:60px}
+  .yt-chrome-mask .mask-bottom{height:90px}
+}
+
 /* Unmute prompt */
 .unmute-prompt{position:absolute;inset:0;z-index:12;display:none;align-items:center;justify-content:center;background:rgba(10,15,20,.55);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);animation:fadeIn .3s ease;}
 .unmute-prompt.visible{display:flex;}
@@ -171,6 +189,51 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .pause-curtain .pc-play i{width:38px;height:38px;stroke-width:2.8;margin-left:5px;}
 .pause-curtain .pc-label{font-size:13px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:var(--cy);}
 .pause-curtain .pc-sub{font-size:12.5px;color:rgba(255,255,255,.65);max-width:340px;line-height:1.55;font-weight:500;}
+
+/* Countdown inside player curtain (upcoming streams) */
+.countdown-block{
+  display:flex;flex-direction:column;align-items:center;gap:14px;
+  text-align:center;padding:8px 16px;
+}
+.countdown-label{
+  font-size:11px;font-weight:900;letter-spacing:.22em;text-transform:uppercase;
+  color:var(--cy);opacity:.9;
+}
+.countdown-digits{
+  font-family:var(--mono);
+  font-size:clamp(2.2rem,7vw,4rem);
+  font-weight:900;
+  color:#fff;
+  letter-spacing:.04em;
+  line-height:1;
+  text-shadow:0 6px 24px rgba(0,255,255,.35), 0 2px 8px rgba(0,0,0,.6);
+  display:flex;align-items:center;gap:6px;
+}
+.countdown-digits .cd-num{
+  display:inline-block;
+  min-width:1.6ch;
+  text-align:center;
+  font-variant-numeric:tabular-nums;
+  padding:0 2px;
+}
+.countdown-digits .cd-sep{
+  color:var(--cy);
+  opacity:.65;
+  font-weight:900;
+  animation:cdBlink 1.6s ease-in-out infinite;
+}
+@keyframes cdBlink{0%,100%{opacity:.65}50%{opacity:.25}}
+.countdown-sub{
+  font-size:12.5px;color:rgba(255,255,255,.65);
+  max-width:340px;line-height:1.55;font-weight:500;
+}
+.countdown-sub strong{color:#fff;font-weight:800}
+
+@media (max-width:640px){
+  .countdown-block{gap:10px}
+  .countdown-label{font-size:10px;letter-spacing:.18em}
+  .countdown-sub{font-size:11.5px}
+}
 
 /* Ad overlay */
 .ad-overlay{position:absolute;inset:0;z-index:20;background:#000;display:none;flex-direction:column;overflow:hidden;}
@@ -440,6 +503,11 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
               <div id="ytPlayerHost"></div>
 
               <div class="click-shield" id="clickShield"></div>
+
+              <div class="yt-chrome-mask" aria-hidden="true">
+                <div class="mask-top"></div>
+                <div class="mask-bottom"></div>
+              </div>
 
               <span class="live-pill" id="livePill">LIVE</span>
               <span class="highlight-pill" id="highlightPill"><i data-lucide="film"></i> Highlight</span>
@@ -730,6 +798,7 @@ var streamData = null;
 var streamId = null;
 var siblingStreams = [];
 var countdownTimer = null;
+var upcomingCountdownTimer = null;   /* ticks the visible countdown in the player curtain */
 var adSettings = Object.assign({}, AD_DEFAULTS);
 var adPool = { preroll: [], midroll: [], postroll: [] };
 var adState = {
@@ -1523,6 +1592,108 @@ function buildSiblingRow(s){
 }
 
 /* ══════════════════════════════════════════════════════════════
+   COUNTDOWN (upcoming streams)
+   ══════════════════════════════════════════════════════════════ */
+function formatCountdownParts(msRemaining){
+  var s = Math.max(0, Math.floor(msRemaining / 1000));
+  var days = Math.floor(s / 86400);
+  var h = Math.floor((s % 86400) / 3600);
+  var m = Math.floor((s % 3600) / 60);
+  var sec = s % 60;
+  return {
+    days: days,
+    hh: String(h).padStart(2, "0"),
+    mm: String(m).padStart(2, "0"),
+    ss: String(sec).padStart(2, "0")
+  };
+}
+
+function renderCountdownIntoCurtain(curtain){
+  var enabled = streamData.countdownEnabled !== false;   /* default true */
+  var t = getTiming();
+  if (!enabled || !t || !t.valid) {
+    curtain.innerHTML =
+      '<div class="pc-icon"><i data-lucide="hourglass"></i></div>' +
+      '<h3>Starts soon</h3>' +
+      '<p>The player will appear here at showtime. Come back when the countdown hits zero.</p>';
+    refreshIcons();
+    return;
+  }
+
+  curtain.innerHTML =
+    '<div class="countdown-block">' +
+      '<div class="countdown-label">Stream starts in</div>' +
+      '<div class="countdown-digits" id="countdownDigits">' +
+        '<span class="cd-num" id="cdH">00</span>' +
+        '<span class="cd-sep">:</span>' +
+        '<span class="cd-num" id="cdM">00</span>' +
+        '<span class="cd-sep">:</span>' +
+        '<span class="cd-num" id="cdS">00</span>' +
+      '</div>' +
+      '<div class="countdown-sub" id="countdownSub">Starting <strong>soon</strong></div>' +
+    '</div>';
+  refreshIcons();
+  updateCountdownDisplay();
+  startUpcomingCountdown();
+}
+
+function updateCountdownDisplay(){
+  var t = getTiming();
+  if (!t || !t.valid) return;
+  var remaining = t.startMs - Date.now();
+  if (remaining <= 0) remaining = 0;
+  var parts = formatCountdownParts(remaining);
+
+  var hEl = $("cdH");
+  var mEl = $("cdM");
+  var sEl = $("cdS");
+  var subEl = $("countdownSub");
+  if (!hEl || !mEl || !sEl) return;
+
+  /* If more than 24h away, show DD:HH:MM instead of HH:MM:SS */
+  if (parts.days > 0) {
+    hEl.textContent = String(parts.days).padStart(2, "0");
+    mEl.textContent = parts.hh;
+    sEl.textContent = parts.mm;
+  } else {
+    hEl.textContent = parts.hh;
+    mEl.textContent = parts.mm;
+    sEl.textContent = parts.ss;
+  }
+
+  if (subEl) {
+    var startStr = formatDate(streamData.startDate, streamData.startTime);
+    subEl.innerHTML = 'Starts <strong>' + esc(startStr) + '</strong>';
+  }
+}
+
+function startUpcomingCountdown(){
+  if (upcomingCountdownTimer) clearInterval(upcomingCountdownTimer);
+  var t = getTiming();
+  if (!t || !t.valid) return;
+
+  upcomingCountdownTimer = setInterval(function(){
+    var remaining = t.startMs - Date.now();
+    if (remaining <= 0) {
+      clearInterval(upcomingCountdownTimer);
+      upcomingCountdownTimer = null;
+      /* Auto-load the player — no refresh needed */
+      renderWatch();
+      renderHero();
+      return;
+    }
+    updateCountdownDisplay();
+  }, 1000);
+}
+
+function stopUpcomingCountdown(){
+  if (upcomingCountdownTimer) {
+    clearInterval(upcomingCountdownTimer);
+    upcomingCountdownTimer = null;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
    RENDER WATCH
    ══════════════════════════════════════════════════════════════ */
 function renderWatch(){
@@ -1546,6 +1717,7 @@ function renderWatch(){
   playerStateSync("idle");
   clearTimeout(adState.midrollTimerId);
   adState.midrollTimerId = null;
+  stopUpcomingCountdown();
 
   var watermark = $("playerWatermark");
   var live = $("livePill");
@@ -1560,11 +1732,7 @@ function renderWatch(){
 
   if (phase === "upcoming" || phase === "unknown" || !t || !t.valid) {
     curtain.style.display = "flex";
-    curtain.innerHTML =
-      '<div class="pc-icon"><i data-lucide="hourglass"></i></div>' +
-      '<h3>Starts soon</h3>' +
-      '<p>The player will appear here at showtime. Come back when the countdown hits zero.</p>';
-    refreshIcons();
+    renderCountdownIntoCurtain(curtain);
     return;
   }
   if (phase === "ended") {
@@ -1635,11 +1803,7 @@ function renderWatch(){
 
   if (phase === "unlocking") {
     curtain.style.display = "flex";
-    curtain.innerHTML =
-      '<div class="pc-icon"><i data-lucide="clock"></i></div>' +
-      '<h3>Starting soon</h3>' +
-      '<p>The stream will be live shortly.</p>';
-    refreshIcons();
+    renderCountdownIntoCurtain(curtain);
     startTimeTicker();
     return;
   }
@@ -1705,8 +1869,8 @@ function startTimeTicker(){
       var s = Math.floor((elapsed % 60000) / 1000);
       if (chip) chip.textContent = pad2(h) + ":" + pad2(m) + ":" + pad2(s);
 
-      /* On declared-live streams, check how far behind the live edge we are.
-         Show a "Live" jump button when the viewer has drifted back >30s. */
+      /* On declared-live streams, show the "Live" jump button when the viewer
+         has drifted more than LIVE_EDGE_DRIFT_SECONDS behind the live edge. */
       try {
         if (player.ytPlayer && player.ytReady && typeof player.ytPlayer.getCurrentTime === "function") {
           var ct = player.ytPlayer.getCurrentTime() || 0;
@@ -1725,7 +1889,6 @@ function startTimeTicker(){
         player.duration = player.ytPlayer.getDuration() || 0;
       }
       updateTimeDisplay();
-      /* Highlight streams never show the jump button */
       var btn2 = $("ctrlLiveJump");
       if (btn2) btn2.style.display = "none";
     }
@@ -1744,12 +1907,12 @@ function watchForStreamEnd(){
   }, 10000);
 }
 
+/* Legacy stub kept for safety — no longer relies on a missing #countdownVal element */
 function startCountdown(){
   if (countdownTimer) clearInterval(countdownTimer);
-  var val = $("countdownVal");
-  if (!val) return;
   var lastPhase = null;
   function tick(){
+    if (!streamData) return;
     var t = getTiming();
     if (!t || !t.valid) return;
     var phase = currentPhase();
@@ -1887,6 +2050,7 @@ document.addEventListener("DOMContentLoaded", function(){
 
   window.addEventListener("beforeunload", function(){
     if (countdownTimer) clearInterval(countdownTimer);
+    if (upcomingCountdownTimer) clearInterval(upcomingCountdownTimer);
     if (player.timeTicker) clearInterval(player.timeTicker);
     clearTimeout(adState.midrollTimerId);
     clearInterval(adState.countdownTimerId);
@@ -1898,4 +2062,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-  </html>
+                    </html>
