@@ -23,6 +23,7 @@
   --font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --danger:#dc2626;--danger-soft:#fef2f2;
   --live:#dc2626;--live-soft:#fef2f2;
+  --highlight:#7c3aed;--highlight-soft:#f5f3ff;
   --navy:#1e2f4d;
   --success:#059669;--success-soft:#ecfdf5;
   --ease-smooth:cubic-bezier(0.25,0.8,0.25,1);
@@ -168,6 +169,8 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
 }
 .status-badge.live{background:#dc2626;color:#fff}
 .status-badge.live::before{content:'';width:7px;height:7px;border-radius:50%;background:#fff;animation:livePulse 1.5s infinite}
+.status-badge.highlight{background:linear-gradient(135deg,rgba(139,92,246,.95),rgba(124,58,237,.95));color:#fff}
+.status-badge.highlight::before{content:'';width:7px;height:7px;border-radius:50%;background:#fff}
 .status-badge.upcoming{background:rgba(10,15,20,0.82);color:#67e8f9;backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border:1px solid rgba(103,232,249,0.35)}
 .status-badge.replay{background:rgba(139,92,246,0.92);color:#fff}
 .status-badge.ended{background:rgba(71,85,105,0.85);color:#e2e8f0}
@@ -222,6 +225,8 @@ body{font-family:var(--font);background:var(--bg-2);color:var(--text);line-heigh
 .stream-card-status i{width:13px;height:13px;color:var(--cyan-600);flex-shrink:0}
 .stream-card-status.live{color:#dc2626}
 .stream-card-status.live i{color:#dc2626}
+.stream-card-status.highlight{color:#7c3aed}
+.stream-card-status.highlight i{color:#7c3aed}
 .stream-card-status.replay{color:#7c3aed}
 .stream-card-status.replay i{color:#7c3aed}
 .stream-card-status.ended{color:var(--text-muted)}
@@ -475,6 +480,11 @@ function streamTitleOf(s){ return s.streamTitle || s.eventName || "Untitled Stre
 function streamChannelName(s){ return s.channelName || s.hostName || s.ownerName || "Channel"; }
 function streamPlatformLabel(p){ return { youtube:"YouTube", vimeo:"Vimeo", twitch:"Twitch", custom:"Embed" }[p] || "Live"; }
 
+/* Host-declared stream type — "live" or "highlight". Missing → "live". */
+function streamTypeOf(s){
+  return s.streamType === "highlight" ? "highlight" : "live";
+}
+
 function streamStatus(s){
   var dateStr = s.startDate || "";
   var timeStr = s.startTime || "00:00";
@@ -513,7 +523,10 @@ function createdValue(data){
 
 function statusLine(s){
   var st = streamStatus(s);
+  var isHL = streamTypeOf(s) === "highlight";
+
   if (st.status === 'live') {
+    if (isHL) return { cls: 'highlight', ic: 'film', text: 'Highlight' };
     return { cls: 'live', ic: 'radio', text: 'Live now' };
   }
   if (st.status === 'upcoming') {
@@ -533,7 +546,11 @@ function statusLine(s){
 
 function ctaText(s){
   var st = streamStatus(s);
-  if (st.status === 'live') return 'Watch now';
+  var isHL = streamTypeOf(s) === "highlight";
+  if (st.status === 'live') {
+    if (isHL) return 'Watch highlight';
+    return 'Watch now';
+  }
   if (st.status === 'past' && st.replayOk) return 'Watch replay';
   if (st.status === 'past') return 'View details';
   return 'View';
@@ -705,6 +722,8 @@ function buildCard(s){
   card.setAttribute("tabindex", "0");
 
   var st = streamStatus(s);
+  var type = streamTypeOf(s);
+  var isHL = (type === "highlight");
   var title = streamTitleOf(s);
   var channel = streamChannelName(s);
   var dateStr = formatStreamDate(s.startDate, s.startTime);
@@ -718,10 +737,18 @@ function buildCard(s){
     thumbStyle = "background-image:url('" + esc(s.heroImage) + "');background-size:cover;background-position:center;";
   }
 
+  /* Top-right badge:
+     - live phase + declared live → "Live now" (red, pulsing)
+     - live phase + declared highlight → "Highlight" (purple)
+     - upcoming → "Upcoming"
+     - past + replay ok → "Replay"
+     - past + no replay → "Ended" */
   var badgeClass = "upcoming";
   var badgeText = "Upcoming";
-  if (st.status === 'live') { badgeClass = "live"; badgeText = "Live now"; }
-  else if (st.status === 'past') {
+  if (st.status === 'live') {
+    if (isHL) { badgeClass = "highlight"; badgeText = "Highlight"; }
+    else { badgeClass = "live"; badgeText = "Live now"; }
+  } else if (st.status === 'past') {
     if (st.replayOk) { badgeClass = "replay"; badgeText = "Replay"; }
     else { badgeClass = "ended"; badgeText = "Ended"; }
   }
