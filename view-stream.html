@@ -90,14 +90,35 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .click-shield{position:absolute;inset:0;z-index:5;background:transparent;cursor:pointer;}
 
 /* ══════════════════════════════════════════════════════════════
+   YOUTUBE BOTTOM BAR
+   ══════════════════════════════════════════════════════════════
+   Solid black rectangle at the very bottom of the player. Covers
+   YouTube's "More videos" chip, YouTube logo, title bar, and
+   progress hint bar. Shown ONLY for YouTube streams (Live or
+   Highlight). Every other platform (Twitch, Vimeo, Custom Embed)
+   shows a clean picture with no bar.
+   z-index 7 = above iframe (1), above shield (5), below controls (9). */
+.yt-bottom-bar{
+  display:none;
+  position:absolute;left:0;right:0;bottom:0;
+  height:90px;
+  background:#000;
+  z-index:7;
+  pointer-events:none;
+}
+.player-wrap[data-platform="youtube"] .yt-bottom-bar{display:block;}
+@media (max-width:640px){
+  .yt-bottom-bar{height:80px;}
+}
+
+/* ══════════════════════════════════════════════════════════════
    FULL BLACK LOADING OVERLAY
    ══════════════════════════════════════════════════════════════
    Solid opaque black rectangle covering the entire player. Hides
    YouTube's chrome (title bar, logo, "More videos" chip, buffering
    spinner) completely during: entry, buffering, seek, jump-to-live,
-   and fullscreen transitions. Contains Novalink-branded mark
-   and "Loading stream…" label. z-index 15 = above iframe (1),
-   above shield (5), below ad overlay (20). */
+   and fullscreen transitions. z-index 15 = above iframe (1),
+   above shield (5), above bar (7), below ad overlay (20). */
 .player-loader{
   position:absolute!important;inset:0!important;z-index:15!important;
   background:#000;
@@ -332,6 +353,8 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .player-wrap:-webkit-full-screen .highlight-pill{top:22px;left:22px;}
 .player-wrap:fullscreen .live-time-chip,
 .player-wrap:-webkit-full-screen .live-time-chip{top:52px;left:22px;}
+.player-wrap:fullscreen .yt-bottom-bar,
+.player-wrap:-webkit-full-screen .yt-bottom-bar{height:110px;}
 
 @media (max-width:640px){
   .live-pill,.highlight-pill{font-size:9px;padding:4px 9px;top:10px;left:10px;gap:5px;}
@@ -553,6 +576,9 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 
               <div class="click-shield" id="clickShield"></div>
 
+              <!-- YouTube-only bottom bar — covers YT chrome (More videos, logo, title bar). Hidden for all other platforms. -->
+              <div class="yt-bottom-bar" aria-hidden="true"></div>
+
               <div class="player-loader" id="playerLoader" aria-hidden="true">
                 <svg class="pl-mark" viewBox="0 0 60 74" aria-hidden="true">
                   <path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/>
@@ -767,12 +793,11 @@ var LIVE_CHIP_FADE_MS = 5000;
 var LIVE_EDGE_DRIFT_SECONDS = 30;
 var UNMUTE_PREF_KEY = 'novalink_audio_enabled';
 
-/* Loader timing (ms) */
-var LOADER_ENTRY_MIN_MS = 3500;      /* min time the loader stays up on entry — long enough that YT chrome reveal and hide has fully finished */
-var LOADER_ENTRY_TAIL_MS = 400;      /* extra tail after YT says "playing" on entry */
-var LOADER_SEEK_MS = 800;            /* fixed time on any seek / jump-to-live */
-var LOADER_FULLSCREEN_MS = 600;      /* fixed time on fullscreen enter/exit */
-var LOADER_MAX_MS = 8000;            /* hard cap so the viewer is never stuck */
+var LOADER_ENTRY_MIN_MS = 3500;
+var LOADER_ENTRY_TAIL_MS = 400;
+var LOADER_SEEK_MS = 800;
+var LOADER_FULLSCREEN_MS = 600;
+var LOADER_MAX_MS = 8000;
 
 var AD_DEFAULTS = {
   prerollEnabled:    true,
@@ -892,6 +917,17 @@ var player = {
   pauseStartTime: null,
   ytReady: false
 };
+
+/* ══════════════════════════════════════════════════════════════
+   PLATFORM → PLAYER-WRAP ATTRIBUTE
+   ══════════════════════════════════════════════════════════════
+   The yt-bottom-bar only shows when data-platform="youtube".
+   Set on the wrap every time we know the platform. */
+function setPlayerPlatformAttr(platform){
+  var wrap = $("playerWrap");
+  if (!wrap) return;
+  wrap.setAttribute("data-platform", platform || "youtube");
+}
 
 /* ══════════════════════════════════════════════════════════════
    FULL BLACK LOADER
@@ -1136,6 +1172,9 @@ function loadPlainIframe(embedUrl){
   host.appendChild(iframe);
   player.iframe = iframe;
   player.platform = streamData.streamPlatform || "youtube";
+
+  /* Set platform on the wrap so CSS knows whether to show the YT bar */
+  setPlayerPlatformAttr(player.platform);
 
   var declared = getDeclaredStreamType();
   var isLiveDeclared = (declared === "live");
@@ -1835,6 +1874,7 @@ function renderWatch(){
 
   var platform = streamData.streamPlatform || "youtube";
   player.platform = platform;
+  setPlayerPlatformAttr(platform);
   var embedUrl = buildEmbedUrl();
   var url = (streamData.streamUrl || "").trim();
   if (!url && platform !== "youtube") {
@@ -2023,6 +2063,9 @@ function loadStream(){
   }).then(function(doc){
     if (!doc.exists) { showError("Stream not found", "This stream may have been deleted or the link is broken."); return; }
     streamData = Object.assign({ id: doc.id }, doc.data() || {});
+
+    /* Set platform on the wrap as soon as we know it — before the player even mounts */
+    setPlayerPlatformAttr(streamData.streamPlatform || "youtube");
 
     var query;
     if (streamData.channelName) {
