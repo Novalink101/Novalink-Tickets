@@ -680,7 +680,12 @@ var auth = firebase.auth();
 var STREAMS = "streams";
 var ADS = "ads";
 var SETTINGS = "settings";
-var ADMINS = ["nylnathan340@gmail.com"];
+
+/* ─── Admin emails — both Novalink admins ─── */
+var ADMINS = [
+  "nylnathan340@gmail.com",
+  "customerservicesnovalink@gmail.com"
+];
 
 function $(id){ return document.getElementById(id); }
 function refreshIcons(){ if (window.lucide) lucide.createIcons(); }
@@ -729,16 +734,6 @@ function platformLabel(p){
     custom: 'Custom Embed'
   }[p] || 'Live';
 }
-
-/* ──────────────────────────────────────────────────────────────
-   PLATFORM-SPECIFIC PLAYBACK
-   ──────────────────────────────────────────────────────────────
-   - youtube: autoplays muted, YouTube's UI visible in the player
-   - twitch, vimeo, facebook, custom: iframe with a tap-to-play gate
-   In every case, the iframe is the platform's own player and we do
-   not obscure its chrome or controls. We only place our LIVE /
-   HIGHLIGHT badge and Novalink watermark in the corners.
-   ────────────────────────────────────────────────────────────── */
 
 var currentUser = null;
 var isAdmin = false;
@@ -864,8 +859,6 @@ function applyDeclaredStreamType(){
   renderWatchBanner();
 }
 
-/* ── URL parsers ───────────────────────────────────────────── */
-
 function extractYouTubeId(url){
   if (!url) return null;
   var m1 = url.match(/[?&]v=([A-Za-z0-9_-]{6,})/);
@@ -891,12 +884,9 @@ function extractVimeoId(url){
   return m ? m[1] : null;
 }
 function buildFacebookEmbed(url){
-  // Wrap the facebook URL in the Facebook plugin iframe
   var full = encodeURIComponent(url);
-  return "https://www.facebook.com/plugins/video.php?href=" + full + "&show_text=false&width=734&height=413&appId";
+  return "https://www.facebook.com/plugins/video.php?href=" + full + "&show_text=false&width=734&height=413";
 }
-
-/* ── Embed loaders ──────────────────────────────────────────── */
 
 function loadYouTubePlayer(videoId){
   var host = $("ytPlayerHost");
@@ -932,8 +922,6 @@ function loadPlainIframe(embedUrl){
   iframe.style.pointerEvents = "auto";
   host.appendChild(iframe);
 }
-
-/* ── Render ─────────────────────────────────────────────────── */
 
 function renderHero(){
   var title = streamData.streamTitle || streamData.eventName || "Untitled Stream";
@@ -1195,8 +1183,6 @@ function stopUpcomingCountdown(){
   }
 }
 
-/* ── THE MAIN RENDER ─────────────────────────────────────────── */
-
 function renderWatch(){
   var phase = currentPhase();
   var t = getTiming();
@@ -1246,12 +1232,10 @@ function renderWatch(){
     return;
   }
 
-  // Decide what to load
   var ytId = (platform === "youtube") ? extractYouTubeId(url) : null;
   var twChannel = (platform === "twitch") ? extractTwitchChannel(url) : null;
   var vimeoId = (platform === "vimeo") ? extractVimeoId(url) : null;
 
-  // Prepare startPlayback function
   var startPlayback = function(){
 
     curtain.style.display = "none";
@@ -1312,7 +1296,6 @@ function renderWatch(){
         showTapToPlay("Ready to watch?", "Facebook may ask you to sign in");
       }, 800);
     } else {
-      // custom
       showLoader("Connecting to source…");
       loadPlainIframe(url);
       setTimeout(function(){
@@ -1432,8 +1415,6 @@ function startCountdown(){
   tick();
   countdownTimer = setInterval(tick, 1000);
 }
-
-/* ── Ads ─────────────────────────────────────────────────────── */
 
 function fetchAdSettings(){
   return db.collection(SETTINGS).doc("ads").get().then(function(snap){
@@ -1562,8 +1543,6 @@ function hideAdOverlay(){
   adState.currentlyShowing = null;
 }
 
-/* ── Load ────────────────────────────────────────────────────── */
-
 function loadStream(){
   streamId = getParam("id");
   if (!streamId) { showError("Missing stream ID", "The link is missing a stream identifier."); return; }
@@ -1637,11 +1616,9 @@ document.addEventListener("DOMContentLoaded", function(){
   $("year").textContent = new Date().getFullYear();
   refreshIcons();
 
-  // Tap-to-play button wiring
   $("ttpBtn").addEventListener("click", function(e){
     e.stopPropagation();
     hideTapToPlay();
-    // The iframe is already loaded underneath — the tap just reveals it
     showLoader("Starting stream…");
     setTimeout(function(){ hideLoader(); }, TAP_START_LOADER_MS);
   });
@@ -1656,7 +1633,10 @@ document.addEventListener("DOMContentLoaded", function(){
   });
   document.addEventListener("click", function(){ $("userDropdown").classList.remove("open"); });
   $("ddSignOut").addEventListener("click", function(){ auth.signOut().then(function(){ showToast("Signed out.", "success"); }); });
-  $("ddCreateStream").addEventListener("click", function(){ location.href = "create-streams.html"; });
+  $("ddCreateStream").addEventListener("click", function(){
+    if (!isAdmin) { showToast("Stream Studio is restricted to admins.", "error"); return; }
+    location.href = "create-streams.html";
+  });
   $("ddMyStreams").addEventListener("click", function(){ location.href = "streams.html?mine=1"; });
   $("deleteBtn").addEventListener("click", deleteStream);
 
