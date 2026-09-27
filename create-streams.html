@@ -183,12 +183,6 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
 .banner-preview .placeholder .main{font-size:10.5px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}
 .banner-preview .placeholder .sub{font-size:10.5px;font-weight:500;color:var(--mut);line-height:1.4;margin-top:2px}
 
-.platform-warn{display:none;gap:10px;align-items:flex-start;padding:12px 14px;background:#fffbeb;border:1px solid #fbbf24;border-radius:11px;margin-top:10px}
-.platform-warn.show{display:flex}
-.platform-warn i{width:17px;height:17px;color:#d97706;flex-shrink:0;margin-top:2px}
-.platform-warn .pw-t{font-size:12.5px;font-weight:900;color:#92400e;margin-bottom:2px}
-.platform-warn .pw-s{font-size:11.5px;color:#78350f;line-height:1.5;font-weight:500}
-
 .platform-info{display:flex;gap:10px;align-items:flex-start;padding:12px 14px;background:linear-gradient(135deg,rgba(0,255,255,.06),rgba(0,255,255,.02));border:1px solid rgba(0,255,255,.28);border-radius:11px;margin-top:6px}
 .platform-info i{width:17px;height:17px;color:var(--cy3);flex-shrink:0;margin-top:2px}
 .platform-info .pi-t{font-size:12.5px;font-weight:900;color:var(--tx);margin-bottom:2px}
@@ -599,7 +593,7 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
       <div class="form-col">
         <div class="step-card">
           <span class="step-num">3</span>
-          <div class="step-info"><div class="step-title">Stream Source</div><div class="step-sub">YouTube URL · Delivery · Ad breaks</div></div>
+          <div class="step-info"><div class="step-title">Stream Source</div><div class="step-sub">Platform · URL · Delivery · Ad breaks</div></div>
         </div>
 
         <div class="form-card">
@@ -607,11 +601,15 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
             <label for="streamPlatform">Platform</label>
             <select id="streamPlatform">
               <option value="youtube" selected>YouTube Live</option>
+              <option value="twitch">Twitch</option>
+              <option value="vimeo">Vimeo Live</option>
+              <option value="facebook">Facebook Live</option>
+              <option value="custom">Custom Embed URL</option>
             </select>
-            <p class="hint">Novalink streams are hosted on YouTube Live. Viewers watch inside Novalink — they never see the raw YouTube page.</p>
+            <p class="hint">Pick where your stream is hosted. Viewers watch inside Novalink — they never see the raw source page.</p>
           </div>
 
-          <div id="goLivePanel" class="golive-panel">
+          <div id="goLivePanelYT" class="golive-panel">
             <div class="golive-head">
               <i data-lucide="radio"></i>
               <div>
@@ -645,17 +643,115 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
             </div>
           </div>
 
+          <div id="goLivePanelTwitch" class="golive-panel" style="display:none;">
+            <div class="golive-head">
+              <i data-lucide="twitch" style="color:#a970ff;"></i>
+              <div>
+                <div class="golive-title">Go live on Twitch</div>
+                <div class="golive-sub">Stream from the Twitch app or OBS. Then paste your channel link below.</div>
+              </div>
+            </div>
+            <div class="golive-grid">
+              <div class="golive-card">
+                <div class="golive-card-head"><span class="golive-emoji">📱</span><span class="golive-card-title">Streaming from your phone</span></div>
+                <ol class="golive-steps">
+                  <li>Open the <b>Twitch</b> app on your phone</li>
+                  <li>Tap your profile → <b>Go Live</b></li>
+                  <li>Grant <b>camera + mic</b> permission → tap <b>Go Live</b></li>
+                  <li>Copy your channel link (twitch.tv/yourname)</li>
+                  <li>Paste it below and click <b>Save</b></li>
+                </ol>
+                <p class="golive-note">Viewers will need to tap once to start the stream — that's Twitch's policy.</p>
+              </div>
+              <div class="golive-card">
+                <div class="golive-card-head"><span class="golive-emoji">💻</span><span class="golive-card-title">Streaming from a PC</span></div>
+                <ol class="golive-steps">
+                  <li>Stream to Twitch using <b>OBS</b> or Twitch Studio</li>
+                  <li>When live, copy your channel URL</li>
+                  <li>Paste it below and click <b>Save</b></li>
+                </ol>
+                <button type="button" class="golive-btn" id="goLiveTwitch"><i data-lucide="external-link"></i> Open Twitch Dashboard</button>
+                <p class="golive-note">Paste the channel link, not the dashboard link.</p>
+              </div>
+            </div>
+          </div>
+
+          <div id="goLivePanelVimeo" class="golive-panel" style="display:none;">
+            <div class="golive-head">
+              <i data-lucide="video"></i>
+              <div>
+                <div class="golive-title">Vimeo Live</div>
+                <div class="golive-sub">Paste your Vimeo video or live event URL below.</div>
+              </div>
+            </div>
+            <div class="golive-grid">
+              <div class="golive-card">
+                <div class="golive-card-head"><span class="golive-emoji">🔗</span><span class="golive-card-title">Vimeo link format</span></div>
+                <ol class="golive-steps">
+                  <li>Go to your Vimeo live event page</li>
+                  <li>Copy the URL — it should look like <b>vimeo.com/123456789</b></li>
+                  <li>Paste it below and click <b>Save</b></li>
+                </ol>
+                <p class="golive-note">Vimeo Live requires a paid plan on Vimeo's side.</p>
+              </div>
+            </div>
+          </div>
+
+          <div id="goLivePanelFacebook" class="golive-panel" style="display:none;">
+            <div class="golive-head">
+              <i data-lucide="facebook"></i>
+              <div>
+                <div class="golive-title">Facebook Live</div>
+                <div class="golive-sub">Paste the link to your Facebook live video.</div>
+              </div>
+            </div>
+            <div class="golive-grid">
+              <div class="golive-card">
+                <div class="golive-card-head"><span class="golive-emoji">🔗</span><span class="golive-card-title">How to get the link</span></div>
+                <ol class="golive-steps">
+                  <li>Go live on Facebook</li>
+                  <li>Tap the <b>Share</b> button on your live video</li>
+                  <li>Copy the video link (facebook.com/.../videos/...)</li>
+                  <li>Paste it below and click <b>Save</b></li>
+                </ol>
+                <p class="golive-note">Facebook requires viewers to be logged in to see your stream.</p>
+              </div>
+            </div>
+          </div>
+
+          <div id="goLivePanelCustom" class="golive-panel" style="display:none;">
+            <div class="golive-head">
+              <i data-lucide="code"></i>
+              <div>
+                <div class="golive-title">Custom Embed</div>
+                <div class="golive-sub">Paste any embeddable URL — from your own site, a partner platform, or a streaming service.</div>
+              </div>
+            </div>
+            <div class="golive-grid">
+              <div class="golive-card">
+                <div class="golive-card-head"><span class="golive-emoji">🌐</span><span class="golive-card-title">Works with</span></div>
+                <ol class="golive-steps">
+                  <li>Self-hosted streams (RTMP → HLS)</li>
+                  <li>Other platforms (Kick, Rumble, Dailymotion)</li>
+                  <li>Custom player URLs from event companies</li>
+                  <li>Anything that allows embedding</li>
+                </ol>
+                <p class="golive-note">If the source blocks embedding, the player will show a blank screen.</p>
+              </div>
+            </div>
+          </div>
+
           <div class="field">
             <label for="streamUrl" id="streamUrlLabel">YouTube Live URL</label>
             <input type="url" id="streamUrl" placeholder="https://youtube.com/live/..." />
-            <p class="hint" id="streamUrlHint">Paste the URL of your YouTube live stream. Any of these formats work: youtube.com/watch?v=..., youtu.be/..., youtube.com/live/...</p>
+            <p class="hint" id="streamUrlHint">Paste the URL of your YouTube live stream.</p>
           </div>
 
-          <div class="platform-info">
+          <div class="platform-info" id="platformInfo">
             <i data-lucide="info"></i>
             <div>
-              <div class="pi-t">Free streams only</div>
-              <div class="pi-s">Novalink is free to watch and free to run. If your YouTube channel has monetization enabled, YouTube may play its own ads inside the player. To avoid this, turn off monetization in YouTube Studio → Monetization → Off.</div>
+              <div class="pi-t" id="platformInfoTitle">Free streams only</div>
+              <div class="pi-s" id="platformInfoText">Novalink is free to watch and free to run. If your YouTube channel has monetization enabled, YouTube may play its own ads inside the player. To avoid this, turn off monetization in YouTube Studio → Monetization → Off.</div>
             </div>
           </div>
 
@@ -873,6 +969,49 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
 var GLOBAL_MAX_STREAMS = 4;
 var DEFAULT_MIDROLL_MINUTE = 30;
 
+var PLATFORM_CONFIG = {
+  youtube: {
+    label: 'YouTube Live',
+    urlLabel: 'YouTube Live URL',
+    urlPlaceholder: 'https://youtube.com/live/...',
+    urlHint: 'Paste the URL of your YouTube live stream.',
+    infoTitle: 'Free streams only',
+    infoText: 'Novalink is free to watch and free to run. If your YouTube channel has monetization enabled, YouTube may play its own ads inside the player. To avoid this, turn off monetization in YouTube Studio → Monetization → Off.'
+  },
+  twitch: {
+    label: 'Twitch',
+    urlLabel: 'Twitch channel URL',
+    urlPlaceholder: 'https://twitch.tv/yourchannel',
+    urlHint: 'Paste your Twitch channel URL. Viewers will need to tap once to start the stream — that is Twitch\'s policy.',
+    infoTitle: 'Twitch tap-to-play',
+    infoText: 'Twitch requires viewers to tap before their stream starts. Novalink shows a branded "Tap to start" screen first.'
+  },
+  vimeo: {
+    label: 'Vimeo Live',
+    urlLabel: 'Vimeo video URL',
+    urlPlaceholder: 'https://vimeo.com/123456789',
+    urlHint: 'Paste the URL of your Vimeo video or live event.',
+    infoTitle: 'Vimeo Live',
+    infoText: 'Vimeo Live requires a paid plan on Vimeo. Paste your Vimeo link and it will play inside Novalink.'
+  },
+  facebook: {
+    label: 'Facebook Live',
+    urlLabel: 'Facebook video URL',
+    urlPlaceholder: 'https://facebook.com/.../videos/...',
+    urlHint: 'Paste the URL of your Facebook live video.',
+    infoTitle: 'Facebook Live',
+    infoText: 'Viewers must be logged into Facebook to see your stream. Facebook handles the login prompt.'
+  },
+  custom: {
+    label: 'Custom Embed',
+    urlLabel: 'Custom Embed URL',
+    urlPlaceholder: 'https://yourstream.example.com/embed',
+    urlHint: 'Paste any embeddable URL — self-hosted HLS, partner platform, or event page.',
+    infoTitle: 'Custom Embed',
+    infoText: 'Your URL plays inside Novalink. If the source blocks embedding, the player will show a blank screen.'
+  }
+};
+
 var firebaseConfig = {
   apiKey: "AIzaSyDSnns131jOlBXAqKo6qy7lTW4Rij-1oWU",
   authDomain: "novalink-864cf.firebaseapp.com",
@@ -920,6 +1059,32 @@ function renderStreamTypePreview(){
     badge.textContent = 'Live';
     badge.style.background = '';
   }
+}
+
+function syncPlatformUI(){
+  var p = $('streamPlatform').value || 'youtube';
+  var cfg = PLATFORM_CONFIG[p] || PLATFORM_CONFIG.youtube;
+
+  // Update URL field
+  $('streamUrlLabel').textContent = cfg.urlLabel;
+  $('streamUrl').placeholder = cfg.urlPlaceholder;
+  $('streamUrlHint').textContent = cfg.urlHint;
+
+  // Update info box
+  $('platformInfoTitle').textContent = cfg.infoTitle;
+  $('platformInfoText').textContent = cfg.infoText;
+
+  // Show the correct Go Live panel
+  ['YT','Twitch','Vimeo','Facebook','Custom'].forEach(function(key){
+    var panel = $('goLivePanel' + key);
+    if (!panel) return;
+    var match = (key === 'YT' && p === 'youtube')
+             || (key === 'Twitch' && p === 'twitch')
+             || (key === 'Vimeo' && p === 'vimeo')
+             || (key === 'Facebook' && p === 'facebook')
+             || (key === 'Custom' && p === 'custom');
+    panel.style.display = match ? 'block' : 'none';
+  });
 }
 
 function toast(msg, type, ms){
@@ -1347,6 +1512,7 @@ function clearStreamFields(){
   $('streamDescription').value = '';
   $('descCounter').textContent = '0 / 2000';
   $('streamUrl').value = '';
+  $('streamPlatform').value = 'youtube';
   state.heroImage = '';
   state.streamId = null;
   state.editing = false;
@@ -1367,6 +1533,7 @@ function clearStreamFields(){
   $('adClientId').value = '';
   $('adSlotId').value = '';
   $('customVastUrl').value = '';
+  syncPlatformUI();
   syncAdProviderUI();
   syncMidrollTimingVisibility();
   renderStreamPreview();
@@ -1382,6 +1549,8 @@ function loadStreamIntoForm(d){
   $('streamDate').value = d.startDate || '';
   $('streamTime').value = d.startTime || '';
   $('streamDuration').value = d.durationMinutes != null ? d.durationMinutes : '';
+  if (d.streamPlatform) $('streamPlatform').value = d.streamPlatform;
+  else $('streamPlatform').value = 'youtube';
   $('streamUrl').value = d.streamUrl || '';
   if (typeof d.replayEnabled === 'boolean') $('replayToggle').checked = d.replayEnabled;
   if (typeof d.autoRecord === 'boolean') $('recordToggle').checked = d.autoRecord;
@@ -1397,6 +1566,7 @@ function loadStreamIntoForm(d){
   if (d.heroImage) { state.heroImage = d.heroImage; renderCover(); }
   $('saveLbl').textContent = 'Update Stream';
   $('submitBtn').innerHTML = icon('save') + ' Update Stream';
+  syncPlatformUI();
   syncAdProviderUI();
   syncMidrollTimingVisibility();
   renderStreamPreview();
@@ -1456,7 +1626,7 @@ function saveStream(){
     channelCategory: $('channelCategory').value,
     channelBannerUrl: state.channelBanner || '',
     slotNumber: state.selectedSlot + 1,
-    streamPlatform: 'youtube',
+    streamPlatform: $('streamPlatform').value || 'youtube',
     streamUrl: $('streamUrl').value.trim(),
     replayEnabled: $('replayToggle').checked,
     autoRecord: $('recordToggle').checked,
@@ -1608,13 +1778,20 @@ document.addEventListener('DOMContentLoaded', function(){
     });
   }
 
+  $('streamPlatform').addEventListener('change', syncPlatformUI);
   $('midrollToggle').addEventListener('change', syncMidrollTimingVisibility);
   $('adProvider').addEventListener('change', syncAdProviderUI);
 
-  var goLiveBtn = $('goLiveYT');
-  if (goLiveBtn) goLiveBtn.addEventListener('click', function(){
+  var goLiveYT = $('goLiveYT');
+  if (goLiveYT) goLiveYT.addEventListener('click', function(){
     window.open('https://studio.youtube.com/channel/UC/livestreaming', '_blank', 'noopener');
     toast('YouTube Studio opened in a new tab.', 'info', 5000);
+  });
+
+  var goLiveTwitch = $('goLiveTwitch');
+  if (goLiveTwitch) goLiveTwitch.addEventListener('click', function(){
+    window.open('https://dashboard.twitch.tv/', '_blank', 'noopener');
+    toast('Twitch Dashboard opened in a new tab.', 'info', 5000);
   });
 
   $('saveStreamBtn').addEventListener('click', saveStream);
@@ -1682,6 +1859,7 @@ document.addEventListener('DOMContentLoaded', function(){
     .then(function(){ btn.disabled = false; syncAuthTabs(); });
   });
 
+  syncPlatformUI();
   syncAdProviderUI();
   syncMidrollTimingVisibility();
   renderBanner();
