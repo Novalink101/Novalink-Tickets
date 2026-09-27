@@ -30,7 +30,6 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 a{color:inherit;text-decoration:none}
 button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation}
 
-/* HEADER */
 .site-header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--bd);padding:12px 0}
 .header-inner{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .logo{display:inline-flex;align-items:center;gap:10px;margin-left:12px}
@@ -54,10 +53,8 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .dd-item:hover{background:var(--sf2);color:var(--tx)}
 .dd-item i{width:16px;height:16px;color:var(--mut)}
 
-/* PAGE */
 .page{flex:1;padding:0 0 64px}
 
-/* CHANNEL HERO */
 .channel-hero{position:relative;background:#0a0f14;color:#fff;border-radius:0 0 26px 26px;overflow:hidden;margin-bottom:26px;box-shadow:0 20px 40px -20px rgba(10,15,20,.5);}
 .channel-hero-banner{position:relative;aspect-ratio:21/9;max-height:320px;min-height:180px;background:linear-gradient(135deg,#1e2f4d,#0a0f14 60%,#0f172a);background-size:cover;background-position:center;overflow:hidden;}
 .channel-hero-banner::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle at 1px 1px, rgba(255,255,255,.05) 1px, transparent 0);background-size:20px 20px;opacity:.6;}
@@ -74,26 +71,28 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .channel-meta-row .live-dot::before{content:'';width:7px;height:7px;border-radius:50%;background:#fca5a5;animation:livePulse 1.5s infinite;box-shadow:0 0 10px rgba(252,165,165,.7);}
 @keyframes livePulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.35;transform:scale(.85)}}
 
-/* LAYOUT */
 .layout{display:grid;grid-template-columns:1fr;gap:26px}
 @media (min-width:960px){.layout{grid-template-columns:minmax(0,1.65fr) minmax(0,1fr)}}
 .card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rd);padding:22px;box-shadow:0 6px 20px rgba(10,15,20,.04)}
 .card + .card{margin-top:18px}
 .card-title{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:var(--cy3);margin-bottom:12px}
 
-/* PLAYER */
 .player-wrap{background:#000;border-radius:16px;overflow:hidden;aspect-ratio:16/9;position:relative;border:1px solid var(--bd);user-select:none;-webkit-user-select:none;-webkit-touch-callout:none;box-shadow:0 16px 48px -12px rgba(10,15,20,.35);}
 .player-wrap iframe,
 .player-wrap #ytPlayer,
-.player-wrap #ytPlayer iframe{position:absolute!important;inset:0;width:100%;height:100%;border:0;z-index:1!important;background:#000}
+.player-wrap #ytPlayer iframe{position:absolute!important;inset:0;width:100%;height:100%;border:0;z-index:1!important;pointer-events:none;background:#000}
 
-/* Click-shield — only on YouTube. Native platforms get direct taps. */
 .click-shield{position:absolute;inset:0;z-index:5;background:transparent;cursor:pointer;}
-.player-wrap[data-platform="twitch"] .click-shield,
-.player-wrap[data-platform="vimeo"] .click-shield,
-.player-wrap[data-platform="custom"] .click-shield{display:none!important;}
 
-/* YouTube bottom bar — only YouTube */
+/* Top + Bottom black bars — hide ALL YouTube chrome. Only for YouTube streams. */
+.yt-top-bar{
+  display:none;
+  position:absolute;top:0;left:0;right:0;
+  height:52px;
+  background:#000;
+  z-index:7;
+  pointer-events:none;
+}
 .yt-bottom-bar{
   display:none;
   position:absolute;left:0;right:0;bottom:0;
@@ -102,14 +101,13 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
   z-index:7;
   pointer-events:none;
 }
+.player-wrap[data-platform="youtube"] .yt-top-bar{display:block;}
 .player-wrap[data-platform="youtube"] .yt-bottom-bar{display:block;}
 @media (max-width:640px){
-  .yt-bottom-bar{height:32px;}
+  .yt-top-bar{height:44px;}
+  .yt-bottom-bar{height:34px;}
 }
 
-/* ══════════════════════════════════════════════════════════════
-   FULL BLACK LOADING OVERLAY (all platforms)
-   ══════════════════════════════════════════════════════════════ */
 .player-loader{
   position:absolute!important;inset:0!important;z-index:15!important;
   background:#000;
@@ -158,90 +156,6 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
   .player-loader .pl-sub{font-size:10px}
 }
 
-/* ══════════════════════════════════════════════════════════════
-   TAP-TO-PLAY OVERLAY — native platforms only (Twitch/Vimeo/custom)
-   ══════════════════════════════════════════════════════════════ */
-.tap-to-play{
-  position:absolute!important;inset:0!important;z-index:14!important;
-  background:radial-gradient(circle at 50% 40%, rgba(0,255,255,.08), transparent 60%), #000;
-  display:none;
-  flex-direction:column;align-items:center;justify-content:center;
-  gap:22px;
-  padding:24px;
-  text-align:center;
-  opacity:0;
-  transition:opacity .3s ease;
-}
-.tap-to-play.visible{
-  display:flex;
-  opacity:1;
-}
-.tap-to-play .ttp-mark{
-  width:80px;height:100px;
-  display:block;
-  filter:drop-shadow(0 10px 30px rgba(0,255,255,.5));
-  animation:ttpPulse 2.4s ease-in-out infinite;
-}
-@keyframes ttpPulse{
-  0%,100%{transform:scale(1);filter:drop-shadow(0 10px 30px rgba(0,255,255,.5))}
-  50%{transform:scale(1.05);filter:drop-shadow(0 10px 40px rgba(0,255,255,.75))}
-}
-.tap-to-play .ttp-title{
-  font-size:clamp(1.1rem,2.6vw,1.5rem);
-  font-weight:900;
-  color:#fff;
-  letter-spacing:-.01em;
-  max-width:80%;
-  line-height:1.25;
-  text-shadow:0 4px 16px rgba(0,0,0,.6);
-  word-break:break-word;
-}
-.tap-to-play .ttp-sub{
-  font-size:12px;
-  color:rgba(255,255,255,.55);
-  font-weight:500;
-  letter-spacing:.02em;
-  max-width:340px;
-}
-.tap-to-play .ttp-btn{
-  margin-top:6px;
-  display:inline-flex;
-  align-items:center;
-  gap:12px;
-  padding:16px 28px;
-  background:linear-gradient(135deg,var(--cy),var(--cy2));
-  color:#04161c;
-  border:none;
-  border-radius:99px;
-  font-family:inherit;
-  font-weight:900;
-  font-size:15px;
-  letter-spacing:.02em;
-  cursor:pointer;
-  box-shadow:0 20px 60px rgba(0,255,255,.45), 0 0 0 6px rgba(0,255,255,.12);
-  transition:transform .2s ease, box-shadow .2s ease;
-  animation:ttpBtn 2s ease-in-out infinite;
-}
-.tap-to-play .ttp-btn:hover{
-  transform:scale(1.05);
-  box-shadow:0 24px 70px rgba(0,255,255,.6), 0 0 0 8px rgba(0,255,255,.2);
-}
-.tap-to-play .ttp-btn:active{transform:scale(.98);}
-.tap-to-play .ttp-btn i{width:22px;height:22px;stroke-width:2.6;}
-@keyframes ttpBtn{
-  0%,100%{box-shadow:0 20px 60px rgba(0,255,255,.45), 0 0 0 6px rgba(0,255,255,.12)}
-  50%{box-shadow:0 20px 70px rgba(0,255,255,.6), 0 0 0 10px rgba(0,255,255,.18)}
-}
-@media (max-width:640px){
-  .tap-to-play{gap:16px;padding:18px}
-  .tap-to-play .ttp-mark{width:60px;height:75px}
-  .tap-to-play .ttp-title{font-size:1rem}
-  .tap-to-play .ttp-sub{font-size:11px}
-  .tap-to-play .ttp-btn{padding:13px 22px;font-size:14px;gap:10px}
-  .tap-to-play .ttp-btn i{width:18px;height:18px}
-}
-
-/* Unmute prompt */
 .unmute-prompt{position:absolute;inset:0;z-index:12;display:none;align-items:center;justify-content:center;background:rgba(10,15,20,.55);backdrop-filter:blur(3px);-webkit-backdrop-filter:blur(3px);animation:fadeIn .3s ease;}
 .unmute-prompt.visible{display:flex;}
 .unmute-btn{display:inline-flex;align-items:center;gap:14px;padding:18px 26px;background:linear-gradient(135deg,var(--cy),var(--cy2));color:#04161c;border:none;border-radius:99px;font-family:inherit;font-weight:900;font-size:16px;letter-spacing:.02em;cursor:pointer;box-shadow:0 20px 60px rgba(0,255,255,.45), 0 0 0 6px rgba(0,255,255,.15);transition:transform .2s ease, box-shadow .2s ease;animation:unmutePulse 2.4s ease-in-out infinite;}
@@ -251,7 +165,6 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 @keyframes unmutePulse{0%,100%{transform:scale(1);}50%{transform:scale(1.03);}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
 
-/* Badges */
 .live-pill{position:absolute;top:14px;left:14px;z-index:8;display:none;align-items:center;gap:6px;background:linear-gradient(135deg,#dc2626,#b91c1c);color:#fff;font-size:10px;font-weight:900;letter-spacing:.16em;text-transform:uppercase;padding:5px 11px;border-radius:6px;box-shadow:0 4px 14px rgba(220,38,38,.5), inset 0 1px 0 rgba(255,255,255,.15);pointer-events:none;}
 .live-pill.visible{display:inline-flex;}
 .live-pill::before{content:'';width:6px;height:6px;border-radius:50%;background:#fff;animation:livePulse 1.5s infinite;flex-shrink:0;}
@@ -270,12 +183,8 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .player-watermark .mark{width:18px;height:22px;flex-shrink:0;display:block;filter:drop-shadow(0 2px 6px rgba(0,0,0,.7));}
 .player-watermark .wordmark{font-weight:900;font-size:12px;letter-spacing:.14em;color:#fff;text-transform:uppercase;line-height:1;}
 
-/* Control bar — YouTube only */
 .ctrl-bar{position:absolute;left:0;right:0;bottom:0;z-index:9;padding:20px 18px 14px;background:linear-gradient(0deg, rgba(10,15,20,.96) 0%, rgba(10,15,20,.7) 50%, rgba(10,15,20,0) 100%);display:flex;align-items:center;gap:10px;opacity:0;transform:translateY(8px);transition:opacity .3s ease, transform .3s ease;pointer-events:none;}
 .player-wrap.controls-visible .ctrl-bar{opacity:1;transform:translateY(0);pointer-events:auto;}
-.player-wrap[data-platform="twitch"] .ctrl-bar,
-.player-wrap[data-platform="vimeo"] .ctrl-bar,
-.player-wrap[data-platform="custom"] .ctrl-bar{display:none!important;}
 
 .ctrl-btn{width:42px;height:42px;border-radius:11px;background:rgba(0,255,255,.12);border:1px solid rgba(0,255,255,.4);color:#e6ffff;display:inline-flex;align-items:center;justify-content:center;cursor:pointer;transition:transform .15s ease, background .15s ease, box-shadow .2s ease, opacity .2s ease;padding:0;backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);flex-shrink:0;position:relative;}
 .ctrl-btn:hover:not(:disabled){background:rgba(0,255,255,.3);box-shadow:0 8px 24px rgba(0,255,255,.35);transform:translateY(-1px);}
@@ -285,25 +194,10 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .ctrl-btn.primary{width:50px;height:50px;background:linear-gradient(135deg,var(--cy),var(--cy2));border-color:var(--cy);color:#04161c;box-shadow:0 10px 28px rgba(0,255,255,.45);}
 .ctrl-btn.primary:hover:not(:disabled){background:linear-gradient(135deg,var(--cy2),var(--cy3));transform:scale(1.06);box-shadow:0 12px 32px rgba(0,255,255,.6);}
 .ctrl-btn.primary i{width:24px;height:24px;stroke-width:2.6;}
-
 .ctrl-btn .skip-num{position:absolute;bottom:3px;right:4px;font-size:8.5px;font-weight:900;font-family:var(--mono);color:rgba(230,255,255,.85);letter-spacing:0;pointer-events:none;line-height:1;}
 
-.ctrl-btn.ctrl-live-jump{
-  background:rgba(220,38,38,.18);
-  border-color:rgba(220,38,38,.5);
-  color:#fecaca;
-  width:auto;
-  padding:0 14px;
-  gap:6px;
-  font-size:11.5px;
-  font-weight:900;
-  letter-spacing:.04em;
-  text-transform:uppercase;
-}
-.ctrl-btn.ctrl-live-jump:hover:not(:disabled){
-  background:rgba(220,38,38,.35);
-  box-shadow:0 8px 24px rgba(220,38,38,.4);
-}
+.ctrl-btn.ctrl-live-jump{background:rgba(220,38,38,.18);border-color:rgba(220,38,38,.5);color:#fecaca;width:auto;padding:0 14px;gap:6px;font-size:11.5px;font-weight:900;letter-spacing:.04em;text-transform:uppercase;}
+.ctrl-btn.ctrl-live-jump:hover:not(:disabled){background:rgba(220,38,38,.35);box-shadow:0 8px 24px rgba(220,38,38,.4);}
 .ctrl-btn.ctrl-live-jump i{width:14px;height:14px}
 
 .ctrl-spacer{flex:1;}
@@ -315,9 +209,6 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .seek-ripple.show{display:flex;animation:rippleFade .7s ease forwards;}
 .seek-ripple i{width:26px;height:26px;stroke-width:2.6;}
 @keyframes rippleFade{0%{opacity:0;transform:scale(.8)}30%{opacity:1;transform:scale(1)}100%{opacity:0;transform:scale(1.1)}}
-.player-wrap[data-platform="twitch"] .seek-ripple,
-.player-wrap[data-platform="vimeo"] .seek-ripple,
-.player-wrap[data-platform="custom"] .seek-ripple{display:none!important;}
 
 .pause-curtain{position:absolute;inset:0;z-index:10;background:rgba(10,15,20,.75);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);display:none;flex-direction:column;align-items:center;justify-content:center;gap:20px;text-align:center;padding:24px;cursor:pointer;animation:fadeIn .25s ease;}
 .pause-curtain.visible{display:flex;}
@@ -329,47 +220,14 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .pause-curtain .pc-play i{width:38px;height:38px;stroke-width:2.8;margin-left:5px;}
 .pause-curtain .pc-label{font-size:13px;font-weight:900;letter-spacing:.18em;text-transform:uppercase;color:var(--cy);}
 .pause-curtain .pc-sub{font-size:12.5px;color:rgba(255,255,255,.65);max-width:340px;line-height:1.55;font-weight:500;}
-.player-wrap[data-platform="twitch"] .pause-curtain,
-.player-wrap[data-platform="vimeo"] .pause-curtain,
-.player-wrap[data-platform="custom"] .pause-curtain{display:none!important;}
 
-/* Countdown inside player curtain (upcoming streams) */
-.countdown-block{
-  display:flex;flex-direction:column;align-items:center;gap:14px;
-  text-align:center;padding:8px 16px;
-}
-.countdown-label{
-  font-size:11px;font-weight:900;letter-spacing:.22em;text-transform:uppercase;
-  color:var(--cy);opacity:.9;
-}
-.countdown-digits{
-  font-family:var(--mono);
-  font-size:clamp(2.2rem,7vw,4rem);
-  font-weight:900;
-  color:#fff;
-  letter-spacing:.04em;
-  line-height:1;
-  text-shadow:0 6px 24px rgba(0,255,255,.35), 0 2px 8px rgba(0,0,0,.6);
-  display:flex;align-items:center;gap:6px;
-}
-.countdown-digits .cd-num{
-  display:inline-block;
-  min-width:1.6ch;
-  text-align:center;
-  font-variant-numeric:tabular-nums;
-  padding:0 2px;
-}
-.countdown-digits .cd-sep{
-  color:var(--cy);
-  opacity:.65;
-  font-weight:900;
-  animation:cdBlink 1.6s ease-in-out infinite;
-}
+.countdown-block{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center;padding:8px 16px;}
+.countdown-label{font-size:11px;font-weight:900;letter-spacing:.22em;text-transform:uppercase;color:var(--cy);opacity:.9;}
+.countdown-digits{font-family:var(--mono);font-size:clamp(2.2rem,7vw,4rem);font-weight:900;color:#fff;letter-spacing:.04em;line-height:1;text-shadow:0 6px 24px rgba(0,255,255,.35), 0 2px 8px rgba(0,0,0,.6);display:flex;align-items:center;gap:6px;}
+.countdown-digits .cd-num{display:inline-block;min-width:1.6ch;text-align:center;font-variant-numeric:tabular-nums;padding:0 2px;}
+.countdown-digits .cd-sep{color:var(--cy);opacity:.65;font-weight:900;animation:cdBlink 1.6s ease-in-out infinite;}
 @keyframes cdBlink{0%,100%{opacity:.65}50%{opacity:.25}}
-.countdown-sub{
-  font-size:12.5px;color:rgba(255,255,255,.65);
-  max-width:340px;line-height:1.55;font-weight:500;
-}
+.countdown-sub{font-size:12.5px;color:rgba(255,255,255,.65);max-width:340px;line-height:1.55;font-weight:500;}
 .countdown-sub strong{color:#fff;font-weight:800}
 
 @media (max-width:640px){
@@ -378,7 +236,6 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
   .countdown-sub{font-size:11.5px}
 }
 
-/* Ad overlay */
 .ad-overlay{position:absolute;inset:0;z-index:20;background:#000;display:none;flex-direction:column;overflow:hidden;}
 .ad-overlay.visible{display:flex;}
 .ad-overlay-media{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#000;overflow:hidden;}
@@ -413,7 +270,6 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .ad-house-ad .hh-cta{margin-top:6px;display:inline-flex;align-items:center;gap:8px;padding:10px 18px;background:linear-gradient(135deg, #00FFFF, #00CCCC);color:#04161c;font-size:13px;font-weight:900;border-radius:11px;text-decoration:none;box-shadow:0 8px 22px rgba(0,255,255,.35);pointer-events:auto;}
 .ad-house-ad .hh-cta i{width:14px;height:14px;}
 
-/* Fullscreen */
 .player-wrap:fullscreen,
 .player-wrap:-webkit-full-screen{border-radius:0;border:none;aspect-ratio:auto;width:100vw;height:100vh;max-width:none;}
 .player-wrap:fullscreen .ctrl-bar,
@@ -426,6 +282,8 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .player-wrap:-webkit-full-screen .highlight-pill{top:22px;left:22px;}
 .player-wrap:fullscreen .live-time-chip,
 .player-wrap:-webkit-full-screen .live-time-chip{top:52px;left:22px;}
+.player-wrap:fullscreen .yt-top-bar,
+.player-wrap:-webkit-full-screen .yt-top-bar{height:64px;}
 .player-wrap:fullscreen .yt-bottom-bar,
 .player-wrap:-webkit-full-screen .yt-bottom-bar{height:52px;}
 
@@ -473,7 +331,6 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .player-curtain h3{font-size:1.1rem;font-weight:900;color:#fff;margin:0}
 .player-curtain p{font-size:13px;color:rgba(255,255,255,.7);max-width:340px;margin:0;line-height:1.55}
 
-/* WATCH BANNER */
 .watch-banner{display:flex;align-items:center;gap:12px;padding:14px 18px;background:linear-gradient(135deg,rgba(0,255,255,.1),rgba(0,255,255,.02));border:1px solid rgba(0,255,255,.35);border-radius:12px;margin-bottom:14px}
 .watch-banner.live{background:linear-gradient(135deg,rgba(220,38,38,.15),rgba(220,38,38,.05));border-color:rgba(220,38,38,.5)}
 .watch-banner.highlight{background:linear-gradient(135deg,rgba(139,92,246,.15),rgba(139,92,246,.03));border-color:rgba(139,92,246,.5)}
@@ -487,7 +344,6 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .watch-banner .wb-value{font-size:13.5px;font-weight:700;color:var(--tx);word-break:break-word}
 .watch-banner .wb-note{font-size:11.5px;color:var(--mut);font-weight:600;margin-top:2px}
 
-/* NOW PLAYING ROW */
 .now-playing-row{display:flex;align-items:center;justify-content:space-between;gap:14px;padding:16px 20px;background:var(--sf);border:1px solid var(--bd);border-top:none;border-radius:0 0 16px 16px;margin-top:-6px;margin-bottom:16px;box-shadow:0 6px 20px rgba(10,15,20,.04);}
 .now-playing-row .np-left{min-width:0;flex:1}
 .now-playing-row .np-title{font-size:15px;font-weight:800;color:var(--tx);word-break:break-word;margin-bottom:3px;letter-spacing:-.01em}
@@ -497,7 +353,6 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .now-playing-row .np-cta.highlight{color:#7c3aed;background:rgba(139,92,246,.08);border-color:rgba(139,92,246,.25)}
 .now-playing-row .np-cta.highlight::before{background:#7c3aed;animation:none}
 
-/* MORE ON CHANNEL */
 .more-on-channel{margin-top:24px}
 .more-on-channel .moc-head{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:16px;flex-wrap:wrap;}
 .more-on-channel .moc-title{font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--cy3);}
@@ -533,7 +388,6 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
   .sibling-cta{grid-column:2; justify-content:flex-start; padding:0; margin-top:4px;}
 }
 
-/* HOST / INFO */
 .host{display:flex;align-items:center;gap:12px;padding:14px;background:var(--bg);border-radius:12px;border:1px solid var(--bd)}
 .hav{width:44px;height:44px;border-radius:50%;background:linear-gradient(135deg,var(--cy),var(--cy2));display:flex;align-items:center;justify-content:center;font-weight:800;font-size:15px;color:#04161c;flex-shrink:0}
 .hn{font-weight:800;font-size:14px;word-break:break-word}
@@ -649,6 +503,7 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 
               <div class="click-shield" id="clickShield"></div>
 
+              <div class="yt-top-bar" aria-hidden="true"></div>
               <div class="yt-bottom-bar" aria-hidden="true"></div>
 
               <div class="player-loader" id="playerLoader" aria-hidden="true">
@@ -658,20 +513,6 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
                 </svg>
                 <div class="pl-label">Loading stream…</div>
                 <div class="pl-sub" id="plSub">Connecting to the source</div>
-              </div>
-
-              <!-- TAP-TO-PLAY OVERLAY — Twitch / Vimeo / Custom only -->
-              <div class="tap-to-play" id="tapToPlay" aria-hidden="true">
-                <svg class="ttp-mark" viewBox="0 0 60 74" aria-hidden="true">
-                  <path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/>
-                  <path fill="#00FFFF" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/>
-                </svg>
-                <div class="ttp-title" id="ttpTitle">Ready to watch?</div>
-                <div class="ttp-sub">Streams from this platform require a tap to start</div>
-                <button type="button" class="ttp-btn" id="ttpBtn">
-                  <i data-lucide="play"></i>
-                  <span>Tap to start watching</span>
-                </button>
               </div>
 
               <span class="live-pill" id="livePill">LIVE</span>
@@ -884,9 +725,6 @@ var LOADER_SEEK_MS = 800;
 var LOADER_FULLSCREEN_MS = 600;
 var LOADER_MAX_MS = 8000;
 
-/* How long the tap-to-play loader runs after the user taps, before we hide it */
-var TAP_START_LOADER_MS = 1200;
-
 var AD_DEFAULTS = {
   prerollEnabled:    true,
   midrollEnabled:    true,
@@ -946,9 +784,6 @@ function formatDate(dateStr, timeStr){
     return out;
   } catch(e){ return dateStr; }
 }
-function platformLabel(p){
-  return { youtube:"YouTube Live", vimeo:"Vimeo Live", twitch:"Twitch", custom:"Custom Embed" }[p] || "Live";
-}
 function categoryLabel(c){
   return {
     sports:'Sports', gaming:'Gaming', music:'Music', entertainment:'Entertainment',
@@ -1006,19 +841,12 @@ var player = {
   ytReady: false
 };
 
-function isNativePlatform(p){
-  return p === "twitch" || p === "vimeo" || p === "custom";
-}
-
 function setPlayerPlatformAttr(platform){
   var wrap = $("playerWrap");
   if (!wrap) return;
   wrap.setAttribute("data-platform", platform || "youtube");
 }
 
-/* ══════════════════════════════════════════════════════════════
-   LOADER
-   ══════════════════════════════════════════════════════════════ */
 function showLoader(subText){
   var el = $("playerLoader");
   if (!el) return;
@@ -1052,30 +880,6 @@ function scheduleLoaderHide(minMs, tailMs, resetEntry){
   }, wait);
 }
 
-/* ══════════════════════════════════════════════════════════════
-   TAP-TO-PLAY OVERLAY (native platforms only)
-   ══════════════════════════════════════════════════════════════ */
-function showTapToPlay(){
-  var el = $("tapToPlay");
-  if (!el) return;
-  var titleEl = $("ttpTitle");
-  if (titleEl && streamData) {
-    titleEl.textContent = streamData.streamTitle || streamData.eventName || "Ready to watch?";
-  }
-  el.classList.add("visible");
-  el.setAttribute("aria-hidden", "false");
-  refreshIcons();
-}
-function hideTapToPlay(){
-  var el = $("tapToPlay");
-  if (!el) return;
-  el.classList.remove("visible");
-  el.setAttribute("aria-hidden", "true");
-}
-
-/* ══════════════════════════════════════════════════════════════
-   AUTH
-   ══════════════════════════════════════════════════════════════ */
 function applyAuth(user){
   currentUser = user;
   isAdmin = !!(user && ADMINS.map(function(e){ return e.toLowerCase(); }).indexOf(String(user.email).toLowerCase()) !== -1);
@@ -1096,9 +900,6 @@ function isOwner(){
   return streamData.ownerUid && streamData.ownerUid === currentUser.uid;
 }
 
-/* ══════════════════════════════════════════════════════════════
-   TIMING / PHASE
-   ══════════════════════════════════════════════════════════════ */
 function getTiming(){
   if (!streamData) return { valid: false };
   var dateStr = streamData.startDate || "";
@@ -1129,10 +930,11 @@ function getDeclaredStreamType(){
   if (!streamData) return "live";
   return streamData.streamType === "highlight" ? "highlight" : "live";
 }
+function applyDeclaredStreamType(){
+  var t = getDeclaredStreamType();
+  applyLiveStatus(t === "live");
+}
 
-/* ══════════════════════════════════════════════════════════════
-   YOUTUBE
-   ══════════════════════════════════════════════════════════════ */
 function extractYouTubeId(url){
   if (!url) return null;
   var m1 = url.match(/[?&]v=([A-Za-z0-9_-]{6,})/);
@@ -1181,7 +983,8 @@ function onPlayerReady(event){
     }
   } catch(e){ console.warn("[yt iframe]", e); }
 
-  applyLiveStatus(getDeclaredStreamType() === "live");
+  applyDeclaredStreamType();
+
   loader.entryPhase = true;
 
   if (localStorage.getItem(UNMUTE_PREF_KEY) === "1") {
@@ -1250,80 +1053,6 @@ function onPlayerStateChange(event){
   }
 }
 
-/* ══════════════════════════════════════════════════════════════
-   NATIVE IFRAME (Twitch / Vimeo / Custom)
-   ══════════════════════════════════════════════════════════════ */
-function buildEmbedUrl(){
-  if (!streamData) return null;
-  var platform = streamData.streamPlatform || "youtube";
-  var url = (streamData.streamUrl || "").trim();
-  if (!url) return null;
-  try {
-    if (platform === "vimeo") {
-      var vm = url.match(/vimeo\.com\/(?:video\/)?(\d+)/);
-      if (vm) return "https://player.vimeo.com/video/" + vm[1] + "?autoplay=1&muted=1&controls=1&background=0";
-      return url;
-    }
-    if (platform === "twitch") {
-      var tm = url.match(/twitch\.tv\/([A-Za-z0-9_]+)/);
-      if (tm) {
-        var host = location.hostname || "localhost";
-        return "https://player.twitch.tv/?channel=" + tm[1] + "&parent=" + host + "&autoplay=true&muted=true";
-      }
-      return url;
-    }
-    return url;
-  } catch(e){ return url; }
-}
-
-function loadPlainIframe(embedUrl){
-  var host = $("ytPlayerHost");
-  host.innerHTML = "";
-  var iframe = document.createElement("iframe");
-  iframe.src = embedUrl;
-  iframe.allow = "autoplay; picture-in-picture; encrypted-media; fullscreen";
-  iframe.setAttribute("referrerpolicy", "strict-origin-when-cross-origin");
-  iframe.setAttribute("allowfullscreen", "");
-  /* Native platforms: taps go straight to the iframe */
-  iframe.style.pointerEvents = "auto";
-  host.appendChild(iframe);
-  player.iframe = iframe;
-  player.platform = streamData.streamPlatform || "youtube";
-
-  setPlayerPlatformAttr(player.platform);
-
-  var isLiveDeclared = (getDeclaredStreamType() === "live");
-  player.isLive = isLiveDeclared;
-
-  if ($("ctrlBack")) $("ctrlBack").disabled = false;
-  if ($("ctrlForward")) $("ctrlForward").disabled = false;
-  if ($("ctrlPlayPause")) $("ctrlPlayPause").style.display = isLiveDeclared ? "none" : "inline-flex";
-
-  if (isLiveDeclared) {
-    if ($("livePill")) $("livePill").classList.add("visible");
-    if ($("highlightPill")) $("highlightPill").classList.remove("visible");
-  } else {
-    if ($("livePill")) $("livePill").classList.remove("visible");
-    if ($("highlightPill")) $("highlightPill").classList.add("visible");
-    if ($("ctrlLiveJump")) $("ctrlLiveJump").style.display = "none";
-  }
-
-  /* Entry: loader first, then tap-to-play overlay */
-  loader.entryPhase = true;
-  showLoader("Connecting to the source");
-  setTimeout(function(){
-    hideLoader();
-    loader.entryPhase = false;
-    showTapToPlay();
-  }, LOADER_ENTRY_MIN_MS);
-
-  playerStateSync("idle");
-  refreshIcons();
-}
-
-/* ══════════════════════════════════════════════════════════════
-   PLAYER CONTROLS
-   ══════════════════════════════════════════════════════════════ */
 function sendCommand(cmd, value){
   try {
     if (player.ytPlayer && player.ytReady) {
@@ -1332,16 +1061,6 @@ function sendCommand(cmd, value){
       if (cmd === "mute")   player.ytPlayer.mute();
       if (cmd === "unmute") player.ytPlayer.unMute();
       if (cmd === "seek")   player.ytPlayer.seekTo(Math.max(0, value|0), true);
-      return;
-    }
-    var iframe = player.iframe;
-    if (!iframe || !iframe.contentWindow) return;
-    if (player.platform === "twitch") {
-      if (cmd === "play")   iframe.contentWindow.postMessage({eventName:"play"}, "*");
-      if (cmd === "pause")  iframe.contentWindow.postMessage({eventName:"pause"}, "*");
-      if (cmd === "mute")   iframe.contentWindow.postMessage({eventName:"mute"}, "*");
-      if (cmd === "unmute") iframe.contentWindow.postMessage({eventName:"unmute"}, "*");
-      if (cmd === "seek")   iframe.contentWindow.postMessage({eventName:"seek", seconds:Math.max(0, value|0)}, "*");
     }
   } catch(e){ console.warn("[sendCommand]", e); }
 }
@@ -1404,7 +1123,7 @@ function showUnmutePrompt(){ if ($("unmutePrompt")) $("unmutePrompt").classList.
 function hideUnmutePrompt(){ if ($("unmutePrompt")) $("unmutePrompt").classList.remove("visible"); }
 
 function seekBy(seconds){
-  if (!player.ytPlayer && !player.iframe) return;
+  if (!player.ytPlayer) return;
   var target = Math.max(0, player.currentTime + seconds);
   if (player.duration > 0) target = Math.min(target, player.duration);
   showLoader("Seeking…");
@@ -1542,9 +1261,6 @@ function showSeekRipple(side){
   setTimeout(function(){ el.classList.remove("show"); }, 750);
 }
 
-/* ══════════════════════════════════════════════════════════════
-   ADS
-   ══════════════════════════════════════════════════════════════ */
 function fetchAdSettings(){
   return db.collection(SETTINGS).doc("ads").get().then(function(snap){
     if (snap.exists) adSettings = Object.assign({}, AD_DEFAULTS, snap.data() || {});
@@ -1683,9 +1399,6 @@ function hideAdOverlay(){
   if (player.muted && localStorage.getItem(UNMUTE_PREF_KEY) !== "1") showUnmutePrompt();
 }
 
-/* ══════════════════════════════════════════════════════════════
-   HERO
-   ══════════════════════════════════════════════════════════════ */
 function renderHero(){
   var title = streamData.streamTitle || streamData.eventName || "Untitled Stream";
   var channel = streamData.channelName || streamData.hostName || streamData.ownerName || "Channel";
@@ -1731,7 +1444,7 @@ function renderHero(){
   if ($("infoHost")) $("infoHost").textContent = host;
   if ($("infoDate")) $("infoDate").textContent = formatDate(streamData.startDate, streamData.startTime);
   if ($("infoDuration")) $("infoDuration").textContent = duration + " minutes";
-  if ($("infoPlatform")) $("infoPlatform").textContent = platformLabel(streamData.streamPlatform);
+  if ($("infoPlatform")) $("infoPlatform").textContent = "YouTube Live";
   if ($("infoReplay")) {
     if (streamData.replayEnabled === false) $("infoReplayRow").style.display = "none";
     else { $("infoReplayRow").style.display = "flex"; $("infoReplay").textContent = GLOBAL_REPLAY_DAYS + " days after stream"; }
@@ -1755,9 +1468,6 @@ function renderOwnerActions(){
   if (streamData) renderHero();
 }
 
-/* ══════════════════════════════════════════════════════════════
-   SIBLINGS
-   ══════════════════════════════════════════════════════════════ */
 function renderSiblings(){
   var wrap = $("moreOnChannel");
   var list = $("siblingList");
@@ -1852,9 +1562,6 @@ function buildSiblingRow(s){
   return row;
 }
 
-/* ══════════════════════════════════════════════════════════════
-   COUNTDOWN
-   ══════════════════════════════════════════════════════════════ */
 function formatCountdownParts(msRemaining){
   var s = Math.max(0, Math.floor(msRemaining / 1000));
   var days = Math.floor(s / 86400);
@@ -1952,9 +1659,6 @@ function stopUpcomingCountdown(){
   }
 }
 
-/* ══════════════════════════════════════════════════════════════
-   RENDER WATCH
-   ══════════════════════════════════════════════════════════════ */
 function renderWatch(){
   var phase = currentPhase();
   var t = getTiming();
@@ -1974,7 +1678,6 @@ function renderWatch(){
   hideAdOverlay();
   hideUnmutePrompt();
   hideLoader();
-  hideTapToPlay();
   playerStateSync("idle");
   clearTimeout(adState.midrollTimerId);
   adState.midrollTimerId = null;
@@ -2006,32 +1709,25 @@ function renderWatch(){
     return;
   }
 
-  var platform = streamData.streamPlatform || "youtube";
-  player.platform = platform;
-  setPlayerPlatformAttr(platform);
-  var embedUrl = buildEmbedUrl();
+  player.platform = "youtube";
+  setPlayerPlatformAttr("youtube");
   var url = (streamData.streamUrl || "").trim();
-  if (!url && platform !== "youtube") {
+  var ytId = extractYouTubeId(url);
+  if (!ytId) {
     curtain.style.display = "flex";
     curtain.innerHTML =
       '<div class="pc-icon"><i data-lucide="alert-triangle"></i></div>' +
       '<h3>Stream URL missing</h3>' +
-      '<p>The host has not set a stream URL yet.</p>';
+      '<p>The host has not set a valid YouTube URL yet.</p>';
     refreshIcons();
     return;
   }
-  var ytId = platform === "youtube" ? extractYouTubeId(url) : null;
 
   function startPlayback(){
     curtain.style.display = "none";
     loader.entryPhase = true;
     showLoader("Connecting to the source");
-    if (platform === "youtube" && ytId && window.YT && window.YT.Player) {
-      loadYouTubePlayer(ytId);
-    } else {
-      var finalUrl = embedUrl || url;
-      loadPlainIframe(finalUrl);
-    }
+    loadYouTubePlayer(ytId);
     if (watermark) watermark.classList.add("visible");
   }
 
@@ -2198,7 +1894,7 @@ function loadStream(){
     if (!doc.exists) { showError("Stream not found", "This stream may have been deleted or the link is broken."); return; }
     streamData = Object.assign({ id: doc.id }, doc.data() || {});
 
-    setPlayerPlatformAttr(streamData.streamPlatform || "youtube");
+    setPlayerPlatformAttr("youtube");
 
     var query;
     if (streamData.channelName) {
@@ -2289,27 +1985,6 @@ document.addEventListener("DOMContentLoaded", function(){
     playPlayer();
   });
   $("unmuteBtn").addEventListener("click", function(e){ e.stopPropagation(); tryUnmute(); });
-
-  /* TAP-TO-PLAY: hide overlay immediately so the tap falls through to the iframe underneath.
-     Show loader for a beat while Twitch renders, then fade it and show unmute prompt. */
-  $("ttpBtn").addEventListener("click", function(e){
-    e.stopPropagation();
-    hideTapToPlay();
-    showLoader("Starting stream…");
-    setTimeout(function(){
-      hideLoader();
-      /* Try postMessage commands — some platforms will honor them */
-      try { sendCommand("play"); } catch(err){}
-      try { sendCommand("unmute"); } catch(err){}
-      playerStateSync("playing");
-      if (localStorage.getItem(UNMUTE_PREF_KEY) !== "1") showUnmutePrompt();
-    }, TAP_START_LOADER_MS);
-  });
-  /* Also allow tapping the overlay background to trigger the same behavior */
-  $("tapToPlay").addEventListener("click", function(e){
-    if (e.target.closest("#ttpBtn")) return;
-    $("ttpBtn").click();
-  });
 
   $("userMenuBtn").addEventListener("click", function(e){
     e.stopPropagation();
