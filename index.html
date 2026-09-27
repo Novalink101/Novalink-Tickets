@@ -397,7 +397,7 @@ h3{font-size:1.2rem}
         <button class="user-dropdown-item" id="ddDashboard"><i data-lucide="layout-dashboard"></i> Dashboard</button>
         <button class="user-dropdown-item" id="ddMyEvents"><i data-lucide="calendar"></i> My events</button>
         <button class="user-dropdown-item" id="ddCreateEvent"><i data-lucide="plus-circle"></i> Create an event</button>
-        <button class="user-dropdown-item" id="ddCreateStream"><i data-lucide="radio"></i> Go live</button>
+        <button class="user-dropdown-item" id="ddCreateStream" style="display:none;"><i data-lucide="radio"></i> Go live</button>
         <button class="user-dropdown-item" id="ddMyCards"><i data-lucide="ticket"></i> My cards</button>
         <button class="user-dropdown-item" id="ddScanner"><i data-lucide="scan-line"></i> Scanner</button>
         <button class="user-dropdown-item" id="ddManageAds" style="display:none;"><i data-lucide="megaphone"></i> Manage ads</button>
@@ -424,7 +424,7 @@ h3{font-size:1.2rem}
       <div class="hero-cta">
         <a href="create-event.html" class="btn btn-accent btn-lg"><i data-lucide="plus-circle"></i> Create an event</a>
         <a href="create-trip.html" class="btn btn-accent btn-lg"><i data-lucide="map"></i> Create a trip</a>
-        <a href="create-streams.html" class="btn btn-accent btn-lg"><i data-lucide="radio"></i> Go live — free</a>
+        <a href="create-streams.html" id="heroGoLive" class="btn btn-accent btn-lg" style="display:none;"><i data-lucide="radio"></i> Go live — free</a>
       </div>
       <div class="hero-stats">
         <div class="hero-stat"><span class="hero-stat-num">8</span><span class="hero-stat-label">Streams per account</span></div>
@@ -763,7 +763,6 @@ h3{font-size:1.2rem}
         <h4>Product</h4>
         <a href="create-event.html">Create an event</a>
         <a href="create-trip.html">Create a trip</a>
-        <a href="create-streams.html">Go live (free)</a>
         <a href="streams.html">All streams</a>
         <a href="my-cards.html">My cards</a>
         <a href="dashboard.html">Organizer dashboard</a>
@@ -874,7 +873,11 @@ var EVENTS_COLLECTION  = "events";
 var TRIPS_COLLECTION   = "trips";
 var STREAMS_COLLECTION = "streams";
 
-var ADMIN_EMAILS = ["nylnathan340@gmail.com"];
+/* ─── Admin emails — both Novalink admins ─── */
+var ADMIN_EMAILS = [
+  "nylnathan340@gmail.com",
+  "customerservicesnovalink@gmail.com"
+];
 
 var currentUser = null;
 var isAdmin = false;
@@ -911,6 +914,11 @@ function applyAuthState(user){
   currentUser = user;
   isAdmin = !!(user && ADMIN_EMAILS.map(function(e){return e.toLowerCase();}).indexOf(String(user.email).toLowerCase()) !== -1);
 
+  // Grab admin-only buttons up front (may be null on some pages)
+  var heroGoLive     = $("heroGoLive");
+  var ddCreateStream = $("ddCreateStream");
+  var manageAdsBtn   = $("ddManageAds");
+
   if(user){
     var display = user.displayName || user.email.split("@")[0];
     $("signInBtn").style.display = "none";
@@ -922,11 +930,10 @@ function applyAuthState(user){
     $("adminBadge").style.display = isAdmin ? "inline-block" : "none";
     $("ddAdminBadge").style.display = isAdmin ? "inline-block" : "none";
 
-    // Show "Manage ads" only for the admin account
-    var manageAdsBtn = $("ddManageAds");
-    if (manageAdsBtn) {
-      manageAdsBtn.style.display = isAdmin ? "flex" : "none";
-    }
+    // Admin-only buttons — "Manage ads" + "Go live" (Stream Studio)
+    if (manageAdsBtn)   manageAdsBtn.style.display   = isAdmin ? "flex"        : "none";
+    if (ddCreateStream) ddCreateStream.style.display = isAdmin ? "flex"        : "none";
+    if (heroGoLive)     heroGoLive.style.display     = isAdmin ? "inline-flex" : "none";
 
     // Bootstrap the user doc if it's missing — required by the 8-stream cap rules
     var userRef = db.collection("users").doc(user.uid);
@@ -954,8 +961,12 @@ function applyAuthState(user){
     $("userMenuBtn").style.display = "none";
     $("adminBadge").style.display = "none";
     $("ddAdminBadge").style.display = "none";
-    var manageAdsBtn2 = $("ddManageAds");
-    if (manageAdsBtn2) manageAdsBtn2.style.display = "none";
+
+    // Hide all admin-only buttons when signed out
+    if (manageAdsBtn)   manageAdsBtn.style.display   = "none";
+    if (ddCreateStream) ddCreateStream.style.display = "none";
+    if (heroGoLive)     heroGoLive.style.display     = "none";
+
     $("userDropdown").classList.remove("open");
   }
   refreshIcons();
@@ -1298,7 +1309,7 @@ function attachStreamsListener(){
       container.innerHTML =
         '<p style="color: var(--text-muted); padding: 20px; font-size: 14px;">' +
           'No streams yet. ' +
-          '<a href="create-streams.html" style="color:var(--cyan-600);font-weight:700;">Go live first →</a>' +
+          '<a href="streams.html" style="color:var(--cyan-600);font-weight:700;">Browse streams →</a>' +
         '</p>';
     });
 }
@@ -1311,7 +1322,7 @@ function renderFeaturedStreams(streams){
     container.innerHTML =
       '<p style="color: var(--text-muted); padding: 20px; font-size: 14px;">' +
         'No streams yet. ' +
-        '<a href="create-streams.html" style="color:var(--cyan-600);font-weight:700;">Go live first →</a>' +
+        '<a href="streams.html" style="color:var(--cyan-600);font-weight:700;">Browse streams →</a>' +
       '</p>';
     return;
   }
@@ -1418,7 +1429,7 @@ document.querySelectorAll(".auth-tab").forEach(function(tab){
     document.querySelectorAll(".auth-tab").forEach(function(t){ t.classList.toggle("active", t === tab); });
     if(authMode === "signup"){
       $("authTitle").textContent = "Create account";
-      $("authSubtitle").textContent = "Join Novalink to start ticketing or go live.";
+      $("authSubtitle").textContent = "Join Novalink to start ticketing.";
       $("nameGroup").style.display = "block";
       $("authSubmit").innerHTML = icon("user-plus") + " Create account";
       $("authPassword").autocomplete = "new-password";
@@ -1531,10 +1542,22 @@ $("ddSignOut").addEventListener("click", function(){
 $("ddDashboard").addEventListener("click", function(){ window.location.href = "dashboard.html"; });
 $("ddMyEvents").addEventListener("click", function(){ window.location.href = "events.html"; });
 $("ddCreateEvent").addEventListener("click", function(){ window.location.href = "create-event.html"; });
-$("ddCreateStream").addEventListener("click", function(){ window.location.href = "create-streams.html"; });
 $("ddMyCards").addEventListener("click", function(){ window.location.href = "my-cards.html"; });
 $("ddScanner").addEventListener("click", function(){ window.location.href = "scanner.html"; });
-$("ddManageAds").addEventListener("click", function(){ window.location.href = "admin-ads.html"; });
+
+// Admin-only — these buttons are hidden for non-admins but we still guard the click
+if ($("ddCreateStream")) {
+  $("ddCreateStream").addEventListener("click", function(){
+    if (!isAdmin) { showToast("Stream Studio is restricted to admins.", "error"); return; }
+    window.location.href = "create-streams.html";
+  });
+}
+if ($("ddManageAds")) {
+  $("ddManageAds").addEventListener("click", function(){
+    if (!isAdmin) { showToast("Admin only.", "error"); return; }
+    window.location.href = "admin-ads.html";
+  });
+}
 
 /* Delete account */
 $("ddDeleteAccount").addEventListener("click", function(){
@@ -1696,4 +1719,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-                                                         </html>
+  </html>
