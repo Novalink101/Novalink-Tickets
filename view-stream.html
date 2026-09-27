@@ -1539,4 +1539,143 @@ function buildHouseAd(){
   wrap.innerHTML =
     '<div class="hh-brand">' +
       '<svg class="mark" viewBox="0 0 60 74" aria-hidden="true">' +
-        '<path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6
+        '<path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/>' +
+        '<path fill="#00FFFF" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/>' +
+      '</svg>' +
+      '<span class="wm">Novalink</span>' +
+    '</div>' +
+    '<div class="hh-t">' + esc(adSettings.houseAdTitle || "Advertise on Novalink") + '</div>' +
+    '<div class="hh-s">' + esc(adSettings.houseAdText || "Reach thousands of live viewers across South Africa.") + '</div>' +
+    '<a class="hh-cta" href="' + esc(adSettings.houseAdUrl || "mailto:ads@novalink.com") + '" target="_blank" rel="noopener noreferrer">' +
+      '<i data-lucide="message-circle"></i> ' + esc(adSettings.houseAdCtaLabel || "Advertise here") +
+    '</a>';
+  return wrap;
+}
+function hideAdOverlay(){
+  var overlay = $("adOverlay");
+  if (!overlay) return;
+  overlay.classList.remove("visible");
+  var media = $("adMedia");
+  if (media) media.innerHTML = "";
+  clearInterval(adState.countdownTimerId);
+  clearTimeout(adState.skipTimerId);
+  adState.currentlyShowing = null;
+}
+
+/* ── Load ────────────────────────────────────────────────────── */
+
+function loadStream(){
+  streamId = getParam("id");
+  if (!streamId) { showError("Missing stream ID", "The link is missing a stream identifier."); return; }
+
+  Promise.all([fetchAdSettings(), fetchAdPool()]).then(function(){
+    return db.collection(STREAMS).doc(streamId).get();
+  }).then(function(doc){
+    if (!doc.exists) { showError("Stream not found", "This stream may have been deleted or the link is broken."); return; }
+    streamData = Object.assign({ id: doc.id }, doc.data() || {});
+
+    var query;
+    if (streamData.channelName) {
+      query = db.collection(STREAMS).where("channelName", "==", streamData.channelName).limit(10);
+    } else if (streamData.ownerUid) {
+      query = db.collection(STREAMS).where("ownerUid", "==", streamData.ownerUid).limit(10);
+    } else query = null;
+
+    var siblingsPromise = query
+      ? query.get().then(function(snap){
+          siblingStreams = [];
+          snap.forEach(function(d){ var x = d.data() || {}; x.id = d.id; siblingStreams.push(x); });
+        }).catch(function(err){ console.warn("[siblings]", err); })
+      : Promise.resolve();
+    return siblingsPromise.then(function(){ return doc; });
+  }).then(function(){
+    $("loadingState").style.display = "none";
+    $("contentState").style.display = "block";
+    renderHero();
+    renderOwnerActions();
+    renderSiblings();
+    renderWatch();
+    startCountdown();
+    watchForStreamEnd();
+  }).catch(function(err){
+    console.error("[load stream]", err);
+    showError("Could not load stream", err.message || "Please try again.");
+  });
+}
+
+function showError(title, msg){
+  $("loadingState").style.display = "none";
+  $("contentState").style.display = "none";
+  $("errorState").style.display = "block";
+  $("errorTitle").textContent = title;
+  $("errorMsg").textContent = msg;
+  refreshIcons();
+}
+
+function deleteStream(){
+  if (!isOwner()) return;
+  if (!confirm("Delete this stream permanently? This cannot be undone.")) return;
+  var btn = $("deleteBtn");
+  btn.disabled = true;
+  btn.innerHTML = "Deleting…";
+  db.collection(STREAMS).doc(streamId).delete()
+    .then(function(){
+      showToast("Stream deleted.", "success");
+      setTimeout(function(){ location.href = "streams.html"; }, 800);
+    })
+    .catch(function(err){
+      showToast("Delete failed: " + err.message, "error", 5000);
+      btn.disabled = false;
+      btn.innerHTML = '<i data-lucide="trash-2"></i> Delete stream';
+      refreshIcons();
+    });
+}
+
+window.onYouTubeIframeAPIReady = function(){ /* ready when needed */ };
+
+document.addEventListener("DOMContentLoaded", function(){
+  $("year").textContent = new Date().getFullYear();
+  refreshIcons();
+
+  // Tap-to-play button wiring
+  $("ttpBtn").addEventListener("click", function(e){
+    e.stopPropagation();
+    hideTapToPlay();
+    // The iframe is already loaded underneath — the tap just reveals it
+    showLoader("Starting stream…");
+    setTimeout(function(){ hideLoader(); }, TAP_START_LOADER_MS);
+  });
+  $("tapToPlay").addEventListener("click", function(e){
+    if (e.target.closest("#ttpBtn")) return;
+    $("ttpBtn").click();
+  });
+
+  $("userMenuBtn").addEventListener("click", function(e){
+    e.stopPropagation();
+    $("userDropdown").classList.toggle("open");
+  });
+  document.addEventListener("click", function(){ $("userDropdown").classList.remove("open"); });
+  $("ddSignOut").addEventListener("click", function(){ auth.signOut().then(function(){ showToast("Signed out.", "success"); }); });
+  $("ddCreateStream").addEventListener("click", function(){ location.href = "create-streams.html"; });
+  $("ddMyStreams").addEventListener("click", function(){ location.href = "streams.html?mine=1"; });
+  $("deleteBtn").addEventListener("click", deleteStream);
+
+  auth.onAuthStateChanged(function(user){
+    applyAuth(user);
+    if (!streamData) loadStream();
+  });
+
+  window.addEventListener("beforeunload", function(){
+    if (countdownTimer) clearInterval(countdownTimer);
+    if (upcomingCountdownTimer) clearInterval(upcomingCountdownTimer);
+    clearTimeout(adState.midrollTimerId);
+    clearInterval(adState.countdownTimerId);
+    clearTimeout(adState.skipTimerId);
+    clearTimeout(loader.hideTimer);
+    clearTimeout(loader.maxTimer);
+  });
+});
+})();
+</script>
+</body>
+  </html>
