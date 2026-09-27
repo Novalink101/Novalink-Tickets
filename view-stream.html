@@ -82,7 +82,6 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .player-wrap #ytPlayer,
 .player-wrap #ytPlayer iframe{position:absolute!important;inset:0;width:100%;height:100%;border:0;z-index:1!important;pointer-events:none;background:#000}
 
-/* Mobile landscape: player fills the whole screen, edge to edge. No letterbox bars. */
 @media (max-width:900px) and (orientation:landscape){
   .player-wrap{
     aspect-ratio:auto;
@@ -101,7 +100,6 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
   .site-footer{display:none;}
   .channel-hero{display:none;}
   .more-on-channel{display:none;}
-  .about-card{display:none;}
 }
 
 .click-shield{position:absolute;inset:0;z-index:5;background:transparent;cursor:pointer;}
@@ -749,9 +747,17 @@ var UNMUTE_PREF_KEY = 'novalink_audio_enabled';
 
 var LOADER_ENTRY_MIN_MS = 3500;
 var LOADER_ENTRY_TAIL_MS = 400;
-var LOADER_SEEK_MS = 800;
+var LOADER_SEEK_MS = 1500;
 var LOADER_FULLSCREEN_MS = 600;
 var LOADER_MAX_MS = 8000;
+
+/* How long the bars stay up after a seek / jump-to-live.
+   YouTube keeps its chrome visible for ~3s after a seek, so we hold
+   the bars for that long to keep it hidden. */
+var BARS_HOLD_AFTER_SEEK_MS = 3000;
+
+/* Standard window for our control bar + bars when user taps the screen */
+var CONTROLS_IDLE_HIDE_MS = 3000;
 
 var AD_DEFAULTS = {
   prerollEnabled:    true,
@@ -1150,16 +1156,29 @@ function tryUnmute(){
 function showUnmutePrompt(){ if ($("unmutePrompt")) $("unmutePrompt").classList.add("visible"); }
 function hideUnmutePrompt(){ if ($("unmutePrompt")) $("unmutePrompt").classList.remove("visible"); }
 
+/* Hold bars + controls visible for BARS_HOLD_AFTER_SEEK_MS.
+   Used after seeks and jump-to-live so YouTube's lingering chrome
+   stays covered. */
+function holdBars(){
+  var wrap = $("playerWrap");
+  if (!wrap) return;
+  wrap.classList.add("controls-visible");
+  clearTimeout(player.controlsHideTimer);
+  player.controlsHideTimer = setTimeout(function(){
+    wrap.classList.remove("controls-visible");
+  }, BARS_HOLD_AFTER_SEEK_MS);
+}
+
 function seekBy(seconds){
   if (!player.ytPlayer) return;
   var target = Math.max(0, player.currentTime + seconds);
   if (player.duration > 0) target = Math.min(target, player.duration);
   showLoader("Seeking…");
   scheduleLoaderHide(LOADER_SEEK_MS, 0, false);
+  holdBars();
   sendCommand("seek", target);
   player.currentTime = target;
   updateTimeDisplay();
-  showControls();
 }
 
 function jumpToLive(){
@@ -1169,12 +1188,12 @@ function jumpToLive(){
     if (dur > 0) {
       showLoader("Jumping to live…");
       scheduleLoaderHide(LOADER_SEEK_MS, 0, false);
+      holdBars();
       player.ytPlayer.seekTo(dur, true);
       player.ytPlayer.playVideo();
       showToast("Jumped to live", "success", 1500);
     }
   } catch(err){}
-  showControls();
 }
 
 function updateTimeDisplay(){
@@ -1190,7 +1209,7 @@ function showControls(keepOpen){
   if (!wrap) return;
   wrap.classList.add("controls-visible");
   clearTimeout(player.controlsHideTimer);
-  if (!keepOpen) player.controlsHideTimer = setTimeout(hideControls, 3000);
+  if (!keepOpen) player.controlsHideTimer = setTimeout(hideControls, CONTROLS_IDLE_HIDE_MS);
 }
 function hideControls(){
   var wrap = $("playerWrap");
@@ -2045,4 +2064,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-  </html>
+                       </html>
