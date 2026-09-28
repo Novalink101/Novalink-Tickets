@@ -185,6 +185,12 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
 .nl-ad-skip:disabled{opacity:.65;cursor:not-allowed}
 .nl-ad-skip i{width:14px;height:14px}
 .nl-ad-skip .cnt{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 6px;background:rgba(255,255,255,.15);border-radius:6px;font-family:var(--mono);font-size:11px}
+
+/* NEW: Fullscreen button inside the Ad Overlay */
+.nl-ad-fs{pointer-events:auto;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.25);color:#fff;width:38px;height:38px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);transition:.15s;font-family:inherit;flex-shrink:0;}
+.nl-ad-fs:hover{background:rgba(0,0,0,.75);border-color:rgba(255,255,255,.45);}
+.nl-ad-fs i{width:16px;height:16px;}
+
 .nl-ad-progress{position:absolute;bottom:0;left:0;right:0;height:3px;background:rgba(255,255,255,.15);z-index:18}
 .nl-ad-progress > i{display:block;height:100%;background:var(--cy);border-radius:0 2px 2px 0;width:0%;transition:width .2s linear}
 
@@ -809,10 +815,13 @@ function renderPage(){
           '</div>' +
           '<div class="nl-ad-bottombar">' +
             '<a class="nl-ad-cta" id="adCta" href="#" target="_blank" rel="noopener noreferrer">'+icon('external-link')+'<span id="adCtaLabel">Learn more</span></a>' +
-            '<button type="button" class="nl-ad-skip" id="adSkip" disabled>' +
-              '<span id="adSkipText">Skip in</span>' +
-              '<span class="cnt" id="adCountdown">5</span>' +
-            '</button>' +
+            '<div style="display:flex; gap:8px; align-items:center;">' +
+              '<button type="button" class="nl-ad-fs" id="adFullscreen" title="Fullscreen">'+icon('maximize')+'</button>' +
+              '<button type="button" class="nl-ad-skip" id="adSkip" disabled>' +
+                '<span id="adSkipText">Skip in</span>' +
+                '<span class="cnt" id="adCountdown">5</span>' +
+              '</button>' +
+            '</div>' +
           '</div>' +
           '<div class="nl-ad-progress"><i id="adProgressFill"></i></div>' +
         '</div>' +
@@ -1921,6 +1930,18 @@ function showAd(slot, onComplete){
   media.innerHTML = '';
   progressFill.style.width = '0%';
   var skipAfter = parseInt(adSettings.skipAfterSeconds, 10) || 5;
+
+  // Wire up the ad fullscreen button
+  var fsBtn = $('adFullscreen');
+  if (fsBtn) {
+    fsBtn.onclick = function() {
+      var wrap = $('nlPlayer'); 
+      if (!wrap) return;
+      if (document.fullscreenElement) document.exitFullscreen();
+      else if (wrap.requestFullscreen) wrap.requestFullscreen();
+      else if (wrap.webkitRequestFullscreen) wrap.webkitRequestFullscreen();
+    };
+  }
 
   if (ad){
     title.textContent = ad.title || 'Advertisement';
