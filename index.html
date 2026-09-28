@@ -1476,20 +1476,12 @@ $("authForm").addEventListener("submit", function(e){
   }
 });
 
+// Google sign-in — POPUP ONLY (redirect is broken on mobile Chrome)
 $("googleBtn").addEventListener("click", function(){
   var provider = new firebase.auth.GoogleAuthProvider();
-  var isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
+  provider.setCustomParameters({ prompt: 'select_account' });
 
   $("googleBtn").disabled = true;
-
-  if (isMobile) {
-    sessionStorage.setItem("novalink_auth_redirect", "1");
-    auth.signInWithRedirect(provider).catch(function(err){
-      showToast(err.message, "error");
-      $("googleBtn").disabled = false;
-    });
-    return;
-  }
 
   auth.signInWithPopup(provider)
     .then(function(){
@@ -1498,13 +1490,15 @@ $("googleBtn").addEventListener("click", function(){
       document.body.style.overflow = "";
     })
     .catch(function(err){
-      if (err.code === "auth/popup-blocked" || err.code === "auth/popup-closed-by-user") {
-        sessionStorage.setItem("novalink_auth_redirect", "1");
-        auth.signInWithRedirect(provider);
+      console.warn("[google sign-in]", err.code, err.message);
+      if (err.code === "auth/popup-blocked") {
+        showToast("Please allow popups for this site, then try again.", "error", 5000);
+      } else if (err.code === "auth/popup-closed-by-user" || err.code === "auth/cancelled-popup-request") {
+        // user closed it — silent
       } else {
-        showToast(err.message, "error");
-        $("googleBtn").disabled = false;
+        showToast(err.message || "Sign-in failed. Try again.", "error", 5000);
       }
+      $("googleBtn").disabled = false;
     });
 });
 
@@ -1665,24 +1659,6 @@ document.addEventListener("DOMContentLoaded", function(){
   initHeaderScroll();
   refreshIcons();
 
-  auth.getRedirectResult().then(function(result){
-    if (result && result.user) {
-      showToast("Signed in with Google", "success");
-      $("authModal").classList.remove("open");
-      document.body.style.overflow = "";
-    }
-  }).catch(function(err){
-    if (err && err.code) console.warn("[redirect auth]", err.code, err.message);
-  });
-
-  if (sessionStorage.getItem("novalink_auth_redirect") === "1") {
-    sessionStorage.removeItem("novalink_auth_redirect");
-    setTimeout(function(){
-      $("authModal").classList.add("open");
-      document.body.style.overflow = "hidden";
-    }, 200);
-  }
-
   auth.onAuthStateChanged(function(user){
     applyAuthState(user);
     attachEventsListener();
@@ -1698,4 +1674,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-          </html>
+              </html>
