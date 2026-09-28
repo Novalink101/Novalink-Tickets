@@ -591,6 +591,20 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
             Add up to <strong>2 URLs</strong>. Ads play automatically during any gap between them.
           </p>
 
+          <!-- NEW: Native HLS Stream Option -->
+          <div class="toggle-row hl" style="margin-bottom: 14px;">
+            <span class="tl">Use Native HLS Stream<small>Paste your HLS (.m3u8) link from Cloudflare, Mux, or your own server.</small></span>
+            <label class="toggle"><input type="checkbox" id="useHlsToggle" /><span class="slider"></span></label>
+          </div>
+
+          <div id="hlsUrlContainer" style="display:none; margin-bottom: 20px;">
+            <div class="field">
+              <label>HLS Playback URL (.m3u8)</label>
+              <input type="url" id="hlsUrlInput" placeholder="https://customer-xxxx.cloudflarestream.com/xxxx/manifest/video.m3u8" />
+              <p class="hint" style="font-style:normal; color:var(--cy3);">This is the link your viewers will watch. Get this from your streaming platform.</p>
+            </div>
+          </div>
+
           <div id="segmentsContainer"></div>
 
           <button type="button" id="addSegmentBtn" class="btn btn-ghost" style="margin-top:10px;padding:10px 16px;font-size:13px;">
@@ -880,6 +894,7 @@ function detectPlatformFromUrl(url){
   if (u.indexOf('restream.io') !== -1) return 'restream';
   if (u.indexOf('zoom.us') !== -1) return 'zoom';
   if (/\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(u)) return 'video-file';
+  if (u.indexOf('.m3u8') !== -1) return 'native-hls';
   return 'custom';
 }
 function platformFriendlyName(p){
@@ -888,6 +903,7 @@ function platformFriendlyName(p){
     kick:'Kick', rumble:'Rumble', dailymotion:'Dailymotion', odysee:'Odysee',
     bitchute:'BitChute', niconico:'Niconico', streamyard:'StreamYard',
     restream:'Restream', zoom:'Zoom', 'video-file':'Direct video file',
+    'native-hls':'Native HLS Stream',
     custom:'Custom Embed'
   }[p] || 'Custom Embed';
 }
@@ -915,6 +931,16 @@ function formatDuration(min){
    SEGMENTS — validation
    ══════════════════════════════════════════════════════════════ */
 function validateSegments(){
+  var isNativeHls = $('useHlsToggle') && $('useHlsToggle').checked;
+  if (isNativeHls) {
+    var hlsUrl = $('hlsUrlInput') ? $('hlsUrlInput').value.trim() : '';
+    if (!hlsUrl) return { ok:false, err:'Please enter the HLS Playback URL.' };
+    if (!hlsUrl.includes('.m3u8') && !hlsUrl.startsWith('http')) {
+      // Just a soft warning, don't fail hard
+    }
+    return { ok:true, segs: [{ url: hlsUrl, startTime: '00:00', endTime: '23:59' }] };
+  }
+
   var segs = state.segments.filter(function(s){ return (s.url || '').trim() !== ''; });
   if (!segs.length) return { ok:false, err:'Enter at least one stream URL.' };
   for (var i = 0; i < segs.length; i++){
@@ -1384,6 +1410,18 @@ function updateSegmentDetection(idx){
 function updateTimelinePreview(){
   var container = $('timelinePreview');
   if (!container) return;
+  
+  var isNativeHls = $('useHlsToggle') && $('useHlsToggle').checked;
+  if (isNativeHls) {
+    container.innerHTML = '<div class="stream-title">Native HLS Stream</div>' +
+      '<div class="stream-meta" style="margin-top:8px;">' +
+        '<span><i data-lucide="radio"></i> Live HLS Playback</span>' +
+        '<span><i data-lucide="megaphone"></i> Ads enabled</span>' +
+      '</div>';
+    refreshIcons();
+    return;
+  }
+
   var segs = state.segments.filter(function(s){ return (s.url||'').trim() && s.startTime && s.endTime; });
   if (!segs.length){
     container.innerHTML =
@@ -1427,6 +1465,10 @@ function wireSegmentEvents(){
   document.addEventListener('input', function(e){
     var t = e.target;
     if (!t) return;
+    if (t.id === 'hlsUrlInput') {
+      updateSaveEnabled();
+      return;
+    }
     if (t.classList.contains('seg-url')){
       var idx = parseInt(t.getAttribute('data-idx'), 10);
       state.segments[idx].url = t.value;
@@ -1634,6 +1676,17 @@ function clearStreamFields(){
   state.segments = [{ url: '', startTime: '20:00', endTime: '21:00' }];
   var addBtn = $('addSegmentBtn');
   if (addBtn) addBtn.style.display = 'inline-flex';
+  
+  // Reset HLS toggle
+  if ($('useHlsToggle')) {
+    $('useHlsToggle').checked = false;
+    $('hlsUrlContainer').style.display = 'none';
+    $('segmentsContainer').style.display = 'block';
+    if (addBtn) addBtn.style.display = 'inline-flex';
+    var rulesCard = document.querySelector('.rules-card');
+    if (rulesCard) rulesCard.style.display = 'block';
+  }
+
   renderCover();
   renderSegments();
   $('saveLbl').textContent = 'Save Stream';
@@ -1667,8 +1720,24 @@ function loadStreamIntoForm(d){
   $('descCounter').textContent = ($('streamDescription').value.length) + ' / 2000';
   $('streamDate').value = d.startDate || '';
 
+  // Handle Native HLS
+  var isNative = d.isNative || false;
+  if ($('useHlsToggle')) {
+    $('useHlsToggle').checked = isNative;
+    $('hlsUrlContainer').style.display = isNative ? 'block' : 'none';
+    $('hlsUrlInput').value = d.hlsUrl || '';
+    
+    var segContainer = $('segmentsContainer');
+    var addBtn = $('addSegmentBtn');
+    var rulesCard = document.querySelector('.rules-card');
+    
+    if (segContainer) segContainer.style.display = isNative ? 'none' : 'block';
+    if (addBtn) addBtn.style.display = isNative ? 'none' : 'inline-flex';
+    if (rulesCard) rulesCard.style.display = isNative ? 'none' : 'block';
+  }
+
   /* Load segments — backwards compatible */
-  if (Array.isArray(d.segments) && d.segments.length){
+  if (!isNative && Array.isArray(d.segments) && d.segments.length){
     state.segments = d.segments.map(function(s){
       return {
         url: s.url || '',
@@ -1677,7 +1746,7 @@ function loadStreamIntoForm(d){
       };
     });
     if (state.segments.length > MAX_SEGMENTS) state.segments = state.segments.slice(0, MAX_SEGMENTS);
-  } else if (d.streamUrl){
+  } else if (!isNative && d.streamUrl){
     var start = d.startTime || '20:00';
     var dur = parseInt(d.durationMinutes, 10) || 60;
     var sMin = timeToMinutes(start);
@@ -1692,7 +1761,7 @@ function loadStreamIntoForm(d){
   }
 
   var addBtn = $('addSegmentBtn');
-  if (addBtn) addBtn.style.display = state.segments.length >= MAX_SEGMENTS ? 'none' : 'inline-flex';
+  if (addBtn && !isNative) addBtn.style.display = state.segments.length >= MAX_SEGMENTS ? 'none' : 'inline-flex';
   renderSegments();
 
   if (typeof d.replayEnabled === 'boolean') $('replayToggle').checked = d.replayEnabled;
@@ -1759,21 +1828,30 @@ function saveStream(){
   var firstSeg = validSegments[0];
   var firstPlatform = detectPlatformFromUrl(firstSeg.url);
 
+  // Check if using Native HLS
+  var isNativeHls = $('useHlsToggle') && $('useHlsToggle').checked;
+  var hlsUrl = isNativeHls ? $('hlsUrlInput').value.trim() : '';
+
   var payload = {
     kind: 'stream',
     eventName: title,
     streamTitle: title,
-    streamType: getSelectedStreamType(),
+    streamType: isNativeHls ? 'native' : getSelectedStreamType(),
     eventTagline: $('streamTagline').value.trim(),
     eventDescription: $('streamDescription').value.trim(),
     startDate: date,
     /* Legacy single-segment fields for backwards compatibility */
-    startTime: firstSeg.startTime,
-    durationMinutes: totalDuration,
-    streamPlatform: firstPlatform,
-    streamUrl: firstSeg.url,
+    startTime: isNativeHls ? '00:00' : firstSeg.startTime,
+    durationMinutes: isNativeHls ? 120 : totalDuration, // Default to 2hrs for native HLS if unknown
+    streamPlatform: isNativeHls ? 'native-hls' : firstPlatform,
+    streamUrl: isNativeHls ? hlsUrl : firstSeg.url,
+    
+    // NEW: Native HLS fields
+    isNative: isNativeHls,
+    hlsUrl: hlsUrl,
+    
     /* New multi-segment fields */
-    segments: validSegments.map(function(s){
+    segments: isNativeHls ? [] : validSegments.map(function(s){
       return {
         url: s.url.trim(),
         startTime: s.startTime,
@@ -1920,6 +1998,28 @@ document.addEventListener('DOMContentLoaded', function(){
     });
   }
 
+  // NEW: HLS Toggle
+  var hlsToggle = $('useHlsToggle');
+  if (hlsToggle) {
+    hlsToggle.addEventListener('change', function() {
+      var isHls = hlsToggle.checked;
+      $('hlsUrlContainer').style.display = isHls ? 'block' : 'none';
+      
+      var segContainer = $('segmentsContainer');
+      var addBtn = $('addSegmentBtn');
+      var rulesCard = document.querySelector('.rules-card');
+      var platformInfo = document.querySelector('.platform-info');
+      
+      if (segContainer) segContainer.style.display = isHls ? 'none' : 'block';
+      if (addBtn) addBtn.style.display = isHls ? 'none' : 'inline-flex';
+      if (rulesCard) rulesCard.style.display = isHls ? 'none' : 'block';
+      if (platformInfo) platformInfo.style.display = isHls ? 'none' : 'block';
+      
+      updateTimelinePreview();
+      updateSaveEnabled();
+    });
+  }
+
   var confirmBox = $('confirmCheckbox');
   if (confirmBox){
     confirmBox.addEventListener('change', function(){
@@ -2005,4 +2105,4 @@ document.addEventListener('DOMContentLoaded', function(){
 })();
 </script>
 </body>
-                                                                                                                     </html>
+  </html>
