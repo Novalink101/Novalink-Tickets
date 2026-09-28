@@ -186,7 +186,7 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
 .nl-ad-skip i{width:14px;height:14px}
 .nl-ad-skip .cnt{display:inline-flex;align-items:center;justify-content:center;min-width:22px;height:22px;padding:0 6px;background:rgba(255,255,255,.15);border-radius:6px;font-family:var(--mono);font-size:11px}
 
-/* NEW: Fullscreen button inside the Ad Overlay */
+/* Fullscreen button inside the Ad Overlay */
 .nl-ad-fs{pointer-events:auto;background:rgba(0,0,0,.55);border:1px solid rgba(255,255,255,.25);color:#fff;width:38px;height:38px;border-radius:10px;cursor:pointer;display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);transition:.15s;font-family:inherit;flex-shrink:0;}
 .nl-ad-fs:hover{background:rgba(0,0,0,.75);border-color:rgba(255,255,255,.45);}
 .nl-ad-fs i{width:16px;height:16px;}
@@ -1929,13 +1929,14 @@ function showAd(slot, onComplete){
   overlay.classList.add('show');
   media.innerHTML = '';
   progressFill.style.width = '0%';
-  var skipAfter = parseInt(adSettings.skipAfterSeconds, 10) || 5;
+  var skipAfter = parseInt(adSettings.skipAfterSeconds, 10);
+  if (isNaN(skipAfter)) skipAfter = 5;
 
   // Wire up the ad fullscreen button
   var fsBtn = $('adFullscreen');
   if (fsBtn) {
     fsBtn.onclick = function() {
-      var wrap = $('nlPlayer'); 
+      var wrap = $('nlPlayer');
       if (!wrap) return;
       if (document.fullscreenElement) document.exitFullscreen();
       else if (wrap.requestFullscreen) wrap.requestFullscreen();
@@ -1943,11 +1944,14 @@ function showAd(slot, onComplete){
     };
   }
 
+  var isVideoAd = false;
+
   if (ad){
     title.textContent = ad.title || 'Advertisement';
     cta.href = ad.clickUrl || '#';
     ctaLabel.textContent = ad.ctaLabel || 'Learn more';
     if (ad.mediaType === 'video' && ad.mediaUrl){
+      isVideoAd = true;
       var vid = document.createElement('video');
       vid.src = ad.mediaUrl;
       vid.autoplay = true; vid.muted = false; vid.playsInline = true;
@@ -1974,29 +1978,55 @@ function showAd(slot, onComplete){
     ctaLabel.textContent = adSettings.houseAdCtaLabel || 'Advertise here';
     media.appendChild(buildHouseAd());
   }
+
   cta.onclick = function(){ if (ad) trackAdEvent(ad, 'click'); };
+
+  // FIXED: Skip button logic. Ads no longer auto-close after a timer.
   if (skipAfter === -1){
-    skipBtn.disabled = true; skipText.textContent = 'Ad'; countdown.textContent = '';
+    // Advertiser disabled skipping entirely
+    skipBtn.disabled = true;
+    skipText.textContent = 'Ad';
+    countdown.textContent = '';
+  } else if (skipAfter === 0){
+    // Skippable immediately
+    skipBtn.disabled = false;
+    skipText.textContent = 'Skip ad';
+    countdown.textContent = '';
   } else {
     var remaining = skipAfter;
-    skipBtn.disabled = true; skipText.textContent = 'Skip in'; countdown.textContent = remaining;
+    skipBtn.disabled = true;
+    skipText.textContent = 'Skip in';
+    countdown.textContent = remaining;
     clearInterval(adState.countdownTimerId);
     adState.countdownTimerId = setInterval(function(){
       remaining--;
       if (remaining <= 0){
         clearInterval(adState.countdownTimerId);
-        skipBtn.disabled = false; skipText.textContent = 'Skip ad'; countdown.textContent = '';
-      } else countdown.textContent = remaining;
+        skipBtn.disabled = false;
+        skipText.textContent = 'Skip ad';
+        countdown.textContent = '';
+      } else {
+        countdown.textContent = remaining;
+      }
     }, 1000);
   }
+
   skipBtn.onclick = function(){
     if (skipBtn.disabled) return;
-    hideAd(); if (onComplete) onComplete();
+    hideAd();
+    if (onComplete) onComplete();
   };
-  if (!(ad && ad.mediaType === 'video')){
-    clearTimeout(adState.skipTimerId);
-    adState.skipTimerId = setTimeout(function(){ hideAd(); if (onComplete) onComplete(); }, 10000);
+
+  // FIXED: Only auto-close if it's a non-video ad AND no advertiser skip setting is present.
+  // This covers the house ad fallback. Video ads close on their own "ended" event.
+  clearTimeout(adState.skipTimerId);
+  if (!isVideoAd && (!ad || typeof ad.skipAfterSeconds === 'undefined')){
+    adState.skipTimerId = setTimeout(function(){
+      hideAd();
+      if (onComplete) onComplete();
+    }, 15000); // 15s default for house ads
   }
+
   refreshIcons();
 }
 
