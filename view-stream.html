@@ -1944,53 +1944,28 @@ function showAd(slot, onComplete){
     };
   }
 
-  if (ad){
-    title.textContent = ad.title || 'Advertisement';
-    cta.href = ad.clickUrl || '#';
-    ctaLabel.textContent = ad.ctaLabel || 'Learn more';
-    if (ad.mediaType === 'video' && ad.mediaUrl){
-      var vid = document.createElement('video');
-      vid.src = ad.mediaUrl;
-      vid.autoplay = true; vid.muted = false; vid.playsInline = true;
-      vid.setAttribute('playsinline', '');
-      media.appendChild(vid);
-      vid.addEventListener('timeupdate', function(){
-        if (vid.duration) progressFill.style.width = ((vid.currentTime / vid.duration) * 100) + '%';
-      });
-      vid.addEventListener('ended', function(){ hideAd(); if (onComplete) onComplete(); });
-      vid.addEventListener('error', function(){ media.innerHTML = ''; media.appendChild(buildHouseAd()); });
-    } else if (ad.mediaUrl){
-      var img = document.createElement('img');
-      img.src = ad.mediaUrl; img.alt = ad.title || 'Ad';
-      media.appendChild(img);
-    } else {
-      media.appendChild(buildHouseAd());
+  // Helper — start the skip countdown. Called once the ad is actually visible/playing.
+  var skipStarted = false;
+  function beginSkipCountdown(seconds){
+    if (skipStarted) return;
+    skipStarted = true;
+
+    if (seconds === -1){
+      // Advertiser disabled skipping entirely
+      skipBtn.disabled = true;
+      skipText.textContent = 'Ad';
+      countdown.textContent = '';
+      return;
     }
-    trackAdEvent(ad, 'impression');
-    rememberAd(ad.id);
-    if (typeof ad.skipAfterSeconds === 'number') skipAfter = ad.skipAfterSeconds;
-  } else {
-    title.textContent = adSettings.houseAdTitle || 'Advertise on Novalink';
-    cta.href = adSettings.houseAdUrl || 'mailto:ads@novalink.com';
-    ctaLabel.textContent = adSettings.houseAdCtaLabel || 'Advertise here';
-    media.appendChild(buildHouseAd());
-  }
+    if (seconds === 0){
+      // Skippable immediately
+      skipBtn.disabled = false;
+      skipText.textContent = 'Skip ad';
+      countdown.textContent = '';
+      return;
+    }
 
-  cta.onclick = function(){ if (ad) trackAdEvent(ad, 'click'); };
-
-  // Skip button logic. Ads NEVER auto-close.
-  if (skipAfter === -1){
-    // Advertiser disabled skipping entirely
-    skipBtn.disabled = true;
-    skipText.textContent = 'Ad';
-    countdown.textContent = '';
-  } else if (skipAfter === 0){
-    // Skippable immediately
-    skipBtn.disabled = false;
-    skipText.textContent = 'Skip ad';
-    countdown.textContent = '';
-  } else {
-    var remaining = skipAfter;
+    var remaining = seconds;
     skipBtn.disabled = true;
     skipText.textContent = 'Skip in';
     countdown.textContent = remaining;
@@ -2007,6 +1982,51 @@ function showAd(slot, onComplete){
       }
     }, 1000);
   }
+
+  if (ad){
+    title.textContent = ad.title || 'Advertisement';
+    cta.href = ad.clickUrl || '#';
+    ctaLabel.textContent = ad.ctaLabel || 'Learn more';
+    if (typeof ad.skipAfterSeconds === 'number') skipAfter = ad.skipAfterSeconds;
+
+    if (ad.mediaType === 'video' && ad.mediaUrl){
+      var vid = document.createElement('video');
+      vid.src = ad.mediaUrl;
+      vid.autoplay = true; vid.muted = false; vid.playsInline = true;
+      vid.setAttribute('playsinline', '');
+      media.appendChild(vid);
+      vid.addEventListener('timeupdate', function(){
+        if (vid.duration) progressFill.style.width = ((vid.currentTime / vid.duration) * 100) + '%';
+      });
+      vid.addEventListener('ended', function(){ hideAd(); if (onComplete) onComplete(); });
+      vid.addEventListener('error', function(){ media.innerHTML = ''; media.appendChild(buildHouseAd()); beginSkipCountdown(skipAfter); });
+      // Only start the skip countdown once the video actually starts playing
+      vid.addEventListener('playing', function(){ beginSkipCountdown(skipAfter); });
+      // Fallback: if 'playing' doesn't fire (e.g. autoplay blocked), start on 'loadeddata'
+      vid.addEventListener('loadeddata', function(){ setTimeout(function(){ beginSkipCountdown(skipAfter); }, 500); });
+    } else if (ad.mediaUrl){
+      var img = document.createElement('img');
+      img.src = ad.mediaUrl; img.alt = ad.title || 'Ad';
+      // Only start the skip countdown once the image has loaded
+      img.addEventListener('load', function(){ beginSkipCountdown(skipAfter); });
+      // Fallback: if image fails to load, still let the user skip
+      img.addEventListener('error', function(){ beginSkipCountdown(skipAfter); });
+      media.appendChild(img);
+    } else {
+      media.appendChild(buildHouseAd());
+      beginSkipCountdown(skipAfter);
+    }
+    trackAdEvent(ad, 'impression');
+    rememberAd(ad.id);
+  } else {
+    title.textContent = adSettings.houseAdTitle || 'Advertise on Novalink';
+    cta.href = adSettings.houseAdUrl || 'mailto:ads@novalink.com';
+    ctaLabel.textContent = adSettings.houseAdCtaLabel || 'Advertise here';
+    media.appendChild(buildHouseAd());
+    beginSkipCountdown(skipAfter);
+  }
+
+  cta.onclick = function(){ if (ad) trackAdEvent(ad, 'click'); };
 
   skipBtn.onclick = function(){
     if (skipBtn.disabled) return;
