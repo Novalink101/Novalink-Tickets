@@ -71,7 +71,7 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
 .card-title i{width:14px;height:14px}
 @media (max-width:560px){.card{padding:14px}}
 
-/* NOVALINK PLAYER */
+/* PLAYER */
 .nl-player-wrap{
   background:#000;border-radius:16px;overflow:hidden;
   border:1px solid var(--bd);
@@ -85,7 +85,8 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
   overflow:hidden;
 }
 .nl-player iframe,
-.nl-player #ytPlayer{
+.nl-player #ytPlayer,
+.nl-player #ytPlayerHost iframe{
   position:absolute!important;
   inset:0;
   width:100%!important;
@@ -94,6 +95,89 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
   z-index:1!important;
   background:#000;
 }
+#ytPlayerHost{
+  position:absolute;
+  inset:0;
+  z-index:1;
+}
+
+/* COUNTDOWN OVERLAY (sits on top of the player while stream is upcoming) */
+.nl-countdown-overlay{
+  position:absolute;
+  inset:0;
+  z-index:6;
+  background:linear-gradient(180deg, rgba(10,15,20,.82) 0%, rgba(10,15,20,.94) 100%);
+  backdrop-filter:blur(6px);
+  -webkit-backdrop-filter:blur(6px);
+  display:none;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:18px;
+  padding:24px;
+  text-align:center;
+  transition:opacity .6s ease;
+}
+.nl-countdown-overlay.show{display:flex}
+.nl-countdown-overlay.fading{opacity:0}
+.cd-label{
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:.28em;
+  text-transform:uppercase;
+  color:var(--cy);
+  opacity:.9;
+}
+.cd-digits{
+  display:flex;
+  gap:10px;
+  justify-content:center;
+  flex-wrap:nowrap;
+}
+.cd-unit{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:4px;
+  min-width:62px;
+  padding:12px 8px;
+  background:rgba(0,255,255,.06);
+  border:1px solid rgba(0,255,255,.25);
+  border-radius:12px;
+}
+.cd-unit strong{
+  font-family:var(--mono);
+  font-size:clamp(1.5rem,4.5vw,2.4rem);
+  font-weight:900;
+  color:#fff;
+  line-height:1;
+  letter-spacing:-.02em;
+  font-variant-numeric:tabular-nums;
+  text-shadow:0 4px 18px rgba(0,255,255,.4);
+}
+.cd-unit small{
+  font-size:9.5px;
+  font-weight:800;
+  letter-spacing:.14em;
+  color:rgba(255,255,255,.55);
+  text-transform:uppercase;
+}
+.cd-date{
+  font-size:12.5px;
+  color:rgba(255,255,255,.7);
+  font-weight:600;
+  margin-top:2px;
+}
+.cd-date strong{color:#fff;font-weight:800;}
+
+@media (max-width:520px){
+  .cd-unit{min-width:52px;padding:10px 6px;border-radius:10px}
+  .cd-digits{gap:6px}
+  .cd-label{font-size:10px;letter-spacing:.2em}
+  .cd-date{font-size:11px}
+}
+
+/* PLAYER TOP/BOTTOM BARS */
 .nl-player-topbar{
   position:absolute;top:0;left:0;right:0;z-index:5;
   display:flex;align-items:center;justify-content:space-between;gap:10px;
@@ -151,13 +235,6 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
 .nl-curtain h3{font-size:1.1rem;font-weight:900;color:#fff;margin:0}
 .nl-curtain p{font-size:13px;color:rgba(255,255,255,.7);max-width:340px;margin:0;line-height:1.55}
 
-.countdown-block{display:flex;flex-direction:column;align-items:center;gap:14px;text-align:center}
-.countdown-label{font-size:11px;font-weight:900;letter-spacing:.22em;text-transform:uppercase;color:var(--cy);opacity:.9}
-.countdown-digits{font-family:var(--mono);font-size:clamp(2rem,6vw,3.5rem);font-weight:900;color:#fff;letter-spacing:.04em;line-height:1;text-shadow:0 6px 24px rgba(0,255,255,.35);display:flex;align-items:center;gap:6px}
-.countdown-digits .cd-num{display:inline-block;min-width:1.6ch;text-align:center;font-variant-numeric:tabular-nums;padding:0 2px}
-.countdown-digits .cd-sep{color:var(--cy);opacity:.65;font-weight:900;animation:cdBlink 1.6s ease-in-out infinite}
-@keyframes cdBlink{0%,100%{opacity:.65}50%{opacity:.25}}
-
 .tap-to-play{position:absolute;inset:0;z-index:4;background:radial-gradient(circle at 50% 40%, rgba(0,255,255,.08), transparent 60%),#000;display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;padding:24px}
 .tap-to-play.show{display:flex}
 .tap-to-play .ttp-title{font-size:clamp(1rem,2.4vw,1.4rem);font-weight:900;color:#fff;letter-spacing:-.01em;max-width:80%;line-height:1.25}
@@ -213,7 +290,7 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
 .house-ad .hh-cta{margin-top:6px;display:inline-flex;align-items:center;gap:8px;padding:10px 18px;background:linear-gradient(135deg,var(--cy),var(--cy2));color:#04161c;font-size:13px;font-weight:900;border-radius:11px;text-decoration:none;box-shadow:0 8px 22px rgba(0,255,255,.35);border:none;font-family:inherit;cursor:pointer}
 .house-ad .hh-cta i{width:14px;height:14px}
 
-/* INFO ROWS */
+/* INFO */
 .info-list{display:flex;flex-direction:column;gap:10px}
 .info-row{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--tx2);line-height:1.5}
 .info-row i{width:15px;height:15px;color:var(--cy3);flex-shrink:0;margin-top:3px}
@@ -225,7 +302,6 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
 .free-note .t{font-size:12px;font-weight:800;color:#065f46;margin-bottom:2px}
 .free-note .s{font-size:11px;color:#047857;line-height:1.5;font-weight:500}
 
-/* OWNER CONTROLS (admin only) */
 .owner-actions{display:flex;flex-direction:column;gap:8px;margin-top:12px}
 .owner-btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 14px;border-radius:10px;font-weight:800;font-size:12.5px;border:1px solid var(--bd);background:var(--sf2);color:var(--tx2);transition:.15s;font-family:inherit;text-decoration:none;cursor:pointer}
 .owner-btn:hover{border-color:var(--cy);color:var(--cy3)}
@@ -254,7 +330,7 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
 .sibling-meta{display:flex;align-items:center;gap:6px;font-size:11.5px;color:var(--mut);font-weight:500}
 .sibling-meta i{width:12px;height:12px;color:var(--cy3);flex-shrink:0}
 
-/* STATE / LOADING */
+/* STATE */
 .state{max-width:560px;margin:60px auto;background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:44px 32px;text-align:center;box-shadow:0 8px 24px rgba(15,23,42,.06)}
 .state .ico{width:56px;height:56px;margin:0 auto 16px;border-radius:16px;background:var(--sf2);display:flex;align-items:center;justify-content:center;color:var(--mut)}
 .state .ico i{width:28px;height:28px}
@@ -268,7 +344,6 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
 .spinner-lg{width:28px;height:28px;border:3px solid rgba(0,255,255,.2);border-top-color:var(--cy);border-radius:50%;animation:spin .8s linear infinite;display:inline-block}
 @keyframes spin{to{transform:rotate(360deg)}}
 
-/* TOAST */
 #toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,18px);background:var(--ink);color:var(--cy);font-size:13px;font-weight:800;padding:13px 22px;border-radius:99px;box-shadow:0 14px 34px rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:.22s;z-index:200;max-width:90vw;text-align:center;display:flex;align-items:center;gap:9px}
 #toast.show{opacity:1;transform:translate(-50%,0)}
 #toast svg{width:15px;height:15px;flex-shrink:0}
@@ -327,7 +402,6 @@ var ADMIN_EMAILS = [
   "nylnathan340@gmail.com",
   "customerservicesnovalink@gmail.com"
 ];
-
 var STREAMS = "streams";
 var CHANNELS = "channels";
 var ADS = "ads";
@@ -337,10 +411,7 @@ var REPLAY_DAYS = 30;
 var RECENT_ADS_MAX = 10;
 
 var AD_DEFAULTS = {
-  prerollEnabled: true,
-  midrollEnabled: true,
-  postrollEnabled: true,
-  midrollMinute: 30,
+  prerollEnabled: true, midrollEnabled: true, postrollEnabled: true, midrollMinute: 30,
   skipAfterSeconds: 5,
   houseAdUrl: "mailto:ads@novalink.com",
   houseAdTitle: "Advertise on Novalink",
@@ -408,22 +479,45 @@ function platformLabel(p){
   return { youtube:'YouTube Live', twitch:'Twitch', vimeo:'Vimeo Live', facebook:'Facebook Live', custom:'Custom Embed' }[p] || 'Live';
 }
 
-/* ── ADMIN CHECK (email-based) ── */
 function isAdmin(user){
   if (!user || !user.email) return false;
   var e = String(user.email).toLowerCase();
   return ADMIN_EMAILS.some(function(x){ return x.toLowerCase() === e; });
 }
 
+/* ══════════════════════════════════════════════════════════════
+   YOUTUBE URL EXTRACTION — handles more formats now
+   ══════════════════════════════════════════════════════════════ */
 function extractYouTubeId(url){
   if (!url) return null;
-  var m1 = url.match(/[?&]v=([A-Za-z0-9_-]{6,})/);
-  var m2 = url.match(/youtu\.be\/([A-Za-z0-9_-]{6,})/);
-  var m3 = url.match(/youtube\.com\/live\/([A-Za-z0-9_-]{6,})/);
-  var m4 = url.match(/youtube(?:-nocookie)?\.com\/embed\/([A-Za-z0-9_-]{6,})/);
-  var m5 = url.match(/youtube\.com\/shorts\/([A-Za-z0-9_-]{6,})/);
-  return (m1 && m1[1]) || (m2 && m2[1]) || (m3 && m3[1]) || (m4 && m4[1]) || (m5 && m5[1]) || null;
+  var u = String(url).trim();
+
+  // Raw 11-char video ID
+  if (/^[A-Za-z0-9_-]{11}$/.test(u)) return u;
+
+  // Patterns
+  var patterns = [
+    /[?&]v=([A-Za-z0-9_-]{11})/,           // watch?v=XXXX
+    /youtu\.be\/([A-Za-z0-9_-]{11})/,      // youtu.be/XXXX
+    /youtube\.com\/live\/([A-Za-z0-9_-]{11})/,  // youtube.com/live/XXXX
+    /youtube\.com\/embed\/([A-Za-z0-9_-]{11})/, // youtube.com/embed/XXXX
+    /youtube\.com\/shorts\/([A-Za-z0-9_-]{11})/, // youtube.com/shorts/XXXX
+    /youtube-nocookie\.com\/embed\/([A-Za-z0-9_-]{11})/,
+    /youtube\.com\/v\/([A-Za-z0-9_-]{11})/
+  ];
+  for (var i = 0; i < patterns.length; i++){
+    var m = u.match(patterns[i]);
+    if (m && m[1]) return m[1];
+  }
+  // Last-ditch: pull any 11-char alphanumeric token that looks like an ID
+  var m2 = u.match(/([A-Za-z0-9_-]{11})/);
+  if (m2 && m2[1]) {
+    // Heuristic: the ID usually comes after the last `/` or `=`
+    return m2[1];
+  }
+  return null;
 }
+
 function extractTwitchChannel(url){
   if (!url) return null;
   var m = url.match(/twitch\.tv\/([A-Za-z0-9_]+)/);
@@ -438,7 +532,9 @@ function buildFacebookEmbed(url){
   return 'https://www.facebook.com/plugins/video.php?href=' + encodeURIComponent(url) + '&show_text=false&width=734&height=413';
 }
 
-/* ── STATE ── */
+/* ══════════════════════════════════════════════════════════════
+   STATE
+   ══════════════════════════════════════════════════════════════ */
 var currentUser = null;
 var isAdminUser = false;
 var streamId = null;
@@ -446,8 +542,11 @@ var streamData = null;
 var channelData = null;
 var siblingStreams = [];
 var ytPlayer = null;
+var ytPlayerReady = false;
 var countdownTimer = null;
+var phaseTickTimer = null;
 var currentPhase = 'unknown';
+var pendingVideoId = null;
 
 var adSettings = Object.assign({}, AD_DEFAULTS);
 var adPool = { preroll: [], midroll: [], postroll: [] };
@@ -460,7 +559,6 @@ var adState = {
   firedPreroll: false
 };
 
-/* ── AUTH ── */
 function applyAuth(user){
   currentUser = user;
   isAdminUser = isAdmin(user);
@@ -477,7 +575,9 @@ function applyAuth(user){
   renderOwnerControls();
 }
 
-/* ── PHASE ── */
+/* ══════════════════════════════════════════════════════════════
+   TIMING / PHASE
+   ══════════════════════════════════════════════════════════════ */
 function getTiming(){
   if (!streamData) return { valid:false };
   var dateStr = streamData.startDate || '';
@@ -501,7 +601,9 @@ function computePhase(){
   return 'ended';
 }
 
-/* ── RENDER SKELETON ── */
+/* ══════════════════════════════════════════════════════════════
+   RENDER
+   ══════════════════════════════════════════════════════════════ */
 function renderLoading(){
   $('main').innerHTML =
     '<div class="state">' +
@@ -524,7 +626,6 @@ function renderError(title, msg){
   refreshIcons();
 }
 
-/* ── RENDER PAGE ── */
 function renderPage(){
   var s = streamData;
   var ch = channelData;
@@ -580,6 +681,18 @@ function renderPage(){
           '</div>' +
         '</div>' +
 
+        /* COUNTDOWN OVERLAY — always present, shown when phase is upcoming */
+        '<div class="nl-countdown-overlay" id="countdownOverlay">' +
+          '<div class="cd-label">Stream starts in</div>' +
+          '<div class="cd-digits">' +
+            '<div class="cd-unit"><strong id="cdDays">00</strong><small>Days</small></div>' +
+            '<div class="cd-unit"><strong id="cdHours">00</strong><small>Hours</small></div>' +
+            '<div class="cd-unit"><strong id="cdMins">00</strong><small>Min</small></div>' +
+            '<div class="cd-unit"><strong id="cdSecs">00</strong><small>Sec</small></div>' +
+          '</div>' +
+          '<div class="cd-date" id="cdDate">Loading…</div>' +
+        '</div>' +
+
         '<div class="nl-curtain" id="curtain">' +
           '<div class="ico"><i data-lucide="video"></i></div>' +
           '<h3>Loading stream…</h3>' +
@@ -633,7 +746,6 @@ function renderPage(){
       freeNoteHTML +
     '</div>';
 
-  /* ── OWNER CONTROLS: ADMIN ONLY ── */
   var ownerHTML = '<div class="card" id="ownerCard" style="display:none;">' +
     '<div class="card-title">'+icon('wrench')+' Admin controls</div>' +
     '<div class="owner-actions">' +
@@ -676,18 +788,25 @@ function renderPage(){
   renderOwnerControls();
   renderSiblings();
   renderPhaseUI();
+
+  /* Always load the player immediately */
+  loadPlayer();
+
+  /* Then decide overlay state */
+  applyPhaseUI();
+
+  /* Start countdown tick if needed */
+  startCountdownTicker();
+
+  /* Load ads in background */
   loadAdsAndMaybePlay();
 }
 
-/* ── OWNER CONTROLS (ADMIN ONLY) ── */
 function renderOwnerControls(){
   var card = $('ownerCard');
   if (!card || !streamData) return;
-
-  /* Only admins see these controls */
-  var show = isAdminUser;
-  card.style.display = show ? 'block' : 'none';
-  if (!show) return;
+  card.style.display = isAdminUser ? 'block' : 'none';
+  if (!isAdminUser) return;
 
   var edit = $('editStreamBtn');
   if (edit) edit.setAttribute('href', 'create-streams.html?id=' + encodeURIComponent(streamId));
@@ -711,7 +830,6 @@ function renderOwnerControls(){
   }
 }
 
-/* ── SIBLINGS ── */
 function renderSiblings(){
   var row = $('siblingsRow');
   if (!row || !siblingStreams.length) return;
@@ -762,7 +880,9 @@ function computeStreamPhase(s){
   return 'ended';
 }
 
-/* ── PLAYER CONTROLS ── */
+/* ══════════════════════════════════════════════════════════════
+   PLAYER CONTROLS
+   ══════════════════════════════════════════════════════════════ */
 function wirePlayerControls(){
   var pp = $('ctrlPlayPause');
   var mute = $('ctrlMute');
@@ -798,14 +918,6 @@ function wirePlayerControls(){
       else if (wrap.webkitRequestFullscreen) wrap.webkitRequestFullscreen();
     });
   }
-
-  var tapBtn = $('tapBtn');
-  if (tapBtn){
-    tapBtn.addEventListener('click', function(){
-      $('tapToPlay').classList.remove('show');
-      loadPlayerForPhase();
-    });
-  }
 }
 
 function setCurtain(html){
@@ -820,14 +932,15 @@ function hideCurtain(){
   if (c) c.classList.remove('show');
 }
 
-/* ── PHASE UI ── */
+/* ══════════════════════════════════════════════════════════════
+   PHASE UI
+   ══════════════════════════════════════════════════════════════ */
 function renderPhaseUI(){
-  var phase = computePhase();
-  currentPhase = phase;
+  currentPhase = computePhase();
 
   var liveTag = $('playerLiveTag');
   var crumbLive = $('crumbLivePill');
-  if (phase === 'live'){
+  if (currentPhase === 'live'){
     if (liveTag) liveTag.style.display = 'inline-flex';
     if (crumbLive) crumbLive.style.display = 'inline-flex';
   } else {
@@ -836,78 +949,102 @@ function renderPhaseUI(){
   }
 }
 
-function loadPlayerForPhase(){
-  var phase = computePhase();
+function applyPhaseUI(){
+  var overlay = $('countdownOverlay');
+  if (!overlay) return;
+
+  var phase = currentPhase;
+
   if (phase === 'upcoming'){
-    startCountdownUI();
-    return;
-  }
-  if (phase === 'ended'){
+    overlay.classList.add('show');
+    overlay.classList.remove('fading');
+    /* Player loaded but hidden behind the countdown — user can't interact yet */
+    var iframe = $('ytPlayerHost');
+    if (iframe) iframe.style.pointerEvents = 'none';
+  } else if (phase === 'ended'){
+    overlay.classList.remove('show');
     setCurtain(
       '<div class="ico"><i data-lucide="square"></i></div>' +
       '<h3>Stream ended</h3>' +
       '<p>The replay window has closed.</p>'
     );
-    return;
-  }
-  loadPlayer();
-}
-
-function startCountdownUI(){
-  var t = getTiming();
-  if (!t.valid){ setCurtain('<div class="ico"><i data-lucide="clock"></i></div><h3>Waiting</h3><p>Stream time not set.</p>'); return; }
-
-  setCurtain(
-    '<div class="countdown-block">' +
-      '<div class="countdown-label">Stream starts in</div>' +
-      '<div class="countdown-digits" id="cd">' +
-        '<span class="cd-num" id="cdH">00</span>' +
-        '<span class="cd-sep">:</span>' +
-        '<span class="cd-num" id="cdM">00</span>' +
-        '<span class="cd-sep">:</span>' +
-        '<span class="cd-num" id="cdS">00</span>' +
-      '</div>' +
-      '<p style="color:rgba(255,255,255,.65);font-size:13px;margin:0;">Starts '+esc(formatDate(streamData.startDate, streamData.startTime))+'</p>' +
-    '</div>'
-  );
-
-  clearInterval(countdownTimer);
-  countdownTimer = setInterval(function(){
-    var diff = t.startMs - Date.now();
-    if (diff <= 0){
-      clearInterval(countdownTimer);
-      renderPhaseUI();
-      loadPlayerForPhase();
-      return;
-    }
-    var s = Math.floor(diff / 1000);
-    var days = Math.floor(s / 86400);
-    var h = Math.floor((s % 86400) / 3600);
-    var m = Math.floor((s % 3600) / 60);
-    var sec = s % 60;
-    var hEl = $('cdH'), mEl = $('cdM'), sEl = $('cdS');
-    if (!hEl) return;
-    if (days > 0){
-      hEl.textContent = String(days).padStart(2,'0');
-      mEl.textContent = String(h).padStart(2,'0');
-      sEl.textContent = String(m).padStart(2,'0');
+  } else {
+    /* live or replay — hide countdown, show player */
+    if (overlay.classList.contains('show')){
+      overlay.classList.add('fading');
+      setTimeout(function(){ overlay.classList.remove('show'); overlay.classList.remove('fading'); }, 600);
     } else {
-      hEl.textContent = String(h).padStart(2,'0');
-      mEl.textContent = String(m).padStart(2,'0');
-      sEl.textContent = String(sec).padStart(2,'0');
+      overlay.classList.remove('show');
     }
-  }, 1000);
+    var iframe2 = $('ytPlayerHost');
+    if (iframe2) iframe2.style.pointerEvents = '';
+  }
 }
 
-/* ── PLAYER LOAD ── */
+/* ══════════════════════════════════════════════════════════════
+   COUNTDOWN TICKER
+   ══════════════════════════════════════════════════════════════ */
+function startCountdownTicker(){
+  clearInterval(countdownTimer);
+  clearInterval(phaseTickTimer);
+
+  updateCountdownDigits();
+
+  /* Tick every second for the countdown display */
+  countdownTimer = setInterval(updateCountdownDigits, 1000);
+
+  /* Every 15s, re-check phase (in case we cross a boundary) */
+  phaseTickTimer = setInterval(function(){
+    var newPhase = computePhase();
+    if (newPhase !== currentPhase){
+      currentPhase = newPhase;
+      renderPhaseUI();
+      applyPhaseUI();
+      if (newPhase === 'live') setupMidrollTimer();
+    }
+  }, 15000);
+}
+
+function updateCountdownDigits(){
+  var t = getTiming();
+  if (!t.valid) return;
+  var diff = t.startMs - Date.now();
+  if (diff < 0) diff = 0;
+
+  var s = Math.floor(diff / 1000);
+  var days = Math.floor(s / 86400);
+  var hours = Math.floor((s % 86400) / 3600);
+  var mins = Math.floor((s % 3600) / 60);
+  var secs = s % 60;
+
+  var dEl = $('cdDays'), hEl = $('cdHours'), mEl = $('cdMins'), sEl = $('cdSecs');
+  if (dEl) dEl.textContent = String(days).padStart(2,'0');
+  if (hEl) hEl.textContent = String(hours).padStart(2,'0');
+  if (mEl) mEl.textContent = String(mins).padStart(2,'0');
+  if (sEl) sEl.textContent = String(secs).padStart(2,'0');
+
+  var cdDate = $('cdDate');
+  if (cdDate) cdDate.innerHTML = 'Starts <strong>' + esc(formatDate(streamData.startDate, streamData.startTime)) + '</strong>';
+
+  /* When it hits zero, transition */
+  if (diff <= 0 && currentPhase === 'upcoming'){
+    currentPhase = computePhase();
+    renderPhaseUI();
+    applyPhaseUI();
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   LOAD PLAYER (always)
+   ══════════════════════════════════════════════════════════════ */
 function loadPlayer(){
   var host = $('ytPlayerHost');
   if (!host) return;
   host.innerHTML = '';
-  hideCurtain();
 
   var platform = streamData.streamPlatform || 'youtube';
   var url = (streamData.streamUrl || '').trim();
+
   if (!url){
     setCurtain('<div class="ico"><i data-lucide="alert-triangle"></i></div><h3>Stream URL missing</h3><p>The host has not set a stream URL yet.</p>');
     return;
@@ -916,10 +1053,12 @@ function loadPlayer(){
   if (platform === 'youtube'){
     var vid = extractYouTubeId(url);
     if (!vid){
-      setCurtain('<div class="ico"><i data-lucide="alert-triangle"></i></div><h3>Invalid YouTube URL</h3><p>Could not extract a video ID.</p>');
+      setCurtain('<div class="ico"><i data-lucide="alert-triangle"></i></div><h3>Invalid YouTube URL</h3><p>Could not extract a video ID from: ' + esc(url) + '</p>');
       return;
     }
+    pendingVideoId = vid;
     host.innerHTML = '<div id="ytPlayer"></div>';
+
     if (window.YT && window.YT.Player){
       createYTPlayer(vid);
     } else {
@@ -950,16 +1089,7 @@ function loadPlayer(){
     iframe.style.height = '100%';
     iframe.style.border = '0';
     host.appendChild(iframe);
-
-    var tap = $('tapToPlay');
-    if (tap){
-      var sub = tap.querySelector('.ttp-sub');
-      if (sub) sub.textContent = platformLabel(platform) + ' needs a tap to start';
-      tap.classList.add('show');
-    }
   }
-
-  setupMidrollTimer();
 }
 
 function createYTPlayer(videoId){
@@ -977,7 +1107,14 @@ function createYTPlayer(videoId){
       color: 'white'
     },
     events: {
-      onReady: function(){ hideCurtain(); },
+      onReady: function(){
+        ytPlayerReady = true;
+        hideCurtain();
+        /* If live now, play immediately */
+        if (currentPhase === 'live'){
+          try { ytPlayer.playVideo(); } catch(e){}
+        }
+      },
       onStateChange: function(e){
         var pp = $('ctrlPlayPause');
         if (pp) pp.innerHTML = icon(e.data === 1 ? 'pause' : 'play');
@@ -987,6 +1124,9 @@ function createYTPlayer(videoId){
   });
 }
 
+/* ══════════════════════════════════════════════════════════════
+   MIDROLL TIMER
+   ══════════════════════════════════════════════════════════════ */
 function setupMidrollTimer(){
   clearTimeout(adState.midrollTimerId);
   if (!adSettings.midrollEnabled) return;
@@ -1007,7 +1147,9 @@ function setupMidrollTimer(){
   }, delay);
 }
 
-/* ── ADS ── */
+/* ══════════════════════════════════════════════════════════════
+   ADS
+   ══════════════════════════════════════════════════════════════ */
 function loadAdsAndMaybePlay(){
   var settingsPromise = db.collection(SETTINGS).doc(SETTINGS_DOC).get().then(function(snap){
     if (snap.exists) adSettings = Object.assign({}, AD_DEFAULTS, snap.data() || {});
@@ -1035,6 +1177,7 @@ function loadAdsAndMaybePlay(){
   }).catch(function(){});
 
   Promise.all([settingsPromise, poolPromise]).then(function(){
+    /* Only fire pre-roll if stream is live right now */
     if (currentPhase === 'live'){
       if (adSettings.prerollEnabled && streamData.prerollEnabled !== false && !adState.firedPreroll){
         adState.firedPreroll = true;
@@ -1217,7 +1360,9 @@ function buildHouseAd(){
   return wrap;
 }
 
-/* ── LOAD STREAM ── */
+/* ══════════════════════════════════════════════════════════════
+   LOAD STREAM
+   ══════════════════════════════════════════════════════════════ */
 function load(){
   streamId = getParam('id');
   if (!streamId){ renderError('No stream specified', 'This page needs a stream ID.'); return; }
@@ -1255,14 +1400,9 @@ function load(){
         : Promise.resolve();
 
       Promise.all([chPromise, sibPromise]).then(function(){
+        /* Determine phase first, then render */
+        currentPhase = computePhase();
         renderPage();
-        setInterval(function(){
-          var newPhase = computePhase();
-          if (newPhase !== currentPhase){
-            currentPhase = newPhase;
-            renderPhaseUI();
-          }
-        }, 30000);
       });
     })
     .catch(function(err){
@@ -1271,7 +1411,9 @@ function load(){
     });
 }
 
-/* ── BOOT ── */
+/* ══════════════════════════════════════════════════════════════
+   BOOT
+   ══════════════════════════════════════════════════════════════ */
 document.addEventListener('DOMContentLoaded', function(){
   refreshIcons();
   $('signInBtn').addEventListener('click', function(){ window.location.href = 'index.html#signin'; });
@@ -1287,6 +1429,7 @@ document.addEventListener('DOMContentLoaded', function(){
 
 window.addEventListener('beforeunload', function(){
   if (countdownTimer) clearInterval(countdownTimer);
+  if (phaseTickTimer) clearInterval(phaseTickTimer);
   clearTimeout(adState.midrollTimerId);
   clearInterval(adState.countdownTimerId);
   clearTimeout(adState.skipTimerId);
@@ -1294,4 +1437,4 @@ window.addEventListener('beforeunload', function(){
 })();
 </script>
 </body>
-</html>
+  </html>
