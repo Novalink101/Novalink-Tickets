@@ -11,8 +11,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-check-compat.js"></script>
-<script src="app-check.js"></script>
 
 <style>
 :root{
@@ -867,13 +865,13 @@ var firebaseConfig = {
   appId: "1:602780280140:web:5d9ff2351e5a7d5e66dbe9"
 };
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+try { firebase.auth().setPersistence(firebase.auth.Auth.Persistence.LOCAL); } catch(e){ console.warn('auth persistence:', e); }
 var db   = firebase.firestore();
 var auth = firebase.auth();
 var EVENTS_COLLECTION  = "events";
 var TRIPS_COLLECTION   = "trips";
 var STREAMS_COLLECTION = "streams";
 
-/* ─── Admin emails — both Novalink admins ─── */
 var ADMIN_EMAILS = [
   "nylnathan340@gmail.com",
   "customerservicesnovalink@gmail.com"
@@ -914,7 +912,6 @@ function applyAuthState(user){
   currentUser = user;
   isAdmin = !!(user && ADMIN_EMAILS.map(function(e){return e.toLowerCase();}).indexOf(String(user.email).toLowerCase()) !== -1);
 
-  // Grab admin-only buttons up front (may be null on some pages)
   var heroGoLive     = $("heroGoLive");
   var ddCreateStream = $("ddCreateStream");
   var manageAdsBtn   = $("ddManageAds");
@@ -930,12 +927,10 @@ function applyAuthState(user){
     $("adminBadge").style.display = isAdmin ? "inline-block" : "none";
     $("ddAdminBadge").style.display = isAdmin ? "inline-block" : "none";
 
-    // Admin-only buttons — "Manage ads" + "Go live" (Stream Studio)
     if (manageAdsBtn)   manageAdsBtn.style.display   = isAdmin ? "flex"        : "none";
     if (ddCreateStream) ddCreateStream.style.display = isAdmin ? "flex"        : "none";
     if (heroGoLive)     heroGoLive.style.display     = isAdmin ? "inline-flex" : "none";
 
-    // Bootstrap the user doc if it's missing — required by the 8-stream cap rules
     var userRef = db.collection("users").doc(user.uid);
     userRef.get().then(function(snap){
       if (!snap.exists) {
@@ -962,7 +957,6 @@ function applyAuthState(user){
     $("adminBadge").style.display = "none";
     $("ddAdminBadge").style.display = "none";
 
-    // Hide all admin-only buttons when signed out
     if (manageAdsBtn)   manageAdsBtn.style.display   = "none";
     if (ddCreateStream) ddCreateStream.style.display = "none";
     if (heroGoLive)     heroGoLive.style.display     = "none";
@@ -972,7 +966,6 @@ function applyAuthState(user){
   refreshIcons();
 }
 
-/* ─────────────── Shared card helpers ─────────────── */
 function formatEventCost(e){
   if(typeof e.cost === "number"){
     if(e.cost <= 0) return "Free";
@@ -988,7 +981,6 @@ function canDeleteEvent(e){
   return e.ownerUid && e.ownerUid === currentUser.uid;
 }
 
-/* ─────────────── Event-specific helpers ─────────────── */
 function eventAttendeeCount(e){
   if(typeof e.totalAttendees === "number") return e.totalAttendees;
   if(e.venue && typeof e.venue.totalAttendees === "number") return e.venue.totalAttendees;
@@ -1007,7 +999,6 @@ function eventDateLabel(e){
   return dateStr;
 }
 
-/* ─────────────── Trip-specific helpers ─────────────── */
 function tripName(t){
   return t.tripName || t.eventName || t.name || "Untitled Trip";
 }
@@ -1048,7 +1039,6 @@ function tripDateSpan(t){
   return prettyDate(dep) + " → " + prettyDate(ret);
 }
 
-/* ─────────────── Stream-specific helpers ─────────────── */
 function streamTitleOf(s){
   return s.streamTitle || s.eventName || "Untitled Stream";
 }
@@ -1082,7 +1072,6 @@ function streamStatus(s){
   return "past";
 }
 
-/* ─────────────── Events listener ─────────────── */
 function attachEventsListener(){
   var container = $("eventsScroll");
   if (!container) return;
@@ -1175,7 +1164,6 @@ function renderFeaturedEvents(events){
   refreshIcons();
 }
 
-/* ─────────────── Trips listener ─────────────── */
 function attachTripsListener(){
   var container = $("tripsScroll");
   if (!container) return;
@@ -1281,7 +1269,6 @@ function renderFeaturedTrips(trips){
   refreshIcons();
 }
 
-/* ─────────────── Streams listener ─────────────── */
 function attachStreamsListener(){
   var container = $("streamsScroll");
   if (!container) return;
@@ -1395,7 +1382,6 @@ function renderFeaturedStreams(streams){
   refreshIcons();
 }
 
-/* ─────────────── Shared delete-button wiring ─────────────── */
 function bindCardDeleteButtons(container, collectionName, label){
   container.querySelectorAll(".event-card-delete").forEach(function(btn){
     btn.addEventListener("click", function(ev){
@@ -1418,7 +1404,6 @@ function bindCardDeleteButtons(container, collectionName, label){
   });
 }
 
-/* ─────────────── Auth modal ─────────────── */
 $("signInBtn").addEventListener("click", function(){ $("authModal").classList.add("open"); document.body.style.overflow = "hidden"; });
 $("authClose").addEventListener("click", function(){ $("authModal").classList.remove("open"); document.body.style.overflow = ""; });
 $("authModal").addEventListener("click", function(e){ if(e.target === this){ this.classList.remove("open"); document.body.style.overflow = ""; } });
@@ -1491,7 +1476,6 @@ $("authForm").addEventListener("submit", function(e){
   }
 });
 
-/* Mobile-safe Google sign-in — redirect on mobile, popup on desktop */
 $("googleBtn").addEventListener("click", function(){
   var provider = new firebase.auth.GoogleAuthProvider();
   var isMobile = /Android|iPhone|iPad|iPod|Mobile/i.test(navigator.userAgent);
@@ -1524,7 +1508,6 @@ $("googleBtn").addEventListener("click", function(){
     });
 });
 
-/* User dropdown */
 $("userMenuBtn").addEventListener("click", function(e){
   e.stopPropagation();
   var open = $("userDropdown").classList.toggle("open");
@@ -1545,7 +1528,6 @@ $("ddCreateEvent").addEventListener("click", function(){ window.location.href = 
 $("ddMyCards").addEventListener("click", function(){ window.location.href = "my-cards.html"; });
 $("ddScanner").addEventListener("click", function(){ window.location.href = "scanner.html"; });
 
-// Admin-only — these buttons are hidden for non-admins but we still guard the click
 if ($("ddCreateStream")) {
   $("ddCreateStream").addEventListener("click", function(){
     if (!isAdmin) { showToast("Stream Studio is restricted to admins.", "error"); return; }
@@ -1559,7 +1541,6 @@ if ($("ddManageAds")) {
   });
 }
 
-/* Delete account */
 $("ddDeleteAccount").addEventListener("click", function(){
   $("deleteAccountModal").classList.add("open");
   document.body.style.overflow = "hidden";
@@ -1591,7 +1572,7 @@ $("deleteAccountConfirmBtn").addEventListener("click", function(){
       snap.forEach(function(doc){ batch.delete(doc.ref); });
       if (snap.size > 0) return batch.commit();
     })
-    .catch(function(){ /* collection may not exist — non-fatal */ });
+    .catch(function(){ });
 
   var wipeTrips = db.collection(TRIPS_COLLECTION).where("ownerUid", "==", uid).get()
     .then(function(snap){
@@ -1599,7 +1580,7 @@ $("deleteAccountConfirmBtn").addEventListener("click", function(){
       snap.forEach(function(doc){ batch.delete(doc.ref); });
       if (snap.size > 0) return batch.commit();
     })
-    .catch(function(){ /* collection may not exist — non-fatal */ });
+    .catch(function(){ });
 
   var wipeStreams = db.collection(STREAMS_COLLECTION).where("ownerUid", "==", uid).get()
     .then(function(snap){
@@ -1607,7 +1588,7 @@ $("deleteAccountConfirmBtn").addEventListener("click", function(){
       snap.forEach(function(doc){ batch.delete(doc.ref); });
       if (snap.size > 0) return batch.commit();
     })
-    .catch(function(){ /* collection may not exist — non-fatal */ });
+    .catch(function(){ });
 
   Promise.all([wipeEvents, wipeTrips, wipeStreams])
     .then(function(){ return currentUser.delete(); })
@@ -1621,7 +1602,6 @@ $("deleteAccountConfirmBtn").addEventListener("click", function(){
     });
 });
 
-/* Scroll reveal */
 function initScrollReveal() {
   var reveals = document.querySelectorAll(".reveal");
   if (!reveals.length || !("IntersectionObserver" in window)) { reveals.forEach(function(el){ el.classList.add("active"); }); return; }
@@ -1685,7 +1665,6 @@ document.addEventListener("DOMContentLoaded", function(){
   initHeaderScroll();
   refreshIcons();
 
-  /* Handle Google redirect return */
   auth.getRedirectResult().then(function(result){
     if (result && result.user) {
       showToast("Signed in with Google", "success");
@@ -1719,4 +1698,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-  </html>
+          </html>
