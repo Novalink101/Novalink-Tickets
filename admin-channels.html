@@ -1,0 +1,1124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+<meta name="theme-color" content="#0a0f14" />
+<title>Manage Channels · Novalink Admin</title>
+<script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-storage-compat.js"></script>
+<style>
+:root{
+  --cy:#00FFFF;--cy2:#00CCCC;--cy3:#009999;--cyf:#e6ffff;
+  --bg:#f6f8fb;--sf:#ffffff;--sf2:#f1f4f8;
+  --bd:#e4e9f0;--bd2:#d3dbe5;
+  --tx:#0a0f14;--tx2:#2b3644;--mut:#6b7787;
+  --rd:14px;--font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --dg:#dc2626;--dgf:#fef2f2;--sv:#059669;--svf:#ecfdf5;--nv:#1e2f4d;
+  --ink:#0a0f14;--ink2:#111827;
+  --ease:cubic-bezier(0.25,0.8,0.25,1);
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{-webkit-text-size-adjust:100%}
+body{font-family:var(--font);background:var(--bg);color:var(--tx);line-height:1.6;min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
+.container{max-width:1480px;margin:0 auto;padding:0 20px;width:100%}
+h1,h2,h3{line-height:1.15;font-weight:700}
+a{color:inherit;text-decoration:none}
+button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation}
+input,select,textarea{font-family:inherit;font-size:14px}
+
+/* HEADER */
+.site-header{background:var(--sf);border-bottom:1px solid var(--bd);padding:12px 0;position:sticky;top:0;z-index:40}
+.hdr{max-width:1480px;margin:0 auto;padding:0 20px;display:flex;align-items:center;gap:16px;justify-content:space-between;flex-wrap:wrap}
+.logo{display:inline-flex;align-items:center;gap:11px;flex-shrink:0;color:var(--nv)}
+.logo svg{width:26px;height:32px;display:block}
+.logo b{font-weight:800;font-size:1.15rem;letter-spacing:-.01em}
+.admin-tag{display:inline-flex;align-items:center;gap:6px;background:var(--ink);color:var(--cy);font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;padding:6px 11px;border-radius:99px;margin-left:8px}
+.admin-tag i{width:12px;height:12px}
+.hdr-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap}
+.hdr-btn{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border-radius:99px;background:var(--sf2);border:1px solid var(--bd);color:var(--tx);font-size:12.5px;font-weight:800;transition:.15s;white-space:nowrap}
+.hdr-btn:hover{border-color:var(--cy);background:#fff;box-shadow:0 0 0 3px rgba(0,255,255,.14)}
+.hdr-btn i{width:14px;height:14px}
+
+/* HERO */
+.hero{background:
+  radial-gradient(circle at 78% 30%, rgba(0,255,255,.14), transparent 55%),
+  radial-gradient(circle at 12% 82%, rgba(0,255,255,.08), transparent 45%),
+  linear-gradient(160deg,#0a0f14 0%,#0f172a 45%,#0a0f14 100%);
+  color:#fff;padding:40px 0 42px;position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;inset:0;background-image:radial-gradient(circle at 1px 1px, rgba(255,255,255,.035) 1px, transparent 0);background-size:24px 24px;pointer-events:none}
+.hero-in{max-width:1480px;margin:0 auto;padding:0 20px;position:relative;z-index:1}
+.hero-tag{display:inline-flex;align-items:center;gap:9px;border:1px solid rgba(0,255,255,.42);background:rgba(0,255,255,.1);color:var(--cy);font-size:11px;font-weight:900;letter-spacing:.11em;text-transform:uppercase;padding:8px 15px;border-radius:99px;margin-bottom:16px}
+.hero-tag i{width:13px;height:13px}
+.hero h1{font-size:clamp(1.7rem,3.6vw,2.5rem);font-weight:900;line-height:1.1;letter-spacing:-.02em;margin-bottom:10px;max-width:720px}
+.hero h1 span{color:var(--cy)}
+.hero p{color:#94a3b8;font-size:14.5px;font-weight:500;max-width:640px;line-height:1.6}
+
+/* MAIN */
+main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:24px 20px 64px}
+@media (max-width:560px){main{padding:16px 14px 44px}}
+
+.split{display:grid;grid-template-columns:minmax(0,1fr);gap:22px;align-items:start}
+@media (min-width:1024px){.split{grid-template-columns:minmax(0,1.5fr) minmax(0,1fr)}}
+.col{min-width:0}
+.col-right{display:flex;flex-direction:column;gap:16px}
+@media (min-width:1024px){.col-right{position:sticky;top:88px}}
+
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rd);padding:20px;box-shadow:0 4px 14px rgba(15,23,42,.05)}
+.card + .card{margin-top:16px}
+.card-title{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:var(--cy3);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.card-title i{width:15px;height:15px}
+.card-title .count{margin-left:auto;color:var(--mut);font-weight:600;text-transform:none;letter-spacing:0;font-size:12px}
+
+/* EMPTY */
+.empty-list{text-align:center;padding:44px 20px;color:var(--mut)}
+.empty-list i{width:40px;height:40px;color:var(--bd2);margin:0 auto 10px;display:block}
+.empty-list h3{font-size:14.5px;font-weight:800;color:var(--tx2);margin-bottom:4px}
+.empty-list p{font-size:12.5px;line-height:1.55}
+
+/* CHANNEL LIST */
+.ch-list{display:flex;flex-direction:column;gap:12px}
+.ch-item{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:14px;display:grid;grid-template-columns:64px 1fr auto;gap:14px;align-items:center;transition:.15s}
+.ch-item:hover{border-color:var(--cy);box-shadow:0 6px 20px rgba(6,182,212,.08)}
+.ch-logo{width:64px;height:64px;border-radius:14px;overflow:hidden;background:linear-gradient(135deg,#0a0f14,#0f172a);display:flex;align-items:center;justify-content:center;flex-shrink:0;position:relative;border:1px solid var(--bd)}
+.ch-logo img{width:100%;height:100%;object-fit:cover;display:block}
+.ch-logo span{font-size:22px;font-weight:900;color:var(--cy);font-family:var(--mono)}
+.ch-info{min-width:0}
+.ch-name{font-size:14.5px;font-weight:800;color:var(--tx);word-break:break-word;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:2px}
+.ch-cat{font-size:9.5px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:99px;background:var(--cyf);color:var(--cy3);border:1px solid var(--cy)}
+.ch-meta{font-size:11.5px;color:var(--mut);display:flex;gap:12px;flex-wrap:wrap;font-weight:500}
+.ch-meta strong{color:var(--tx2);font-weight:800}
+.ch-meta .stat{font-family:var(--mono);font-weight:700;color:var(--tx2)}
+.ch-live{color:#dc2626;font-weight:800;font-family:var(--mono)}
+.ch-actions{display:flex;gap:6px;flex-shrink:0;flex-wrap:wrap}
+@media (max-width:640px){
+  .ch-item{grid-template-columns:56px 1fr;gap:10px}
+  .ch-logo{width:56px;height:56px}
+  .ch-actions{grid-column:1/-1;justify-content:flex-end;padding-top:6px;border-top:1px dashed var(--bd)}
+}
+
+/* FORM */
+.field{margin-bottom:14px}
+.field label{display:block;font-size:10.5px;font-weight:900;color:var(--tx2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em}
+.field input,.field select,.field textarea{width:100%;padding:11px 14px;background:var(--sf2);border:1px solid var(--bd2);border-radius:10px;color:var(--tx);font-size:14px;font-family:inherit;transition:border-color .15s,box-shadow .15s;min-width:0}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--cy);background:#fff;box-shadow:0 0 0 3px rgba(0,255,255,.15)}
+.field textarea{resize:vertical;min-height:70px;line-height:1.6;padding:12px 14px}
+.field select{appearance:none;-webkit-appearance:none;padding-right:38px;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7787' stroke-width='3'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:12px;cursor:pointer}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:560px){.field-row{grid-template-columns:1fr}}
+.hint{font-size:11px;color:var(--mut);margin-top:5px;line-height:1.5;font-style:italic;word-break:break-word}
+
+/* IMAGE UPLOAD */
+.upload-preview{
+  aspect-ratio:1/1;max-width:200px;
+  border-radius:14px;border:1.5px dashed var(--bd2);
+  background:var(--sf2);overflow:hidden;position:relative;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:.15s;margin:0 auto;
+}
+.upload-preview:hover{border-color:var(--cy);background:#fff;box-shadow:0 0 0 3px rgba(0,255,255,.12)}
+.upload-preview.has-image{border-style:solid;border-color:var(--bd);background:#000}
+.upload-preview img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.upload-preview .placeholder{display:flex;flex-direction:column;align-items:center;gap:6px;color:#94a3b8;text-align:center;padding:14px 10px;pointer-events:none}
+.upload-preview .placeholder i{width:28px;height:28px;stroke-width:1.75;opacity:.7}
+.upload-preview .placeholder .main{font-size:10.5px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}
+.upload-preview .placeholder .sub{font-size:10.5px;font-weight:500;color:var(--mut);line-height:1.4;margin-top:2px}
+
+.banner-preview{
+  aspect-ratio:21/9;
+  border-radius:14px;border:1.5px dashed var(--bd2);
+  background:var(--sf2);overflow:hidden;position:relative;
+  display:flex;align-items:center;justify-content:center;
+  cursor:pointer;transition:.15s;width:100%;
+}
+.banner-preview:hover{border-color:var(--cy);background:#fff;box-shadow:0 0 0 3px rgba(0,255,255,.12)}
+.banner-preview.has-image{border-style:solid;border-color:var(--bd);background:#000}
+.banner-preview img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.banner-preview .placeholder{display:flex;flex-direction:column;align-items:center;gap:6px;color:#94a3b8;text-align:center;padding:14px 10px;pointer-events:none}
+.banner-preview .placeholder i{width:26px;height:26px;stroke-width:1.75;opacity:.7}
+.banner-preview .placeholder .main{font-size:10.5px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}
+.banner-preview .placeholder .sub{font-size:10.5px;font-weight:500;color:var(--mut);line-height:1.4;margin-top:2px}
+
+.upload-actions{margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.upload-actions button{font-size:11px;font-weight:800;padding:7px 12px;border-radius:8px;border:1px solid var(--bd);background:var(--sf2);color:var(--mut);transition:.15s;display:inline-flex;align-items:center;gap:5px}
+.upload-actions button:hover:not(:disabled){border-color:var(--cy);color:var(--cy3);background:#fff}
+.upload-actions button:disabled{opacity:.5;cursor:not-allowed}
+.upload-actions button.primary{background:var(--cy);color:#04161c;border-color:var(--cy);font-weight:900}
+.upload-actions button.primary:hover:not(:disabled){background:var(--cy2);transform:translateY(-1px)}
+.upload-actions button i{width:12px;height:12px}
+
+.upload-meta{font-size:10.5px;color:var(--mut);font-weight:600;text-align:center;margin-top:8px;font-family:var(--mono)}
+.upload-error{background:var(--dgf);border:1px solid #fecaca;color:#991b1b;font-size:11px;font-weight:700;padding:9px 12px;border-radius:9px;margin-top:8px;line-height:1.5;display:none}
+.upload-error.show{display:block}
+.upload-progress{margin-top:8px;height:6px;border-radius:99px;background:var(--sf2);overflow:hidden;display:none}
+.upload-progress.show{display:block}
+.upload-progress > i{display:block;height:100%;background:linear-gradient(90deg,var(--cy),var(--cy2));width:0%;transition:width .2s ease}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:11px 17px;border-radius:11px;font-weight:800;font-size:13px;border:1px solid transparent;transition:.15s;white-space:nowrap;font-family:inherit;text-decoration:none;cursor:pointer}
+.btn i{width:15px;height:15px}
+.btn-accent{background:var(--cy);color:#04161c}
+.btn-accent:hover{transform:translateY(-1px);box-shadow:0 6px 18px rgba(0,255,255,.35)}
+.btn-ghost{background:var(--sf);color:var(--tx2);border-color:var(--bd2)}
+.btn-ghost:hover{border-color:var(--cy);color:var(--cy3)}
+.btn-danger{background:var(--dgf);color:var(--dg);border-color:#fecaca}
+.btn-danger:hover{background:var(--dg);color:#fff;border-color:var(--dg)}
+.btn-sm{padding:8px 12px;font-size:12px;border-radius:9px}
+.btn-block{width:100%}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important}
+
+/* TOAST */
+#toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,18px);background:var(--ink);color:var(--cy);font-size:13px;font-weight:800;padding:13px 22px;border-radius:99px;box-shadow:0 14px 34px rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:.22s;z-index:200;max-width:90vw;text-align:center;display:flex;align-items:center;gap:9px}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#toast svg{width:15px;height:15px;flex-shrink:0}
+#toast.success{background:#065f46;color:#d1fae5}
+#toast.error{background:#991b1b;color:#fef2f2}
+
+/* ACCESS SCREEN */
+.access-screen{max-width:520px;margin:80px auto;background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:44px 32px;text-align:center;box-shadow:0 8px 24px rgba(15,23,42,.06)}
+.access-screen .ico{width:56px;height:56px;border-radius:16px;background:var(--dgf);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;color:var(--dg)}
+.access-screen .ico i{width:28px;height:28px}
+.access-screen h2{font-size:1.3rem;font-weight:900;color:var(--nv);margin-bottom:8px}
+.access-screen p{font-size:13.5px;color:var(--mut);margin-bottom:22px;line-height:1.6}
+.access-screen .actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.access-screen.loading .ico{background:var(--cyf);color:var(--cy3)}
+.access-screen.loading .ico i{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(10,15,20,.6);backdrop-filter:blur(8px);display:none;align-items:flex-start;justify-content:center;z-index:100;padding:24px 20px;overflow-y:auto}
+.modal-overlay.open{display:flex}
+.modal{background:var(--sf);border:1px solid var(--bd);border-radius:18px;max-width:480px;width:100%;padding:28px 24px;position:relative;margin:auto;box-shadow:0 24px 60px rgba(10,15,20,.25)}
+.modal h3{font-size:1.15rem;margin-bottom:8px;text-align:center}
+.modal p.sub{color:var(--mut);font-size:13.5px;margin-bottom:20px;text-align:center;line-height:1.5}
+.modal .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.modal .actions button{flex:1;min-width:120px}
+
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:6px;border:2px solid var(--bg)}
+::-webkit-scrollbar-track{background:transparent}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="hdr">
+    <a href="index.html" class="logo" aria-label="Novalink home">
+      <svg viewBox="0 0 60 74"><path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/><path fill="#00FFFF" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/></svg>
+      <b>NOVALINK</b>
+      <span class="admin-tag"><i data-lucide="shield-check"></i> Admin</span>
+    </a>
+    <div class="hdr-actions">
+      <a href="streams.html" class="hdr-btn"><i data-lucide="radio"></i><span>All streams</span></a>
+      <a href="create-streams.html" class="hdr-btn"><i data-lucide="plus-circle"></i><span>Create stream</span></a>
+      <a href="admin-ads.html" class="hdr-btn"><i data-lucide="megaphone"></i><span>Ads</span></a>
+      <a href="index.html" class="hdr-btn"><i data-lucide="home"></i><span>Home</span></a>
+      <button class="hdr-btn" id="signOutBtn" type="button"><i data-lucide="log-out"></i><span>Sign out</span></button>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-in">
+    <span class="hero-tag"><i data-lucide="tv"></i>Channel Manager</span>
+    <h1>Build your <span>channels</span>. Rule the airwaves.</h1>
+    <p>Create unlimited channels — Novasports, Concerts, News, anything. Each channel holds up to 8 streams. Viewers swipe between them in a Netflix-style pager.</p>
+  </div>
+</section>
+
+<main>
+
+  <div id="accessGate">
+    <div class="access-screen loading" id="accessLoading">
+      <div class="ico"><i data-lucide="loader-2"></i></div>
+      <h2>Checking access…</h2>
+      <p>Verifying your admin account.</p>
+    </div>
+
+    <div class="access-screen" id="accessDenied" style="display:none">
+      <div class="ico"><i data-lucide="shield-alert"></i></div>
+      <h2>Admin access only</h2>
+      <p>This page is restricted to Novalink administrators.</p>
+      <div class="actions">
+        <a href="index.html" class="btn btn-accent"><i data-lucide="home"></i> Home</a>
+        <a href="streams.html" class="btn btn-ghost"><i data-lucide="radio"></i> All streams</a>
+      </div>
+    </div>
+
+    <div class="access-screen" id="accessSignedOut" style="display:none">
+      <div class="ico"><i data-lucide="lock"></i></div>
+      <h2>Sign in required</h2>
+      <p>Sign in with your admin account to manage channels.</p>
+      <div class="actions">
+        <a href="index.html#signin" class="btn btn-accent"><i data-lucide="log-in"></i> Sign in</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="adminContent" style="display:none">
+    <div class="split">
+
+      <div class="col">
+        <div class="card">
+          <div class="card-title">
+            <i data-lucide="list"></i>
+            Your channels
+            <span class="count" id="chCount">0 channels</span>
+          </div>
+          <div class="ch-list" id="chList">
+            <div class="empty-list">
+              <i data-lucide="tv"></i>
+              <h3>No channels yet</h3>
+              <p>Create your first channel using the form on the right.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-right">
+        <div class="card" id="editorCard">
+          <div class="card-title">
+            <i data-lucide="plus-circle"></i>
+            <span id="editorTitle">Create a new channel</span>
+          </div>
+
+          <div class="field">
+            <label>Channel logo</label>
+            <div class="upload-preview" id="logoPreview" role="button" tabindex="0" aria-label="Upload channel logo">
+              <div class="placeholder">
+                <i data-lucide="image-plus"></i>
+                <span class="main">Add logo</span>
+                <span class="sub">Square · 1:1 · PNG or JPG</span>
+              </div>
+            </div>
+            <input type="file" id="logoFile" accept="image/jpeg,image/png,image/webp" style="display:none" />
+            <div class="upload-actions">
+              <button type="button" id="logoChoose" class="primary"><i data-lucide="upload"></i> Choose</button>
+              <button type="button" id="logoRemove" disabled><i data-lucide="trash-2"></i> Remove</button>
+            </div>
+            <div class="upload-meta" id="logoMeta" style="display:none;"></div>
+            <div class="upload-progress" id="logoProgress"><i></i></div>
+            <div class="upload-error" id="logoError"></div>
+          </div>
+
+          <div class="field">
+            <label>Channel banner (optional)</label>
+            <div class="banner-preview" id="bannerPreview" role="button" tabindex="0" aria-label="Upload channel banner">
+              <div class="placeholder">
+                <i data-lucide="image"></i>
+                <span class="main">Add banner</span>
+                <span class="sub">Wide · 21:9 · Shows at top of channel</span>
+              </div>
+            </div>
+            <input type="file" id="bannerFile" accept="image/jpeg,image/png,image/webp" style="display:none" />
+            <div class="upload-actions">
+              <button type="button" id="bannerChoose" class="primary"><i data-lucide="upload"></i> Choose</button>
+              <button type="button" id="bannerRemove" disabled><i data-lucide="trash-2"></i> Remove</button>
+            </div>
+            <div class="upload-meta" id="bannerMeta" style="display:none;"></div>
+            <div class="upload-progress" id="bannerProgress"><i></i></div>
+            <div class="upload-error" id="bannerError"></div>
+          </div>
+
+          <div class="field">
+            <label for="chName">Channel name</label>
+            <input type="text" id="chName" placeholder="e.g., Novasports" maxlength="40" autocomplete="off" />
+            <p class="hint">Appears on cards, in the swipe pager, and on channel pages.</p>
+          </div>
+
+          <div class="field">
+            <label for="chCategory">Category</label>
+            <select id="chCategory">
+              <option value="">Choose a category…</option>
+              <option value="sports">Sports</option>
+              <option value="concerts">Concerts</option>
+              <option value="entertainment">Entertainment</option>
+              <option value="news">News</option>
+              <option value="music">Music</option>
+              <option value="gaming">Gaming</option>
+              <option value="education">Education</option>
+              <option value="talk">Talk Shows</option>
+              <option value="movies">Movies</option>
+              <option value="business">Business</option>
+              <option value="creative">Creative</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="chTagline">Tagline (optional)</label>
+            <input type="text" id="chTagline" placeholder="e.g., Live sports, all day" maxlength="80" autocomplete="off" />
+          </div>
+
+          <div class="field">
+            <label for="chDescription">Description (optional)</label>
+            <textarea id="chDescription" placeholder="Tell viewers what this channel is about." maxlength="400"></textarea>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="chNumber">Channel number (optional)</label>
+              <input type="number" id="chNumber" placeholder="101" min="1" max="9999" />
+              <p class="hint">DSTV-style channel number.</p>
+            </div>
+            <div class="field">
+              <label for="chOrder">Swipe order</label>
+              <input type="number" id="chOrder" placeholder="1" min="1" max="99" value="1" />
+              <p class="hint">Lower number = appears first.</p>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="chActive">Status</label>
+            <select id="chActive">
+              <option value="true" selected>Active — visible to viewers</option>
+              <option value="false">Hidden — not shown to viewers</option>
+            </select>
+          </div>
+
+          <button type="button" class="btn btn-accent btn-block" id="saveChBtn" style="margin-top:8px;">
+            <i data-lucide="save"></i> <span id="saveChLbl">Create channel</span>
+          </button>
+
+          <button type="button" class="btn btn-ghost btn-block" id="cancelEditBtn" style="margin-top:8px;display:none;">
+            Cancel editing
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</main>
+
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal">
+    <h3>Delete channel?</h3>
+    <p class="sub" id="deleteChannelName">This channel will be permanently removed. Streams linked to it will become unassigned but will not be deleted.</p>
+    <div class="actions">
+      <button type="button" class="btn btn-ghost" id="deleteCancel">Cancel</button>
+      <button type="button" class="btn btn-danger" id="deleteConfirm"><i data-lucide="trash-2"></i> Delete</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ══════════════════════════════════════════════════════════════
+   CONFIG
+   ══════════════════════════════════════════════════════════════ */
+var ADMIN_EMAILS = [
+  "nylnathan340@gmail.com",
+  "customerservicesnovalink@gmail.com"
+];
+
+var CHANNELS = "channels";
+var STREAMS = "streams";
+
+var MAX_LOGO_BYTES = 300 * 1024;   // 300 KB compressed
+var MAX_BANNER_BYTES = 500 * 1024; // 500 KB compressed
+var MAX_SOURCE_BYTES = 15 * 1024 * 1024; // 15 MB original
+
+/* ══════════════════════════════════════════════════════════════
+   FIREBASE
+   ══════════════════════════════════════════════════════════════ */
+var firebaseConfig = {
+  apiKey: "AIzaSyDSnns131jOlBXAqKo6qy7lTW4Rij-1oWU",
+  authDomain: "novalink-864cf.firebaseapp.com",
+  projectId: "novalink-864cf",
+  storageBucket: "novalink-864cf.firebasestorage.app",
+  messagingSenderId: "602780280140",
+  appId: "1:602780280140:web:5d9ff2351e5a7d5e66dbe9"
+};
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+var db = firebase.firestore();
+var auth = firebase.auth();
+var storage = firebase.storage();
+
+/* ══════════════════════════════════════════════════════════════
+   UTILITIES
+   ══════════════════════════════════════════════════════════════ */
+var $ = function(id){ return document.getElementById(id); };
+var esc = function(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); };
+var refreshIcons = function(){ if (window.lucide) lucide.createIcons(); };
+var icon = function(n){ return '<i data-lucide="'+n+'"></i>'; };
+
+function toast(msg, type, ms){
+  type = type || 'info'; ms = ms || 3200;
+  var t = $('toast');
+  var ic = type === 'error' ? 'alert-circle' : (type === 'success' ? 'check-circle' : 'info');
+  t.className = type;
+  t.innerHTML = icon(ic) + '<span>' + esc(msg) + '</span>';
+  refreshIcons();
+  requestAnimationFrame(function(){ t.classList.add('show'); });
+  clearTimeout(toast._t);
+  toast._t = setTimeout(function(){ t.classList.remove('show'); }, ms);
+}
+
+function slugify(s){
+  return String(s || '').toLowerCase().trim()
+    .replace(/[^a-z0-9]+/g,'-')
+    .replace(/^-|-$/g,'')
+    .slice(0,40) || 'channel';
+}
+
+function initials(name){
+  if (!name) return '?';
+  var p = String(name).trim().split(/\s+/);
+  if (p.length >= 2) return (p[0][0]+p[1][0]).toUpperCase();
+  return p[0].slice(0,2).toUpperCase();
+}
+
+function formatBytes(n){
+  if (n < 1024) return n + ' B';
+  if (n < 1024*1024) return (n/1024).toFixed(1) + ' KB';
+  return (n/(1024*1024)).toFixed(2) + ' MB';
+}
+
+function isAdmin(user){
+  if (!user || !user.email) return false;
+  var e = String(user.email).toLowerCase();
+  return ADMIN_EMAILS.some(function(x){ return x.toLowerCase() === e; });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   STATE
+   ══════════════════════════════════════════════════════════════ */
+var currentUser = null;
+var allChannels = [];
+var streamCounts = {};      // channelId -> count
+var liveCounts = {};        // channelId -> live count
+var chUnsub = null;
+var editingChannelId = null;
+var logoDataUrl = null;
+var bannerDataUrl = null;
+var existingLogoUrl = '';
+var existingBannerUrl = '';
+var deleteTargetId = null;
+
+/* ══════════════════════════════════════════════════════════════
+   ACCESS GATE
+   ══════════════════════════════════════════════════════════════ */
+function checkAccess(){
+  var loading = $('accessLoading');
+  var denied = $('accessDenied');
+  var signedOut = $('accessSignedOut');
+  var content = $('adminContent');
+
+  if (!currentUser){
+    loading.style.display = 'none';
+    denied.style.display = 'none';
+    signedOut.style.display = 'block';
+    content.style.display = 'none';
+    return false;
+  }
+  if (!isAdmin(currentUser)){
+    loading.style.display = 'none';
+    denied.style.display = 'block';
+    signedOut.style.display = 'none';
+    content.style.display = 'none';
+    return false;
+  }
+  loading.style.display = 'none';
+  denied.style.display = 'none';
+  signedOut.style.display = 'none';
+  content.style.display = 'block';
+  return true;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   IMAGE COMPRESSION
+   ══════════════════════════════════════════════════════════════ */
+function readImage(file){
+  return new Promise(function(resolve, reject){
+    var r = new FileReader();
+    r.onload = function(e){
+      var img = new Image();
+      img.onload = function(){ resolve(img); };
+      img.onerror = function(){ reject(new Error('Image decode failed.')); };
+      img.src = e.target.result;
+    };
+    r.onerror = function(){ reject(new Error('Could not read file.')); };
+    r.readAsDataURL(file);
+  });
+}
+
+function compressImage(img, maxDim, quality, square){
+  var w = img.naturalWidth || img.width;
+  var h = img.naturalHeight || img.height;
+
+  if (square){
+    var s = Math.min(w, h);
+    var ox = (w - s) / 2;
+    var oy = (h - s) / 2;
+    var canvas = document.createElement('canvas');
+    var size = Math.min(maxDim, s);
+    canvas.width = size;
+    canvas.height = size;
+    var ctx = canvas.getContext('2d');
+    ctx.fillStyle = '#0a0f14';
+    ctx.fillRect(0, 0, size, size);
+    ctx.drawImage(img, ox, oy, s, s, 0, 0, size, size);
+    return canvas.toDataURL('image/jpeg', quality);
+  }
+
+  if (w > maxDim || h > maxDim){
+    if (w >= h){ h = Math.round(h/w * maxDim); w = maxDim; }
+    else { w = Math.round(w/h * maxDim); h = maxDim; }
+  }
+  var c2 = document.createElement('canvas');
+  c2.width = w; c2.height = h;
+  var ctx2 = c2.getContext('2d');
+  ctx2.fillStyle = '#0a0f14';
+  ctx2.fillRect(0, 0, w, h);
+  ctx2.drawImage(img, 0, 0, w, h);
+  return c2.toDataURL('image/jpeg', quality);
+}
+
+function bytesFromDataUrl(d){
+  if (!d || typeof d !== 'string') return 0;
+  var comma = d.indexOf(',');
+  if (comma < 0) return 0;
+  var b64 = d.slice(comma + 1);
+  var pad = 0;
+  if (b64.endsWith('==')) pad = 2;
+  else if (b64.endsWith('=')) pad = 1;
+  return Math.floor((b64.length * 3) / 4) - pad;
+}
+
+async function fileToLogoDataUrl(file){
+  if (!/^image\/(jpeg|png|webp)$/.test(file.type)) throw new Error('Use JPG, PNG or WebP.');
+  if (file.size > MAX_SOURCE_BYTES) throw new Error('Image too large — max 15 MB.');
+  var img = await readImage(file);
+  var out = compressImage(img, 400, 0.82, true);
+  if (bytesFromDataUrl(out) > MAX_LOGO_BYTES){
+    out = compressImage(img, 320, 0.7, true);
+  }
+  var b = bytesFromDataUrl(out);
+  if (b > MAX_LOGO_BYTES) throw new Error('Logo is ' + formatBytes(b) + ' after compression — try a simpler image.');
+  return out;
+}
+
+async function fileToBannerDataUrl(file){
+  if (!/^image\/(jpeg|png|webp)$/.test(file.type)) throw new Error('Use JPG, PNG or WebP.');
+  if (file.size > MAX_SOURCE_BYTES) throw new Error('Image too large — max 15 MB.');
+  var img = await readImage(file);
+  var out = compressImage(img, 1600, 0.78, false);
+  if (bytesFromDataUrl(out) > MAX_BANNER_BYTES){
+    out = compressImage(img, 1200, 0.65, false);
+  }
+  var b = bytesFromDataUrl(out);
+  if (b > MAX_BANNER_BYTES) throw new Error('Banner is ' + formatBytes(b) + ' after compression — try a simpler image.');
+  return out;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   UPLOAD TO FIREBASE STORAGE
+   ══════════════════════════════════════════════════════════════ */
+function dataUrlToBlob(dataUrl){
+  return new Promise(function(resolve){
+    var parts = dataUrl.split(',');
+    var mime = parts[0].match(/:(.*?);/)[1];
+    var bstr = atob(parts[1]);
+    var n = bstr.length;
+    var u8 = new Uint8Array(n);
+    while (n--) u8[n] = bstr.charCodeAt(n);
+    resolve(new Blob([u8], { type: mime }));
+  });
+}
+
+function uploadToStorage(dataUrl, path, progressEl){
+  return dataUrlToBlob(dataUrl).then(function(blob){
+    var ref = storage.ref(path);
+    var task = ref.put(blob);
+    if (progressEl){
+      progressEl.classList.add('show');
+      var fill = progressEl.querySelector('i');
+      task.on('state_changed', function(snap){
+        var pct = (snap.bytesTransferred / snap.totalBytes) * 100;
+        fill.style.width = pct.toFixed(0) + '%';
+      });
+    }
+    return task.then(function(snapshot){
+      return snapshot.ref.getDownloadURL();
+    });
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   LOGO / BANNER PREVIEWS
+   ══════════════════════════════════════════════════════════════ */
+function renderLogoPreview(){
+  var el = $('logoPreview');
+  var rm = $('logoRemove');
+  var meta = $('logoMeta');
+  var err = $('logoError');
+  err.classList.remove('show');
+
+  if (!logoDataUrl){
+    el.classList.remove('has-image');
+    el.innerHTML = '<div class="placeholder">'+icon('image-plus')+'<span class="main">Add logo</span><span class="sub">Square · 1:1 · PNG or JPG</span></div>';
+    if (rm) rm.disabled = true;
+    if (meta) meta.style.display = 'none';
+    refreshIcons();
+    return;
+  }
+  el.classList.add('has-image');
+  el.innerHTML = '<img alt="Logo preview" src="'+logoDataUrl+'" />';
+  if (rm) rm.disabled = false;
+  if (meta){
+    meta.textContent = 'Ready · ' + formatBytes(bytesFromDataUrl(logoDataUrl));
+    meta.style.display = 'block';
+  }
+}
+
+function renderBannerPreview(){
+  var el = $('bannerPreview');
+  var rm = $('bannerRemove');
+  var meta = $('bannerMeta');
+  var err = $('bannerError');
+  err.classList.remove('show');
+
+  if (!bannerDataUrl){
+    el.classList.remove('has-image');
+    el.innerHTML = '<div class="placeholder">'+icon('image')+'<span class="main">Add banner</span><span class="sub">Wide · 21:9 · Shows at top of channel</span></div>';
+    if (rm) rm.disabled = true;
+    if (meta) meta.style.display = 'none';
+    refreshIcons();
+    return;
+  }
+  el.classList.add('has-image');
+  el.innerHTML = '<img alt="Banner preview" src="'+bannerDataUrl+'" />';
+  if (rm) rm.disabled = false;
+  if (meta){
+    meta.textContent = 'Ready · ' + formatBytes(bytesFromDataUrl(bannerDataUrl));
+    meta.style.display = 'block';
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   RENDER CHANNEL LIST
+   ══════════════════════════════════════════════════════════════ */
+function renderList(){
+  var list = $('chList');
+  var count = $('chCount');
+  count.textContent = allChannels.length + ' channel' + (allChannels.length === 1 ? '' : 's');
+
+  if (!allChannels.length){
+    list.innerHTML =
+      '<div class="empty-list">'+
+        icon('tv') +
+        '<h3>No channels yet</h3>'+
+        '<p>Create your first channel using the form on the right.</p>'+
+      '</div>';
+    refreshIcons();
+    return;
+  }
+
+  list.innerHTML = '';
+  allChannels.forEach(function(ch){
+    var totalStreams = streamCounts[ch.id] || 0;
+    var liveStreams = liveCounts[ch.id] || 0;
+    var item = document.createElement('div');
+    item.className = 'ch-item';
+
+    var logoHtml;
+    if (ch.logoUrl){
+      logoHtml = '<img alt="" src="'+esc(ch.logoUrl)+'" />';
+    } else {
+      logoHtml = '<span>'+esc(initials(ch.name))+'</span>';
+    }
+
+    var catHtml = ch.category ? '<span class="ch-cat">'+esc(ch.category)+'</span>' : '';
+
+    var liveHtml = liveStreams > 0
+      ? '<span class="ch-live">● '+liveStreams+' live</span>'
+      : '<span>'+(totalStreams === 1 ? '1 stream' : totalStreams+' streams')+'</span>';
+
+    item.innerHTML =
+      '<div class="ch-logo">'+logoHtml+'</div>'+
+      '<div class="ch-info">'+
+        '<div class="ch-name">'+esc(ch.name)+' '+catHtml+'</div>'+
+        '<div class="ch-meta">'+
+          liveHtml +
+          (ch.channelNumber ? '<span class="stat">CH '+esc(String(ch.channelNumber))+'</span>' : '')+
+          (ch.tagline ? '<span>'+esc(ch.tagline)+'</span>' : '')+
+        '</div>'+
+      '</div>'+
+      '<div class="ch-actions">'+
+        '<button class="btn btn-ghost btn-sm" data-action="view" data-id="'+esc(ch.id)+'" title="View on site">'+icon('external-link')+'</button>'+
+        '<button class="btn btn-ghost btn-sm" data-action="edit" data-id="'+esc(ch.id)+'" title="Edit">'+icon('pencil')+'</button>'+
+        '<button class="btn btn-danger btn-sm" data-action="delete" data-id="'+esc(ch.id)+'" title="Delete">'+icon('trash-2')+'</button>'+
+      '</div>';
+
+    list.appendChild(item);
+  });
+
+  list.querySelectorAll('[data-action]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var action = btn.getAttribute('data-action');
+      var id = btn.getAttribute('data-id');
+      var ch = allChannels.find(function(x){ return x.id === id; });
+      if (!ch) return;
+      if (action === 'edit') editChannel(ch);
+      if (action === 'delete') openDeleteModal(ch);
+      if (action === 'view') window.open('channel.html?id=' + encodeURIComponent(id), '_blank');
+    });
+  });
+
+  refreshIcons();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   EDIT CHANNEL
+   ══════════════════════════════════════════════════════════════ */
+function editChannel(ch){
+  editingChannelId = ch.id;
+  logoDataUrl = null;
+  bannerDataUrl = null;
+  existingLogoUrl = ch.logoUrl || '';
+  existingBannerUrl = ch.bannerUrl || '';
+
+  $('editorTitle').textContent = 'Edit "' + (ch.name || 'channel') + '"';
+  $('saveChLbl').textContent = 'Update channel';
+  $('cancelEditBtn').style.display = 'inline-flex';
+  $('chName').value = ch.name || '';
+  $('chCategory').value = ch.category || '';
+  $('chTagline').value = ch.tagline || '';
+  $('chDescription').value = ch.description || '';
+  $('chNumber').value = ch.channelNumber || '';
+  $('chOrder').value = ch.order || 1;
+  $('chActive').value = String(ch.active !== false);
+
+  if (existingLogoUrl){
+    logoDataUrl = existingLogoUrl;
+    renderLogoPreview();
+    $('logoMeta').textContent = 'Existing logo';
+    $('logoMeta').style.display = 'block';
+  } else {
+    logoDataUrl = null;
+    renderLogoPreview();
+  }
+
+  if (existingBannerUrl){
+    bannerDataUrl = existingBannerUrl;
+    renderBannerPreview();
+    $('bannerMeta').textContent = 'Existing banner';
+    $('bannerMeta').style.display = 'block';
+  } else {
+    bannerDataUrl = null;
+    renderBannerPreview();
+  }
+
+  $('editorCard').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+function clearEditor(){
+  editingChannelId = null;
+  logoDataUrl = null;
+  bannerDataUrl = null;
+  existingLogoUrl = '';
+  existingBannerUrl = '';
+  $('editorTitle').textContent = 'Create a new channel';
+  $('saveChLbl').textContent = 'Create channel';
+  $('cancelEditBtn').style.display = 'none';
+  $('chName').value = '';
+  $('chCategory').value = '';
+  $('chTagline').value = '';
+  $('chDescription').value = '';
+  $('chNumber').value = '';
+  $('chOrder').value = '1';
+  $('chActive').value = 'true';
+  $('logoFile').value = '';
+  $('bannerFile').value = '';
+  $('logoMeta').style.display = 'none';
+  $('bannerMeta').style.display = 'none';
+  $('logoError').classList.remove('show');
+  $('bannerError').classList.remove('show');
+  $('logoProgress').classList.remove('show');
+  $('bannerProgress').classList.remove('show');
+  renderLogoPreview();
+  renderBannerPreview();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SAVE CHANNEL
+   ══════════════════════════════════════════════════════════════ */
+function saveChannel(){
+  if (!currentUser || !isAdmin(currentUser)){
+    toast('Not authorized.', 'error');
+    return;
+  }
+
+  var name = $('chName').value.trim();
+  if (!name){ toast('Channel name is required.', 'error'); $('chName').focus(); return; }
+
+  if (!logoDataUrl){
+    toast('Please upload a channel logo.', 'error');
+    $('logoPreview').scrollIntoView({ behavior:'smooth', block:'center' });
+    return;
+  }
+
+  var btn = $('saveChBtn');
+  var lbl = $('saveChLbl');
+  var orig = lbl.textContent;
+  btn.disabled = true;
+  lbl.textContent = 'Saving…';
+
+  var channelId = editingChannelId || (slugify(name) + '-' + Date.now().toString(36).slice(-4));
+  var isNew = !editingChannelId;
+
+  var logoUrlPromise;
+  if (logoDataUrl.indexOf('data:') === 0){
+    var logoPath = 'channels/' + channelId + '/logo.jpg';
+    logoUrlPromise = uploadToStorage(logoDataUrl, logoPath, $('logoProgress'));
+  } else {
+    logoUrlPromise = Promise.resolve(logoDataUrl);
+  }
+
+  var bannerUrlPromise;
+  if (bannerDataUrl && bannerDataUrl.indexOf('data:') === 0){
+    var bannerPath = 'channels/' + channelId + '/banner.jpg';
+    bannerUrlPromise = uploadToStorage(bannerDataUrl, bannerPath, $('bannerProgress'));
+  } else {
+    bannerUrlPromise = Promise.resolve(bannerDataUrl || '');
+  }
+
+  Promise.all([logoUrlPromise, bannerUrlPromise])
+    .then(function(results){
+      var logoUrl = results[0];
+      var bannerUrl = results[1];
+
+      var payload = {
+        name: name,
+        slug: slugify(name),
+        category: $('chCategory').value || '',
+        tagline: $('chTagline').value.trim(),
+        description: $('chDescription').value.trim(),
+        channelNumber: parseInt($('chNumber').value, 10) || null,
+        order: parseInt($('chOrder').value, 10) || 1,
+        active: $('chActive').value === 'true',
+        logoUrl: logoUrl,
+        bannerUrl: bannerUrl,
+        ownerUid: currentUser.uid,
+        ownerEmail: currentUser.email || '',
+        updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+      };
+      if (isNew){
+        payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      }
+
+      return db.collection(CHANNELS).doc(channelId).set(payload, { merge: true });
+    })
+    .then(function(){
+      toast(isNew ? 'Channel created.' : 'Channel updated.', 'success');
+      $('logoProgress').classList.remove('show');
+      $('bannerProgress').classList.remove('show');
+      clearEditor();
+    })
+    .catch(function(err){
+      console.error('[save channel]', err);
+      toast('Save failed: ' + (err.message || 'unknown error'), 'error', 5000);
+      $('logoProgress').classList.remove('show');
+      $('bannerProgress').classList.remove('show');
+    })
+    .then(function(){
+      btn.disabled = false;
+      lbl.textContent = orig;
+    });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   DELETE
+   ══════════════════════════════════════════════════════════════ */
+function openDeleteModal(ch){
+  deleteTargetId = ch.id;
+  $('deleteChannelName').textContent = 'Delete "' + ch.name + '"? Streams linked to it will become unassigned but will not be deleted.';
+  $('deleteModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  refreshIcons();
+}
+
+function closeDeleteModal(){
+  $('deleteModal').classList.remove('open');
+  document.body.style.overflow = '';
+  deleteTargetId = null;
+}
+
+function confirmDelete(){
+  if (!deleteTargetId) return;
+  var btn = $('deleteConfirm');
+  btn.disabled = true;
+  var id = deleteTargetId;
+
+  db.collection(CHANNELS).doc(id).delete()
+    .then(function(){
+      toast('Channel deleted.', 'success');
+      closeDeleteModal();
+    })
+    .catch(function(err){
+      toast('Delete failed: ' + err.message, 'error', 5000);
+    })
+    .then(function(){
+      btn.disabled = false;
+    });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   LOAD DATA
+   ══════════════════════════════════════════════════════════════ */
+function attachListeners(){
+  if (chUnsub){ try { chUnsub(); } catch(e){} }
+  chUnsub = db.collection(CHANNELS)
+    .orderBy('order', 'asc')
+    .onSnapshot(function(snap){
+      allChannels = [];
+      snap.forEach(function(doc){
+        var d = doc.data() || {};
+        d.id = doc.id;
+        allChannels.push(d);
+      });
+      allChannels.sort(function(a, b){
+        var oa = a.order || 99, ob = b.order || 99;
+        if (oa !== ob) return oa - ob;
+        return String(a.name || '').localeCompare(String(b.name || ''));
+      });
+      renderList();
+      refreshStreamCounts();
+    }, function(err){
+      console.error('[channels listener]', err);
+      toast('Could not load channels: ' + err.message, 'error', 5000);
+    });
+}
+
+function refreshStreamCounts(){
+  db.collection(STREAMS).get().then(function(snap){
+    streamCounts = {};
+    liveCounts = {};
+    var now = Date.now();
+    snap.forEach(function(doc){
+      var d = doc.data() || {};
+      var chId = d.channelId;
+      if (!chId) return;
+      streamCounts[chId] = (streamCounts[chId] || 0) + 1;
+      var startMs = d.startDate ? new Date(d.startDate + 'T' + (d.startTime || '00:00') + ':00').getTime() : 0;
+      var durMs = (parseInt(d.durationMinutes, 10) || 90) * 60000;
+      if (startMs && now >= startMs && now <= startMs + durMs) {
+        liveCounts[chId] = (liveCounts[chId] || 0) + 1;
+      }
+    });
+    renderList();
+  }).catch(function(err){
+    console.warn('Could not count streams:', err);
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   WIRE UP
+   ══════════════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', function(){
+  refreshIcons();
+
+  // Logo
+  $('logoChoose').addEventListener('click', function(e){ e.stopPropagation(); $('logoFile').click(); });
+  $('logoPreview').addEventListener('click', function(){ $('logoFile').click(); });
+  $('logoPreview').addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); $('logoFile').click(); } });
+  $('logoFile').addEventListener('change', function(e){
+    var f = e.target.files[0];
+    if (!f) return;
+    $('logoError').classList.remove('show');
+    $('logoMeta').textContent = 'Compressing…';
+    $('logoMeta').style.display = 'block';
+    fileToLogoDataUrl(f).then(function(d){
+      logoDataUrl = d;
+      renderLogoPreview();
+      toast('Logo ready', 'success', 1600);
+    }).catch(function(err){
+      $('logoError').textContent = err.message;
+      $('logoError').classList.add('show');
+      $('logoMeta').style.display = 'none';
+    });
+    e.target.value = '';
+  });
+  $('logoRemove').addEventListener('click', function(e){
+    e.stopPropagation();
+    if (!logoDataUrl) return;
+    if (!confirm('Remove the logo?')) return;
+    logoDataUrl = null;
+    existingLogoUrl = '';
+    renderLogoPreview();
+  });
+
+  // Banner
+  $('bannerChoose').addEventListener('click', function(e){ e.stopPropagation(); $('bannerFile').click(); });
+  $('bannerPreview').addEventListener('click', function(){ $('bannerFile').click(); });
+  $('bannerPreview').addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); $('bannerFile').click(); } });
+  $('bannerFile').addEventListener('change', function(e){
+    var f = e.target.files[0];
+    if (!f) return;
+    $('bannerError').classList.remove('show');
+    $('bannerMeta').textContent = 'Compressing…';
+    $('bannerMeta').style.display = 'block';
+    fileToBannerDataUrl(f).then(function(d){
+      bannerDataUrl = d;
+      renderBannerPreview();
+      toast('Banner ready', 'success', 1600);
+    }).catch(function(err){
+      $('bannerError').textContent = err.message;
+      $('bannerError').classList.add('show');
+      $('bannerMeta').style.display = 'none';
+    });
+    e.target.value = '';
+  });
+  $('bannerRemove').addEventListener('click', function(e){
+    e.stopPropagation();
+    if (!bannerDataUrl) return;
+    if (!confirm('Remove the banner?')) return;
+    bannerDataUrl = null;
+    existingBannerUrl = '';
+    renderBannerPreview();
+  });
+
+  // Save / Cancel
+  $('saveChBtn').addEventListener('click', saveChannel);
+  $('cancelEditBtn').addEventListener('click', clearEditor);
+
+  // Delete modal
+  $('deleteCancel').addEventListener('click', closeDeleteModal);
+  $('deleteConfirm').addEventListener('click', confirmDelete);
+  $('deleteModal').addEventListener('click', function(e){ if (e.target === this) closeDeleteModal(); });
+
+  // Sign out
+  $('signOutBtn').addEventListener('click', function(){
+    auth.signOut().then(function(){ toast('Signed out.', 'success'); });
+  });
+
+  // Auth
+  auth.onAuthStateChanged(function(user){
+    currentUser = user;
+    var ok = checkAccess();
+    if (ok){
+      attachListeners();
+      clearEditor();
+    } else {
+      if (chUnsub){ try { chUnsub(); } catch(e){} chUnsub = null; }
+    }
+    refreshIcons();
+  });
+
+  window.addEventListener('beforeunload', function(){
+    if (chUnsub){ try { chUnsub(); } catch(e){} }
+  });
+});
+})();
+</script>
+</body>
+  </html>
