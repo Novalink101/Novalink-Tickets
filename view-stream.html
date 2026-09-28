@@ -337,6 +337,7 @@ var CONTROLS_HIDE_MS = 6000;
 var SEEK_STEP_S = 10;
 var GAP_ADS_MAX_MS = 60 * 60 * 1000;
 var QUEUE_LOOKAHEAD_MS = 24 * 60 * 60 * 1000;
+var SKIP_EXTRA_DELAY_SECONDS = 6; /* Extra delay added to every skippable ad */
 
 var AD_DEFAULTS = {
   prerollEnabled: true, midrollEnabled: true, postrollEnabled: true, midrollMinute: 30,
@@ -1957,7 +1958,11 @@ function showAd(slot, onComplete){
       countdown.textContent = '';
       return;
     }
-    if (seconds === 0){
+
+    // Apply the extra delay to every skippable ad.
+    var totalWait = (seconds || 0) + SKIP_EXTRA_DELAY_SECONDS;
+
+    if (totalWait <= 0){
       // Skippable immediately
       skipBtn.disabled = false;
       skipText.textContent = 'Skip ad';
@@ -1965,7 +1970,7 @@ function showAd(slot, onComplete){
       return;
     }
 
-    var remaining = seconds;
+    var remaining = totalWait;
     skipBtn.disabled = true;
     skipText.textContent = 'Skip in';
     countdown.textContent = remaining;
