@@ -7,6 +7,8 @@
 <title>Stream · Novalink</title>
 <script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
 <script src="https://www.youtube.com/iframe_api"></script>
+<!-- NEW: HLS.js for Native HLS Streams -->
+<script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -431,6 +433,7 @@ function detectPlatformFromUrl(url){
   if (u.indexOf('restream.io') !== -1) return 'restream';
   if (u.indexOf('zoom.us') !== -1) return 'zoom';
   if (/\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(u)) return 'video-file';
+  if (u.indexOf('.m3u8') !== -1) return 'native-hls';
   return 'custom';
 }
 
@@ -439,7 +442,8 @@ function platformLabel(p){
     youtube:'YouTube Live', twitch:'Twitch', vimeo:'Vimeo Live', facebook:'Facebook Live',
     kick:'Kick', rumble:'Rumble', dailymotion:'Dailymotion', odysee:'Odysee',
     bitchute:'BitChute', niconico:'Niconico', streamyard:'StreamYard',
-    restream:'Restream', zoom:'Zoom', 'video-file':'Direct video', custom:'Custom Embed'
+    restream:'Restream', zoom:'Zoom', 'video-file':'Direct video', custom:'Custom Embed',
+    'native-hls':'Native HLS Stream'
   }[p] || 'Live';
 }
 
@@ -548,6 +552,23 @@ var adState = {
    ══════════════════════════════════════════════════════════════ */
 function getSegments(){
   if (!streamData) return [];
+
+  // If Native HLS, we return a single segment covering the whole event
+  if (streamData.isNative && streamData.hlsUrl) {
+    var ds = streamData.startDate || '';
+    var ts = streamData.startTime || '00:00';
+    var dur = parseInt(streamData.durationMinutes, 10) || 120; // Default 2hrs for native
+    var st = new Date(ds + 'T' + ts + ':00').getTime();
+    if (isNaN(st)) st = Date.now();
+    return [{
+      url: streamData.hlsUrl,
+      startTime: ts,
+      endTime: '23:59',
+      startMs: st,
+      endMs: st + dur * 60000,
+      platform: 'native-hls'
+    }];
+  }
 
   if (Array.isArray(streamData.segments) && streamData.segments.length){
     var dateStr = streamData.startDate || '';
@@ -1086,6 +1107,8 @@ function handleOffline(){
   var ov = $('offlineOverlay');
   if (ov) ov.classList.add('show');
   try { if (ytPlayer && ytPlayer.pauseVideo) ytPlayer.pauseVideo(); } catch(e){}
+  var nativeVid = document.getElementById('nativeVideoPlayer');
+  if (nativeVid) try { nativeVid.pause(); } catch(e){}
 }
 function handleOnline(){
   isOffline = false;
@@ -1139,51 +1162,78 @@ function wirePlayerControls(){
   var fwd = $('ctrlSeekForward');
   var jumpLive = $('ctrlJumpLive');
 
-  function safePlayer(){
-    if (!ytPlayer) return null;
-    if (typeof ytPlayer.getPlayerState !== 'function') return null;
-    return ytPlayer;
+  function getActivePlayer() {
+    if (ytPlayer && ytReady) return { type: 'youtube', instance: ytPlayer };
+    var nativeVid = document.getElementById('nativeVideoPlayer');
+    if (nativeVid) return { type: 'native', instance: nativeVid };
+    return null;
   }
 
   if (pp) pp.addEventListener('click', function(){
-    var p = safePlayer(); if (!p) return;
-    var st = p.getPlayerState();
-    if (st === 1) p.pauseVideo(); else p.playVideo();
+    var player = getActivePlayer(); if (!player) return;
+    if (player.type === 'youtube') {
+      var st = player.instance.getPlayerState();
+      if (st === 1) player.instance.pauseVideo(); else player.instance.playVideo();
+    } else {
+      if (player.instance.paused) player.instance.play(); else player.instance.pause();
+    }
   });
+
   if (mute) mute.addEventListener('click', function(){
-    var p = safePlayer(); if (!p) return;
-    if (p.isMuted()){ p.unMute(); mute.innerHTML = icon('volume-2'); }
-    else { p.mute(); mute.innerHTML = icon('volume-x'); }
+    var player = getActivePlayer(); if (!player) return;
+    if (player.type === 'youtube') {
+      if (player.instance.isMuted()){ player.instance.unMute(); mute.innerHTML = icon('volume-2'); }
+      else { player.instance.mute(); mute.innerHTML = icon('volume-x'); }
+    } else {
+      player.instance.muted = !player.instance.muted;
+      mute.innerHTML = icon(player.instance.muted ? 'volume-x' : 'volume-2');
+    }
     refreshIcons();
   });
+
   if (fs) fs.addEventListener('click', function(){
     var wrap = $('nlPlayer'); if (!wrap) return;
     if (document.fullscreenElement) document.exitFullscreen();
     else if (wrap.requestFullscreen) wrap.requestFullscreen();
     else if (wrap.webkitRequestFullscreen) wrap.webkitRequestFullscreen();
   });
+
   if (back) back.addEventListener('click', function(){
-    var p = safePlayer(); if (!p || typeof p.getCurrentTime !== 'function') return;
-    var cur = p.getCurrentTime() || 0;
-    p.seekTo(Math.max(0, cur - SEEK_STEP_S), true);
+    var player = getActivePlayer(); if (!player) return;
+    if (player.type === 'youtube') {
+      var cur = player.instance.getCurrentTime() || 0;
+      player.instance.seekTo(Math.max(0, cur - SEEK_STEP_S), true);
+    } else {
+      player.instance.currentTime = Math.max(0, player.instance.currentTime - SEEK_STEP_S);
+    }
     updateJumpLiveButton();
     toast('−' + SEEK_STEP_S + 's', 'info', 900);
   });
+
   if (fwd) fwd.addEventListener('click', function(){
-    var p = safePlayer(); if (!p || typeof p.getCurrentTime !== 'function') return;
-    var cur = p.getCurrentTime() || 0;
-    var dur = (typeof p.getDuration === 'function' ? p.getDuration() : 0) || 0;
-    var target = cur + SEEK_STEP_S;
-    if (dur > 0 && target > dur - 1) target = dur - 0.5;
-    p.seekTo(target, true);
+    var player = getActivePlayer(); if (!player) return;
+    if (player.type === 'youtube') {
+      var cur = player.instance.getCurrentTime() || 0;
+      var dur = player.instance.getDuration() || 0;
+      var target = cur + SEEK_STEP_S;
+      if (dur > 0 && target > dur - 1) target = dur - 0.5;
+      player.instance.seekTo(target, true);
+    } else {
+      player.instance.currentTime = Math.min(player.instance.duration, player.instance.currentTime + SEEK_STEP_S);
+    }
     updateJumpLiveButton();
     toast('+' + SEEK_STEP_S + 's', 'info', 900);
   });
+
   if (jumpLive) jumpLive.addEventListener('click', function(){
-    var p = safePlayer(); if (!p) return;
-    var dur = (typeof p.getDuration === 'function' ? p.getDuration() : 0) || 0;
-    if (dur > 0) p.seekTo(dur - 0.5, true);
-    else p.seekTo(0, true);
+    var player = getActivePlayer(); if (!player) return;
+    if (player.type === 'youtube') {
+      var dur = player.instance.getDuration() || 0;
+      if (dur > 0) player.instance.seekTo(dur - 0.5, true);
+      else player.instance.seekTo(0, true);
+    } else {
+      if (player.instance.duration) player.instance.currentTime = player.instance.duration - 0.5;
+    }
     updateJumpLiveButton();
     toast('Jumped to live', 'success', 1400);
   });
@@ -1192,11 +1242,17 @@ function wirePlayerControls(){
 function updateJumpLiveButton(){
   var btn = $('ctrlJumpLive');
   if (!btn) return;
-  if (currentPhase !== 'live' || !ytReady){ btn.classList.remove('show'); return; }
-  var p = ytPlayer;
-  if (!p || typeof p.getDuration !== 'function'){ btn.classList.remove('show'); return; }
-  var cur = (typeof p.getCurrentTime === 'function' ? p.getCurrentTime() : 0) || 0;
-  var dur = p.getDuration() || 0;
+  if (currentPhase !== 'live'){ btn.classList.remove('show'); return; }
+  
+  var player = null;
+  if (ytPlayer && ytReady) player = ytPlayer;
+  else player = document.getElementById('nativeVideoPlayer');
+
+  if (!player){ btn.classList.remove('show'); return; }
+  
+  var cur = (typeof player.getCurrentTime === 'function' ? player.getCurrentTime() : player.currentTime) || 0;
+  var dur = (typeof player.getDuration === 'function' ? player.getDuration() : player.duration) || 0;
+  
   if (dur <= 0 || cur <= 0){ btn.classList.remove('show'); return; }
   var distance = dur - cur;
   if (distance <= 20) btn.classList.remove('show');
@@ -1284,6 +1340,8 @@ function clearPlayerIframe(){
   ytPlayer = null;
   ytReady = false;
   currentYtVideoId = null;
+  var nativeVid = document.getElementById('nativeVideoPlayer');
+  if (nativeVid) nativeVid.remove();
 }
 
 function tryNextInQueue(){
@@ -1586,6 +1644,59 @@ function loadPlayerForIframeOnly(){
 function loadPlayerWithUrl(url, platform, silent){
   var host = $('ytPlayerHost');
   if (!host) return;
+
+  // --- NEW: NATIVE HLS PLAYER ---
+  if (platform === 'native-hls' || (url && url.endsWith('.m3u8'))) {
+    if (!silent) showCurtain('loading', 'Connecting to Novalink Live…');
+    
+    host.innerHTML = '';
+    ytPlayer = null;
+    ytReady = false;
+    
+    var video = document.createElement('video');
+    video.id = 'nativeVideoPlayer';
+    video.controls = false;
+    video.autoplay = true;
+    video.muted = true; // Required for autoplay
+    video.playsInline = true;
+    video.style.width = '100%';
+    video.style.height = '100%';
+    video.style.position = 'absolute';
+    video.style.inset = '0';
+    video.style.objectFit = 'contain';
+
+    if (window.Hls && Hls.isSupported()) {
+      var hls = new Hls();
+      hls.loadSource(url);
+      hls.attachMedia(video);
+      hls.on(Hls.Events.MANIFEST_PARSED, function() {
+        video.play().catch(function(e){ console.log('Autoplay blocked', e); });
+        hideCurtain();
+      });
+      hls.on(Hls.Events.ERROR, function(event, data) {
+        console.error('HLS error:', data);
+        if (data.fatal) {
+            switch (data.type) {
+                case Hls.ErrorTypes.NETWORK_ERROR: hls.startLoad(); break;
+                case Hls.ErrorTypes.MEDIA_ERROR: hls.recoverMediaError(); break;
+                default: showCurtain('error', 'Stream Error', 'Could not connect to the HLS stream.'); break;
+            }
+        }
+      });
+    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
+      // Safari native support
+      video.src = url;
+      video.addEventListener('loadedmetadata', function() {
+        video.play().catch(function(e){ console.log('Autoplay blocked', e); });
+        hideCurtain();
+      });
+    }
+    
+    host.appendChild(video);
+    updateJumpLiveButton();
+    return; 
+  }
+  // --- END NATIVE HLS PLAYER ---
 
   if (platform === 'youtube'){
     var vid = extractYouTubeId(url);
