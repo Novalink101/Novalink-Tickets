@@ -98,7 +98,29 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
   z-index:1;
 }
 
-/* COUNTDOWN PILL (top-right, doesn't block player) */
+/* AUTO-HIDE CONTROLS */
+.nl-player-topbar,
+.nl-player-bottombar,
+.nl-cd-pill{
+  transition:opacity .4s ease, transform .4s ease;
+}
+.nl-player.hide-controls .nl-player-topbar{
+  opacity:0;
+  transform:translateY(-8px);
+  pointer-events:none;
+}
+.nl-player.hide-controls .nl-player-bottombar{
+  opacity:0;
+  transform:translateY(8px);
+  pointer-events:none;
+}
+.nl-player.hide-controls .nl-cd-pill{
+  opacity:0;
+  pointer-events:none;
+}
+.nl-player.hide-cursor{cursor:none;}
+
+/* COUNTDOWN PILL */
 .nl-cd-pill{
   position:absolute;
   top:12px;
@@ -121,24 +143,9 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
   box-shadow:0 6px 18px rgba(0,0,0,.4);
 }
 .nl-cd-pill.show{display:inline-flex}
-.nl-cd-pill .dot{
-  width:7px;height:7px;border-radius:50%;
-  background:var(--cy);
-  animation:pulse 1.5s infinite;
-}
-.nl-cd-pill .lbl{
-  font-family:var(--font);
-  font-size:9.5px;
-  font-weight:900;
-  letter-spacing:.14em;
-  text-transform:uppercase;
-  color:var(--cy);
-  opacity:.85;
-}
-@media (max-width:520px){
-  .nl-cd-pill{top:8px;right:8px;padding:5px 9px;font-size:10.5px;gap:6px}
-  .nl-cd-pill .lbl{font-size:8.5px}
-}
+.nl-cd-pill .dot{width:7px;height:7px;border-radius:50%;background:var(--cy);animation:pulse 1.5s infinite;}
+.nl-cd-pill .lbl{font-family:var(--font);font-size:9.5px;font-weight:900;letter-spacing:.14em;text-transform:uppercase;color:var(--cy);opacity:.85;}
+@media (max-width:520px){.nl-cd-pill{top:8px;right:8px;padding:5px 9px;font-size:10.5px;gap:6px;}.nl-cd-pill .lbl{font-size:8.5px}}
 
 /* PLAYER BARS */
 .nl-player-topbar{
@@ -152,21 +159,16 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
 .nl-player-topbar .live-tag{
   background:#dc2626;color:#fff;font-size:9.5px;font-weight:900;letter-spacing:.08em;
   padding:4px 9px;border-radius:5px;text-transform:uppercase;
-  display:inline-flex;align-items:center;gap:5px;
-  pointer-events:none;
+  display:inline-flex;align-items:center;gap:5px;pointer-events:none;
 }
 .nl-player-topbar .live-tag::before{content:'';width:5px;height:5px;border-radius:50%;background:#fff;animation:pulse 1.5s infinite}
 .nl-player-topbar .ch-pill{
   background:rgba(10,15,20,.7);border:1px solid rgba(0,255,255,.35);color:#fff;
   font-size:9.5px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;
   padding:4px 9px;border-radius:99px;backdrop-filter:blur(8px);
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;
-  pointer-events:none;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:180px;pointer-events:none;
 }
-.nl-player-topbar .wm{
-  display:inline-flex;align-items:center;gap:6px;
-  text-shadow:0 2px 8px rgba(0,0,0,.85);pointer-events:none;opacity:.85;
-}
+.nl-player-topbar .wm{display:inline-flex;align-items:center;gap:6px;text-shadow:0 2px 8px rgba(0,0,0,.85);pointer-events:none;opacity:.85;}
 .nl-player-topbar .wm svg{width:15px;height:19px;flex-shrink:0;display:block}
 .nl-player-topbar .wm span{font-weight:900;font-size:11px;letter-spacing:.12em;color:#fff;text-transform:uppercase}
 
@@ -177,14 +179,48 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
   background:linear-gradient(0deg,rgba(0,0,0,.78) 0%,rgba(0,0,0,0) 100%);
   pointer-events:none;
 }
-.nl-player-bottombar .controls{display:flex;gap:6px;align-items:center;pointer-events:auto}
+.nl-player-bottombar .controls{display:flex;gap:6px;align-items:center;pointer-events:auto;flex-wrap:wrap}
 .nl-ctrl{
   width:36px;height:36px;border-radius:50%;background:rgba(0,0,0,.55);color:#fff;
   border:1px solid rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;
   transition:.15s;backdrop-filter:blur(6px);flex-shrink:0;
+  font-size:11px;font-weight:900;letter-spacing:-1px;
 }
 .nl-ctrl:hover{background:var(--cy);color:#04161c;border-color:var(--cy);transform:scale(1.08)}
+.nl-ctrl:active{transform:scale(.95)}
 .nl-ctrl i{width:16px;height:16px}
+.nl-ctrl.seek{
+  font-family:var(--mono);
+  font-size:13px;
+  letter-spacing:-2px;
+  padding-right:2px;
+}
+.nl-ctrl.jump-live{
+  width:auto;
+  padding:0 14px;
+  border-radius:99px;
+  font-size:11.5px;
+  font-weight:900;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+  color:#04161c;
+  background:linear-gradient(135deg,var(--cy),var(--cy2));
+  border-color:var(--cy);
+  display:none;
+  align-items:center;
+  gap:6px;
+  height:36px;
+}
+.nl-ctrl.jump-live.show{display:inline-flex}
+.nl-ctrl.jump-live::before{
+  content:'';
+  width:7px;height:7px;border-radius:50%;background:#04161c;
+  animation:pulse 1.2s infinite;
+}
+.nl-ctrl.jump-live:hover{
+  background:linear-gradient(135deg,#fff,#cffafe);
+  transform:translateY(-1px);
+}
 .nl-player-bottombar .right{display:flex;gap:6px;align-items:center;pointer-events:auto}
 
 .nl-curtain{
@@ -198,15 +234,6 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
 .nl-curtain h3{font-size:1.1rem;font-weight:900;color:#fff;margin:0}
 .nl-curtain p{font-size:13px;color:rgba(255,255,255,.7);max-width:340px;margin:0;line-height:1.55}
 
-.tap-to-play{position:absolute;inset:0;z-index:4;background:radial-gradient(circle at 50% 40%, rgba(0,255,255,.08), transparent 60%),#000;display:none;flex-direction:column;align-items:center;justify-content:center;gap:18px;text-align:center;padding:24px}
-.tap-to-play.show{display:flex}
-.tap-to-play .ttp-title{font-size:clamp(1rem,2.4vw,1.4rem);font-weight:900;color:#fff;letter-spacing:-.01em;max-width:80%;line-height:1.25}
-.tap-to-play .ttp-sub{font-size:12px;color:rgba(255,255,255,.55);max-width:340px}
-.tap-to-play .ttp-btn{display:inline-flex;align-items:center;gap:10px;padding:14px 24px;background:linear-gradient(135deg,var(--cy),var(--cy2));color:#04161c;border:none;border-radius:99px;font-family:inherit;font-weight:900;font-size:14px;letter-spacing:.02em;cursor:pointer;box-shadow:0 16px 40px rgba(0,255,255,.4);transition:.2s}
-.tap-to-play .ttp-btn:hover{transform:scale(1.05)}
-.tap-to-play .ttp-btn i{width:20px;height:20px;stroke-width:2.6}
-
-/* AD OVERLAY */
 .nl-ad{position:absolute;inset:0;z-index:10;background:#000;display:none;flex-direction:column;overflow:hidden}
 .nl-ad.show{display:flex}
 .nl-ad-media{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;background:#000}
@@ -300,6 +327,8 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
   .nl-player-bottombar{padding:9px 10px}
   .nl-ctrl{width:32px;height:32px}
   .nl-ctrl i{width:14px;height:14px}
+  .nl-ctrl.seek{font-size:11px}
+  .nl-ctrl.jump-live{height:32px;padding:0 11px;font-size:10.5px}
 }
 </style>
 </head>
@@ -348,6 +377,8 @@ var SETTINGS = "settings";
 var SETTINGS_DOC = "ads";
 var REPLAY_DAYS = 30;
 var RECENT_ADS_MAX = 10;
+var CONTROLS_HIDE_MS = 6000;
+var SEEK_STEP_S = 10;
 
 var AD_DEFAULTS = {
   prerollEnabled: true, midrollEnabled: true, postrollEnabled: true, midrollMinute: 30,
@@ -387,10 +418,7 @@ function toast(msg, type, ms){
   toast._t = setTimeout(function(){ t.classList.remove('show'); }, ms);
 }
 
-function getParam(n){
-  try { return new URLSearchParams(window.location.search).get(n); }
-  catch(e){ return null; }
-}
+function getParam(n){ try { return new URLSearchParams(window.location.search).get(n); } catch(e){ return null; } }
 function initialsFrom(name, email){
   if (name && name.trim()){
     var p = name.trim().split(/\s+/);
@@ -420,21 +448,11 @@ function isAdmin(user){
   return ADMIN_EMAILS.some(function(x){ return x.toLowerCase() === e; });
 }
 
-/* ══════════════════════════════════════════════════════════════
-   BULLETPROOF YOUTUBE ID EXTRACTION
-   Accepts: full URLs, short URLs, raw IDs, mobile URLs, share URLs
-   ══════════════════════════════════════════════════════════════ */
 function extractYouTubeId(input){
   if (!input) return null;
   var u = String(input).trim();
-
-  // Raw 11-char ID
   if (/^[A-Za-z0-9_-]{11}$/.test(u)) return u;
-
-  // Strip whitespace/newlines
   u = u.replace(/\s+/g, '');
-
-  // Try every known pattern
   var patterns = [
     /(?:youtube\.com\/watch\?(?:.*&)?v=)([A-Za-z0-9_-]{11})/,
     /(?:youtu\.be\/)([A-Za-z0-9_-]{11})/,
@@ -450,14 +468,10 @@ function extractYouTubeId(input){
     var m = u.match(patterns[i]);
     if (m && m[1]) return m[1];
   }
-
-  // Last resort — pull any 11-char token that could be a video ID
   var m2 = u.match(/([A-Za-z0-9_-]{11})/);
   if (m2 && m2[1]) return m2[1];
-
   return null;
 }
-
 function extractTwitchChannel(url){
   if (!url) return null;
   var m = url.match(/twitch\.tv\/([A-Za-z0-9_]+)/);
@@ -472,9 +486,6 @@ function buildFacebookEmbed(url){
   return 'https://www.facebook.com/plugins/video.php?href=' + encodeURIComponent(url) + '&show_text=false&width=734&height=413';
 }
 
-/* ══════════════════════════════════════════════════════════════
-   STATE
-   ══════════════════════════════════════════════════════════════ */
 var currentUser = null;
 var isAdminUser = false;
 var streamId = null;
@@ -485,18 +496,17 @@ var ytPlayer = null;
 var ytReady = false;
 var countdownTimer = null;
 var phaseTickTimer = null;
-var currentPhase = 'unknown';
 var autoplayRetryTimer = null;
+var controlsHideTimer = null;
+var liveCheckTimer = null;
+var currentPhase = 'unknown';
+var userSeekedAwayFromLive = false;
 
 var adSettings = Object.assign({}, AD_DEFAULTS);
 var adPool = { preroll: [], midroll: [], postroll: [] };
 var adState = {
-  midrollTimerId: null,
-  skipTimerId: null,
-  countdownTimerId: null,
-  firedMidroll: false,
-  firedPostroll: false,
-  firedPreroll: false
+  midrollTimerId: null, skipTimerId: null, countdownTimerId: null,
+  firedMidroll: false, firedPostroll: false, firedPreroll: false
 };
 
 function applyAuth(user){
@@ -515,7 +525,6 @@ function applyAuth(user){
   renderOwnerControls();
 }
 
-/* ── PHASE ── */
 function getTiming(){
   if (!streamData) return { valid:false };
   var dateStr = streamData.startDate || '';
@@ -539,7 +548,6 @@ function computePhase(){
   return 'ended';
 }
 
-/* ── RENDER ── */
 function renderLoading(){
   $('main').innerHTML =
     '<div class="state">' +
@@ -596,14 +604,13 @@ function renderPage(){
       '<div class="nl-player" id="nlPlayer">' +
         '<div id="ytPlayerHost"></div>' +
 
-        /* COUNTDOWN PILL (top-right, doesn't block player) */
         '<div class="nl-cd-pill" id="cdPill">' +
           '<span class="dot"></span>' +
           '<span class="lbl">Live in</span>' +
           '<span id="cdText">00:00:00</span>' +
         '</div>' +
 
-        '<div class="nl-player-topbar">' +
+        '<div class="nl-player-topbar" id="nlTopbar">' +
           '<div class="left">' +
             '<span class="live-tag" id="playerLiveTag" style="display:none;">LIVE</span>' +
             (chName ? '<span class="ch-pill">'+esc(chName)+'</span>' : '') +
@@ -614,13 +621,16 @@ function renderPage(){
           '</span>' +
         '</div>' +
 
-        '<div class="nl-player-bottombar">' +
+        '<div class="nl-player-bottombar" id="nlBottombar">' +
           '<div class="controls">' +
-            '<button class="nl-ctrl" id="ctrlPlayPause" type="button" aria-label="Play/Pause">'+icon('play')+'</button>' +
-            '<button class="nl-ctrl" id="ctrlMute" type="button" aria-label="Mute">'+icon('volume-2')+'</button>' +
+            '<button class="nl-ctrl seek" id="ctrlSeekBack" type="button" aria-label="Back 10 seconds" title="Back 10s">&lt;&lt;&lt;&lt;</button>' +
+            '<button class="nl-ctrl" id="ctrlPlayPause" type="button" aria-label="Play/Pause" title="Play/Pause">'+icon('play')+'</button>' +
+            '<button class="nl-ctrl seek" id="ctrlSeekForward" type="button" aria-label="Forward 10 seconds" title="Forward 10s">&gt;&gt;&gt;&gt;&gt;</button>' +
+            '<button class="nl-ctrl" id="ctrlMute" type="button" aria-label="Mute" title="Mute">'+icon('volume-2')+'</button>' +
+            '<button class="nl-ctrl jump-live" id="ctrlJumpLive" type="button" aria-label="Jump to live" title="Jump to live edge">Jump to Live</button>' +
           '</div>' +
           '<div class="right">' +
-            '<button class="nl-ctrl" id="ctrlFullscreen" type="button" aria-label="Fullscreen">'+icon('maximize')+'</button>' +
+            '<button class="nl-ctrl" id="ctrlFullscreen" type="button" aria-label="Fullscreen" title="Fullscreen">'+icon('maximize')+'</button>' +
           '</div>' +
         '</div>' +
 
@@ -710,19 +720,15 @@ function renderPage(){
   $('main').innerHTML = html;
   refreshIcons();
   wirePlayerControls();
+  wireControlsAutoHide();
   renderOwnerControls();
   renderSiblings();
 
-  /* Always load the player right away */
   loadPlayer();
-
-  /* Update the countdown pill */
   currentPhase = computePhase();
   renderPhaseUI();
   updateCountdownPill();
   startTickers();
-
-  /* Load ads in background */
   loadAdsAndMaybePlay();
 }
 
@@ -731,10 +737,8 @@ function renderOwnerControls(){
   if (!card || !streamData) return;
   card.style.display = isAdminUser ? 'block' : 'none';
   if (!isAdminUser) return;
-
   var edit = $('editStreamBtn');
   if (edit) edit.setAttribute('href', 'create-streams.html?id=' + encodeURIComponent(streamId));
-
   var del = $('deleteStreamBtn');
   if (del && !del._bound){
     del._bound = true;
@@ -742,14 +746,8 @@ function renderOwnerControls(){
       if (!confirm('Delete this stream permanently?')) return;
       del.disabled = true;
       db.collection(STREAMS).doc(streamId).delete()
-        .then(function(){
-          toast('Stream deleted.', 'success');
-          setTimeout(function(){ window.location.href = 'streams.html'; }, 800);
-        })
-        .catch(function(err){
-          toast('Delete failed: ' + err.message, 'error', 5000);
-          del.disabled = false;
-        });
+        .then(function(){ toast('Stream deleted.', 'success'); setTimeout(function(){ window.location.href = 'streams.html'; }, 800); })
+        .catch(function(err){ toast('Delete failed: ' + err.message, 'error', 5000); del.disabled = false; });
     });
   }
 }
@@ -766,23 +764,18 @@ function renderSiblings(){
     if (st === 'live'){ badge = 'live'; label = 'Live'; }
     else if (st === 'replay'){ badge = 'replay'; label = 'Replay'; }
     else if (st === 'ended'){ badge = 'ended'; label = 'Ended'; }
-
     var title = s.streamTitle || s.eventName || 'Untitled Stream';
     var dateStr = formatDate(s.startDate, s.startTime);
     var thumbStyle = s.heroImage ? "background-image:url('"+esc(s.heroImage)+"');background-size:cover;background-position:center;" : '';
-
     card.innerHTML =
-      '<div class="sibling-thumb" style="'+thumbStyle+'">'+
-        '<span class="sibling-badge '+badge+'">'+esc(label)+'</span>'+
-      '</div>'+
-      '<div class="sibling-body">'+
-        '<div class="sibling-title">'+esc(title)+'</div>'+
-        '<div class="sibling-meta">'+icon('calendar')+' <span>'+esc(dateStr)+'</span></div>'+
+      '<div class="sibling-thumb" style="'+thumbStyle+'">' +
+        '<span class="sibling-badge '+badge+'">'+esc(label)+'</span>' +
+      '</div>' +
+      '<div class="sibling-body">' +
+        '<div class="sibling-title">'+esc(title)+'</div>' +
+        '<div class="sibling-meta">'+icon('calendar')+' <span>'+esc(dateStr)+'</span></div>' +
       '</div>';
-
-    card.addEventListener('click', function(){
-      window.location.href = 'view-stream.html?id=' + encodeURIComponent(s.id);
-    });
+    card.addEventListener('click', function(){ window.location.href = 'view-stream.html?id=' + encodeURIComponent(s.id); });
     row.appendChild(card);
   });
   refreshIcons();
@@ -804,33 +797,94 @@ function computeStreamPhase(s){
   return 'ended';
 }
 
-/* ── PLAYER CONTROLS ── */
+/* ══════════════════════════════════════════════════════════════
+   AUTO-HIDE CONTROLS
+   ══════════════════════════════════════════════════════════════ */
+function wireControlsAutoHide(){
+  var player = $('nlPlayer');
+  if (!player) return;
+
+  /* Reset the hide timer on any interaction */
+  function showControls(){
+    player.classList.remove('hide-controls');
+    player.classList.remove('hide-cursor');
+    resetHideTimer();
+  }
+
+  function resetHideTimer(){
+    clearTimeout(controlsHideTimer);
+    controlsHideTimer = setTimeout(function(){
+      /* Don't hide while an ad is playing */
+      var adOverlay = $('adOverlay');
+      if (adOverlay && adOverlay.classList.contains('show')) return;
+      /* Don't hide while curtain is showing */
+      var curtain = $('curtain');
+      if (curtain && curtain.classList.contains('show')) return;
+      player.classList.add('hide-controls');
+      player.classList.add('hide-cursor');
+    }, CONTROLS_HIDE_MS);
+  }
+
+  ['mousemove','mousedown','touchstart','touchmove','click','keydown'].forEach(function(evt){
+    player.addEventListener(evt, function(e){
+      /* If clicking a button, still show controls */
+      showControls();
+    }, { passive: true });
+  });
+
+  /* Also show controls on document scroll within the player area */
+  document.addEventListener('keydown', function(e){
+    if (e.key === ' ' || e.key === 'ArrowLeft' || e.key === 'ArrowRight'){
+      showControls();
+    }
+  });
+
+  /* Start the timer initially */
+  resetHideTimer();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PLAYER CONTROLS
+   ══════════════════════════════════════════════════════════════ */
 function wirePlayerControls(){
   var pp = $('ctrlPlayPause');
   var mute = $('ctrlMute');
   var fs = $('ctrlFullscreen');
+  var back = $('ctrlSeekBack');
+  var fwd = $('ctrlSeekForward');
+  var jumpLive = $('ctrlJumpLive');
+
+  function safePlayer(){
+    if (!ytPlayer) return null;
+    if (typeof ytPlayer.getPlayerState !== 'function') return null;
+    return ytPlayer;
+  }
 
   if (pp){
     pp.addEventListener('click', function(){
-      if (!ytPlayer || typeof ytPlayer.getPlayerState !== 'function') return;
-      var st = ytPlayer.getPlayerState();
-      if (st === 1) ytPlayer.pauseVideo();
-      else ytPlayer.playVideo();
+      var p = safePlayer();
+      if (!p) return;
+      var st = p.getPlayerState();
+      if (st === 1) p.pauseVideo();
+      else p.playVideo();
     });
   }
+
   if (mute){
     mute.addEventListener('click', function(){
-      if (!ytPlayer || typeof ytPlayer.isMuted !== 'function') return;
-      if (ytPlayer.isMuted()){
-        ytPlayer.unMute();
+      var p = safePlayer();
+      if (!p) return;
+      if (p.isMuted()){
+        p.unMute();
         mute.innerHTML = icon('volume-2');
       } else {
-        ytPlayer.mute();
+        p.mute();
         mute.innerHTML = icon('volume-x');
       }
       refreshIcons();
     });
   }
+
   if (fs){
     fs.addEventListener('click', function(){
       var wrap = $('nlPlayer');
@@ -840,92 +894,92 @@ function wirePlayerControls(){
       else if (wrap.webkitRequestFullscreen) wrap.webkitRequestFullscreen();
     });
   }
-}
 
-function setCurtain(html){
-  var c = $('curtain');
-  if (!c) return;
-  c.innerHTML = html;
-  c.classList.add('show');
-  refreshIcons();
-}
-function hideCurtain(){
-  var c = $('curtain');
-  if (c) c.classList.remove('show');
-}
-
-/* ── PHASE UI ── */
-function renderPhaseUI(){
-  var liveTag = $('playerLiveTag');
-  var crumbLive = $('crumbLivePill');
-  if (currentPhase === 'live'){
-    if (liveTag) liveTag.style.display = 'inline-flex';
-    if (crumbLive) crumbLive.style.display = 'inline-flex';
-  } else {
-    if (liveTag) liveTag.style.display = 'none';
-    if (crumbLive) crumbLive.style.display = 'none';
-  }
-}
-
-/* ── COUNTDOWN PILL ── */
-function updateCountdownPill(){
-  var pill = $('cdPill');
-  var text = $('cdText');
-  if (!pill || !text) return;
-
-  if (currentPhase !== 'upcoming'){
-    pill.classList.remove('show');
-    return;
+  if (back){
+    back.addEventListener('click', function(){
+      var p = safePlayer();
+      if (!p || typeof p.getCurrentTime !== 'function') return;
+      var cur = p.getCurrentTime() || 0;
+      var target = Math.max(0, cur - SEEK_STEP_S);
+      p.seekTo(target, true);
+      userSeekedAwayFromLive = true;
+      updateJumpLiveButton();
+      /* Show a quick toast */
+      toast('−' + SEEK_STEP_S + 's', 'info', 900);
+    });
   }
 
-  var t = getTiming();
-  if (!t.valid) return;
-
-  var diff = t.startMs - Date.now();
-  if (diff < 0) diff = 0;
-  var s = Math.floor(diff / 1000);
-  var d = Math.floor(s / 86400);
-  var h = Math.floor((s % 86400) / 3600);
-  var m = Math.floor((s % 3600) / 60);
-  var sec = s % 60;
-
-  var str;
-  if (d > 0){
-    str = d + 'd ' + String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
-  } else {
-    str = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+  if (fwd){
+    fwd.addEventListener('click', function(){
+      var p = safePlayer();
+      if (!p || typeof p.getCurrentTime !== 'function') return;
+      var cur = p.getCurrentTime() || 0;
+      var dur = (typeof p.getDuration === 'function' ? p.getDuration() : 0) || 0;
+      var target = cur + SEEK_STEP_S;
+      if (dur > 0 && target > dur - 1) target = dur - 0.5;
+      p.seekTo(target, true);
+      updateJumpLiveButton();
+      toast('+' + SEEK_STEP_S + 's', 'info', 900);
+    });
   }
-  text.textContent = str;
-  pill.classList.add('show');
-}
 
-function startTickers(){
-  clearInterval(countdownTimer);
-  clearInterval(phaseTickTimer);
-
-  countdownTimer = setInterval(function(){
-    updateCountdownPill();
-  }, 1000);
-
-  phaseTickTimer = setInterval(function(){
-    var newPhase = computePhase();
-    if (newPhase !== currentPhase){
-      currentPhase = newPhase;
-      renderPhaseUI();
-      updateCountdownPill();
-      if (newPhase === 'live'){
-        /* Stream just went live — tell the YouTube player to load */
-        if (ytReady && ytPlayer && typeof ytPlayer.playVideo === 'function'){
-          try { ytPlayer.playVideo(); } catch(e){}
-        }
-        setupMidrollTimer();
+  if (jumpLive){
+    jumpLive.addEventListener('click', function(){
+      var p = safePlayer();
+      if (!p) return;
+      var dur = (typeof p.getDuration === 'function' ? p.getDuration() : 0) || 0;
+      /* Live edge = very end of the DVR window */
+      if (dur > 0){
+        p.seekTo(dur - 0.5, true);
+      } else {
+        p.seekTo(0, true);
       }
-    }
-  }, 5000);
+      userSeekedAwayFromLive = false;
+      updateJumpLiveButton();
+      toast('Jumped to live', 'success', 1400);
+    });
+  }
 }
 
 /* ══════════════════════════════════════════════════════════════
-   LOAD PLAYER — always tries to play
+   JUMP TO LIVE BUTTON VISIBILITY
+   ══════════════════════════════════════════════════════════════ */
+function updateJumpLiveButton(){
+  var btn = $('ctrlJumpLive');
+  if (!btn) return;
+
+  /* Only show for live streams */
+  if (currentPhase !== 'live'){
+    btn.classList.remove('show');
+    return;
+  }
+
+  var p = ytPlayer;
+  if (!p || typeof p.getDuration !== 'function'){
+    btn.classList.remove('show');
+    return;
+  }
+
+  var cur = (typeof p.getCurrentTime === 'function' ? p.getCurrentTime() : 0) || 0;
+  var dur = p.getDuration() || 0;
+
+  /* If DVR window is very short or unknown, no point showing jump-live */
+  if (dur <= 0 || cur <= 0){
+    btn.classList.remove('show');
+    return;
+  }
+
+  /* If user is within 20 seconds of live edge, hide the button */
+  var distance = dur - cur;
+  if (distance <= 20){
+    btn.classList.remove('show');
+  } else {
+    btn.classList.add('show');
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PLAYER LOAD
    ══════════════════════════════════════════════════════════════ */
 function loadPlayer(){
   var host = $('ytPlayerHost');
@@ -935,8 +989,6 @@ function loadPlayer(){
   var platform = streamData.streamPlatform || 'youtube';
   var url = (streamData.streamUrl || '').trim();
 
-  console.log('[Novalink] Loading player. Platform:', platform, 'URL:', url);
-
   if (!url){
     setCurtain('<div class="ico"><i data-lucide="alert-triangle"></i></div><h3>Stream URL missing</h3><p>The host has not set a stream URL yet.</p>');
     return;
@@ -944,18 +996,13 @@ function loadPlayer(){
 
   if (platform === 'youtube'){
     var vid = extractYouTubeId(url);
-    console.log('[Novalink] Extracted YouTube ID:', vid);
-
     if (!vid){
-      setCurtain('<div class="ico"><i data-lucide="alert-triangle"></i></div><h3>Invalid YouTube URL</h3><p>Could not extract a video ID from:<br><br><code style="font-size:11px;background:rgba(0,0,0,.3);padding:4px 8px;border-radius:4px;word-break:break-all;color:#fff;">' + esc(url) + '</code></p>');
+      setCurtain('<div class="ico"><i data-lucide="alert-triangle"></i></div><h3>Invalid YouTube URL</h3><p>Could not extract a video ID from: ' + esc(url) + '</p>');
       return;
     }
-
-    /* Show loading curtain while YT API loads */
     setCurtain('<div class="ico"><i data-lucide="loader"></i></div><h3>Loading player…</h3><p>Connecting to YouTube.</p>');
     host.innerHTML = '<div id="ytPlayer"></div>';
 
-    /* If YT API is ready, create player immediately */
     if (window.YT && window.YT.Player){
       createYTPlayer(vid);
     } else {
@@ -990,39 +1037,21 @@ function loadPlayer(){
   }
 }
 
-/* ══════════════════════════════════════════════════════════════
-   YOUTUBE PLAYER — aggressive autoplay
-   ══════════════════════════════════════════════════════════════ */
 function createYTPlayer(videoId){
-  console.log('[Novalink] Creating YT player with ID:', videoId);
-
   ytPlayer = new YT.Player('ytPlayer', {
     videoId: videoId,
     playerVars: {
-      autoplay: 1,
-      mute: 1,
-      rel: 0,
-      playsinline: 1,
-      iv_load_policy: 3,
-      modestbranding: 1,
-      controls: 1,
-      disablekb: 0,
-      color: 'white',
-      origin: window.location.origin
+      autoplay: 1, mute: 1, rel: 0, playsinline: 1,
+      iv_load_policy: 3, modestbranding: 1, controls: 0, disablekb: 1,
+      color: 'white', origin: window.location.origin
     },
     events: {
       onReady: function(event){
         ytReady = true;
-        console.log('[Novalink] YT player ready. Attempting autoplay.');
         hideCurtain();
+        try { event.target.mute(); event.target.playVideo(); } catch(e){}
 
-        /* Force play with mute — standard autoplay pattern */
-        try {
-          event.target.mute();
-          event.target.playVideo();
-        } catch(e){ console.warn('[Novalink] playVideo error:', e); }
-
-        /* Retry every 1s for 8 seconds — some browsers block the first attempt */
+        /* Aggressive autoplay retry */
         var attempts = 0;
         clearInterval(autoplayRetryTimer);
         autoplayRetryTimer = setInterval(function(){
@@ -1030,120 +1059,151 @@ function createYTPlayer(videoId){
           if (attempts > 8){ clearInterval(autoplayRetryTimer); return; }
           try {
             var state = event.target.getPlayerState();
-            /* If not playing (1), try to play */
-            if (state !== 1 && state !== 3){
-              event.target.playVideo();
-            } else {
-              clearInterval(autoplayRetryTimer);
-            }
+            if (state !== 1 && state !== 3) event.target.playVideo();
+            else clearInterval(autoplayRetryTimer);
           } catch(e){}
         }, 1000);
+
+        /* Poll every 2s to update jump-to-live visibility */
+        clearInterval(liveCheckTimer);
+        liveCheckTimer = setInterval(function(){
+          if (currentPhase === 'live') updateJumpLiveButton();
+        }, 2000);
       },
       onStateChange: function(event){
-        console.log('[Novalink] YT state change:', event.data);
         var pp = $('ctrlPlayPause');
         if (pp) pp.innerHTML = icon(event.data === 1 ? 'pause' : 'play');
         refreshIcons();
 
-        /* If video ends and there's a postroll, fire it */
         if (event.data === 0){
           if (adSettings.postrollEnabled && streamData.postrollEnabled !== false && !adState.firedPostroll){
             adState.firedPostroll = true;
             showAd('postroll', function(){});
           }
         }
-
-        /* YT error codes */
-        if (event.data === -1 || event.data === 5 || event.data === 100 || event.data === 101 || event.data === 150){
-          var errMsg = 'YouTube error ' + event.data;
-          if (event.data === 100 || event.data === 101 || event.data === 150){
-            errMsg = 'This video is private or does not allow embedding.';
-          } else if (event.data === 5){
-            errMsg = 'This video format is not supported by the player.';
-          } else if (event.data === -1){
-            errMsg = 'Waiting for the stream to start on YouTube…';
-          }
-          console.warn('[Novalink]', errMsg);
-          /* For -1 (unstarted), don't show error — it's just waiting */
-          if (event.data !== -1 && !(currentPhase === 'upcoming')){
-            toast(errMsg, 'error', 5000);
-          }
+        if (event.data === 1){
+          /* Video is playing — check if we're at the live edge */
+          updateJumpLiveButton();
         }
       },
       onError: function(event){
-        console.error('[Novalink] YT error:', event.data);
         var msg = 'YouTube error. ';
-        if (event.data === 2){
-          msg += 'Video ID is invalid.';
-        } else if (event.data === 5){
-          msg += 'HTML5 player cannot play this video.';
-        } else if (event.data === 100){
-          msg += 'Video not found or is private.';
-        } else if (event.data === 101 || event.data === 150){
-          msg += 'Video owner does not allow embedding.';
-        } else {
-          msg += 'Code: ' + event.data;
-        }
+        if (event.data === 2) msg += 'Video ID is invalid.';
+        else if (event.data === 5) msg += 'HTML5 player cannot play this video.';
+        else if (event.data === 100) msg += 'Video not found or is private.';
+        else if (event.data === 101 || event.data === 150) msg += 'Video owner does not allow embedding.';
+        else msg += 'Code: ' + event.data;
         toast(msg, 'error', 6000);
       }
     }
   });
 }
 
-/* ══════════════════════════════════════════════════════════════
-   MIDROLL
-   ══════════════════════════════════════════════════════════════ */
+function setCurtain(html){
+  var c = $('curtain');
+  if (!c) return;
+  c.innerHTML = html;
+  c.classList.add('show');
+  refreshIcons();
+}
+function hideCurtain(){
+  var c = $('curtain');
+  if (c) c.classList.remove('show');
+}
+
+function renderPhaseUI(){
+  var liveTag = $('playerLiveTag');
+  var crumbLive = $('crumbLivePill');
+  if (currentPhase === 'live'){
+    if (liveTag) liveTag.style.display = 'inline-flex';
+    if (crumbLive) crumbLive.style.display = 'inline-flex';
+  } else {
+    if (liveTag) liveTag.style.display = 'none';
+    if (crumbLive) crumbLive.style.display = 'none';
+  }
+  updateJumpLiveButton();
+}
+
+function updateCountdownPill(){
+  var pill = $('cdPill');
+  var text = $('cdText');
+  if (!pill || !text) return;
+  if (currentPhase !== 'upcoming'){ pill.classList.remove('show'); return; }
+  var t = getTiming();
+  if (!t.valid) return;
+  var diff = t.startMs - Date.now();
+  if (diff < 0) diff = 0;
+  var s = Math.floor(diff / 1000);
+  var d = Math.floor(s / 86400);
+  var h = Math.floor((s % 86400) / 3600);
+  var m = Math.floor((s % 3600) / 60);
+  var sec = s % 60;
+  var str;
+  if (d > 0){
+    str = d + 'd ' + String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+  } else {
+    str = String(h).padStart(2,'0') + ':' + String(m).padStart(2,'0') + ':' + String(sec).padStart(2,'0');
+  }
+  text.textContent = str;
+  pill.classList.add('show');
+}
+
+function startTickers(){
+  clearInterval(countdownTimer);
+  clearInterval(phaseTickTimer);
+  countdownTimer = setInterval(function(){ updateCountdownPill(); }, 1000);
+  phaseTickTimer = setInterval(function(){
+    var newPhase = computePhase();
+    if (newPhase !== currentPhase){
+      currentPhase = newPhase;
+      renderPhaseUI();
+      updateCountdownPill();
+      if (newPhase === 'live'){
+        if (ytReady && ytPlayer && typeof ytPlayer.playVideo === 'function'){
+          try { ytPlayer.playVideo(); } catch(e){}
+        }
+        setupMidrollTimer();
+      }
+    }
+  }, 5000);
+}
+
 function setupMidrollTimer(){
   clearTimeout(adState.midrollTimerId);
   if (!adSettings.midrollEnabled) return;
   if (streamData.midrollEnabled === false) return;
   if (adState.firedMidroll) return;
-
   var t = getTiming();
   if (!t.valid) return;
   if (currentPhase !== 'live') return;
-
   var midMin = parseInt(streamData.midrollMinute, 10) || adSettings.midrollMinute || 30;
   var fireAt = t.startMs + (midMin * 60000);
   var delay = Math.max(0, fireAt - Date.now());
-
   adState.midrollTimerId = setTimeout(function(){
     adState.firedMidroll = true;
     showAd('midroll', function(){});
   }, delay);
 }
 
-/* ══════════════════════════════════════════════════════════════
-   ADS
-   ══════════════════════════════════════════════════════════════ */
 function loadAdsAndMaybePlay(){
   var settingsPromise = db.collection(SETTINGS).doc(SETTINGS_DOC).get().then(function(snap){
     if (snap.exists) adSettings = Object.assign({}, AD_DEFAULTS, snap.data() || {});
   }).catch(function(){});
-
   var poolPromise = db.collection(ADS).where('active', '==', true).limit(50).get().then(function(snap){
     adPool = { preroll: [], midroll: [], postroll: [] };
     var now = Date.now();
     snap.forEach(function(doc){
       var d = doc.data() || {};
       d.id = doc.id;
-      if (d.startDate){
-        var s = new Date(d.startDate + 'T00:00').getTime();
-        if (!isNaN(s) && now < s) return;
-      }
-      if (d.endDate){
-        var e = new Date(d.endDate + 'T23:59:59').getTime();
-        if (!isNaN(e) && now > e) return;
-      }
+      if (d.startDate){ var s = new Date(d.startDate + 'T00:00').getTime(); if (!isNaN(s) && now < s) return; }
+      if (d.endDate){ var e = new Date(d.endDate + 'T23:59:59').getTime(); if (!isNaN(e) && now > e) return; }
       var t = d.type || 'any';
       if (t === 'preroll' || t === 'any') adPool.preroll.push(d);
       if (t === 'midroll' || t === 'any') adPool.midroll.push(d);
       if (t === 'postroll' || t === 'any') adPool.postroll.push(d);
     });
   }).catch(function(){});
-
   Promise.all([settingsPromise, poolPromise]).then(function(){
-    /* Pre-roll only fires when the stream is live */
     if (currentPhase === 'live'){
       if (adSettings.prerollEnabled && streamData.prerollEnabled !== false && !adState.firedPreroll){
         adState.firedPreroll = true;
@@ -1154,10 +1214,7 @@ function loadAdsAndMaybePlay(){
 }
 
 function getRecentAdIds(){
-  try {
-    var raw = sessionStorage.getItem('nl_recent_ads');
-    return raw ? JSON.parse(raw) : [];
-  } catch(e){ return []; }
+  try { var raw = sessionStorage.getItem('nl_recent_ads'); return raw ? JSON.parse(raw) : []; } catch(e){ return []; }
 }
 function rememberAd(adId){
   var recent = getRecentAdIds();
@@ -1165,7 +1222,6 @@ function rememberAd(adId){
   if (recent.length > RECENT_ADS_MAX) recent = recent.slice(-RECENT_ADS_MAX);
   try { sessionStorage.setItem('nl_recent_ads', JSON.stringify(recent)); } catch(e){}
 }
-
 function pickAd(slot){
   var pool = adPool[slot] || [];
   if (!pool.length) return null;
@@ -1181,7 +1237,6 @@ function pickAd(slot){
   }
   return fresh[0];
 }
-
 function trackAdEvent(ad, type){
   if (!ad || !ad.id) return;
   try {
@@ -1193,108 +1248,75 @@ function trackAdEvent(ad, type){
 }
 
 function showAd(slot, onComplete){
-  var overlay = $('adOverlay');
-  var media = $('adMedia');
-  var title = $('adTitle');
-  var cta = $('adCta');
-  var ctaLabel = $('adCtaLabel');
-  var skipBtn = $('adSkip');
-  var skipText = $('adSkipText');
-  var countdown = $('adCountdown');
+  var overlay = $('adOverlay'), media = $('adMedia'), title = $('adTitle');
+  var cta = $('adCta'), ctaLabel = $('adCtaLabel');
+  var skipBtn = $('adSkip'), skipText = $('adSkipText'), countdown = $('adCountdown');
   var progressFill = $('adProgressFill');
-
   if (!overlay || !media) { if (onComplete) onComplete(); return; }
+
+  /* Show controls while ad plays */
+  var player = $('nlPlayer');
+  if (player) player.classList.remove('hide-controls');
 
   var ad = pickAd(slot);
   overlay.classList.add('show');
   media.innerHTML = '';
   progressFill.style.width = '0%';
-
   var skipAfter = parseInt(adSettings.skipAfterSeconds, 10) || 5;
 
   if (ad){
     title.textContent = ad.title || 'Advertisement';
     cta.href = ad.clickUrl || '#';
     ctaLabel.textContent = ad.ctaLabel || 'Learn more';
-
     if (ad.mediaType === 'video' && ad.mediaUrl){
       var vid = document.createElement('video');
       vid.src = ad.mediaUrl;
-      vid.autoplay = true;
-      vid.muted = false;
-      vid.playsInline = true;
+      vid.autoplay = true; vid.muted = false; vid.playsInline = true;
       vid.setAttribute('playsinline', '');
       media.appendChild(vid);
-
       vid.addEventListener('timeupdate', function(){
         if (vid.duration) progressFill.style.width = ((vid.currentTime / vid.duration) * 100) + '%';
       });
-      vid.addEventListener('ended', function(){
-        hideAd();
-        if (onComplete) onComplete();
-      });
-      vid.addEventListener('error', function(){
-        media.innerHTML = '';
-        media.appendChild(buildHouseAd());
-      });
+      vid.addEventListener('ended', function(){ hideAd(); if (onComplete) onComplete(); });
+      vid.addEventListener('error', function(){ media.innerHTML = ''; media.appendChild(buildHouseAd()); });
     } else if (ad.mediaUrl){
       var img = document.createElement('img');
-      img.src = ad.mediaUrl;
-      img.alt = ad.title || 'Ad';
+      img.src = ad.mediaUrl; img.alt = ad.title || 'Ad';
       media.appendChild(img);
     } else {
       media.appendChild(buildHouseAd());
     }
     trackAdEvent(ad, 'impression');
     rememberAd(ad.id);
-
-    if (typeof ad.skipAfterSeconds === 'number'){
-      skipAfter = ad.skipAfterSeconds;
-    }
+    if (typeof ad.skipAfterSeconds === 'number') skipAfter = ad.skipAfterSeconds;
   } else {
     title.textContent = adSettings.houseAdTitle || 'Advertise on Novalink';
     cta.href = adSettings.houseAdUrl || 'mailto:ads@novalink.com';
     ctaLabel.textContent = adSettings.houseAdCtaLabel || 'Advertise here';
     media.appendChild(buildHouseAd());
   }
-
   cta.onclick = function(){ if (ad) trackAdEvent(ad, 'click'); };
-
   if (skipAfter === -1){
-    skipBtn.disabled = true;
-    skipText.textContent = 'Ad';
-    countdown.textContent = '';
+    skipBtn.disabled = true; skipText.textContent = 'Ad'; countdown.textContent = '';
   } else {
     var remaining = skipAfter;
-    skipBtn.disabled = true;
-    skipText.textContent = 'Skip in';
-    countdown.textContent = remaining;
+    skipBtn.disabled = true; skipText.textContent = 'Skip in'; countdown.textContent = remaining;
     clearInterval(adState.countdownTimerId);
     adState.countdownTimerId = setInterval(function(){
       remaining--;
       if (remaining <= 0){
         clearInterval(adState.countdownTimerId);
-        skipBtn.disabled = false;
-        skipText.textContent = 'Skip ad';
-        countdown.textContent = '';
-      } else {
-        countdown.textContent = remaining;
-      }
+        skipBtn.disabled = false; skipText.textContent = 'Skip ad'; countdown.textContent = '';
+      } else countdown.textContent = remaining;
     }, 1000);
   }
-
   skipBtn.onclick = function(){
     if (skipBtn.disabled) return;
-    hideAd();
-    if (onComplete) onComplete();
+    hideAd(); if (onComplete) onComplete();
   };
-
   if (!(ad && ad.mediaType === 'video')){
     clearTimeout(adState.skipTimerId);
-    adState.skipTimerId = setTimeout(function(){
-      hideAd();
-      if (onComplete) onComplete();
-    }, 10000);
+    adState.skipTimerId = setTimeout(function(){ hideAd(); if (onComplete) onComplete(); }, 10000);
   }
   refreshIcons();
 }
@@ -1325,29 +1347,20 @@ function buildHouseAd(){
   return wrap;
 }
 
-/* ══════════════════════════════════════════════════════════════
-   LOAD
-   ══════════════════════════════════════════════════════════════ */
 function load(){
   streamId = getParam('id');
   if (!streamId){ renderError('No stream specified', 'This page needs a stream ID.'); return; }
-
   db.collection(STREAMS).doc(streamId).get()
     .then(function(doc){
       if (!doc.exists){ renderError('Stream not found', 'This stream may have been deleted.'); return; }
       streamData = doc.data() || {};
       streamData.id = doc.id;
-
       var chId = streamData.channelId;
       var chPromise = chId
         ? db.collection(CHANNELS).doc(chId).get().then(function(cs){
-            if (cs.exists){
-              channelData = cs.data() || {};
-              channelData.id = cs.id;
-            }
+            if (cs.exists){ channelData = cs.data() || {}; channelData.id = cs.id; }
           }).catch(function(){})
         : Promise.resolve();
-
       var sibPromise = chId
         ? db.collection(STREAMS).where('channelId', '==', chId).limit(20).get().then(function(snap){
             siblingStreams = [];
@@ -1363,7 +1376,6 @@ function load(){
             });
           }).catch(function(){})
         : Promise.resolve();
-
       Promise.all([chPromise, sibPromise]).then(function(){
         currentPhase = computePhase();
         renderPage();
@@ -1375,7 +1387,6 @@ function load(){
     });
 }
 
-/* ── BOOT ── */
 document.addEventListener('DOMContentLoaded', function(){
   refreshIcons();
   $('signInBtn').addEventListener('click', function(){ window.location.href = 'index.html#signin'; });
@@ -1385,7 +1396,7 @@ document.addEventListener('DOMContentLoaded', function(){
       auth.signOut().then(function(){ toast('Signed out.', 'success'); });
     }
   });
-  auth.onAuthStateChanged(function(user){ applyAuth(user); });
+  auth.onAuthStateChange && auth.onAuthStateChanged(function(user){ applyAuth(user); });
   load();
 });
 
@@ -1393,6 +1404,8 @@ window.addEventListener('beforeunload', function(){
   if (countdownTimer) clearInterval(countdownTimer);
   if (phaseTickTimer) clearInterval(phaseTickTimer);
   if (autoplayRetryTimer) clearInterval(autoplayRetryTimer);
+  if (liveCheckTimer) clearInterval(liveCheckTimer);
+  if (controlsHideTimer) clearTimeout(controlsHideTimer);
   clearTimeout(adState.midrollTimerId);
   clearInterval(adState.countdownTimerId);
   clearTimeout(adState.skipTimerId);
