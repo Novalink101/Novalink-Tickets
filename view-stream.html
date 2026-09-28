@@ -1944,14 +1944,11 @@ function showAd(slot, onComplete){
     };
   }
 
-  var isVideoAd = false;
-
   if (ad){
     title.textContent = ad.title || 'Advertisement';
     cta.href = ad.clickUrl || '#';
     ctaLabel.textContent = ad.ctaLabel || 'Learn more';
     if (ad.mediaType === 'video' && ad.mediaUrl){
-      isVideoAd = true;
       var vid = document.createElement('video');
       vid.src = ad.mediaUrl;
       vid.autoplay = true; vid.muted = false; vid.playsInline = true;
@@ -1981,7 +1978,7 @@ function showAd(slot, onComplete){
 
   cta.onclick = function(){ if (ad) trackAdEvent(ad, 'click'); };
 
-  // FIXED: Skip button logic. Ads no longer auto-close after a timer.
+  // Skip button logic. Ads NEVER auto-close.
   if (skipAfter === -1){
     // Advertiser disabled skipping entirely
     skipBtn.disabled = true;
@@ -2017,15 +2014,11 @@ function showAd(slot, onComplete){
     if (onComplete) onComplete();
   };
 
-  // FIXED: Only auto-close if it's a non-video ad AND no advertiser skip setting is present.
-  // This covers the house ad fallback. Video ads close on their own "ended" event.
+  // No auto-close timer. Ad only closes when:
+  // - Video ad finishes playing ("ended" event)
+  // - User clicks "Skip Ad"
+  // - User clicks the CTA (link)
   clearTimeout(adState.skipTimerId);
-  if (!isVideoAd && (!ad || typeof ad.skipAfterSeconds === 'undefined')){
-    adState.skipTimerId = setTimeout(function(){
-      hideAd();
-      if (onComplete) onComplete();
-    }, 15000); // 15s default for house ads
-  }
 
   refreshIcons();
 }
