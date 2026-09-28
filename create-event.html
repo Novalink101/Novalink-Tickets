@@ -528,8 +528,6 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .promo-add-grid .form-group input, .promo-add-grid .form-group select{padding:8px 10px;font-size:13px;}
 .promo-add-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:6px;}
 .promo-help{font-size:10.5px;color:var(--text-muted);font-style:italic;margin-top:8px;line-height:1.5;}
-
-.header-inner{display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap}
 .hdr-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
 .hdr-btn{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border-radius:99px;background:var(--surface-2);border:1px solid var(--border);color:var(--text);font-size:12.5px;font-weight:800;cursor:pointer;transition:.15s;white-space:nowrap;font-family:inherit;text-decoration:none}
 .hdr-btn:hover{border-color:var(--cyan-400);background:#fff;box-shadow:0 0 0 3px rgba(0,255,255,.14)}
@@ -541,7 +539,6 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .btn-save i{width:15px;height:15px}
 .btn-save.saved{background:#10b981;color:#fff}
 @media (max-width:560px){.studio-badge{display:none}.hdr-btn .lbl{display:none}.btn-save .lbl{display:none}.btn-save{padding:10px 14px}}
-
 .hero{background:radial-gradient(circle at 78% 30%,rgba(0,255,255,.16),transparent 55%),radial-gradient(circle at 12% 82%,rgba(0,255,255,.08),transparent 45%),linear-gradient(160deg,#0a0f14 0%,#0f172a 45%,#0a0f14 100%);color:#fff;padding:44px 0 46px;position:relative;overflow:hidden}
 .hero::after{content:'';position:absolute;inset:0;background-image:radial-gradient(circle at 1px 1px,rgba(255,255,255,.035) 1px,transparent 0);background-size:24px 24px;pointer-events:none}
 .hero-in{max-width:var(--max-width);margin:0 auto;padding:0 20px;position:relative;z-index:1}
@@ -554,7 +551,6 @@ h1,h2,h3{line-height:1.15;font-weight:700}
 .btn-cyan{background:var(--cyan-400);color:#04161c;font-weight:900;font-size:14px;padding:13px 20px;border-radius:12px;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:.15s;box-shadow:0 8px 22px rgba(0,255,255,.28);font-family:inherit;border:none;cursor:pointer}
 .btn-cyan:hover{transform:translateY(-2px);box-shadow:0 12px 28px rgba(0,255,255,.4)}
 .btn-cyan i{width:16px;height:16px}
-
 .step-card{background:#0a0f14;color:#fff;border-radius:var(--radius);padding:14px 16px;display:flex;gap:13px;align-items:flex-start;position:relative;margin-bottom:14px}
 .step-card .step-num{width:34px;height:34px;border-radius:50%;background:var(--cyan-400);color:#04161c;font-weight:900;font-size:15px;display:flex;align-items:center;justify-content:center;flex-shrink:0;line-height:1}
 .step-card .step-info{flex:1;min-width:0;display:flex;flex-direction:column;justify-content:center;min-height:34px}
@@ -1888,6 +1884,9 @@ function updateChairModeInfo(){
 }
 function isSellingPerChair(){ return !tableMode || numberChairs; }
 
+/* ============================================================
+   FIXED: loadEventForEdit — restores plan, tier colours, applyPlanFeatures
+   ============================================================ */
 function loadEventForEdit(eventId, showCoverPreviewFn){
   return db.collection(EVENTS_COLLECTION).doc(eventId).get().then(function(snap){
     if (!snap.exists) { showToast("That event no longer exists — starting a new one instead.", "error", 4200); return; }
@@ -1911,6 +1910,7 @@ function loadEventForEdit(eventId, showCoverPreviewFn){
     updateAllTicketPreviews(); updateVenuePresetHint();
     var descEl = $("eventDescription"); if (descEl) descEl.dispatchEvent(new Event("input"));
 
+    // --- Restore plan radio + currentPlan ---
     if (d.plan && d.plan.id) {
       var planRadio = document.querySelector('input[name="plan"][value="' + d.plan.id + '"]');
       if (planRadio) {
@@ -1919,13 +1919,17 @@ function loadEventForEdit(eventId, showCoverPreviewFn){
         document.querySelectorAll(".plan-card").forEach(function(card){ var r = card.querySelector("input[type=radio]"); card.classList.toggle("selected", r && r.checked); });
       }
     }
+
+    // --- Restore tier names, colours, prices ---
     if (d.tierNames) { TIER_KEYS.forEach(function(k){ if (d.tierNames[k]) { TIER_NAMES[k] = d.tierNames[k]; var inp = document.querySelector('.tier-name-input[data-tier="'+k+'"]'); if (inp) inp.value = d.tierNames[k]; } }); }
     if (d.tierColours) { TIER_KEYS.forEach(function(k){ if (d.tierColours[k]) { TIER_COLORS[k] = d.tierColours[k]; var inp = document.querySelector('.tier-color-input[data-tier="'+k+'"]'); if (inp) inp.value = d.tierColours[k]; } }); }
+    if (d.tierColours) { TIER_KEYS.forEach(function(k){ if (d.tierColours[k]) { var inp = document.querySelector('.tier-color-input[data-tier="'+k+'"]'); if (inp) inp.value = d.tierColours[k]; } }); }
     if (d.tierPrices) { TIER_KEYS.forEach(function(k){ if (d.tierPrices[k] !== undefined) { TIER_PRICES[k] = d.tierPrices[k]; var inp = document.querySelector('.tier-price-input[data-tier="'+k+'"]'); if (inp) inp.value = Number(d.tierPrices[k]).toFixed(2); } }); }
     if (d.activeTierCount) { activeTierCount = d.activeTierCount; var tc = $("tierCount"); if (tc) tc.value = String(d.activeTierCount); }
     if (d.tierColor) { var tsel = $("tierColor"); if (tsel) tsel.value = d.tierColor; }
     applyTierColors();
 
+    // --- Restore canvas / stage / etc ---
     if (typeof d.canvasWidth === "number")  { canvasWidth  = d.canvasWidth;  var el; el=$("canvasWidth");  if(el) el.value = canvasWidth;  }
     if (typeof d.canvasHeight === "number") { canvasHeight = d.canvasHeight; var el; el=$("canvasHeight"); if(el) el.value = canvasHeight; }
     if (typeof d.gridSize === "number")     { gridSize     = d.gridSize;     var el; el=$("gridSize");     if(el) el.value = gridSize;     }
@@ -1968,11 +1972,16 @@ function loadEventForEdit(eventId, showCoverPreviewFn){
     else if (d.seatingMode === "rows") { tableMode = false; var tm2 = $("tableModeToggle"); if (tm2) tm2.checked = false; }
     if (d.promoCodes && d.promoCodes.length) { promoCodes = d.promoCodes.map(function(p){ return Object.assign({}, p); }); }
 
+    // --- Rebuild all UI ---
     applyTableModeUI(); rebuildSectionTabs(); refreshSectionInputs(); rebuildRowOverrides(); rebuildTableRowsEditor();
     rebuildAnnotationList(); rebuildHoldSelect(); rebuildLevelsList(); rebuildLevelSelect();
     updateTierCountOptions(); updateTierVisibility(); updateTableSummary(); calculateCapacity();
     updateRevenueCalculator(); renderTierBreakdown(); renderPromoList(); updateLayoutSummary();
     updateScaleHints(); updateTableValidation(); renderSeatingPlan(); updateAllTicketPreviews();
+
+    // --- CRITICAL: Re-apply plan features + snapshot AFTER all data is restored ---
+    applyPlanFeatures();
+    updatePlanSnapshot();
 
     document.title = "Edit Event - Novalink Studio";
     var s1h = document.querySelector('.step-panel[data-step-panel="1"] .form-header h1');
@@ -3248,15 +3257,36 @@ document.addEventListener("DOMContentLoaded", function(){
       source:"user"
     },buildVenuePayload());
   }
+
+  /* ============================================================
+     FIXED persistEvent:
+       - On EDIT: uses { merge: true } AND force-sets createdAt so
+         the doc stays visible in the homepage orderBy("createdAt") query.
+       - On CREATE: sets createdAt once.
+     ============================================================ */
   function persistEvent(payload,onDone){
     var user=window._nvCurrentUser||auth.currentUser;
     if(!user){ onDone({ok:false,error:"You must be signed in to save an event. Please sign in first."}); return; }
     payload.ownerUid=user.uid; payload.ownerEmail=user.email||"";
     payload.ownerName=user.displayName||(user.email?user.email.split("@")[0]:"");
-    var ref;
-    if (IS_EDIT_MODE) { ref = db.collection(EVENTS_COLLECTION).doc(EDIT_EVENT_ID); payload.id = EDIT_EVENT_ID; payload.updatedAt = firebase.firestore.FieldValue.serverTimestamp(); }
-    else { ref = db.collection(EVENTS_COLLECTION).doc(); payload.id = ref.id; payload.createdAt = firebase.firestore.FieldValue.serverTimestamp(); }
-    ref.set(payload).then(function(){ onDone({ok:true,id:ref.id}); }).catch(function(err){ console.error("Firestore save error:",err); onDone({ok:false,error:err.message}); });
+
+    if (IS_EDIT_MODE) {
+      var ref = db.collection(EVENTS_COLLECTION).doc(EDIT_EVENT_ID);
+      payload.id = EDIT_EVENT_ID;
+      payload.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
+      // CRITICAL: ensure createdAt is always present so the homepage query includes it.
+      payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      ref.set(payload, { merge: true })
+        .then(function(){ onDone({ok:true,id:ref.id}); })
+        .catch(function(err){ console.error("Firestore save error:",err); onDone({ok:false,error:err.message}); });
+    } else {
+      var ref2 = db.collection(EVENTS_COLLECTION).doc();
+      payload.id = ref2.id;
+      payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+      ref2.set(payload)
+        .then(function(){ onDone({ok:true,id:ref2.id}); })
+        .catch(function(err){ console.error("Firestore save error:",err); onDone({ok:false,error:err.message}); });
+    }
   }
   var costInput=$("cost");
   function handleSaveEvent(){
@@ -3513,4 +3543,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-                                                                                                                                                                     </html>
+  </html>
