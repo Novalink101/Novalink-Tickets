@@ -1,0 +1,955 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#0a0f14" />
+<title>Partner Channels · Novalink Admin</title>
+<script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<style>
+:root{
+  --cy:#00FFFF;--cy2:#00CCCC;--cy3:#009999;--cyf:#e6ffff;
+  --bg:#f6f8fb;--sf:#ffffff;--sf2:#f1f4f8;
+  --bd:#e4e9f0;--bd2:#d3dbe5;
+  --tx:#0a0f14;--tx2:#2b3644;--mut:#6b7787;
+  --rd:14px;--font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --dg:#dc2626;--dgf:#fef2f2;--sv:#059669;--svf:#ecfdf5;--nv:#1e2f4d;
+  --ink:#0a0f14;
+  --ease:cubic-bezier(0.25,0.8,0.25,1);
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{-webkit-text-size-adjust:100%}
+body{font-family:var(--font);background:var(--bg);color:var(--tx);line-height:1.6;min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
+.container{max-width:1480px;margin:0 auto;padding:0 20px;width:100%}
+h1,h2,h3{line-height:1.15;font-weight:700}
+a{color:inherit;text-decoration:none}
+button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation}
+input,select,textarea{font-family:inherit;font-size:14px}
+
+/* HEADER */
+.site-header{background:var(--sf);border-bottom:1px solid var(--bd);padding:12px 0;position:sticky;top:0;z-index:40}
+.hdr{max-width:1480px;margin:0 auto;padding:0 20px;display:flex;align-items:center;gap:16px;justify-content:space-between;flex-wrap:wrap}
+.logo{display:inline-flex;align-items:center;gap:11px;flex-shrink:0;color:var(--nv)}
+.logo svg{width:26px;height:32px;display:block}
+.logo b{font-weight:800;font-size:1.15rem;letter-spacing:-.01em}
+.admin-tag{display:inline-flex;align-items:center;gap:6px;background:var(--ink);color:var(--cy);font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;padding:6px 11px;border-radius:99px;margin-left:8px}
+.admin-tag i{width:12px;height:12px}
+.hdr-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap}
+.hdr-btn{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border-radius:99px;background:var(--sf2);border:1px solid var(--bd);color:var(--tx);font-size:12.5px;font-weight:800;transition:.15s;white-space:nowrap;text-decoration:none}
+.hdr-btn:hover{border-color:var(--cy);background:#fff;box-shadow:0 0 0 3px rgba(0,255,255,.14)}
+.hdr-btn i{width:14px;height:14px}
+
+/* HERO */
+.hero{background:radial-gradient(circle at 78% 30%, rgba(0,255,255,.14), transparent 55%),radial-gradient(circle at 12% 82%, rgba(0,255,255,.08), transparent 45%),linear-gradient(160deg,#0a0f14 0%,#0f172a 45%,#0a0f14 100%);color:#fff;padding:40px 0 42px;position:relative;overflow:hidden}
+.hero::after{content:'';position:absolute;inset:0;background-image:radial-gradient(circle at 1px 1px, rgba(255,255,255,.035) 1px, transparent 0);background-size:24px 24px;pointer-events:none}
+.hero-in{max-width:1480px;margin:0 auto;padding:0 20px;position:relative;z-index:1}
+.hero-tag{display:inline-flex;align-items:center;gap:9px;border:1px solid rgba(0,255,255,.42);background:rgba(0,255,255,.1);color:var(--cy);font-size:11px;font-weight:900;letter-spacing:.11em;text-transform:uppercase;padding:8px 15px;border-radius:99px;margin-bottom:16px}
+.hero-tag i{width:13px;height:13px}
+.hero h1{font-size:clamp(1.7rem,3.6vw,2.5rem);font-weight:900;line-height:1.1;letter-spacing:-.02em;margin-bottom:10px;max-width:720px}
+.hero h1 span{color:var(--cy)}
+.hero p{color:#94a3b8;font-size:14.5px;font-weight:500;max-width:680px;line-height:1.6}
+
+/* MAIN */
+main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:24px 20px 64px}
+@media (max-width:560px){main{padding:16px 14px 44px}}
+
+.split{display:grid;grid-template-columns:minmax(0,1fr);gap:22px;align-items:start}
+@media (min-width:1024px){.split{grid-template-columns:minmax(0,1.4fr) minmax(0,1fr)}}
+.col{min-width:0}
+.col-right{display:flex;flex-direction:column;gap:16px}
+@media (min-width:1024px){.col-right{position:sticky;top:88px}}
+
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rd);padding:20px;box-shadow:0 4px 14px rgba(15,23,42,.05)}
+.card + .card{margin-top:16px}
+.card-title{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:var(--cy3);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.card-title i{width:15px;height:15px}
+.card-title .count{margin-left:auto;color:var(--mut);font-weight:600;text-transform:none;letter-spacing:0;font-size:12px}
+
+/* SEGMENTED CONTROL */
+.seg{display:inline-flex;background:var(--sf2);border:1px solid var(--bd);border-radius:99px;padding:4px;gap:2px;margin-bottom:16px;max-width:100%;overflow-x:auto;scrollbar-width:none}
+.seg::-webkit-scrollbar{display:none}
+.seg button{padding:8px 14px;border-radius:99px;font-size:12.5px;font-weight:800;color:var(--mut);white-space:nowrap;transition:.15s;border:none;background:transparent}
+.seg button.active{background:var(--ink);color:#fff}
+.seg button:hover:not(.active){color:var(--tx2)}
+
+/* EMPTY */
+.empty-list{text-align:center;padding:44px 20px;color:var(--mut)}
+.empty-list i{width:40px;height:40px;color:var(--bd2);margin:0 auto 10px;display:block}
+.empty-list h3{font-size:14.5px;font-weight:800;color:var(--tx2);margin-bottom:4px}
+.empty-list p{font-size:12.5px;line-height:1.55}
+
+/* PARTNER LIST */
+.lp-list{display:flex;flex-direction:column;gap:12px}
+.lp-item{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:14px;transition:.15s}
+.lp-item:hover{border-color:var(--cy);box-shadow:0 6px 20px rgba(6,182,212,.08)}
+.lp-head{display:flex;gap:12px;align-items:flex-start;margin-bottom:10px}
+.lp-logo{width:52px;height:52px;border-radius:12px;overflow:hidden;background:linear-gradient(135deg,#0a0f14,#0f172a);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid var(--bd)}
+.lp-logo img{width:100%;height:100%;object-fit:cover}
+.lp-logo span{font-size:16px;font-weight:900;color:var(--cy);font-family:var(--mono)}
+.lp-info{flex:1;min-width:0}
+.lp-name{font-size:14.5px;font-weight:800;color:var(--tx);word-break:break-word;display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:3px}
+.lp-meta{font-size:11.5px;color:var(--mut);display:flex;gap:12px;flex-wrap:wrap;font-weight:500}
+.lp-meta strong{color:var(--tx2);font-weight:800}
+.lp-meta .stat{font-family:var(--mono);font-weight:700}
+.lp-protocol{font-size:9.5px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:99px;background:var(--cyf);color:var(--cy3);border:1px solid var(--cy)}
+.lp-private{background:#fff7ed;color:#c2410c;border-color:#fdba74}
+.lp-public{background:#ecfdf5;color:#059669;border-color:#6ee7b7}
+.lp-url{font-family:var(--mono);font-size:11px;color:var(--tx2);background:var(--sf2);border:1px dashed var(--bd);border-radius:8px;padding:8px 10px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;margin-bottom:10px;position:relative}
+.lp-url::before{content:'🔒 ';opacity:.5}
+.lp-actions{display:flex;gap:6px;flex-wrap:wrap}
+
+/* FIELDS */
+.field{margin-bottom:14px}
+.field label{display:block;font-size:10.5px;font-weight:900;color:var(--tx2);margin-bottom:6px;text-transform:uppercase;letter-spacing:.06em}
+.field input,.field select,.field textarea{width:100%;padding:11px 14px;background:var(--sf2);border:1px solid var(--bd2);border-radius:10px;color:var(--tx);font-size:14px;font-family:inherit;transition:border-color .15s,box-shadow .15s;min-width:0}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--cy);background:#fff;box-shadow:0 0 0 3px rgba(0,255,255,.15)}
+.field textarea{resize:vertical;min-height:70px;line-height:1.6;padding:12px 14px}
+.field select{appearance:none;-webkit-appearance:none;padding-right:38px;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7787' stroke-width='3'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:12px;cursor:pointer}
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+@media (max-width:560px){.field-row{grid-template-columns:1fr}}
+.hint{font-size:11px;color:var(--mut);margin-top:5px;line-height:1.5;font-style:italic;word-break:break-word}
+
+/* PROTOCOL PICKER */
+.proto-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:8px;margin-top:4px}
+@media (max-width:480px){.proto-grid{grid-template-columns:1fr}}
+.proto-opt{background:var(--sf2);border:2px solid var(--bd);border-radius:10px;padding:10px 12px;cursor:pointer;transition:.15s;text-align:left;font-family:inherit;display:flex;flex-direction:column;gap:3px}
+.proto-opt:hover{border-color:var(--cy)}
+.proto-opt.active{border-color:var(--cy);background:linear-gradient(135deg,var(--cyf),#fff);box-shadow:0 0 0 3px rgba(0,255,255,.18)}
+.proto-opt .po-t{font-size:12.5px;font-weight:800;color:var(--tx);display:flex;align-items:center;gap:6px}
+.proto-opt .po-t i{width:14px;height:14px;color:var(--cy3)}
+.proto-opt .po-s{font-size:10.5px;color:var(--mut);line-height:1.4;font-weight:500}
+
+/* LOGO */
+.upload-preview{aspect-ratio:1/1;max-width:180px;border-radius:14px;border:1.5px dashed var(--bd2);background:var(--sf2);overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:.15s;margin:0 auto}
+.upload-preview:hover{border-color:var(--cy);background:#fff;box-shadow:0 0 0 3px rgba(0,255,255,.12)}
+.upload-preview.has-image{border-style:solid;border-color:var(--bd);background:#000}
+.upload-preview img{width:100%;height:100%;object-fit:cover;display:block;pointer-events:none}
+.upload-preview .placeholder{display:flex;flex-direction:column;align-items:center;gap:6px;color:#94a3b8;text-align:center;padding:14px 10px;pointer-events:none}
+.upload-preview .placeholder i{width:28px;height:28px;stroke-width:1.75;opacity:.7}
+.upload-preview .placeholder .main{font-size:10.5px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}
+.upload-preview .placeholder .sub{font-size:10.5px;font-weight:500;color:var(--mut);line-height:1.4;margin-top:2px}
+.upload-actions{margin-top:10px;display:flex;gap:6px;flex-wrap:wrap;justify-content:center}
+.upload-actions button{font-size:11px;font-weight:800;padding:7px 12px;border-radius:8px;border:1px solid var(--bd);background:var(--sf2);color:var(--mut);transition:.15s;display:inline-flex;align-items:center;gap:5px;font-family:inherit;cursor:pointer}
+.upload-actions button:hover:not(:disabled){border-color:var(--cy);color:var(--cy3);background:#fff}
+.upload-actions button:disabled{opacity:.5;cursor:not-allowed}
+.upload-actions button.primary{background:var(--cy);color:#04161c;border-color:var(--cy);font-weight:900}
+.upload-actions button.primary:hover:not(:disabled){background:var(--cy2);transform:translateY(-1px)}
+.upload-actions button i{width:12px;height:12px}
+.upload-error{background:var(--dgf);border:1px solid #fecaca;color:#991b1b;font-size:11px;font-weight:700;padding:9px 12px;border-radius:9px;margin-top:8px;line-height:1.5;display:none}
+.upload-error.show{display:block}
+
+/* TOGGLE */
+.toggle-row{display:flex;align-items:center;justify-content:space-between;padding:12px 14px;background:var(--sf2);border:1px solid var(--bd);border-radius:11px;margin-bottom:11px;gap:12px}
+.toggle-row .tl{font-size:12.5px;font-weight:800;color:var(--tx);flex:1;min-width:0}
+.toggle-row .tl small{display:block;font-size:10.5px;font-weight:500;color:var(--mut);margin-top:2px;line-height:1.35}
+.toggle{position:relative;display:inline-block;width:46px;height:26px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0;position:absolute}
+.toggle .slider{position:absolute;cursor:pointer;inset:0;background:#cbd5e1;transition:.25s;border-radius:34px}
+.toggle .slider:before{content:"";position:absolute;height:20px;width:20px;left:3px;top:3px;background:#fff;transition:.25s;border-radius:50%;box-shadow:0 1px 3px rgba(0,0,0,.15)}
+.toggle input:checked + .slider{background:var(--cy2)}
+.toggle input:checked + .slider:before{transform:translateX(20px)}
+
+/* BUTTONS */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:11px 17px;border-radius:11px;font-weight:800;font-size:13px;border:1px solid transparent;transition:.15s;white-space:nowrap;font-family:inherit;text-decoration:none;cursor:pointer}
+.btn i{width:15px;height:15px}
+.btn-accent{background:var(--cy);color:#04161c}
+.btn-accent:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 18px rgba(0,255,255,.35)}
+.btn-ghost{background:var(--sf);color:var(--tx2);border-color:var(--bd2)}
+.btn-ghost:hover:not(:disabled){border-color:var(--cy);color:var(--cy3)}
+.btn-danger{background:var(--dgf);color:var(--dg);border-color:#fecaca}
+.btn-danger:hover:not(:disabled){background:var(--dg);color:#fff;border-color:var(--dg)}
+.btn-sm{padding:8px 12px;font-size:12px;border-radius:9px}
+.btn-block{width:100%}
+.btn:disabled{opacity:.55;cursor:not-allowed;transform:none!important}
+.spinner{width:14px;height:14px;border:2px solid rgba(0,0,0,.15);border-top-color:#04161c;border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* TOAST */
+#toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,18px);background:var(--ink);color:var(--cy);font-size:13px;font-weight:800;padding:13px 22px;border-radius:99px;box-shadow:0 14px 34px rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:.22s;z-index:200;max-width:90vw;text-align:center;display:flex;align-items:center;gap:9px;font-family:var(--font)}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#toast svg{width:15px;height:15px;flex-shrink:0}
+#toast.success{background:#065f46;color:#d1fae5}
+#toast.error{background:#991b1b;color:#fef2f2}
+
+/* ACCESS */
+.access-screen{max-width:520px;margin:80px auto;background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:44px 32px;text-align:center;box-shadow:0 8px 24px rgba(15,23,42,.06)}
+.access-screen .ico{width:56px;height:56px;border-radius:16px;background:var(--dgf);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;color:var(--dg)}
+.access-screen .ico i{width:28px;height:28px}
+.access-screen h2{font-size:1.3rem;font-weight:900;color:var(--nv);margin-bottom:8px}
+.access-screen p{font-size:13.5px;color:var(--mut);margin-bottom:22px;line-height:1.6}
+.access-screen .actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.access-screen.loading .ico{background:var(--cyf);color:var(--cy3)}
+.access-screen.loading .ico i{animation:spin 1s linear infinite}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(10,15,20,.6);backdrop-filter:blur(8px);display:none;align-items:flex-start;justify-content:center;z-index:100;padding:24px 20px;overflow-y:auto}
+.modal-overlay.open{display:flex}
+.modal{background:var(--sf);border:1px solid var(--bd);border-radius:18px;max-width:520px;width:100%;padding:28px 24px;position:relative;margin:auto;box-shadow:0 24px 60px rgba(10,15,20,.25)}
+.modal h3{font-size:1.15rem;margin-bottom:8px;text-align:center}
+.modal p.sub{color:var(--mut);font-size:13.5px;margin-bottom:20px;text-align:center;line-height:1.5}
+.modal .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.modal .actions button{flex:1;min-width:120px}
+
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:6px;border:2px solid var(--bg)}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="hdr">
+    <a href="index.html" class="logo">
+      <svg viewBox="0 0 60 74"><path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/><path fill="#00FFFF" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/></svg>
+      <b>NOVALINK</b>
+      <span class="admin-tag"><i data-lucide="shield-check"></i> Admin</span>
+    </a>
+    <div class="hdr-actions">
+      <a href="streams.html" class="hdr-btn"><i data-lucide="radio"></i><span>Streams</span></a>
+      <a href="admin-channels.html" class="hdr-btn"><i data-lucide="tv"></i><span>Channels</span></a>
+      <a href="admin-ads.html" class="hdr-btn"><i data-lucide="megaphone"></i><span>Ads</span></a>
+      <a href="index.html" class="hdr-btn"><i data-lucide="home"></i><span>Home</span></a>
+      <button class="hdr-btn" id="signOutBtn" type="button"><i data-lucide="log-out"></i><span>Sign out</span></button>
+    </div>
+  </div>
+</header>
+
+<section class="hero">
+  <div class="hero-in">
+    <span class="hero-tag"><i data-lucide="link"></i>Partner Channels</span>
+    <h1>Register your <span>licensed feeds</span>. Keep URLs private.</h1>
+    <p>Paste in the URL from a licensed partner, pick a protocol, and Novalink stores it behind admin-only rules. Viewers only ever see the channel — never the source.</p>
+  </div>
+</section>
+
+<main>
+
+  <div id="accessGate">
+    <div class="access-screen loading" id="accessLoading">
+      <div class="ico"><i data-lucide="loader-2"></i></div>
+      <h2>Checking access…</h2>
+      <p>Verifying your admin account.</p>
+    </div>
+
+    <div class="access-screen" id="accessDenied" style="display:none">
+      <div class="ico"><i data-lucide="shield-alert"></i></div>
+      <h2>Admin access only</h2>
+      <p>This page is restricted to Novalink administrators.</p>
+      <div class="actions">
+        <a href="index.html" class="btn btn-accent"><i data-lucide="home"></i> Home</a>
+      </div>
+    </div>
+
+    <div class="access-screen" id="accessSignedOut" style="display:none">
+      <div class="ico"><i data-lucide="lock"></i></div>
+      <h2>Sign in required</h2>
+      <p>Sign in with your admin account.</p>
+      <div class="actions">
+        <a href="index.html#signin" class="btn btn-accent"><i data-lucide="log-in"></i> Sign in</a>
+      </div>
+    </div>
+  </div>
+
+  <div id="adminContent" style="display:none">
+    <div class="split">
+
+      <!-- LEFT: PARTNER LIST -->
+      <div class="col">
+        <div class="card">
+          <div class="card-title">
+            <i data-lucide="list"></i>
+            Registered partners
+            <span class="count" id="lpCount">0 partners</span>
+          </div>
+
+          <div class="seg" id="filterSeg">
+            <button class="active" data-filter="all" type="button">All</button>
+            <button data-filter="public" type="button">Public</button>
+            <button data-filter="private" type="button">Private</button>
+            <button data-filter="hls" type="button">HLS</button>
+            <button data-filter="dash" type="button">DASH</button>
+            <button data-filter="youtube" type="button">YouTube</button>
+          </div>
+
+          <div class="lp-list" id="lpList">
+            <div class="empty-list">
+              <i data-lucide="link"></i>
+              <h3>No partners yet</h3>
+              <p>Register your first licensed partner using the form on the right.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- RIGHT: EDITOR -->
+      <div class="col-right">
+        <div class="card" id="editorCard">
+          <div class="card-title">
+            <i data-lucide="plus-circle"></i>
+            <span id="editorTitle">Register a partner</span>
+          </div>
+
+          <div class="field">
+            <label>Partner logo</label>
+            <div class="upload-preview" id="logoPreview" role="button" tabindex="0">
+              <div class="placeholder">
+                <i data-lucide="image-plus"></i>
+                <span class="main">Add logo</span>
+                <span class="sub">Square · 1:1</span>
+              </div>
+            </div>
+            <input type="file" id="logoFile" accept="image/jpeg,image/png,image/webp" style="display:none" />
+            <div class="upload-actions">
+              <button type="button" id="logoChoose" class="primary"><i data-lucide="upload"></i> Choose</button>
+              <button type="button" id="logoRemove" disabled><i data-lucide="trash-2"></i> Remove</button>
+            </div>
+            <div class="upload-error" id="logoError"></div>
+          </div>
+
+          <div class="field">
+            <label for="lpName">Partner name</label>
+            <input type="text" id="lpName" placeholder="e.g., Nature Channel HD" maxlength="60" autocomplete="off" />
+            <p class="hint">Shown to viewers on the channel page.</p>
+          </div>
+
+          <div class="field">
+            <label>Protocol</label>
+            <div class="proto-grid" id="protoGrid">
+              <button type="button" class="proto-opt active" data-proto="hls">
+                <span class="po-t"><i data-lucide="radio"></i> HLS</span>
+                <span class="po-s">.m3u8 — most common. Works with Cloudflare, Mux, and most broadcasters.</span>
+              </button>
+              <button type="button" class="proto-opt" data-proto="dash">
+                <span class="po-t"><i data-lucide="activity"></i> DASH</span>
+                <span class="po-s">.mpd — used by some premium and DVR feeds.</span>
+              </button>
+              <button type="button" class="proto-opt" data-proto="mpegts">
+                <span class="po-t"><i data-lucide="antenna"></i> MPEG-TS</span>
+                <span class="po-s">.ts — legacy broadcast feeds.</span>
+              </button>
+              <button type="button" class="proto-opt" data-proto="youtube">
+                <span class="po-t"><i data-lucide="youtube"></i> YouTube Live</span>
+                <span class="po-s">YouTube channel or video URL.</span>
+              </button>
+              <button type="button" class="proto-opt" data-proto="iframe">
+                <span class="po-t"><i data-lucide="code"></i> Custom Embed</span>
+                <span class="po-s">Any embeddable iframe URL.</span>
+              </button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="lpUrl">Partner stream URL</label>
+            <input type="text" id="lpUrl" placeholder="https://partner-cdn.com/channel/master.m3u8" autocomplete="off" spellcheck="false" />
+            <p class="hint">🔒 This URL is stored in an admin-only Firestore collection. Viewers never see it.</p>
+          </div>
+
+          <div class="field">
+            <label for="lpRegion">Region</label>
+            <select id="lpRegion">
+              <option value="global">Global (anywhere)</option>
+              <option value="ZA">South Africa</option>
+              <option value="AF">Africa</option>
+              <option value="EU">Europe</option>
+              <option value="US">United States</option>
+              <option value="UK">United Kingdom</option>
+              <option value="ASIA">Asia</option>
+              <option value="other">Other</option>
+            </select>
+            <p class="hint">Geographic scope of the partner's license. Helps you route correctly.</p>
+          </div>
+
+          <div class="field">
+            <label for="lpCategory">Category</label>
+            <select id="lpCategory">
+              <option value="">Choose…</option>
+              <option value="documentary">Documentary</option>
+              <option value="nature">Nature & Wildlife</option>
+              <option value="news">News</option>
+              <option value="science">Science</option>
+              <option value="sports">Sports</option>
+              <option value="movies">Movies</option>
+              <option value="kids">Kids</option>
+              <option value="music">Music</option>
+              <option value="education">Education</option>
+              <option value="other">Other</option>
+            </select>
+          </div>
+
+          <div class="field">
+            <label for="lpNote">License note (internal)</label>
+            <textarea id="lpNote" placeholder="e.g., Signed agreement with Partner X on 2026-04-12. Contact: legal@partner.com" maxlength="500"></textarea>
+            <p class="hint">Private record. Only visible to admins.</p>
+          </div>
+
+          <div class="toggle-row" style="border-color:var(--cy);background:linear-gradient(135deg,var(--cyf),#fff);">
+            <span class="tl">Public visibility<small>If off, this channel is only visible to admins (testing mode).</small></span>
+            <label class="toggle"><input type="checkbox" id="lpPublic" checked /><span class="slider"></span></label>
+          </div>
+
+          <div class="toggle-row">
+            <span class="tl">Enabled<small>Master switch. If off, viewers can't load it even if public.</small></span>
+            <label class="toggle"><input type="checkbox" id="lpEnabled" checked /><span class="slider"></span></label>
+          </div>
+
+          <button type="button" class="btn btn-accent btn-block" id="saveBtn" style="margin-top:8px;">
+            <i data-lucide="save"></i> <span id="saveLbl">Register partner</span>
+          </button>
+
+          <button type="button" class="btn btn-ghost btn-block" id="cancelEditBtn" style="margin-top:8px;display:none;">
+            Cancel editing
+          </button>
+
+          <button type="button" class="btn btn-ghost btn-block" id="testBtn" style="margin-top:8px;">
+            <i data-lucide="play-circle"></i> Test URL in player
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</main>
+
+<div class="modal-overlay" id="deleteModal">
+  <div class="modal">
+    <h3>Delete partner?</h3>
+    <p class="sub" id="deleteName">This partner record will be permanently removed. Any streams linked to it will lose their source.</p>
+    <div class="actions">
+      <button type="button" class="btn btn-ghost" id="deleteCancel">Cancel</button>
+      <button type="button" class="btn btn-danger" id="deleteConfirm"><i data-lucide="trash-2"></i> Delete</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+
+var ADMIN_EMAILS = [
+  "nylnathan340@gmail.com",
+  "customerservicesnovalink@gmail.com"
+];
+
+var LIVE_PARTNERS = "livePartners";
+var MAX_LOGO_BYTES = 200 * 1024;
+var MAX_SOURCE_BYTES = 15 * 1024 * 1024;
+
+var firebaseConfig = {
+  apiKey: "AIzaSyDSnns131jOlBXAqKo6qy7lTW4Rij-1oWU",
+  authDomain: "novalink-864cf.firebaseapp.com",
+  projectId: "novalink-864cf",
+  storageBucket: "novalink-864cf.firebasestorage.app",
+  messagingSenderId: "602780280140",
+  appId: "1:602780280140:web:5d9ff2351e5a7d5e66dbe9"
+};
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+var db = firebase.firestore();
+var auth = firebase.auth();
+
+var $ = function(id){ return document.getElementById(id); };
+var esc = function(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); };
+var refreshIcons = function(){ if (window.lucide) lucide.createIcons(); };
+var icon = function(n){ return '<i data-lucide="'+n+'"></i>'; };
+
+function toast(msg, type, ms){
+  type = type || 'info'; ms = ms || 3200;
+  var t = $('toast');
+  var ic = type === 'error' ? 'alert-circle' : (type === 'success' ? 'check-circle' : 'info');
+  t.className = type;
+  t.innerHTML = icon(ic) + '<span>' + esc(msg) + '</span>';
+  refreshIcons();
+  requestAnimationFrame(function(){ t.classList.add('show'); });
+  clearTimeout(toast._t);
+  toast._t = setTimeout(function(){ t.classList.remove('show'); }, ms);
+}
+
+function initials(name){
+  if (!name) return '?';
+  var p = String(name).trim().split(/\s+/);
+  if (p.length >= 2) return (p[0][0]+p[1][0]).toUpperCase();
+  return p[0].slice(0,2).toUpperCase();
+}
+
+function formatBytes(n){
+  if (n < 1024) return n + ' B';
+  if (n < 1024*1024) return (n/1024).toFixed(1) + ' KB';
+  return (n/(1024*1024)).toFixed(2) + ' MB';
+}
+function bytesFromDataUrl(d){
+  if (!d || typeof d !== 'string') return 0;
+  var comma = d.indexOf(',');
+  if (comma < 0) return 0;
+  var b64 = d.slice(comma + 1);
+  var pad = 0;
+  if (b64.endsWith('==')) pad = 2;
+  else if (b64.endsWith('=')) pad = 1;
+  return Math.floor((b64.length * 3) / 4) - pad;
+}
+
+function isAdmin(user){
+  if (!user || !user.email) return false;
+  var e = String(user.email).toLowerCase();
+  return ADMIN_EMAILS.some(function(x){ return x.toLowerCase() === e; });
+}
+
+function protocolLabel(p){
+  return {
+    hls: 'HLS',
+    dash: 'DASH',
+    mpegts: 'MPEG-TS',
+    youtube: 'YouTube',
+    iframe: 'Embed'
+  }[p] || 'HLS';
+}
+
+/* ── Access ── */
+function checkAccess(){
+  var loading = $('accessLoading');
+  var denied = $('accessDenied');
+  var signedOut = $('accessSignedOut');
+  var content = $('adminContent');
+  var user = auth.currentUser;
+
+  if (!user){
+    loading.style.display = 'none';
+    denied.style.display = 'none';
+    signedOut.style.display = 'block';
+    content.style.display = 'none';
+    return false;
+  }
+  if (!isAdmin(user)){
+    loading.style.display = 'none';
+    denied.style.display = 'block';
+    signedOut.style.display = 'none';
+    content.style.display = 'none';
+    return false;
+  }
+  loading.style.display = 'none';
+  denied.style.display = 'none';
+  signedOut.style.display = 'none';
+  content.style.display = 'block';
+  return true;
+}
+
+/* ── State ── */
+var partners = [];
+var lpUnsub = null;
+var editingId = null;
+var logoDataUrl = null;
+var currentFilter = 'all';
+var currentProtocol = 'hls';
+var deleteTargetId = null;
+var isSaving = false;
+
+/* ── Image compression ── */
+function readImage(file){
+  return new Promise(function(resolve, reject){
+    var r = new FileReader();
+    r.onload = function(e){
+      var img = new Image();
+      img.onload = function(){ resolve(img); };
+      img.onerror = function(){ reject(new Error('Image decode failed.')); };
+      img.src = e.target.result;
+    };
+    r.onerror = function(){ reject(new Error('Could not read file.')); };
+    r.readAsDataURL(file);
+  });
+}
+
+function compressSquare(img, maxDim, quality){
+  var w = img.naturalWidth || img.width;
+  var h = img.naturalHeight || img.height;
+  var s = Math.min(w, h);
+  var ox = (w - s) / 2;
+  var oy = (h - s) / 2;
+  var canvas = document.createElement('canvas');
+  var size = Math.min(maxDim, s);
+  canvas.width = size;
+  canvas.height = size;
+  var ctx = canvas.getContext('2d');
+  ctx.fillStyle = '#0a0f14';
+  ctx.fillRect(0, 0, size, size);
+  ctx.drawImage(img, ox, oy, s, s, 0, 0, size, size);
+  return canvas.toDataURL('image/jpeg', quality);
+}
+
+async function fileToLogoDataUrl(file){
+  if (!/^image\/(jpeg|png|webp)$/.test(file.type)) throw new Error('Use JPG, PNG or WebP.');
+  if (file.size > MAX_SOURCE_BYTES) throw new Error('Image too large — max 15 MB.');
+  var img = await readImage(file);
+  var out = compressSquare(img, 320, 0.78);
+  if (bytesFromDataUrl(out) > MAX_LOGO_BYTES){
+    out = compressSquare(img, 240, 0.7);
+  }
+  var b = bytesFromDataUrl(out);
+  if (b > MAX_LOGO_BYTES) throw new Error('Logo is ' + formatBytes(b) + ' after compression.');
+  return out;
+}
+
+/* ── Logo preview ── */
+function renderLogoPreview(){
+  var el = $('logoPreview');
+  var rm = $('logoRemove');
+  var err = $('logoError');
+  err.classList.remove('show');
+
+  if (!logoDataUrl){
+    el.classList.remove('has-image');
+    el.innerHTML = '<div class="placeholder">'+icon('image-plus')+'<span class="main">Add logo</span><span class="sub">Square · 1:1</span></div>';
+    if (rm) rm.disabled = true;
+    refreshIcons();
+    return;
+  }
+  el.classList.add('has-image');
+  el.innerHTML = '<img alt="Logo preview" src="'+logoDataUrl+'" />';
+  if (rm) rm.disabled = false;
+}
+
+/* ── Protocol picker ── */
+function setProtocol(p){
+  currentProtocol = p;
+  document.querySelectorAll('#protoGrid .proto-opt').forEach(function(btn){
+    btn.classList.toggle('active', btn.dataset.proto === p);
+  });
+  updateUrlHint();
+}
+
+function updateUrlHint(){
+  var inp = $('lpUrl');
+  var hints = {
+    hls: 'e.g., https://partner-cdn.com/master.m3u8',
+    dash: 'e.g., https://partner-cdn.com/manifest.mpd',
+    mpegts: 'e.g., https://partner-cdn.com/stream.ts',
+    youtube: 'e.g., https://youtube.com/live/ABC123 or just the video ID',
+    iframe: 'e.g., https://embed.partner.com/player?id=123'
+  };
+  inp.placeholder = hints[currentProtocol] || hints.hls;
+}
+
+/* ── Render partner list ── */
+function renderList(){
+  var list = $('lpList');
+  var filtered = partners.slice();
+
+  if (currentFilter !== 'all'){
+    if (currentFilter === 'public') filtered = filtered.filter(function(p){ return p.public !== false; });
+    else if (currentFilter === 'private') filtered = filtered.filter(function(p){ return p.public === false; });
+    else filtered = filtered.filter(function(p){ return p.protocol === currentFilter; });
+  }
+
+  $('lpCount').textContent = filtered.length + ' partner' + (filtered.length === 1 ? '' : 's');
+
+  if (!filtered.length){
+    list.innerHTML =
+      '<div class="empty-list">'+
+        icon('link') +
+        '<h3>No partners match</h3>'+
+        '<p>Try a different filter or register a new partner.</p>'+
+      '</div>';
+    refreshIcons();
+    return;
+  }
+
+  list.innerHTML = '';
+  filtered.forEach(function(p){
+    var item = document.createElement('div');
+    item.className = 'lp-item';
+
+    var logoHtml = p.logoUrl
+      ? '<img alt="" src="'+esc(p.logoUrl)+'" />'
+      : '<span>'+esc(initials(p.name))+'</span>';
+
+    var urlPreview = p.streamUrl || '';
+    if (urlPreview.length > 60) urlPreview = urlPreview.slice(0, 40) + '…' + urlPreview.slice(-18);
+
+    var pubClass = p.public === false ? 'lp-private' : 'lp-public';
+    var pubText = p.public === false ? 'Private' : 'Public';
+
+    item.innerHTML =
+      '<div class="lp-head">'+
+        '<div class="lp-logo">'+logoHtml+'</div>'+
+        '<div class="lp-info">'+
+          '<div class="lp-name">'+
+            esc(p.name) +
+            '<span class="lp-protocol">'+esc(protocolLabel(p.protocol))+'</span>'+
+            '<span class="lp-protocol '+pubClass+'">'+esc(pubText)+'</span>'+
+            (p.enabled === false ? '<span class="lp-protocol lp-private">Disabled</span>' : '')+
+          '</div>'+
+          '<div class="lp-meta">'+
+            (p.category ? '<span>'+esc(p.category)+'</span>' : '') +
+            (p.region ? '<span class="stat">'+esc(p.region)+'</span>' : '') +
+          '</div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="lp-url" title="Admin only">'+esc(urlPreview)+'</div>'+
+      '<div class="lp-actions">'+
+        '<button class="btn btn-ghost btn-sm" data-action="test" data-id="'+esc(p.id)+'">'+icon('play')+' Test</button>'+
+        '<button class="btn btn-ghost btn-sm" data-action="edit" data-id="'+esc(p.id)+'">'+icon('pencil')+' Edit</button>'+
+        '<button class="btn btn-danger btn-sm" data-action="delete" data-id="'+esc(p.id)+'">'+icon('trash-2')+' Delete</button>'+
+      '</div>';
+
+    list.appendChild(item);
+  });
+
+  list.querySelectorAll('[data-action]').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      var action = btn.dataset.action;
+      var id = btn.dataset.id;
+      var p = partners.find(function(x){ return x.id === id; });
+      if (!p) return;
+      if (action === 'edit') editPartner(p);
+      if (action === 'delete') openDeleteModal(p);
+      if (action === 'test') testPartner(p);
+    });
+  });
+
+  refreshIcons();
+}
+
+/* ── Edit / clear ── */
+function editPartner(p){
+  editingId = p.id;
+  logoDataUrl = p.logoUrl || null;
+  $('editorTitle').textContent = 'Edit "' + (p.name || 'partner') + '"';
+  $('saveLbl').textContent = 'Update partner';
+  $('cancelEditBtn').style.display = 'inline-flex';
+  $('lpName').value = p.name || '';
+  $('lpUrl').value = p.streamUrl || '';
+  $('lpRegion').value = p.region || 'global';
+  $('lpCategory').value = p.category || '';
+  $('lpNote').value = p.note || '';
+  $('lpPublic').checked = p.public !== false;
+  $('lpEnabled').checked = p.enabled !== false;
+  setProtocol(p.protocol || 'hls');
+  renderLogoPreview();
+  $('editorCard').scrollIntoView({ behavior:'smooth', block:'start' });
+}
+
+function clearEditor(){
+  editingId = null;
+  logoDataUrl = null;
+  $('editorTitle').textContent = 'Register a partner';
+  $('saveLbl').textContent = 'Register partner';
+  $('cancelEditBtn').style.display = 'none';
+  $('lpName').value = '';
+  $('lpUrl').value = '';
+  $('lpRegion').value = 'global';
+  $('lpCategory').value = '';
+  $('lpNote').value = '';
+  $('lpPublic').checked = true;
+  $('lpEnabled').checked = true;
+  $('logoFile').value = '';
+  $('logoError').classList.remove('show');
+  setProtocol('hls');
+  renderLogoPreview();
+}
+
+/* ── Save ── */
+function savePartner(){
+  if (!auth.currentUser || !isAdmin(auth.currentUser)){
+    toast('Not authorized.', 'error');
+    return;
+  }
+  if (isSaving){
+    toast('Already saving…', 'info', 1800);
+    return;
+  }
+
+  var name = $('lpName').value.trim();
+  if (!name){
+    toast('Partner name is required.', 'error');
+    $('lpName').focus();
+    return;
+  }
+  var url = $('lpUrl').value.trim();
+  if (!url){
+    toast('Stream URL is required.', 'error');
+    $('lpUrl').focus();
+    return;
+  }
+
+  isSaving = true;
+  var btn = $('saveBtn');
+  var lbl = $('saveLbl');
+  var origLbl = lbl.textContent;
+  if (btn) btn.disabled = true;
+  if (lbl) lbl.innerHTML = '<span class="spinner"></span> Saving…';
+
+  var partnerId = editingId || (name.toLowerCase().replace(/[^a-z0-9]+/g,'-').slice(0,32) + '-' + Date.now().toString(36).slice(-4));
+  var isNew = !editingId;
+
+  var payload = {
+    name: name,
+    protocol: currentProtocol,
+    streamUrl: url,
+    region: $('lpRegion').value,
+    category: $('lpCategory').value,
+    note: $('lpNote').value.trim(),
+    public: $('lpPublic').checked,
+    enabled: $('lpEnabled').checked,
+    logoUrl: logoDataUrl || '',
+    ownerUid: auth.currentUser.uid,
+    ownerEmail: auth.currentUser.email || '',
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  };
+  if (isNew){
+    payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
+  }
+
+  db.collection(LIVE_PARTNERS).doc(partnerId).set(payload, { merge: true })
+    .then(function(){
+      toast(isNew ? 'Partner registered.' : 'Partner updated.', 'success');
+      isSaving = false;
+      clearEditor();
+    })
+    .catch(function(err){
+      console.error('[save partner]', err);
+      toast('Save failed: ' + (err.message || 'unknown error'), 'error', 6000);
+      isSaving = false;
+      if (btn) btn.disabled = false;
+      if (lbl) lbl.textContent = origLbl;
+    });
+}
+
+/* ── Delete ── */
+function openDeleteModal(p){
+  deleteTargetId = p.id;
+  $('deleteName').textContent = 'Delete "' + p.name + '"? This cannot be undone.';
+  $('deleteModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  refreshIcons();
+}
+function closeDeleteModal(){
+  $('deleteModal').classList.remove('open');
+  document.body.style.overflow = '';
+  deleteTargetId = null;
+}
+function confirmDelete(){
+  if (!deleteTargetId) return;
+  var btn = $('deleteConfirm');
+  btn.disabled = true;
+  var id = deleteTargetId;
+  db.collection(LIVE_PARTNERS).doc(id).delete()
+    .then(function(){
+      toast('Partner deleted.', 'success');
+      closeDeleteModal();
+    })
+    .catch(function(err){
+      toast('Delete failed: ' + err.message, 'error', 5000);
+    })
+    .then(function(){
+      btn.disabled = false;
+    });
+}
+
+/* ── Test in new tab ── */
+function testPartner(p){
+  // Uses the standard Novalink viewer by passing a query param.
+  // We'll wire this properly once view-stream.html supports partner URLs.
+  var url = 'view-stream.html?partnerTest=' + encodeURIComponent(p.id);
+  window.open(url, '_blank');
+  toast('Test opening in new tab…', 'info', 1800);
+}
+
+/* ── Listener ── */
+function attachListeners(){
+  if (lpUnsub){ try { lpUnsub(); } catch(e){} }
+  lpUnsub = db.collection(LIVE_PARTNERS)
+    .orderBy('createdAt', 'desc')
+    .onSnapshot(function(snap){
+      partners = [];
+      snap.forEach(function(doc){
+        var d = doc.data() || {};
+        d.id = doc.id;
+        partners.push(d);
+      });
+      renderList();
+    }, function(err){
+      console.error('[partners listener]', err);
+      toast('Could not load partners: ' + err.message, 'error', 5000);
+    });
+}
+
+/* ── Wire up ── */
+document.addEventListener('DOMContentLoaded', function(){
+  refreshIcons();
+
+  // Logo
+  $('logoChoose').addEventListener('click', function(e){ e.stopPropagation(); $('logoFile').click(); });
+  $('logoPreview').addEventListener('click', function(){ $('logoFile').click(); });
+  $('logoPreview').addEventListener('keydown', function(e){ if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); $('logoFile').click(); } });
+  $('logoFile').addEventListener('change', function(e){
+    var f = e.target.files[0]; if (!f) return;
+    $('logoError').classList.remove('show');
+    fileToLogoDataUrl(f).then(function(d){
+      logoDataUrl = d;
+      renderLogoPreview();
+      toast('Logo ready', 'success', 1600);
+    }).catch(function(err){
+      $('logoError').textContent = err.message;
+      $('logoError').classList.add('show');
+    });
+    e.target.value = '';
+  });
+  $('logoRemove').addEventListener('click', function(e){
+    e.stopPropagation();
+    if (!logoDataUrl) return;
+    if (!confirm('Remove the logo?')) return;
+    logoDataUrl = null;
+    renderLogoPreview();
+  });
+
+  // Protocol picker
+  document.querySelectorAll('#protoGrid .proto-opt').forEach(function(btn){
+    btn.addEventListener('click', function(){ setProtocol(btn.dataset.proto); });
+  });
+
+  // Filters
+  document.querySelectorAll('#filterSeg button').forEach(function(btn){
+    btn.addEventListener('click', function(){
+      currentFilter = btn.dataset.filter;
+      document.querySelectorAll('#filterSeg button').forEach(function(b){ b.classList.toggle('active', b === btn); });
+      renderList();
+    });
+  });
+
+  $('saveBtn').addEventListener('click', savePartner);
+  $('cancelEditBtn').addEventListener('click', clearEditor);
+  $('testBtn').addEventListener('click', function(){
+    if (editingId) testPartner({ id: editingId, name: $('lpName').value });
+    else toast('Save the partner first.', 'info', 1800);
+  });
+
+  $('deleteCancel').addEventListener('click', closeDeleteModal);
+  $('deleteConfirm').addEventListener('click', confirmDelete);
+  $('deleteModal').addEventListener('click', function(e){ if (e.target === this) closeDeleteModal(); });
+
+  $('signOutBtn').addEventListener('click', function(){
+    auth.signOut().then(function(){ toast('Signed out.', 'success'); });
+  });
+
+  auth.onAuthStateChanged(function(user){
+    var ok = checkAccess();
+    if (ok){
+      attachListeners();
+      clearEditor();
+    } else {
+      if (lpUnsub){ try { lpUnsub(); } catch(e){} lpUnsub = null; }
+    }
+    refreshIcons();
+  });
+
+  window.addEventListener('beforeunload', function(){
+    if (lpUnsub){ try { lpUnsub(); } catch(e){} }
+  });
+});
+})();
+</script>
+</body>
+  </html>
