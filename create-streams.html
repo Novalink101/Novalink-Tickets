@@ -222,6 +222,11 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
 .segment-gap i{width:14px;height:14px;flex-shrink:0}
 .segment-gap strong{color:var(--cy3);font-weight:900}
 
+/* GO LIVE QUICK BAR */
+.quick-bar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
+.quick-bar .btn{flex:1;min-width:200px}
+@media (max-width:560px){.quick-bar .btn{flex:1 1 100%}}
+
 /* PREVIEW */
 .stream-card{background:var(--sf);border:1px solid var(--bd);border-radius:14px;overflow:hidden;box-shadow:0 10px 30px rgba(15,23,42,.06)}
 .stream-thumb{aspect-ratio:16/9;background:linear-gradient(135deg,#0a0f14,#0f172a);position:relative;display:flex;align-items:center;justify-content:center;color:#fff;background-size:cover;background-position:center;overflow:hidden}
@@ -501,7 +506,7 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
           <div class="field">
             <label for="streamDate">Date</label>
             <input type="date" id="streamDate" />
-            <p class="hint">All segments share the same date. Times are set per-URL on the Source tab.</p>
+            <p class="hint">Auto-fills to today. If you pick a future date, ads won't fire until that day.</p>
           </div>
 
           <div class="section-divider"><span>Stream cover</span></div>
@@ -563,6 +568,19 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
         </div>
 
         <div class="form-card">
+
+          <!-- NEW: Go Live Now quick bar -->
+          <div class="quick-bar">
+            <button type="button" id="goLiveNowBtn" class="btn btn-accent">
+              <i data-lucide="zap"></i> <span>Go Live Now (test mode)</span>
+            </button>
+            <button type="button" id="resetScheduleBtn" class="btn btn-ghost">
+              <i data-lucide="rotate-ccw"></i> <span>Reset schedule</span>
+            </button>
+          </div>
+          <p class="hint" style="font-style:normal;margin-bottom:14px;color:var(--mut);">
+            "Go Live Now" sets the date to today and time to 5 minutes ago — perfect for testing ads.
+          </p>
 
           <div class="rules-card">
             <i class="rc-icon" data-lucide="shield-alert"></i>
@@ -875,6 +893,33 @@ function isStreamAdmin(user){
 }
 
 /* ══════════════════════════════════════════════════════════════
+   DATE HELPERS — ensure streams go live immediately
+   ══════════════════════════════════════════════════════════════ */
+function getTodayLocal(){
+  var d = new Date();
+  var yyyy = d.getFullYear();
+  var mm = String(d.getMonth() + 1).padStart(2, '0');
+  var dd = String(d.getDate()).padStart(2, '0');
+  return yyyy + '-' + mm + '-' + dd;
+}
+
+function autoFillDateToToday(){
+  var el = $('streamDate');
+  if (el && !el.value){
+    el.value = getTodayLocal();
+  }
+}
+
+/* Returns start=5 minutes ago, end=+1 hour in HH:MM */
+function defaultSegmentTimes(){
+  var now = new Date();
+  var startMin = (now.getHours() * 60 + now.getMinutes()) - 5;
+  if (startMin < 0) startMin += 1440;
+  var endMin = startMin + 60;
+  return { startTime: minutesToTime(startMin), endTime: minutesToTime(endMin) };
+}
+
+/* ══════════════════════════════════════════════════════════════
    PLATFORM DETECTION
    ══════════════════════════════════════════════════════════════ */
 function detectPlatformFromUrl(url){
@@ -935,9 +980,6 @@ function validateSegments(){
   if (isNativeHls) {
     var hlsUrl = $('hlsUrlInput') ? $('hlsUrlInput').value.trim() : '';
     if (!hlsUrl) return { ok:false, err:'Please enter the HLS Playback URL.' };
-    if (!hlsUrl.includes('.m3u8') && !hlsUrl.startsWith('http')) {
-      // Just a soft warning, don't fail hard
-    }
     return { ok:true, segs: [{ url: hlsUrl, startTime: '00:00', endTime: '23:59' }] };
   }
 
@@ -949,7 +991,7 @@ function validateSegments(){
     }
     var sMin = timeToMinutes(segs[i].startTime);
     var eMin = timeToMinutes(segs[i].endTime);
-    if (eMin <= sMin) eMin += 1440; /* allow overnight */
+    if (eMin <= sMin) eMin += 1440;
     if (eMin - sMin < 1){
       return { ok:false, err:'Segment ' + (i+1) + ': end time must be after start time.' };
     }
@@ -1410,7 +1452,7 @@ function updateSegmentDetection(idx){
 function updateTimelinePreview(){
   var container = $('timelinePreview');
   if (!container) return;
-  
+
   var isNativeHls = $('useHlsToggle') && $('useHlsToggle').checked;
   if (isNativeHls) {
     container.innerHTML = '<div class="stream-title">Native HLS Stream</div>' +
@@ -1589,7 +1631,6 @@ function renderStreamPreview(){
   if ($('prevDate')) $('prevDate').textContent = date || 'Date TBA';
   if ($('summaryStreamTitle')) $('summaryStreamTitle').textContent = title || 'Stream title will appear here';
 
-  /* Show total duration */
   var totalMin = 0;
   state.segments.forEach(function(s){
     if (s.startTime && s.endTime){
@@ -1673,10 +1714,14 @@ function clearStreamFields(){
   state.heroImage = '';
   state.streamId = null;
   state.editing = false;
-  state.segments = [{ url: '', startTime: '20:00', endTime: '21:00' }];
+
+  // Default segment times to "5 min ago → +1 hour" so it's instantly live.
+  var dt = defaultSegmentTimes();
+  state.segments = [{ url: '', startTime: dt.startTime, endTime: dt.endTime }];
+
   var addBtn = $('addSegmentBtn');
   if (addBtn) addBtn.style.display = 'inline-flex';
-  
+
   // Reset HLS toggle
   if ($('useHlsToggle')) {
     $('useHlsToggle').checked = false;
@@ -1691,7 +1736,8 @@ function clearStreamFields(){
   renderSegments();
   $('saveLbl').textContent = 'Save Stream';
   $('submitBtn').innerHTML = icon('shield-check') + '<span>Save &amp; Publish Stream</span>';
-  $('streamDate').value = '';
+  // Auto-fill date with today, always.
+  $('streamDate').value = getTodayLocal();
   $('replayToggle').checked = true;
   $('recordToggle').checked = true;
   $('countdownToggle').checked = true;
@@ -1718,7 +1764,8 @@ function loadStreamIntoForm(d){
   $('streamTagline').value = d.eventTagline || '';
   $('streamDescription').value = d.eventDescription || '';
   $('descCounter').textContent = ($('streamDescription').value.length) + ' / 2000';
-  $('streamDate').value = d.startDate || '';
+  // If no date on doc, default to today.
+  $('streamDate').value = d.startDate || getTodayLocal();
 
   // Handle Native HLS
   var isNative = d.isNative || false;
@@ -1726,11 +1773,11 @@ function loadStreamIntoForm(d){
     $('useHlsToggle').checked = isNative;
     $('hlsUrlContainer').style.display = isNative ? 'block' : 'none';
     $('hlsUrlInput').value = d.hlsUrl || '';
-    
+
     var segContainer = $('segmentsContainer');
     var addBtn = $('addSegmentBtn');
     var rulesCard = document.querySelector('.rules-card');
-    
+
     if (segContainer) segContainer.style.display = isNative ? 'none' : 'block';
     if (addBtn) addBtn.style.display = isNative ? 'none' : 'inline-flex';
     if (rulesCard) rulesCard.style.display = isNative ? 'none' : 'block';
@@ -1757,7 +1804,8 @@ function loadStreamIntoForm(d){
       endTime: minutesToTime(eMin)
     }];
   } else {
-    state.segments = [{ url: '', startTime: '20:00', endTime: '21:00' }];
+    var dt2 = defaultSegmentTimes();
+    state.segments = [{ url: '', startTime: dt2.startTime, endTime: dt2.endTime }];
   }
 
   var addBtn = $('addSegmentBtn');
@@ -1802,6 +1850,17 @@ function saveStream(){
   var date = $('streamDate').value;
   if (!date){ toast('Stream date is required.', 'error'); goToView('details'); $('streamDate').focus(); return; }
 
+  // Warn if the date is in the future — ads won't fire until the start time.
+  var todayStr = getTodayLocal();
+  if (date > todayStr){
+    var proceed = confirm(
+      'This stream is scheduled for ' + date + ', which is in the future.\n\n' +
+      'Viewers will see a countdown page, and ads will NOT play until the stream starts.\n\n' +
+      'Save anyway?'
+    );
+    if (!proceed){ goToView('details'); return; }
+  }
+
   var segCheck = validateSegments();
   if (!segCheck.ok){ toast(segCheck.err, 'error', 5000); goToView('source'); return; }
   var validSegments = segCheck.segs;
@@ -1842,14 +1901,14 @@ function saveStream(){
     startDate: date,
     /* Legacy single-segment fields for backwards compatibility */
     startTime: isNativeHls ? '00:00' : firstSeg.startTime,
-    durationMinutes: isNativeHls ? 120 : totalDuration, // Default to 2hrs for native HLS if unknown
+    durationMinutes: isNativeHls ? 120 : totalDuration,
     streamPlatform: isNativeHls ? 'native-hls' : firstPlatform,
     streamUrl: isNativeHls ? hlsUrl : firstSeg.url,
-    
-    // NEW: Native HLS fields
+
+    // Native HLS fields
     isNative: isNativeHls,
     hlsUrl: hlsUrl,
-    
+
     /* New multi-segment fields */
     segments: isNativeHls ? [] : validSegments.map(function(s){
       return {
@@ -1998,25 +2057,64 @@ document.addEventListener('DOMContentLoaded', function(){
     });
   }
 
-  // NEW: HLS Toggle
+  // HLS Toggle
   var hlsToggle = $('useHlsToggle');
   if (hlsToggle) {
     hlsToggle.addEventListener('change', function() {
       var isHls = hlsToggle.checked;
       $('hlsUrlContainer').style.display = isHls ? 'block' : 'none';
-      
+
       var segContainer = $('segmentsContainer');
       var addBtn = $('addSegmentBtn');
       var rulesCard = document.querySelector('.rules-card');
       var platformInfo = document.querySelector('.platform-info');
-      
+
       if (segContainer) segContainer.style.display = isHls ? 'none' : 'block';
       if (addBtn) addBtn.style.display = isHls ? 'none' : 'inline-flex';
       if (rulesCard) rulesCard.style.display = isHls ? 'none' : 'block';
       if (platformInfo) platformInfo.style.display = isHls ? 'none' : 'block';
-      
+
       updateTimelinePreview();
       updateSaveEnabled();
+    });
+  }
+
+  // Go Live Now — sets date to today and times to 5 min ago → +2 hours.
+  var goLiveBtn = $('goLiveNowBtn');
+  if (goLiveBtn){
+    goLiveBtn.addEventListener('click', function(){
+      $('streamDate').value = getTodayLocal();
+
+      var now = new Date();
+      var startMin = (now.getHours() * 60 + now.getMinutes()) - 5;
+      if (startMin < 0) startMin += 1440;
+      var endMin = startMin + 120;
+
+      if (state.segments.length === 0){
+        state.segments = [{ url: '', startTime: '', endTime: '' }];
+      }
+      state.segments[0].startTime = minutesToTime(startMin);
+      state.segments[0].endTime = minutesToTime(endMin);
+
+      renderSegments();
+      renderStreamPreview();
+      updateSaveEnabled();
+      toast('Schedule set to "Live Now" — ads will fire.', 'success', 2400);
+    });
+  }
+
+  // Reset Schedule — restores sensible defaults.
+  var resetBtn = $('resetScheduleBtn');
+  if (resetBtn){
+    resetBtn.addEventListener('click', function(){
+      if (!confirm('Reset date and time fields?')) return;
+      $('streamDate').value = getTodayLocal();
+      var dt = defaultSegmentTimes();
+      state.segments = [{ url: state.segments[0] ? state.segments[0].url : '', startTime: dt.startTime, endTime: dt.endTime }];
+      renderSegments();
+      renderStreamPreview();
+      updateSaveEnabled();
+      toast('Schedule reset.', 'info', 1800);
     });
   }
 
@@ -2088,6 +2186,7 @@ document.addEventListener('DOMContentLoaded', function(){
   });
 
   /* Init */
+  autoFillDateToToday();
   syncAdProviderUI();
   syncMidrollTimingVisibility();
   renderCover();
@@ -2105,4 +2204,4 @@ document.addEventListener('DOMContentLoaded', function(){
 })();
 </script>
 </body>
-  </html>
+                </html>
