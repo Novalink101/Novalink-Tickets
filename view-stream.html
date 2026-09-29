@@ -84,7 +84,6 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
 .nl-player.hide-controls .nl-progress-wrap{opacity:0;transform:translateY(8px);pointer-events:none;}
 .nl-player.hide-cursor{cursor:none;}
 
-/* Double-tap ripple zones */
 .nl-tap-zone{position:absolute;top:0;bottom:0;width:40%;z-index:4;display:flex;align-items:center;justify-content:center;pointer-events:none;}
 .nl-tap-zone.left{left:0;justify-content:flex-start;padding-left:8%;}
 .nl-tap-zone.right{right:0;justify-content:flex-end;padding-right:8%;}
@@ -121,7 +120,6 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
 .nl-buffering .ring{width:56px;height:56px;border-radius:50%;border:3px solid rgba(255,255,255,.15);border-top-color:var(--cy);animation:spinnerRing .9s linear infinite;}
 @keyframes spinnerRing{to{transform:rotate(360deg)}}
 
-/* Progress bar */
 .nl-progress-wrap{
   position:absolute;bottom:0;left:0;right:0;z-index:6;
   padding:14px 14px 8px;
@@ -457,15 +455,18 @@ var SEEK_STEP_S = 10;
 var DOUBLE_TAP_WINDOW = 300;
 var GAP_ADS_MAX_MS = 60 * 60 * 1000;
 var QUEUE_LOOKAHEAD_MS = 24 * 60 * 60 * 1000;
-var UP_NEXT_LEAD_MS = 5 * 60 * 1000;         /* Show "Up Next" screen 5 min before next slot */
+var UP_NEXT_LEAD_MS = 5 * 60 * 1000;
 var SKIP_EXTRA_DELAY_SECONDS = 6;
 var AD_START_TIMEOUT_MS = 3000;
 var AD_HARD_FALLBACK_MS = 8000;
 
+/* ─── AD CONTACT EMAIL ─── */
+var AD_CONTACT_EMAIL = "adsnovalink@gmail.com";
+
 var AD_DEFAULTS = {
   prerollEnabled: true, midrollEnabled: true, postrollEnabled: true, midrollMinute: 30,
   skipAfterSeconds: 5,
-  houseAdUrl: "mailto:ads@novalink.com",
+  houseAdUrl: "mailto:" + AD_CONTACT_EMAIL,
   houseAdTitle: "Advertise on Novalink",
   houseAdText: "Reach thousands of live viewers. Feature your brand before, during, or after every stream.",
   houseAdCtaLabel: "Advertise here"
@@ -636,8 +637,7 @@ var partnerData = null;
 var siblingStreams = [];
 var channelQueue = [];
 var nextStreamInQueue = null;
-var nextSlotStream = null;       /* The next slot in the channel (auto-advance target) */
-var activeSlotIndex = -1;
+var nextSlotStream = null;
 
 var ytPlayer = null;
 var ytReady = false;
@@ -656,7 +656,6 @@ var liveCheckTimer = null;
 var gapAdTimer = null;
 var gapAdRetryTimer = null;
 var slotEndTimer = null;
-var upNextTimer = null;
 var idleCheckTimer = null;
 
 var currentPhase = 'unknown';
@@ -839,37 +838,26 @@ function streamStartMs(s){
   return isNaN(t) ? Infinity : t;
 }
 
-/* ══════════════════════════════════════════════════════════════
-   AUTO-ADVANCE — find next slot in channel
-   ══════════════════════════════════════════════════════════════ */
-function findNextSlotInChannel(){
-  if (!channelQueue.length) return null;
-  var now = Date.now();
-  var currentSlotEnd = streamEndMs(streamData);
-
-  // Filter queue: not this stream, and starts AFTER the current stream's end time
-  var candidates = channelQueue.filter(function(s){
-    if (s.id === streamId) return false;
-    var start = streamStartMs(s);
-    if (!isFinite(start)) return false;
-    return start >= (currentSlotEnd - 60000); // allow 1-min tolerance
-  });
-
-  if (!candidates.length) return null;
-
-  // Sort by start time ascending
-  candidates.sort(function(a, b){ return streamStartMs(a) - streamStartMs(b); });
-
-  // Return the soonest one
-  return candidates[0];
-}
-
 function streamEndMs(s){
   if (!s.startDate) return Infinity;
   var startMs = new Date(s.startDate + 'T' + (s.startTime || '00:00') + ':00').getTime();
   if (isNaN(startMs)) return Infinity;
   var dur = parseInt(s.durationMinutes, 10) || 90;
   return startMs + dur * 60000;
+}
+
+function findNextSlotInChannel(){
+  if (!channelQueue.length) return null;
+  var currentSlotEnd = streamEndMs(streamData);
+  var candidates = channelQueue.filter(function(s){
+    if (s.id === streamId) return false;
+    var start = streamStartMs(s);
+    if (!isFinite(start)) return false;
+    return start >= (currentSlotEnd - 60000);
+  });
+  if (!candidates.length) return null;
+  candidates.sort(function(a, b){ return streamStartMs(a) - streamStartMs(b); });
+  return candidates[0];
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -1447,8 +1435,6 @@ function enterChannelIdle(){
   hideCurtain();
   clearPlayerIframe();
   stopGapAdLoop();
-
-  // Continuous ad loop with retry
   startIdleAdLoop();
   refreshIcons();
 }
@@ -1461,7 +1447,6 @@ function exitChannelIdle(){
 
 function startIdleAdLoop(){
   if (!isChannelIdle) return;
-
   var overlay = $('adOverlay');
   var showingAd = overlay && overlay.classList.contains('show');
   if (showingAd) return;
@@ -1474,7 +1459,6 @@ function startIdleAdLoop(){
       }
     });
   } else {
-    // No ads available — just keep the idle overlay up
     gapAdRetryTimer = setTimeout(function(){ if (isChannelIdle) startIdleAdLoop(); }, 10000);
   }
 }
@@ -1792,12 +1776,8 @@ function decideAndPlay(){
   currentPhase = phase;
   console.log('[Novalink] Phase:', phase, '| Segments:', getSegments().length);
 
-  // Compute next slot target once
-  if (!nextSlotStream){
-    nextSlotStream = findNextSlotInChannel();
-  }
+  if (!nextSlotStream){ nextSlotStream = findNextSlotInChannel(); }
 
-  // ── Upcoming ──
   if (phase === 'upcoming'){
     exitChannelIdle();
     hideUpNext();
@@ -1812,7 +1792,6 @@ function decideAndPlay(){
     return;
   }
 
-  // ── Live ──
   if (phase === 'live'){
     exitChannelIdle();
     hideUpNext();
@@ -1844,7 +1823,6 @@ function decideAndPlay(){
     return;
   }
 
-  // ── Gap ──
   if (phase === 'gap'){
     mode = 'gap-ads';
     clearPlayerIframe();
@@ -1858,7 +1836,6 @@ function decideAndPlay(){
     return;
   }
 
-  // ── Replay ──
   if (phase === 'replay'){
     mode = 'normal';
     stopGapAdLoop();
@@ -1876,7 +1853,6 @@ function decideAndPlay(){
     return;
   }
 
-  // ── Ended ──
   if (phase === 'ended'){
     if (nextSlotStream) enterChannelIdle();
     else tryNextInQueue();
@@ -1893,14 +1869,12 @@ function scheduleSlotEnd(){
   slotEndTimer = setTimeout(function(){
     console.log('[Novalink] Slot ended — advancing');
     var now = Date.now();
-    // If next slot's start is within UP_NEXT_LEAD_MS, show the Up Next screen
     if (nextSlotStream){
       var nextStart = streamStartMs(nextSlotStream);
       if (nextStart - now <= UP_NEXT_LEAD_MS){
         showUpNext(nextSlotStream);
         setTimeout(goToNextSlot, 5000);
       } else {
-        // Too far away — enter idle mode
         enterChannelIdle();
       }
     } else {
@@ -2393,14 +2367,12 @@ function startTickers(){
     }
   }, 3000);
 
-  // Idle mode: check every 30s if next slot's start is close enough to auto-advance
   idleCheckTimer = setInterval(function(){
     if (mode !== 'idle' && !isChannelIdle) return;
     if (!nextSlotStream) return;
     var nextStart = streamStartMs(nextSlotStream);
     if (!isFinite(nextStart)) return;
     var diff = nextStart - Date.now();
-    // If next slot's start is within 30 seconds, redirect
     if (diff <= 30000 && diff > -60000){
       console.log('[Novalink] Idle → next slot starting now');
       window.location.href = 'view-stream.html?id=' + encodeURIComponent(nextSlotStream.id);
@@ -2438,6 +2410,10 @@ function setupMidrollTimer(){
 function loadAdsInBackground(){
   var settingsPromise = db.collection(SETTINGS).doc(SETTINGS_DOC).get().then(function(snap){
     if (snap.exists) adSettings = Object.assign({}, AD_DEFAULTS, snap.data() || {});
+    // Force the ads email regardless of what's in Firestore
+    if (!adSettings.houseAdUrl || adSettings.houseAdUrl.indexOf('ads@novalink.com') !== -1){
+      adSettings.houseAdUrl = 'mailto:' + AD_CONTACT_EMAIL;
+    }
   }).catch(function(){});
   var poolPromise = db.collection(ADS).where('active', '==', true).limit(50).get().then(function(snap){
     adPool = { preroll: [], midroll: [], postroll: [] };
@@ -2457,28 +2433,49 @@ function loadAdsInBackground(){
   return Promise.all([settingsPromise, poolPromise]);
 }
 
-function getRecentAdIds(){ try { var raw = sessionStorage.getItem('nl_recent_ads'); return raw ? JSON.parse(raw) : []; } catch(e){ return []; } }
+function getRecentAdIds(){
+  try { var raw = sessionStorage.getItem('nl_recent_ads'); return raw ? JSON.parse(raw) : []; } catch(e){ return []; }
+}
+function setRecentAdIds(arr){
+  try { sessionStorage.setItem('nl_recent_ads', JSON.stringify(arr.slice(-RECENT_ADS_MAX))); } catch(e){}
+}
 function rememberAd(adId){
   var recent = getRecentAdIds();
   recent.push(adId);
   if (recent.length > RECENT_ADS_MAX) recent = recent.slice(-RECENT_ADS_MAX);
-  try { sessionStorage.setItem('nl_recent_ads', JSON.stringify(recent)); } catch(e){}
+  setRecentAdIds(recent);
 }
+
 function pickAd(slot){
   var pool = adPool[slot] || [];
   if (!pool.length) return null;
-  var recent = getRecentAdIds();
+
+  var memoryKey = 'nl_recent_' + slot;
+  var recent = [];
+  try { var raw = sessionStorage.getItem(memoryKey); recent = raw ? JSON.parse(raw) : []; } catch(e){}
+
+  var cap = Math.max(1, pool.length - 1);
+  if (recent.length > cap) recent = recent.slice(-cap);
+
   var fresh = pool.filter(function(ad){ return recent.indexOf(ad.id) === -1; });
-  if (!fresh.length) fresh = pool;
+  if (!fresh.length){ recent = []; fresh = pool; }
+
   var total = fresh.reduce(function(sum, ad){ return sum + (ad.weight || 1); }, 0);
   var r = Math.random() * total;
   var acc = 0;
+  var picked = fresh[0];
   for (var i = 0; i < fresh.length; i++){
     acc += fresh[i].weight || 1;
-    if (r <= acc) return fresh[i];
+    if (r <= acc){ picked = fresh[i]; break; }
   }
-  return fresh[0];
+
+  recent.push(picked.id);
+  if (recent.length > cap) recent = recent.slice(-cap);
+  try { sessionStorage.setItem(memoryKey, JSON.stringify(recent)); } catch(e){}
+
+  return picked;
 }
+
 function trackAdEvent(ad, type){
   if (!ad || !ad.id) return;
   try {
@@ -2549,7 +2546,7 @@ function showAd(slot, onComplete){
     media.innerHTML = '';
     media.appendChild(buildHouseAd());
     title.textContent = adSettings.houseAdTitle || 'Advertise on Novalink';
-    cta.href = adSettings.houseAdUrl || 'mailto:ads@novalink.com';
+    cta.href = 'mailto:' + AD_CONTACT_EMAIL;
     ctaLabel.textContent = adSettings.houseAdCtaLabel || 'Advertise here';
     beginSkipCountdown(skipAfter);
   }
@@ -2616,7 +2613,7 @@ function showAd(slot, onComplete){
     rememberAd(ad.id);
   } else {
     title.textContent = adSettings.houseAdTitle || 'Advertise on Novalink';
-    cta.href = adSettings.houseAdUrl || 'mailto:ads@novalink.com';
+    cta.href = 'mailto:' + AD_CONTACT_EMAIL;
     ctaLabel.textContent = adSettings.houseAdCtaLabel || 'Advertise here';
     media.appendChild(buildHouseAd());
     beginSkipCountdown(skipAfter);
@@ -2645,7 +2642,7 @@ function buildHouseAd(){
     '</div>' +
     '<div class="hh-t">'+esc(adSettings.houseAdTitle || 'Advertise on Novalink')+'</div>' +
     '<div class="hh-s">'+esc(adSettings.houseAdText || 'Reach thousands of live viewers.')+'</div>' +
-    '<a class="hh-cta" href="'+esc(adSettings.houseAdUrl || 'mailto:ads@novalink.com')+'" target="_blank" rel="noopener">' +
+    '<a class="hh-cta" href="mailto:'+AD_CONTACT_EMAIL+'" target="_blank" rel="noopener">' +
       icon('message-circle') + ' ' + esc(adSettings.houseAdCtaLabel || 'Advertise here') +
     '</a>';
   return wrap;
@@ -2752,7 +2749,6 @@ window.addEventListener('beforeunload', function(){
   if (gapAdTimer) clearTimeout(gapAdTimer);
   if (gapAdRetryTimer) clearTimeout(gapAdRetryTimer);
   if (slotEndTimer) clearTimeout(slotEndTimer);
-  if (upNextTimer) clearInterval(upNextTimer);
   if (idleCheckTimer) clearInterval(idleCheckTimer);
   if (upNextState.timer) clearInterval(upNextState.timer);
   clearTimeout(adState.midrollTimerId);
