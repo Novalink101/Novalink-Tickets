@@ -8,6 +8,8 @@
 <script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
 <script src="https://www.youtube.com/iframe_api"></script>
 <script src="https://cdn.jsdelivr.net/npm/hls.js@latest"></script>
+<script src="https://cdn.dashjs.org/latest/dash.all.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/mpegts.js@1.7.3/dist/mpegts.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
@@ -329,6 +331,7 @@ var ADMIN_EMAILS = [
 ];
 var STREAMS = "streams";
 var CHANNELS = "channels";
+var LIVE_PARTNERS = "livePartners";
 var ADS = "ads";
 var SETTINGS = "settings";
 var SETTINGS_DOC = "ads";
@@ -338,9 +341,9 @@ var CONTROLS_HIDE_MS = 6000;
 var SEEK_STEP_S = 10;
 var GAP_ADS_MAX_MS = 60 * 60 * 1000;
 var QUEUE_LOOKAHEAD_MS = 24 * 60 * 60 * 1000;
-var SKIP_EXTRA_DELAY_SECONDS = 6;   /* Extra delay added to every skippable ad */
-var AD_START_TIMEOUT_MS = 3000;     /* If a video ad never starts, fall back to house ad */
-var AD_HARD_FALLBACK_MS = 8000;     /* Force the skip countdown to begin after this long */
+var SKIP_EXTRA_DELAY_SECONDS = 6;
+var AD_START_TIMEOUT_MS = 3000;
+var AD_HARD_FALLBACK_MS = 8000;
 
 var AD_DEFAULTS = {
   prerollEnabled: true, midrollEnabled: true, postrollEnabled: true, midrollMinute: 30,
@@ -444,6 +447,8 @@ function detectPlatformFromUrl(url){
   if (u.indexOf('zoom.us') !== -1) return 'zoom';
   if (/\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(u)) return 'video-file';
   if (u.indexOf('.m3u8') !== -1) return 'native-hls';
+  if (u.indexOf('.mpd') !== -1) return 'native-dash';
+  if (u.indexOf('.ts') !== -1) return 'native-mpegts';
   return 'custom';
 }
 
@@ -453,7 +458,9 @@ function platformLabel(p){
     kick:'Kick', rumble:'Rumble', dailymotion:'Dailymotion', odysee:'Odysee',
     bitchute:'BitChute', niconico:'Niconico', streamyard:'StreamYard',
     restream:'Restream', zoom:'Zoom', 'video-file':'Direct video', custom:'Custom Embed',
-    'native-hls':'Native HLS Stream'
+    'native-hls':'Native HLS Stream',
+    'native-dash':'Native DASH Stream',
+    'native-mpegts':'Native MPEG-TS Stream'
   }[p] || 'Live';
 }
 
@@ -527,6 +534,7 @@ var isAdminUser = false;
 var streamId = null;
 var streamData = null;
 var channelData = null;
+var partnerData = null;   // when stream references a partner
 var siblingStreams = [];
 var channelQueue = [];
 var nextStreamInQueue = null;
@@ -535,6 +543,9 @@ var ytPlayer = null;
 var ytReady = false;
 var currentYtVideoId = null;
 var currentLoadedSegmentIndex = -1;
+
+var dashPlayer = null;
+var mpegtsPlayer = null;
 
 var countdownTimer = null;
 var phaseTickTimer = null;
@@ -559,6 +570,72 @@ var adState = {
   adHardFallbackId: null,
   autoplayRetryId: null
 };
+
+/* ══════════════════════════════════════════════════════════════
+   URL RESOLVER — keeps URLs out of the DOM
+   ══════════════════════════════════════════════════════════════ */
+/*
+ * Given a stream document, returns a Promise resolving to:
+ *   { url: "<real url>", protocol: "hls"|"dash"|"mpegts"|"youtube"|"iframe", source: "partner"|"stream" }
+ *
+ * For partner streams, the real URL is stored ONLY in livePartners (admin-only).
+ * Viewers must never write the resolved URL to a DOM attribute — always keep it
+ * in a JS variable and hand it to the player.
+ */
+function resolveStreamUrl(streamDoc){
+  // If the stream references a partner channel, fetch from livePartners.
+  var partnerId = streamDoc.partnerId || streamDoc.partnerChannelId;
+  if (partnerId){
+    return db.collection(LIVE_PARTNERS).doc(partnerId).get()
+      .then(function(snap){
+        if (!snap.exists) throw new Error('Partner channel not found or not authorized.');
+        var p = snap.data() || {};
+        if (p.enabled === false) throw new Error('This partner channel is currently disabled.');
+        return {
+          url: p.streamUrl || '',
+          protocol: p.protocol || detectPlatformFromUrl(p.streamUrl || ''),
+          source: 'partner',
+          partnerId: partnerId,
+          partnerName: p.name || '',
+          partnerLogo: p.logoUrl || ''
+        };
+      });
+  }
+
+  // Native HLS on the stream doc.
+  if (streamDoc.isNative && streamDoc.hlsUrl){
+    return Promise.resolve({
+      url: streamDoc.hlsUrl,
+      protocol: 'hls',
+      source: 'stream'
+    });
+  }
+
+  // Segment-based or legacy single URL.
+  var segs = getSegments();
+  if (segs.length){
+    var first = segs[0];
+    var proto = 'hls';
+    if (first.platform === 'youtube') proto = 'youtube';
+    else if (first.platform === 'twitch' || first.platform === 'vimeo' || first.platform === 'facebook'
+             || first.platform === 'kick' || first.platform === 'rumble' || first.platform === 'dailymotion'
+             || first.platform === 'odysee' || first.platform === 'bitchute' || first.platform === 'niconico'
+             || first.platform === 'streamyard' || first.platform === 'restream' || first.platform === 'zoom'){
+      proto = 'iframe';
+    } else if (first.platform === 'native-dash') proto = 'dash';
+    else if (first.platform === 'native-mpegts') proto = 'mpegts';
+    else if (first.platform === 'native-hls') proto = 'hls';
+    else if (first.platform === 'video-file') proto = 'file';
+
+    return Promise.resolve({
+      url: first.url,
+      protocol: proto,
+      source: 'stream'
+    });
+  }
+
+  return Promise.resolve({ url: '', protocol: 'custom', source: 'stream' });
+}
 
 /* ══════════════════════════════════════════════════════════════
    SEGMENTS
@@ -722,13 +799,13 @@ function renderError(title, msg){
 function renderPage(){
   var s = streamData;
   var ch = channelData;
-  var title = s.streamTitle || s.eventName || 'Untitled Stream';
-  var chName = (ch && ch.name) || s.channelName || 'Channel';
+  var title = s.streamTitle || s.eventName || (partnerData ? partnerData.name : '') || 'Untitled Stream';
+  var chName = (ch && ch.name) || s.channelName || (partnerData ? 'Partner Channel' : 'Channel');
   var chId = (ch && ch.id) || s.channelId || '';
   var dateStr = formatDate(s.startDate, s.startTime);
   var segs = getSegments();
   var firstSeg = segs[0];
-  var platform = firstSeg ? platformLabel(firstSeg.platform) : 'Live';
+  var platform = firstSeg ? platformLabel(firstSeg.platform) : (partnerData ? 'Partner Feed' : 'Live');
 
   document.title = title + ' · ' + chName + ' · Novalink';
 
@@ -850,6 +927,10 @@ function renderPage(){
       '</div>' +
     '</div>';
 
+  var partnerNoteHTML = partnerData ? (
+    '<div class="info-row" style="margin-top:6px;">'+icon('link')+'<div><span class="lbl">Source</span><span class="val">Licensed partner channel</span></div></div>'
+  ) : '';
+
   var infoHTML =
     '<div class="card">' +
       '<div class="card-title">'+icon('info')+' Stream details</div>' +
@@ -858,6 +939,7 @@ function renderPage(){
         '<div class="info-row">'+icon('calendar')+'<div><span class="lbl">Date &amp; time</span><span class="val">'+esc(dateStr)+'</span></div></div>' +
         '<div class="info-row">'+icon('clock')+'<div><span class="lbl">Total duration</span><span class="val">'+esc(durationLabel)+'</span></div></div>' +
         '<div class="info-row">'+icon('radio')+'<div><span class="lbl">Platform</span><span class="val">'+esc(platform)+'</span></div></div>' +
+        partnerNoteHTML +
         (segs.length > 1 ? '<div class="info-row">'+icon('layers')+'<div><span class="lbl">Segments</span><span class="val">'+segs.length+' URLs, ads between</span></div></div>' : '') +
         (s.replayEnabled !== false ? '<div class="info-row">'+icon('history')+'<div><span class="lbl">Replay</span><span class="val">'+REPLAY_DAYS+' days after stream</span></div></div>' : '') +
       '</div>' +
@@ -913,8 +995,6 @@ function renderPage(){
 
   startTickers();
 
-  // IMPORTANT: Fetch ads FIRST, then decide what to play.
-  // This prevents the gap-ad loop from starting with an empty pool.
   loadAdsInBackground().then(function(){
     console.log('[AdDebug] Ads loaded. Now calling decideAndPlay.');
     decideAndPlay();
@@ -951,8 +1031,9 @@ function renderSegmentsList(){
 function renderOwnerControls(){
   var card = $('ownerCard');
   if (!card || !streamData) return;
-  card.style.display = isAdminUser ? 'block' : 'none';
-  if (!isAdminUser) return;
+  var canManage = isAdminUser && !streamData._isPartnerTest;
+  card.style.display = canManage ? 'block' : 'none';
+  if (!canManage) return;
 
   var edit = $('editStreamBtn');
   if (edit) edit.setAttribute('href', 'create-streams.html?id=' + encodeURIComponent(streamId));
@@ -1305,7 +1386,7 @@ function decideAndPlay(){
       if (currentLoadedSegmentIndex !== active.index){
         console.log('[Novalink] Loading segment', active.index + 1);
         currentLoadedSegmentIndex = active.index;
-        loadPlayerWithUrl(active.seg.url, active.seg.platform);
+        loadSegment(active);
       }
     }
     renderPhaseUI();
@@ -1313,7 +1394,6 @@ function decideAndPlay(){
     renderSegmentsList();
     setupMidrollTimer();
 
-    // Fire the pre-roll now that the ad pool is ready and phase is live.
     if (adSettings.prerollEnabled && streamData.prerollEnabled !== false && !adState.firedPreroll){
       var hasAnyAds = adPool.preroll.length || adPool.midroll.length || adPool.postroll.length;
       if (hasAnyAds){
@@ -1349,7 +1429,7 @@ function decideAndPlay(){
     var last = segs[segs.length - 1];
     if (last && currentLoadedSegmentIndex !== segs.length - 1){
       currentLoadedSegmentIndex = segs.length - 1;
-      loadPlayerWithUrl(last.url, last.platform);
+      loadSegment({ seg: last, index: segs.length - 1 });
     }
     renderPhaseUI();
     updateCountdownPill();
@@ -1362,14 +1442,291 @@ function decideAndPlay(){
   }
 }
 
+function loadSegment(active){
+  // Resolve the URL first (partner-lookup), then hand it to the right player.
+  resolveStreamUrl({
+    partnerId: streamData.partnerId,
+    isNative: streamData.isNative,
+    hlsUrl: streamData.hlsUrl,
+    segments: streamData.segments,
+    streamUrl: streamData.streamUrl
+  }).then(function(result){
+    if (!result.url){
+      showCurtain('loading', 'Stream URL missing', 'This stream has no playable source configured.');
+      return;
+    }
+    var protocol = result.protocol || 'hls';
+    if (protocol === 'youtube') return loadYouTubePlayer(result.url);
+    if (protocol === 'iframe') return loadIframePlayer(active.seg.url, active.seg.platform);
+    if (protocol === 'dash') return loadDashPlayer(result.url);
+    if (protocol === 'mpegts') return loadMpegTsPlayer(result.url);
+    if (protocol === 'file') return loadDirectVideoPlayer(result.url);
+    // default: HLS
+    return loadHlsPlayer(result.url);
+  }).catch(function(err){
+    console.error('[resolveStreamUrl]', err);
+    showCurtain('error', 'Unable to load stream', err.message || 'Please try again.');
+  });
+}
+
 function clearPlayerIframe(){
   var host = $('ytPlayerHost');
   if (host) host.innerHTML = '';
   ytPlayer = null;
   ytReady = false;
   currentYtVideoId = null;
+  dashPlayer = null;
+  mpegtsPlayer = null;
   var nativeVid = document.getElementById('nativeVideoPlayer');
   if (nativeVid) nativeVid.remove();
+  if (window.dashjs && dashPlayer) { try { dashPlayer.reset(); } catch(e){} dashPlayer = null; }
+  if (window.mpegts && mpegtsPlayer) { try { mpegtsPlayer.destroy(); } catch(e){} mpegtsPlayer = null; }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PLAYER LOADERS (HLS / DASH / MPEG-TS / YT / iframe / file)
+   ══════════════════════════════════════════════════════════════ */
+function getHost(){ return $('ytPlayerHost'); }
+
+function buildVideoEl(id){
+  var v = document.createElement('video');
+  v.id = id || 'nativeVideoPlayer';
+  v.controls = false;
+  v.autoplay = true;
+  v.muted = true;
+  v.playsInline = true;
+  v.style.width = '100%';
+  v.style.height = '100%';
+  v.style.position = 'absolute';
+  v.style.inset = '0';
+  v.style.objectFit = 'contain';
+  v.setAttribute('playsinline', '');
+  return v;
+}
+
+function loadHlsPlayer(url){
+  var host = getHost(); if (!host) return;
+  showCurtain('loading', 'Connecting to live stream…');
+  clearPlayerIframe();
+  var video = buildVideoEl('nativeVideoPlayer');
+  if (window.Hls && Hls.isSupported()){
+    var hls = new Hls();
+    hls.loadSource(url);
+    hls.attachMedia(video);
+    hls.on(Hls.Events.MANIFEST_PARSED, function(){
+      video.play().catch(function(e){ console.log('Autoplay blocked', e); });
+      hideCurtain();
+    });
+    hls.on(Hls.Events.ERROR, function(event, data){
+      console.error('HLS error:', data);
+      if (data && data.fatal){
+        switch (data.type){
+          case Hls.ErrorTypes.NETWORK_ERROR: hls.startLoad(); break;
+          case Hls.ErrorTypes.MEDIA_ERROR: hls.recoverMediaError(); break;
+          default: showCurtain('error', 'Stream Error', 'Could not connect to the HLS stream.'); break;
+        }
+      }
+    });
+  } else if (video.canPlayType('application/vnd.apple.mpegurl')){
+    video.src = url;
+    video.addEventListener('loadedmetadata', function(){
+      video.play().catch(function(e){ console.log('Autoplay blocked', e); });
+      hideCurtain();
+    });
+  }
+  host.appendChild(video);
+  updateJumpLiveButton();
+}
+
+function loadDashPlayer(url){
+  var host = getHost(); if (!host) return;
+  if (!window.dashjs){
+    showCurtain('error', 'DASH not supported', 'The dash.js library failed to load.');
+    return;
+  }
+  showCurtain('loading', 'Connecting to DASH stream…');
+  clearPlayerIframe();
+  var video = buildVideoEl('nativeVideoPlayer');
+  host.appendChild(video);
+  try {
+    dashPlayer = dashjs.MediaPlayer().create();
+    dashPlayer.initialize(video, url, true);
+    dashPlayer.on(dashjs.MediaPlayer.events.STREAM_INITIALIZED, function(){
+      hideCurtain();
+      video.play().catch(function(){});
+    });
+    dashPlayer.on(dashjs.MediaPlayer.events.ERROR, function(e){
+      console.error('DASH error:', e);
+      showCurtain('error', 'Stream Error', 'Could not connect to the DASH stream.');
+    });
+  } catch(e){
+    console.error('DASH init failed:', e);
+    showCurtain('error', 'DASH error', e.message || '');
+  }
+  updateJumpLiveButton();
+}
+
+function loadMpegTsPlayer(url){
+  var host = getHost(); if (!host) return;
+  if (!window.mpegts){
+    showCurtain('error', 'MPEG-TS not supported', 'The mpegts.js library failed to load.');
+    return;
+  }
+  showCurtain('loading', 'Connecting to MPEG-TS stream…');
+  clearPlayerIframe();
+  var video = buildVideoEl('nativeVideoPlayer');
+  host.appendChild(video);
+  try {
+    mpegtsPlayer = mpegts.createPlayer({ type: 'mpegts', url: url, isLive: true });
+    mpegtsPlayer.attachMediaElement(video);
+    mpegtsPlayer.load();
+    mpegtsPlayer.play().then(function(){ hideCurtain(); }).catch(function(){ hideCurtain(); });
+    mpegtsPlayer.on(mpegts.Events.ERROR, function(type, detail){
+      console.error('MPEG-TS error:', type, detail);
+      showCurtain('error', 'Stream Error', 'Could not connect to the MPEG-TS stream.');
+    });
+  } catch(e){
+    console.error('MPEG-TS init failed:', e);
+    showCurtain('error', 'MPEG-TS error', e.message || '');
+  }
+  updateJumpLiveButton();
+}
+
+function loadDirectVideoPlayer(url){
+  var host = getHost(); if (!host) return;
+  showCurtain('loading', 'Loading video…');
+  clearPlayerIframe();
+  var video = buildVideoEl('nativeVideoPlayer');
+  video.src = url;
+  video.addEventListener('loadedmetadata', function(){ hideCurtain(); video.play().catch(function(){}); });
+  host.appendChild(video);
+  updateJumpLiveButton();
+}
+
+function loadYouTubePlayer(url){
+  var host = getHost(); if (!host) return;
+  clearPlayerIframe();
+  var vid = extractYouTubeId(url);
+  if (!vid){ showCurtain('loading', 'Invalid YouTube URL', 'Could not extract a video ID.'); return; }
+  showCurtain('loading', 'Loading stream', 'Connecting to YouTube…');
+  host.innerHTML = '<div id="ytPlayer"></div>';
+  currentYtVideoId = vid;
+  if (window.YT && window.YT.Player) createYTPlayer(vid);
+  else window.onYouTubeIframeAPIReady = function(){ createYTPlayer(vid); };
+}
+
+function loadIframePlayer(url, platform){
+  var host = getHost(); if (!host) return;
+  showCurtain('loading', 'Loading stream', 'Connecting to ' + platformLabel(platform) + '…');
+  clearPlayerIframe();
+  var embed = '';
+  if (platform === 'twitch'){
+    var ch = extractTwitchChannel(url);
+    if (!ch){ showCurtain('loading', 'Invalid Twitch URL', ''); return; }
+    var parent = location.hostname || 'localhost';
+    embed = 'https://player.twitch.tv/?channel=' + encodeURIComponent(ch) + '&parent=' + parent + '&autoplay=true&muted=true';
+  } else if (platform === 'vimeo'){
+    var v2 = extractVimeoId(url);
+    if (!v2){ showCurtain('loading', 'Invalid Vimeo URL', ''); return; }
+    embed = 'https://player.vimeo.com/video/' + v2 + '?autoplay=1&muted=1';
+  } else if (platform === 'facebook'){
+    embed = buildFacebookEmbed(url);
+  } else {
+    embed = normalizeEmbedUrl(url, platform);
+  }
+  var iframe = document.createElement('iframe');
+  iframe.src = embed;
+  iframe.allow = 'autoplay; fullscreen; picture-in-picture; encrypted-media; camera; microphone; clipboard-write';
+  iframe.setAttribute('allowfullscreen', '');
+  iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+  iframe.style.width = '100%';
+  iframe.style.height = '100%';
+  iframe.style.border = '0';
+  iframe.style.position = 'absolute';
+  iframe.style.inset = '0';
+  var loaded = false;
+  iframe.addEventListener('load', function(){ if (!loaded){ loaded = true; hideCurtain(); } });
+  setTimeout(function(){ if (!loaded){ loaded = true; hideCurtain(); } }, 4000);
+  host.appendChild(iframe);
+}
+
+function createYTPlayer(videoId){
+  ytPlayer = new YT.Player('ytPlayer', {
+    videoId: videoId,
+    playerVars: {
+      autoplay: 1, mute: 1, rel: 0, playsinline: 1,
+      iv_load_policy: 3, modestbranding: 1, controls: 0, disablekb: 1,
+      color: 'white', origin: window.location.origin
+    },
+    events: {
+      onReady: function(event){
+        ytReady = true;
+        hideCurtain();
+        try { event.target.mute(); event.target.playVideo(); } catch(e){}
+        var attempts = 0;
+        clearInterval(autoplayRetryTimer);
+        autoplayRetryTimer = setInterval(function(){
+          attempts++;
+          if (attempts > 8){ clearInterval(autoplayRetryTimer); return; }
+          try {
+            var state = event.target.getPlayerState();
+            if (state !== 1 && state !== 3) event.target.playVideo();
+            else clearInterval(autoplayRetryTimer);
+          } catch(e){}
+        }, 1000);
+        clearInterval(liveCheckTimer);
+        liveCheckTimer = setInterval(function(){
+          if (currentPhase === 'live') updateJumpLiveButton();
+        }, 2000);
+      },
+      onStateChange: function(event){
+        var pp = $('ctrlPlayPause');
+        if (pp) pp.innerHTML = icon(event.data === 1 ? 'pause' : 'play');
+        refreshIcons();
+        if (event.data === 0){
+          if (adSettings.postrollEnabled && streamData.postrollEnabled !== false && !adState.firedPostroll){
+            adState.firedPostroll = true;
+            showAd('postroll', function(){ handleSegmentEnd(); });
+          } else {
+            handleSegmentEnd();
+          }
+        }
+        if (event.data === 1) updateJumpLiveButton();
+      },
+      onError: function(event){
+        var msg = 'YouTube error. ';
+        if (event.data === 2) msg += 'Video ID is invalid.';
+        else if (event.data === 5) msg += 'HTML5 player cannot play this video.';
+        else if (event.data === 100) msg += 'Video not found or is private.';
+        else if (event.data === 101 || event.data === 150) msg += 'Video owner does not allow embedding.';
+        else msg += 'Code: ' + event.data;
+        toast(msg, 'error', 6000);
+      }
+    }
+  });
+}
+
+function handleSegmentEnd(){
+  var phase = computePhase();
+  if (phase === 'gap'){ decideAndPlay(); }
+  else if (phase === 'ended'){ tryNextInQueue(); }
+  else if (phase === 'live'){
+    var segs = getSegments();
+    var active = getActiveSegment();
+    if (active && active.index < segs.length - 1){ decideAndPlay(); }
+  }
+}
+
+function loadPlayerForIframeOnly(){
+  var host = getHost();
+  if (!host) return;
+  if (host.innerHTML) return;
+  var active = getActiveSegment() || (function(){
+    var segs = getSegments();
+    return segs[0] ? { seg: segs[0], index: 0 } : null;
+  })();
+  if (!active) return;
+  loadSegment(active);
 }
 
 function tryNextInQueue(){
@@ -1454,12 +1811,8 @@ function startGapAdLoop(){
   if (showingAd) return;
 
   if (streamData.gapAdsEnabled === false){
-    if (!($('curtain') && $('curtain').classList.contains('show'))){
-      showCountdownCurtain();
-    }
-    gapAdRetryTimer = setTimeout(function(){
-      if (mode === 'gap-ads') startGapAdLoop();
-    }, 5000);
+    if (!($('curtain') && $('curtain').classList.contains('show'))){ showCountdownCurtain(); }
+    gapAdRetryTimer = setTimeout(function(){ if (mode === 'gap-ads') startGapAdLoop(); }, 5000);
     return;
   }
 
@@ -1469,22 +1822,12 @@ function startGapAdLoop(){
     adState.gapAdActive = true;
     showAd('preroll', function(){
       adState.gapAdActive = false;
-      if (!$('curtain') || !$('curtain').classList.contains('show')){
-        showCountdownCurtain();
-      }
-      if (mode === 'gap-ads'){
-        gapAdTimer = setTimeout(function(){
-          if (mode === 'gap-ads') startGapAdLoop();
-        }, 400);
-      }
+      if (!$('curtain') || !$('curtain').classList.contains('show')){ showCountdownCurtain(); }
+      if (mode === 'gap-ads'){ gapAdTimer = setTimeout(function(){ if (mode === 'gap-ads') startGapAdLoop(); }, 400); }
     });
   } else {
-    if (!($('curtain') && $('curtain').classList.contains('show'))){
-      showCountdownCurtain();
-    }
-    gapAdRetryTimer = setTimeout(function(){
-      if (mode === 'gap-ads') startGapAdLoop();
-    }, 5000);
+    if (!($('curtain') && $('curtain').classList.contains('show'))){ showCountdownCurtain(); }
+    gapAdRetryTimer = setTimeout(function(){ if (mode === 'gap-ads') startGapAdLoop(); }, 5000);
   }
 }
 
@@ -1599,18 +1942,13 @@ function startTickers(){
     var newPhase = computePhase();
 
     if (currentPhase === 'gap' && newPhase === 'live'){
-      console.log('[Novalink] Gap ended — segment is live');
       decideAndPlay();
       return;
     }
 
     if (newPhase === 'live'){
       var active = getActiveSegment();
-      if (active && currentLoadedSegmentIndex !== active.index){
-        console.log('[Novalink] Auto-switching to segment', active.index + 1);
-        decideAndPlay();
-        return;
-      }
+      if (active && currentLoadedSegmentIndex !== active.index){ decideAndPlay(); return; }
     }
 
     if (newPhase !== currentPhase){
@@ -1651,212 +1989,6 @@ function setupMidrollTimer(){
 }
 
 /* ══════════════════════════════════════════════════════════════
-   LOAD PLAYER
-   ══════════════════════════════════════════════════════════════ */
-function loadPlayerForIframeOnly(){
-  var host = $('ytPlayerHost');
-  if (!host) return;
-  if (host.innerHTML) return;
-  var active = getActiveSegment() || (function(){
-    var segs = getSegments();
-    return segs[0] ? { seg: segs[0], index: 0 } : null;
-  })();
-  if (!active) return;
-  loadPlayerWithUrl(active.seg.url, active.seg.platform, true);
-}
-
-function loadPlayerWithUrl(url, platform, silent){
-  var host = $('ytPlayerHost');
-  if (!host) return;
-
-  if (platform === 'native-hls' || (url && url.endsWith('.m3u8'))) {
-    if (!silent) showCurtain('loading', 'Connecting to Novalink Live…');
-
-    host.innerHTML = '';
-    ytPlayer = null;
-    ytReady = false;
-
-    var video = document.createElement('video');
-    video.id = 'nativeVideoPlayer';
-    video.controls = false;
-    video.autoplay = true;
-    video.muted = true;
-    video.playsInline = true;
-    video.style.width = '100%';
-    video.style.height = '100%';
-    video.style.position = 'absolute';
-    video.style.inset = '0';
-    video.style.objectFit = 'contain';
-
-    if (window.Hls && Hls.isSupported()) {
-      var hls = new Hls();
-      hls.loadSource(url);
-      hls.attachMedia(video);
-      hls.on(Hls.Events.MANIFEST_PARSED, function() {
-        video.play().catch(function(e){ console.log('Autoplay blocked', e); });
-        hideCurtain();
-      });
-      hls.on(Hls.Events.ERROR, function(event, data) {
-        console.error('HLS error:', data);
-        if (data.fatal) {
-            switch (data.type) {
-                case Hls.ErrorTypes.NETWORK_ERROR: hls.startLoad(); break;
-                case Hls.ErrorTypes.MEDIA_ERROR: hls.recoverMediaError(); break;
-                default: showCurtain('error', 'Stream Error', 'Could not connect to the HLS stream.'); break;
-            }
-        }
-      });
-    } else if (video.canPlayType('application/vnd.apple.mpegurl')) {
-      video.src = url;
-      video.addEventListener('loadedmetadata', function() {
-        video.play().catch(function(e){ console.log('Autoplay blocked', e); });
-        hideCurtain();
-      });
-    }
-
-    host.appendChild(video);
-    updateJumpLiveButton();
-    return;
-  }
-
-  if (platform === 'youtube'){
-    var vid = extractYouTubeId(url);
-    if (vid && vid === currentYtVideoId && ytPlayer && ytReady){ if (!silent) hideCurtain(); return; }
-  }
-
-  host.innerHTML = '';
-  ytPlayer = null;
-  ytReady = false;
-  currentYtVideoId = null;
-
-  if (!url){
-    showCurtain('loading', 'Stream URL missing', 'The host has not set a stream URL yet.');
-    return;
-  }
-
-  platform = platform || detectPlatformFromUrl(url);
-
-  if (platform === 'youtube'){
-    var vid2 = extractYouTubeId(url);
-    if (!vid2){ showCurtain('loading', 'Invalid YouTube URL', 'Could not extract a video ID from: ' + url); return; }
-    if (!silent) showCurtain('loading', 'Loading stream', 'Connecting to YouTube…');
-    host.innerHTML = '<div id="ytPlayer"></div>';
-    currentYtVideoId = vid2;
-    if (window.YT && window.YT.Player) createYTPlayer(vid2);
-    else window.onYouTubeIframeAPIReady = function(){ createYTPlayer(vid2); };
-    return;
-  }
-
-  var embed = '';
-  if (platform === 'twitch'){
-    var ch = extractTwitchChannel(url);
-    if (!ch){ showCurtain('loading', 'Invalid Twitch URL', 'Could not find a channel name.'); return; }
-    var parent = location.hostname || 'localhost';
-    embed = 'https://player.twitch.tv/?channel=' + encodeURIComponent(ch) + '&parent=' + parent + '&autoplay=true&muted=true';
-  } else if (platform === 'vimeo'){
-    var v2 = extractVimeoId(url);
-    if (!v2){ showCurtain('loading', 'Invalid Vimeo URL', 'Could not find a video ID.'); return; }
-    embed = 'https://player.vimeo.com/video/' + v2 + '?autoplay=1&muted=1';
-  } else if (platform === 'facebook'){
-    embed = buildFacebookEmbed(url);
-  } else {
-    embed = normalizeEmbedUrl(url, platform);
-  }
-
-  if (!silent) showCurtain('loading', 'Loading stream', 'Connecting to ' + platformLabel(platform) + '…');
-
-  var iframe = document.createElement('iframe');
-  iframe.src = embed;
-  iframe.allow = 'autoplay; fullscreen; picture-in-picture; encrypted-media; camera; microphone; clipboard-write';
-  iframe.setAttribute('allowfullscreen', '');
-  iframe.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
-  iframe.style.width = '100%';
-  iframe.style.height = '100%';
-  iframe.style.border = '0';
-  iframe.style.position = 'absolute';
-  iframe.style.inset = '0';
-
-  var loaded = false;
-  iframe.addEventListener('load', function(){ if (!loaded){ loaded = true; hideCurtain(); } });
-  setTimeout(function(){ if (!loaded){ loaded = true; hideCurtain(); } }, 4000);
-  host.appendChild(iframe);
-}
-
-function createYTPlayer(videoId){
-  ytPlayer = new YT.Player('ytPlayer', {
-    videoId: videoId,
-    playerVars: {
-      autoplay: 1, mute: 1, rel: 0, playsinline: 1,
-      iv_load_policy: 3, modestbranding: 1, controls: 0, disablekb: 1,
-      color: 'white', origin: window.location.origin
-    },
-    events: {
-      onReady: function(event){
-        ytReady = true;
-        hideCurtain();
-        try { event.target.mute(); event.target.playVideo(); } catch(e){}
-
-        var attempts = 0;
-        clearInterval(autoplayRetryTimer);
-        autoplayRetryTimer = setInterval(function(){
-          attempts++;
-          if (attempts > 8){ clearInterval(autoplayRetryTimer); return; }
-          try {
-            var state = event.target.getPlayerState();
-            if (state !== 1 && state !== 3) event.target.playVideo();
-            else clearInterval(autoplayRetryTimer);
-          } catch(e){}
-        }, 1000);
-
-        clearInterval(liveCheckTimer);
-        liveCheckTimer = setInterval(function(){
-          if (currentPhase === 'live') updateJumpLiveButton();
-        }, 2000);
-      },
-      onStateChange: function(event){
-        var pp = $('ctrlPlayPause');
-        if (pp) pp.innerHTML = icon(event.data === 1 ? 'pause' : 'play');
-        refreshIcons();
-
-        if (event.data === 0){
-          if (adSettings.postrollEnabled && streamData.postrollEnabled !== false && !adState.firedPostroll){
-            adState.firedPostroll = true;
-            showAd('postroll', function(){ handleSegmentEnd(); });
-          } else {
-            handleSegmentEnd();
-          }
-        }
-        if (event.data === 1) updateJumpLiveButton();
-      },
-      onError: function(event){
-        var msg = 'YouTube error. ';
-        if (event.data === 2) msg += 'Video ID is invalid.';
-        else if (event.data === 5) msg += 'HTML5 player cannot play this video.';
-        else if (event.data === 100) msg += 'Video not found or is private.';
-        else if (event.data === 101 || event.data === 150) msg += 'Video owner does not allow embedding.';
-        else msg += 'Code: ' + event.data;
-        toast(msg, 'error', 6000);
-      }
-    }
-  });
-}
-
-function handleSegmentEnd(){
-  var phase = computePhase();
-  if (phase === 'gap'){
-    decideAndPlay();
-  } else if (phase === 'ended'){
-    tryNextInQueue();
-  } else if (phase === 'live'){
-    var segs = getSegments();
-    var active = getActiveSegment();
-    if (active && active.index < segs.length - 1){
-      decideAndPlay();
-    }
-  }
-}
-
-/* ══════════════════════════════════════════════════════════════
    ADS
    ══════════════════════════════════════════════════════════════ */
 function loadAdsInBackground(){
@@ -1877,22 +2009,17 @@ function loadAdsInBackground(){
     snap.forEach(function(doc){
       var d = doc.data() || {};
       d.id = doc.id;
-
-      if (d.startDate){ var s = new Date(d.startDate + 'T00:00').getTime(); if (!isNaN(s) && now < s){ console.log('[AdDebug] SKIP future:', d.title); return; } }
-      if (d.endDate){ var e = new Date(d.endDate + 'T23:59:59').getTime(); if (!isNaN(e) && now > e){ console.log('[AdDebug] SKIP expired:', d.title); return; } }
-      if (!d.mediaUrl){ console.log('[AdDebug] SKIP no mediaUrl:', d.title); return; }
-
+      if (d.startDate){ var s = new Date(d.startDate + 'T00:00').getTime(); if (!isNaN(s) && now < s) return; }
+      if (d.endDate){ var e = new Date(d.endDate + 'T23:59:59').getTime(); if (!isNaN(e) && now > e) return; }
+      if (!d.mediaUrl) return;
       var t = d.type || 'any';
       if (t === 'preroll' || t === 'any') adPool.preroll.push(d);
       if (t === 'midroll' || t === 'any') adPool.midroll.push(d);
       if (t === 'postroll' || t === 'any') adPool.postroll.push(d);
-      console.log('[AdDebug] Loaded ad:', d.title, '| type:', t, '| mediaUrl:', d.mediaUrl);
     });
 
     console.log('[AdDebug] Pool ready:', {
-      preroll: adPool.preroll.length,
-      midroll: adPool.midroll.length,
-      postroll: adPool.postroll.length
+      preroll: adPool.preroll.length, midroll: adPool.midroll.length, postroll: adPool.postroll.length
     });
   }).catch(function(err){
     console.error('[AdDebug] Ad pool FAILED:', err);
@@ -1902,9 +2029,7 @@ function loadAdsInBackground(){
   return Promise.all([settingsPromise, poolPromise]);
 }
 
-function getRecentAdIds(){
-  try { var raw = sessionStorage.getItem('nl_recent_ads'); return raw ? JSON.parse(raw) : []; } catch(e){ return []; }
-}
+function getRecentAdIds(){ try { var raw = sessionStorage.getItem('nl_recent_ads'); return raw ? JSON.parse(raw) : []; } catch(e){ return []; } }
 function rememberAd(adId){
   var recent = getRecentAdIds();
   recent.push(adId);
@@ -1945,8 +2070,6 @@ function clearAdTimers(){
 }
 
 function showAd(slot, onComplete){
-  console.log('[AdDebug] showAd called for slot:', slot);
-
   var overlay = $('adOverlay'), media = $('adMedia'), title = $('adTitle');
   var cta = $('adCta'), ctaLabel = $('adCtaLabel');
   var skipBtn = $('adSkip'), skipText = $('adSkipText'), countdown = $('adCountdown');
@@ -1961,8 +2084,6 @@ function showAd(slot, onComplete){
   if (tapOverlay) tapOverlay.classList.remove('show');
 
   var ad = pickAd(slot);
-  console.log('[AdDebug] Picked:', ad ? (ad.title || ad.id) : 'NONE → house ad');
-
   overlay.classList.add('show');
   media.innerHTML = '';
   progressFill.style.width = '0%';
@@ -1970,10 +2091,9 @@ function showAd(slot, onComplete){
   if (isNaN(skipAfter)) skipAfter = 5;
 
   var fsBtn = $('adFullscreen');
-  if (fsBtn) {
-    fsBtn.onclick = function() {
-      var wrap = $('nlPlayer');
-      if (!wrap) return;
+  if (fsBtn){
+    fsBtn.onclick = function(){
+      var wrap = $('nlPlayer'); if (!wrap) return;
       if (document.fullscreenElement) document.exitFullscreen();
       else if (wrap.requestFullscreen) wrap.requestFullscreen();
       else if (wrap.webkitRequestFullscreen) wrap.webkitRequestFullscreen();
@@ -1985,23 +2105,9 @@ function showAd(slot, onComplete){
   function beginSkipCountdown(seconds){
     if (skipStarted) return;
     skipStarted = true;
-    console.log('[AdDebug] beginSkipCountdown:', seconds);
-
-    if (seconds === -1){
-      skipBtn.disabled = true;
-      skipText.textContent = 'Ad';
-      countdown.textContent = '';
-      return;
-    }
-
+    if (seconds === -1){ skipBtn.disabled = true; skipText.textContent = 'Ad'; countdown.textContent = ''; return; }
     var totalWait = (seconds || 0) + SKIP_EXTRA_DELAY_SECONDS;
-    if (totalWait <= 0){
-      skipBtn.disabled = false;
-      skipText.textContent = 'Skip ad';
-      countdown.textContent = '';
-      return;
-    }
-
+    if (totalWait <= 0){ skipBtn.disabled = false; skipText.textContent = 'Skip ad'; countdown.textContent = ''; return; }
     var remaining = totalWait;
     skipBtn.disabled = true;
     skipText.textContent = 'Skip in';
@@ -2011,17 +2117,12 @@ function showAd(slot, onComplete){
       remaining--;
       if (remaining <= 0){
         clearInterval(adState.countdownTimerId);
-        skipBtn.disabled = false;
-        skipText.textContent = 'Skip ad';
-        countdown.textContent = '';
-      } else {
-        countdown.textContent = remaining;
-      }
+        skipBtn.disabled = false; skipText.textContent = 'Skip ad'; countdown.textContent = '';
+      } else { countdown.textContent = remaining; }
     }, 1000);
   }
 
   function fallbackToHouseAd(){
-    console.warn('[AdDebug] Falling back to house ad');
     media.innerHTML = '';
     media.appendChild(buildHouseAd());
     title.textContent = adSettings.houseAdTitle || 'Advertise on Novalink';
@@ -2034,10 +2135,7 @@ function showAd(slot, onComplete){
     var tryPlay = function(attempt){
       var p = vid.play();
       if (p && typeof p.then === 'function'){
-        p.then(function(){
-          console.log('[AdDebug] Ad video playing (attempt ' + attempt + ')');
-        }).catch(function(err){
-          console.warn('[AdDebug] Ad autoplay blocked:', err && err.name);
+        p.then(function(){}).catch(function(){
           if (attempt === 1){
             try { vid.muted = true; } catch(e){}
             adState.autoplayRetryId = setTimeout(function(){ tryPlay(2); }, 400);
@@ -2067,56 +2165,32 @@ function showAd(slot, onComplete){
     if (ad.mediaType === 'video' && ad.mediaUrl){
       var vid = document.createElement('video');
       vid.src = ad.mediaUrl;
-      vid.autoplay = true;
-      vid.muted = false;
-      vid.playsInline = true;
-      vid.preload = 'auto';
+      vid.autoplay = true; vid.muted = false; vid.playsInline = true; vid.preload = 'auto';
       vid.setAttribute('playsinline', '');
       media.appendChild(vid);
-
       vid.addEventListener('timeupdate', function(){
         if (vid.duration) progressFill.style.width = ((vid.currentTime / vid.duration) * 100) + '%';
       });
-
       vid.addEventListener('ended', function(){ hideAd(); if (onComplete) onComplete(); });
-
-      vid.addEventListener('error', function(){
-        console.warn('[AdDebug] Ad video error — falling back');
-        fallbackToHouseAd();
-      });
-
+      vid.addEventListener('error', function(){ fallbackToHouseAd(); });
       vid.addEventListener('playing', function(){ beginSkipCountdown(skipAfter); });
-
       adState.adStartWatchdogId = setTimeout(function(){
         if (!skipStarted){
-          if (vid.readyState >= 2 && !vid.paused){
-            beginSkipCountdown(skipAfter);
-          } else {
-            console.warn('[AdDebug] Ad video never started — showing house ad');
-            fallbackToHouseAd();
-          }
+          if (vid.readyState >= 2 && !vid.paused){ beginSkipCountdown(skipAfter); }
+          else { fallbackToHouseAd(); }
         }
       }, AD_START_TIMEOUT_MS);
-
       adState.adHardFallbackId = setTimeout(function(){
-        if (!skipStarted){
-          console.warn('[AdDebug] Ad hard fallback triggered');
-          beginSkipCountdown(skipAfter);
-        }
+        if (!skipStarted){ beginSkipCountdown(skipAfter); }
       }, AD_HARD_FALLBACK_MS);
-
       attachRobustVideoPlayback(vid);
     } else if (ad.mediaUrl){
       var img = document.createElement('img');
-      img.src = ad.mediaUrl;
-      img.alt = ad.title || 'Ad';
+      img.src = ad.mediaUrl; img.alt = ad.title || 'Ad';
       img.addEventListener('load', function(){ beginSkipCountdown(skipAfter); });
       img.addEventListener('error', function(){ fallbackToHouseAd(); });
       media.appendChild(img);
-
-      adState.adHardFallbackId = setTimeout(function(){
-        if (!skipStarted) beginSkipCountdown(skipAfter);
-      }, AD_HARD_FALLBACK_MS);
+      adState.adHardFallbackId = setTimeout(function(){ if (!skipStarted) beginSkipCountdown(skipAfter); }, AD_HARD_FALLBACK_MS);
     } else {
       media.appendChild(buildHouseAd());
       beginSkipCountdown(skipAfter);
@@ -2132,13 +2206,7 @@ function showAd(slot, onComplete){
   }
 
   cta.onclick = function(){ if (ad) trackAdEvent(ad, 'click'); };
-
-  skipBtn.onclick = function(){
-    if (skipBtn.disabled) return;
-    hideAd();
-    if (onComplete) onComplete();
-  };
-
+  skipBtn.onclick = function(){ if (skipBtn.disabled) return; hideAd(); if (onComplete) onComplete(); };
   refreshIcons();
 }
 
@@ -2146,10 +2214,8 @@ function hideAd(){
   var overlay = $('adOverlay');
   if (!overlay) return;
   overlay.classList.remove('show');
-  var media = $('adMedia');
-  if (media) media.innerHTML = '';
-  var tapOverlay = $('adTap');
-  if (tapOverlay) tapOverlay.classList.remove('show');
+  var media = $('adMedia'); if (media) media.innerHTML = '';
+  var tapOverlay = $('adTap'); if (tapOverlay) tapOverlay.classList.remove('show');
   clearAdTimers();
 }
 
@@ -2173,6 +2239,48 @@ function buildHouseAd(){
    LOAD
    ══════════════════════════════════════════════════════════════ */
 function load(){
+  var partnerTestId = getParam('partnerTest');
+
+  // ── Partner test mode: build a fake stream doc from a livePartners entry ──
+  if (partnerTestId){
+    return db.collection(LIVE_PARTNERS).doc(partnerTestId).get()
+      .then(function(snap){
+        if (!snap.exists){ renderError('Partner not found', 'This partner channel does not exist.'); return; }
+        var p = snap.data() || {};
+        if (p.enabled === false && !isAdmin(auth.currentUser)){
+          renderError('Channel disabled', 'This partner channel is currently disabled.');
+          return;
+        }
+        partnerData = p;
+        streamData = {
+          id: '__partner__' + partnerTestId,
+          _isPartnerTest: true,
+          streamTitle: p.name || 'Partner Channel',
+          eventName: p.name || 'Partner Channel',
+          channelName: 'Partner Feed',
+          isNative: true,
+          hlsUrl: '__partner__',  // placeholder, resolveStreamUrl handles it
+          startDate: new Date().toISOString().slice(0,10),
+          startTime: '00:00',
+          durationMinutes: 1440,
+          replayEnabled: true,
+          prerollEnabled: true,
+          midrollEnabled: false,
+          postrollEnabled: false,
+          gapAdsEnabled: false,
+          partnerId: partnerTestId
+        };
+        currentPhase = computePhase();
+        console.log('[Novalink] Partner test mode for', p.name);
+        renderPage();
+      })
+      .catch(function(err){
+        console.error('[partnerTest]', err);
+        renderError('Could not load partner', err.message || '');
+      });
+  }
+
+  // ── Normal stream load ──
   streamId = getParam('id');
   if (!streamId){ renderError('No stream specified', 'This page needs a stream ID.'); return; }
 
@@ -2182,6 +2290,13 @@ function load(){
       streamData = doc.data() || {};
       streamData.id = doc.id;
       console.log('[Novalink] Stream loaded:', streamData.streamTitle || streamData.eventName);
+
+      // If stream references a partner, load that partner too (admin-only read).
+      var partnerPromise = streamData.partnerId
+        ? db.collection(LIVE_PARTNERS).doc(streamData.partnerId).get().then(function(ps){
+            if (ps.exists){ partnerData = ps.data() || {}; }
+          }).catch(function(){})
+        : Promise.resolve();
 
       var chId = streamData.channelId;
       var chPromise = chId
@@ -2208,7 +2323,7 @@ function load(){
           }).catch(function(){})
         : Promise.resolve();
 
-      Promise.all([chPromise, sibPromise]).then(function(){
+      Promise.all([chPromise, sibPromise, partnerPromise]).then(function(){
         currentPhase = computePhase();
         console.log('[Novalink] Phase on load:', currentPhase);
         renderPage();
@@ -2245,8 +2360,12 @@ window.addEventListener('beforeunload', function(){
   if (gapAdTimer) clearTimeout(gapAdTimer);
   if (gapAdRetryTimer) clearTimeout(gapAdRetryTimer);
   clearTimeout(adState.midrollTimerId);
-  clearAdTimers();
+  clearAdAdTimersSafe();
 });
+
+function clearAdAdTimersSafe(){
+  try { clearAdTimers(); } catch(e){}
+}
 })();
 </script>
 </body>
