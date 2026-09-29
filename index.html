@@ -344,6 +344,7 @@ h3{font-size:1.2rem}
         <button class="user-dropdown-item" id="ddScanner" type="button"><i data-lucide="scan-line"></i> Scanner</button>
         <button class="user-dropdown-item" id="ddManageAds" type="button" style="display:none;"><i data-lucide="megaphone"></i> Manage ads</button>
         <button class="user-dropdown-item" id="ddManageChannels" type="button" style="display:none;"><i data-lucide="tv"></i> Manage channels</button>
+        <button class="user-dropdown-item" id="ddManagePartners" type="button" style="display:none;"><i data-lucide="link"></i> Manage partners</button>
         <div class="user-dropdown-separator"></div>
         <button class="user-dropdown-item" id="ddSignOut" type="button"><i data-lucide="log-out"></i> Sign out</button>
         <button class="user-dropdown-item danger" id="ddDeleteAccount" type="button"><i data-lucide="trash-2"></i> Delete my account</button>
@@ -497,10 +498,11 @@ h3{font-size:1.2rem}
         <a href="tel:+27696835184">Phone</a>
       </div>
       <div class="footer-col">
-        <h4>Legal</h4>
-        <a href="terms.html">Terms &amp; Conditions</a>
-        <a href="privacy.html">Privacy Policy</a>
-        <a href="popia.html">POPIA Notice</a>
+        <h4>Admin</h4>
+        <a href="admin-live.html">Partner channels</a>
+        <a href="admin-channels.html">Channels</a>
+        <a href="admin-ads.html">Ads</a>
+        <a href="create-streams.html">Stream studio</a>
       </div>
     </div>
     <div class="footer-bottom">
@@ -684,7 +686,14 @@ function streamStatus(s){
 }
 
 function platformLabel(p){
-  return { youtube:'YouTube', twitch:'Twitch', vimeo:'Vimeo', facebook:'Facebook', custom:'Embed' }[p] || 'Live';
+  return {
+    youtube:'YouTube', twitch:'Twitch', vimeo:'Vimeo', facebook:'Facebook',
+    custom:'Embed', 'native-hls':'HLS', partner:'Partner'
+  }[p] || 'Live';
+}
+
+function isPartnerStream(s){
+  return !!(s.partnerId || s.streamPlatform === 'partner');
 }
 
 /* Stream card */
@@ -696,6 +705,7 @@ function buildStreamCard(s){
   var dateStr = formatDate(s.startDate, s.startTime);
   var platform = platformLabel(s.streamPlatform);
   var isHL = s.streamType === 'highlight';
+  var isPartner = isPartnerStream(s);
 
   var badgeClass = 'upcoming', badgeText = 'Upcoming';
   if (st.status === 'live'){
@@ -710,10 +720,15 @@ function buildStreamCard(s){
     ? "background-image:url('"+esc(s.heroImage)+"');background-size:cover;background-position:center;"
     : 'background:' + gradientFor(s.id);
 
+  var partnerTag = isPartner
+    ? '<span class="item-card-platform" style="left:12px;right:auto;background:rgba(0,255,255,.9);color:#04161c;">'+icon('shield-check')+' Partner</span>'
+    : '';
+
   card.innerHTML =
     '<div class="item-card-img" style="'+thumbStyle+'">'+
       '<span class="item-card-badge '+badgeClass+'">'+esc(badgeText)+'</span>'+
-      '<span class="item-card-platform">'+esc(platform)+'</span>'+
+      partnerTag +
+      (isPartner ? '' : '<span class="item-card-platform">'+esc(platform)+'</span>')+
     '</div>'+
     '<div class="item-card-body">'+
       '<h3>'+esc(title)+'</h3>'+
@@ -902,7 +917,6 @@ function renderChannelsRow(channels, streams){
   var row = $('channelsRow');
   if (!channels.length){ section.style.display = 'none'; row.innerHTML = ''; return; }
 
-  // Count streams per channel
   var counts = {};
   var liveCounts = {};
   streams.forEach(function(s){
@@ -915,7 +929,6 @@ function renderChannelsRow(channels, streams){
     ch._liveCount = liveCounts[ch.id] || 0;
   });
 
-  // Sort: live channels first, then by order
   channels.sort(function(a, b){
     var la = a._liveCount || 0, lb = b._liveCount || 0;
     if (la !== lb) return lb - la;
@@ -932,7 +945,6 @@ function renderChannelsRow(channels, streams){
    DATA LOADING
    ══════════════════════════════════════════════════════════════ */
 function loadHomepageData(){
-  // Events
   db.collection(EVENTS).orderBy('createdAt', 'desc').limit(8).get()
     .then(function(snap){
       var events = [];
@@ -950,7 +962,6 @@ function loadHomepageData(){
       refreshIcons();
     });
 
-  // Trips
   db.collection(TRIPS).orderBy('createdAt', 'desc').limit(8).get()
     .then(function(snap){
       var trips = [];
@@ -968,7 +979,6 @@ function loadHomepageData(){
       refreshIcons();
     });
 
-  // Streams + Channels
   var streamsPromise = db.collection(STREAMS).orderBy('startDate', 'desc').limit(50).get()
     .then(function(snap){
       var streams = [];
@@ -1019,6 +1029,7 @@ function applyAuthState(user){
   var ddCreateStream = $('ddCreateStream');
   var ddManageAds = $('ddManageAds');
   var ddManageChannels = $('ddManageChannels');
+  var ddManagePartners = $('ddManagePartners');
 
   if (user){
     var display = user.displayName || user.email.split('@')[0];
@@ -1033,6 +1044,7 @@ function applyAuthState(user){
 
     if (ddManageAds) ddManageAds.style.display = isAdmin ? 'flex' : 'none';
     if (ddManageChannels) ddManageChannels.style.display = isAdmin ? 'flex' : 'none';
+    if (ddManagePartners) ddManagePartners.style.display = isAdmin ? 'flex' : 'none';
     if (ddCreateStream) ddCreateStream.style.display = isAdmin ? 'flex' : 'none';
     if (heroGoLive) heroGoLive.style.display = isAdmin ? 'inline-flex' : 'none';
   } else {
@@ -1043,6 +1055,7 @@ function applyAuthState(user){
 
     if (ddManageAds) ddManageAds.style.display = 'none';
     if (ddManageChannels) ddManageChannels.style.display = 'none';
+    if (ddManagePartners) ddManagePartners.style.display = 'none';
     if (ddCreateStream) ddCreateStream.style.display = 'none';
     if (heroGoLive) heroGoLive.style.display = 'none';
 
@@ -1087,7 +1100,6 @@ document.addEventListener('DOMContentLoaded', function(){
   $('year').textContent = new Date().getFullYear();
   refreshIcons();
 
-  // Sign in
   $('signInBtn').addEventListener('click', function(){ openAuthModal('signin'); });
   $('authClose').addEventListener('click', closeAuthModal);
   $('authModal').addEventListener('click', function(e){ if (e.target === $('authModal')) closeAuthModal(); });
@@ -1096,7 +1108,6 @@ document.addEventListener('DOMContentLoaded', function(){
     tab.addEventListener('click', function(){ authMode = tab.dataset.mode; syncAuthTabs(); });
   });
 
-  // Google
   $('googleBtn').addEventListener('click', function(){
     var p = new firebase.auth.GoogleAuthProvider();
     $('googleBtn').disabled = true;
@@ -1106,7 +1117,6 @@ document.addEventListener('DOMContentLoaded', function(){
       .then(function(){ $('googleBtn').disabled = false; });
   });
 
-  // Email/password
   $('authForm').addEventListener('submit', function(e){
     e.preventDefault();
     var email = $('authEmail').value.trim();
@@ -1137,7 +1147,6 @@ document.addEventListener('DOMContentLoaded', function(){
     });
   });
 
-  // User menu
   $('userMenuBtn').addEventListener('click', function(e){
     e.stopPropagation();
     var open = $('userDropdown').classList.toggle('open');
@@ -1148,7 +1157,6 @@ document.addEventListener('DOMContentLoaded', function(){
     $('userMenuBtn').classList.remove('active');
   });
 
-  // Dropdown items
   $('ddDashboard').addEventListener('click', function(){ window.location.href = 'dashboard.html'; });
   $('ddMyEvents').addEventListener('click', function(){ window.location.href = 'events.html'; });
   $('ddCreateEvent').addEventListener('click', function(){ window.location.href = 'create-event.html'; });
@@ -1176,8 +1184,13 @@ document.addEventListener('DOMContentLoaded', function(){
       window.location.href = 'admin-channels.html';
     });
   }
+  if ($('ddManagePartners')){
+    $('ddManagePartners').addEventListener('click', function(){
+      if (!isAdmin){ toast('Admin only.', 'error'); return; }
+      window.location.href = 'admin-live.html';
+    });
+  }
 
-  // Delete account
   $('ddDeleteAccount').addEventListener('click', function(){
     $('deleteAccountModal').classList.add('open');
     document.body.style.overflow = 'hidden';
@@ -1224,18 +1237,15 @@ document.addEventListener('DOMContentLoaded', function(){
     if (snap.size > 0) return batch.commit();
   }
 
-  // Hash sign-in
   if (window.location.hash === '#signin'){
     setTimeout(function(){ openAuthModal('signin'); }, 300);
   }
 
-  // Load data
   auth.onAuthStateChanged(function(user){
     applyAuthState(user);
     loadHomepageData();
   });
 
-  // First-visit fallback (if no auth change event fires quickly)
   setTimeout(function(){
     if (!currentUser) loadHomepageData();
   }, 800);
@@ -1243,4 +1253,4 @@ document.addEventListener('DOMContentLoaded', function(){
 })();
 </script>
 </body>
-      </html>
+            </html>
