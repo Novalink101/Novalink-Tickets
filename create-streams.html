@@ -222,10 +222,38 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
 .segment-gap i{width:14px;height:14px;flex-shrink:0}
 .segment-gap strong{color:var(--cy3);font-weight:900}
 
-/* GO LIVE QUICK BAR */
+/* QUICK BAR */
 .quick-bar{display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap}
 .quick-bar .btn{flex:1;min-width:200px}
 @media (max-width:560px){.quick-bar .btn{flex:1 1 100%}}
+
+/* PARTNER PICKER */
+.source-mode-tabs{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin-bottom:16px}
+@media (max-width:640px){.source-mode-tabs{grid-template-columns:1fr}}
+.src-mode{background:var(--sf2);border:2px solid var(--bd);border-radius:11px;padding:12px;cursor:pointer;text-align:left;font-family:inherit;transition:.15s;display:flex;flex-direction:column;gap:3px}
+.src-mode:hover{border-color:var(--cy)}
+.src-mode.active{border-color:var(--cy);background:linear-gradient(135deg,var(--cyf),#fff);box-shadow:0 0 0 3px rgba(0,255,255,.18)}
+.src-mode .sm-t{font-size:12.5px;font-weight:800;display:flex;align-items:center;gap:6px;color:var(--tx)}
+.src-mode .sm-t i{width:14px;height:14px;color:var(--cy3)}
+.src-mode .sm-s{font-size:10.5px;color:var(--mut);line-height:1.4}
+
+.partner-picker{display:flex;flex-direction:column;gap:10px}
+.partner-opt{display:flex;gap:12px;padding:12px;background:var(--sf2);border:2px solid var(--bd);border-radius:11px;cursor:pointer;font-family:inherit;text-align:left;transition:.15s;align-items:center}
+.partner-opt:hover{border-color:var(--cy);background:#fff}
+.partner-opt.active{border-color:var(--cy);background:linear-gradient(135deg,var(--cyf),#fff);box-shadow:0 0 0 3px rgba(0,255,255,.18)}
+.partner-opt .pl-logo{width:44px;height:44px;border-radius:10px;overflow:hidden;background:linear-gradient(135deg,#0a0f14,#0f172a);display:flex;align-items:center;justify-content:center;flex-shrink:0;border:1px solid var(--bd)}
+.partner-opt .pl-logo img{width:100%;height:100%;object-fit:cover}
+.partner-opt .pl-logo span{font-size:14px;font-weight:900;color:var(--cy);font-family:var(--mono)}
+.partner-opt .pl-info{flex:1;min-width:0}
+.partner-opt .pl-name{font-size:13.5px;font-weight:800;color:var(--tx);margin-bottom:2px}
+.partner-opt .pl-meta{font-size:11px;color:var(--mut);font-weight:500;display:flex;gap:10px;flex-wrap:wrap}
+.partner-opt .pl-meta .stat{font-family:var(--mono);font-weight:700;color:var(--cy3);text-transform:uppercase;font-size:10px;letter-spacing:.05em}
+.partner-opt .pl-check{width:20px;height:20px;border-radius:50%;border:2px solid var(--bd2);display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.partner-opt.active .pl-check{background:var(--cy);border-color:var(--cy)}
+.partner-opt .pl-check i{width:12px;height:12px;color:#04161c;opacity:0}
+.partner-opt.active .pl-check i{opacity:1}
+.partner-empty{padding:22px 16px;background:var(--sf2);border:1px dashed var(--bd2);border-radius:12px;text-align:center;font-size:12.5px;color:var(--mut);line-height:1.55}
+.partner-empty a{color:var(--cy3);font-weight:800;text-decoration:underline}
 
 /* PREVIEW */
 .stream-card{background:var(--sf);border:1px solid var(--bd);border-radius:14px;overflow:hidden;box-shadow:0 10px 30px rgba(15,23,42,.06)}
@@ -329,7 +357,7 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 ::-webkit-scrollbar{width:10px;height:10px}
-::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:6px;border:4px solid var(--bg)}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:6px;border:6px solid var(--bg)}
 ::-webkit-scrollbar-track{background:transparent}
 </style>
 </head>
@@ -344,6 +372,7 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
     <div class="hdr-actions">
       <a href="streams.html" class="hdr-btn"><i data-lucide="arrow-left"></i><span class="lbl">All streams</span></a>
       <a href="admin-channels.html" class="hdr-btn"><i data-lucide="tv"></i><span class="lbl">Channels</span></a>
+      <a href="admin-live.html" class="hdr-btn"><i data-lucide="link"></i><span class="lbl">Partners</span></a>
       <button class="hdr-btn" id="signInBtn" type="button"><i data-lucide="log-in"></i><span class="lbl">Sign in</span></button>
       <button class="hdr-btn" id="userChip" type="button" style="display:none;"><span class="avatar" id="userAvatar">?</span><span class="lbl" id="userName">User</span></button>
       <button class="btn-save" id="saveStreamBtn" type="button" disabled><i data-lucide="save"></i><span class="lbl" id="saveLbl">Save Stream</span></button>
@@ -355,7 +384,7 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
   <div class="hero-in">
     <span class="hero-tag"><i data-lucide="radio"></i>Stream Studio</span>
     <h1>Queue streams. <span>Ads fill the gaps.</span></h1>
-    <p>Add up to 2 URLs per stream — each with its own start and end time. Ads play automatically in the gaps between segments, and viewers never miss a beat.</p>
+    <p>Add a stream URL, pick a partner channel, or attach your own HLS feed. Ads play automatically in the gaps, and viewers never miss a beat.</p>
     <div class="hero-actions">
       <button class="btn-cyan" id="heroGoChannel" type="button"><i data-lucide="tv"></i><span>Pick channel</span></button>
       <button class="btn-cyan" id="heroGoSource" type="button"><i data-lucide="link"></i><span>Stream source</span></button>
@@ -564,12 +593,12 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
       <div class="form-col">
         <div class="step-card">
           <span class="step-num">3</span>
-          <div class="step-info"><div class="step-title">Stream Source</div><div class="step-sub">Up to 2 URLs · Times · Ad gaps</div></div>
+          <div class="step-info"><div class="step-title">Stream Source</div><div class="step-sub">Partner · URL · Times · Ad gaps</div></div>
         </div>
 
         <div class="form-card">
 
-          <!-- NEW: Go Live Now quick bar -->
+          <!-- Quick actions -->
           <div class="quick-bar">
             <button type="button" id="goLiveNowBtn" class="btn btn-accent">
               <i data-lucide="zap"></i> <span>Go Live Now (test mode)</span>
@@ -578,65 +607,129 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
               <i data-lucide="rotate-ccw"></i> <span>Reset schedule</span>
             </button>
           </div>
-          <p class="hint" style="font-style:normal;margin-bottom:14px;color:var(--mut);">
+          <p class="hint" style="font-style:normal;margin-bottom:16px;color:var(--mut);">
             "Go Live Now" sets the date to today and time to 5 minutes ago — perfect for testing ads.
           </p>
 
-          <div class="rules-card">
-            <i class="rc-icon" data-lucide="shield-alert"></i>
-            <div>
-              <div class="rc-t">What you can and cannot stream</div>
-              <div class="rc-s">Novalink only allows <b>your own original content</b>. Streaming someone else's content risks a copyright strike, kills the stream, and takes your channel offline.</div>
-              <ul class="rules-list">
-                <li>Someone else's movie, TV show, or sports match</li>
-                <li>Someone else's YouTube, Twitch, or Facebook live feed</li>
-                <li>Music you don't own the rights to</li>
-                <li>Nudity, sexual content, or pornography</li>
-                <li>Hate speech, racism, threats, or harassment</li>
-                <li>Real violence, gore, fights, or graphic injuries</li>
-                <li>Drug use, drug-selling, or illegal acts</li>
-                <li>Dangerous fake news or medical misinformation</li>
-              </ul>
-              <div class="rc-s" style="margin-top:10px;"><b>One rule:</b> if you did not create it, do not stream it.</div>
+          <!-- Source mode picker -->
+          <div class="section-divider" style="margin-top:0;"><span>Source type</span></div>
+          <div class="source-mode-tabs" id="sourceModeTabs">
+            <button type="button" class="src-mode active" data-mode="url">
+              <span class="sm-t"><i data-lucide="link"></i> Stream URL</span>
+              <span class="sm-s">YouTube, Twitch, Kick, direct MP4, or any embeddable page.</span>
+            </button>
+            <button type="button" class="src-mode" data-mode="hls">
+              <span class="sm-t"><i data-lucide="radio"></i> Native HLS</span>
+              <span class="sm-s">Paste a .m3u8 URL from Cloudflare, Mux, or your own server.</span>
+            </button>
+            <button type="button" class="src-mode" data-mode="partner">
+              <span class="sm-t"><i data-lucide="shield-check"></i> Partner channel</span>
+              <span class="sm-s">Pick a licensed partner from your registry. URL stays hidden.</span>
+            </button>
+          </div>
+
+          <!-- Mode: URL -->
+          <div id="modeUrl">
+            <div class="rules-card">
+              <i class="rc-icon" data-lucide="shield-alert"></i>
+              <div>
+                <div class="rc-t">What you can and cannot stream</div>
+                <div class="rc-s">Novalink only allows <b>your own original content</b>. Streaming someone else's content risks a copyright strike, kills the stream, and takes your channel offline.</div>
+                <ul class="rules-list">
+                  <li>Someone else's movie, TV show, or sports match</li>
+                  <li>Someone else's YouTube, Twitch, or Facebook live feed</li>
+                  <li>Music you don't own the rights to</li>
+                  <li>Nudity, sexual content, or pornography</li>
+                  <li>Hate speech, racism, threats, or harassment</li>
+                  <li>Real violence, gore, fights, or graphic injuries</li>
+                  <li>Drug use, drug-selling, or illegal acts</li>
+                  <li>Dangerous fake news or medical misinformation</li>
+                </ul>
+                <div class="rc-s" style="margin-top:10px;"><b>One rule:</b> if you did not create it, do not stream it.</div>
+              </div>
+            </div>
+
+            <div class="section-divider"><span>Stream segments</span></div>
+
+            <p class="hint" style="font-style:normal;margin-bottom:14px;color:var(--tx2);">
+              Paste <strong>any stream URL</strong> — YouTube, Twitch, Kick, Rumble, Dailymotion, StreamYard, direct MP4, or any embeddable page. Novalink auto-detects the platform.
+            </p>
+
+            <div id="segmentsContainer"></div>
+
+            <button type="button" id="addSegmentBtn" class="btn btn-ghost" style="margin-top:10px;padding:10px 16px;font-size:13px;">
+              <i data-lucide="plus"></i> Add a second URL
+            </button>
+
+            <div class="platform-info" style="margin-top:18px;">
+              <i data-lucide="info"></i>
+              <div>
+                <div class="pi-t">Universal URL support</div>
+                <div class="pi-s">YouTube · Twitch · Vimeo · Facebook · Kick · Rumble · Dailymotion · Odysee · BitChute · StreamYard · Restream · Zoom · Custom MP4 · Any embeddable URL.</div>
+              </div>
             </div>
           </div>
 
-          <div class="section-divider"><span>Stream segments</span></div>
+          <!-- Mode: HLS -->
+          <div id="modeHls" style="display:none;">
+            <div class="section-divider"><span>HLS playback</span></div>
 
-          <p class="hint" style="font-style:normal;margin-bottom:14px;color:var(--tx2);">
-            Paste <strong>any stream URL</strong> — YouTube, Twitch, Kick, Rumble, Dailymotion, StreamYard, direct MP4, or any embeddable page. Novalink auto-detects the platform.
-            <br><br>
-            Add up to <strong>2 URLs</strong>. Ads play automatically during any gap between them.
-          </p>
-
-          <!-- NEW: Native HLS Stream Option -->
-          <div class="toggle-row hl" style="margin-bottom: 14px;">
-            <span class="tl">Use Native HLS Stream<small>Paste your HLS (.m3u8) link from Cloudflare, Mux, or your own server.</small></span>
-            <label class="toggle"><input type="checkbox" id="useHlsToggle" /><span class="slider"></span></label>
-          </div>
-
-          <div id="hlsUrlContainer" style="display:none; margin-bottom: 20px;">
             <div class="field">
-              <label>HLS Playback URL (.m3u8)</label>
+              <label for="hlsUrlInput">HLS Playback URL (.m3u8)</label>
               <input type="url" id="hlsUrlInput" placeholder="https://customer-xxxx.cloudflarestream.com/xxxx/manifest/video.m3u8" />
-              <p class="hint" style="font-style:normal; color:var(--cy3);">This is the link your viewers will watch. Get this from your streaming platform.</p>
+              <p class="hint" style="font-style:normal;color:var(--cy3);">The link viewers will watch. Get this from Cloudflare, Mux, or your own streaming server.</p>
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label for="hlsStartTime">Start time</label>
+                <input type="time" id="hlsStartTime" value="00:00" />
+              </div>
+              <div class="field">
+                <label for="hlsDuration">Duration (minutes)</label>
+                <input type="number" id="hlsDuration" min="1" max="1440" value="120" />
+              </div>
+            </div>
+            <p class="hint" style="font-style:normal;color:var(--mut);margin-top:4px;">
+              This HLS stream will be considered "live" from <strong>start time</strong> for the given duration on the date you picked.
+            </p>
+          </div>
+
+          <!-- Mode: Partner -->
+          <div id="modePartner" style="display:none;">
+            <div class="section-divider"><span>Partner channel</span></div>
+
+            <div class="ad-note">
+              <i data-lucide="shield-check"></i>
+              <div>
+                <div class="an-t">URL stays hidden</div>
+                <div class="an-s">The stream URL is stored only in <code>livePartners</code> (admin-only). The viewer never sees it — only the channel name and logo you registered.</div>
+              </div>
+            </div>
+
+            <div class="field">
+              <label>Select a partner channel</label>
+              <div class="partner-picker" id="partnerPicker">
+                <div class="partner-empty">
+                  Loading partners…
+                </div>
+              </div>
+              <p class="hint">Manage partners on <a href="admin-live.html" style="color:var(--cy3);font-weight:800;">admin-live.html →</a></p>
+            </div>
+
+            <div class="field-row">
+              <div class="field">
+                <label for="partnerStartTime">Start time</label>
+                <input type="time" id="partnerStartTime" value="00:00" />
+              </div>
+              <div class="field">
+                <label for="partnerDuration">Duration (minutes)</label>
+                <input type="number" id="partnerDuration" min="1" max="1440" value="120" />
+              </div>
             </div>
           </div>
 
-          <div id="segmentsContainer"></div>
-
-          <button type="button" id="addSegmentBtn" class="btn btn-ghost" style="margin-top:10px;padding:10px 16px;font-size:13px;">
-            <i data-lucide="plus"></i> Add a second URL
-          </button>
-
-          <div class="platform-info" style="margin-top:18px;">
-            <i data-lucide="info"></i>
-            <div>
-              <div class="pi-t">Universal URL support</div>
-              <div class="pi-s">YouTube · Twitch · Vimeo · Facebook · Kick · Rumble · Dailymotion · Odysee · BitChute · StreamYard · Restream · Zoom · Custom MP4 · Any embeddable URL.</div>
-            </div>
-          </div>
-
+          <!-- Delivery (shared) -->
           <div class="section-divider" style="margin-top:24px;"><span>Delivery</span></div>
 
           <div class="toggle-row hl">
@@ -654,6 +747,7 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
             <label class="toggle"><input type="checkbox" id="countdownToggle" checked /><span class="slider"></span></label>
           </div>
 
+          <!-- Ad breaks (shared) -->
           <div class="section-divider"><span>Ad Breaks (this stream)</span></div>
 
           <div class="toggle-row hl">
@@ -697,8 +791,8 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 64px}
               <span class="cb-box"><i data-lucide="check"></i></span>
             </span>
             <div class="cf-text">
-              <div class="cf-t">I confirm this stream is my own original content.</div>
-              <div class="cf-s">I am not streaming anyone else's TV channel, movie, music, sports match, or another creator's stream.</div>
+              <div class="cf-t">I confirm this stream is my own original content or from an authorized partner.</div>
+              <div class="cf-s">For partner channels: I confirm the partner has granted Novalink permission to redistribute this stream.</div>
             </div>
           </label>
 
@@ -876,6 +970,7 @@ var db = firebase.firestore();
 var auth = firebase.auth();
 var STREAMS = "streams";
 var CHANNELS = "channels";
+var LIVE_PARTNERS = "livePartners";
 var USERS = "users";
 var DEFAULT_MIDROLL_MINUTE = 30;
 
@@ -893,7 +988,7 @@ function isStreamAdmin(user){
 }
 
 /* ══════════════════════════════════════════════════════════════
-   DATE HELPERS — ensure streams go live immediately
+   DATE HELPERS
    ══════════════════════════════════════════════════════════════ */
 function getTodayLocal(){
   var d = new Date();
@@ -902,15 +997,10 @@ function getTodayLocal(){
   var dd = String(d.getDate()).padStart(2, '0');
   return yyyy + '-' + mm + '-' + dd;
 }
-
 function autoFillDateToToday(){
   var el = $('streamDate');
-  if (el && !el.value){
-    el.value = getTodayLocal();
-  }
+  if (el && !el.value) el.value = getTodayLocal();
 }
-
-/* Returns start=5 minutes ago, end=+1 hour in HH:MM */
 function defaultSegmentTimes(){
   var now = new Date();
   var startMin = (now.getHours() * 60 + now.getMinutes()) - 5;
@@ -934,21 +1024,24 @@ function detectPlatformFromUrl(url){
   if (u.indexOf('dailymotion.com') !== -1 || u.indexOf('dai.ly') !== -1) return 'dailymotion';
   if (u.indexOf('odysee.com') !== -1) return 'odysee';
   if (u.indexOf('bitchute.com') !== -1) return 'bitchute';
-  if (u.indexOf('nicovideo.jp') !== -1) return 'niconico';
+  if (u.indexOf('nicovideo.jp') !== -1) return 'nicovideo';
   if (u.indexOf('streamyard.com') !== -1) return 'streamyard';
   if (u.indexOf('restream.io') !== -1) return 'restream';
   if (u.indexOf('zoom.us') !== -1) return 'zoom';
   if (/\.(mp4|webm|mov|m4v)(\?|#|$)/i.test(u)) return 'video-file';
   if (u.indexOf('.m3u8') !== -1) return 'native-hls';
+  if (u.indexOf('.mpd') !== -1) return 'native-dash';
+  if (u.indexOf('.ts') !== -1) return 'native-mpegts';
   return 'custom';
 }
 function platformFriendlyName(p){
   return {
     youtube:'YouTube', twitch:'Twitch', vimeo:'Vimeo', facebook:'Facebook',
     kick:'Kick', rumble:'Rumble', dailymotion:'Dailymotion', odysee:'Odysee',
-    bitchute:'BitChute', niconico:'Niconico', streamyard:'StreamYard',
+    bitchute:'BitChute', nicovideo:'Niconico', streamyard:'StreamYard',
     restream:'Restream', zoom:'Zoom', 'video-file':'Direct video file',
-    'native-hls':'Native HLS Stream',
+    'native-hls':'Native HLS Stream', 'native-dash':'Native DASH Stream',
+    'native-mpegts':'Native MPEG-TS Stream',
     custom:'Custom Embed'
   }[p] || 'Custom Embed';
 }
@@ -973,16 +1066,27 @@ function formatDuration(min){
 }
 
 /* ══════════════════════════════════════════════════════════════
-   SEGMENTS — validation
+   VALIDATION
    ══════════════════════════════════════════════════════════════ */
 function validateSegments(){
-  var isNativeHls = $('useHlsToggle') && $('useHlsToggle').checked;
-  if (isNativeHls) {
-    var hlsUrl = $('hlsUrlInput') ? $('hlsUrlInput').value.trim() : '';
-    if (!hlsUrl) return { ok:false, err:'Please enter the HLS Playback URL.' };
-    return { ok:true, segs: [{ url: hlsUrl, startTime: '00:00', endTime: '23:59' }] };
+  var mode = state.sourceMode;
+
+  if (mode === 'partner'){
+    if (!state.selectedPartnerId) return { ok:false, err:'Please pick a partner channel.' };
+    var pStart = $('partnerStartTime').value || '00:00';
+    var pDur = parseInt($('partnerDuration').value, 10) || 120;
+    return { ok:true, segs: [{ url: '__partner__', startTime: pStart, endTime: minutesToTime(timeToMinutes(pStart) + pDur) }] };
   }
 
+  if (mode === 'hls'){
+    var hlsUrl = $('hlsUrlInput') ? $('hlsUrlInput').value.trim() : '';
+    if (!hlsUrl) return { ok:false, err:'Please enter the HLS Playback URL.' };
+    var hStart = $('hlsStartTime').value || '00:00';
+    var hDur = parseInt($('hlsDuration').value, 10) || 120;
+    return { ok:true, segs: [{ url: hlsUrl, startTime: hStart, endTime: minutesToTime(timeToMinutes(hStart) + hDur) }] };
+  }
+
+  // URL mode
   var segs = state.segments.filter(function(s){ return (s.url || '').trim() !== ''; });
   if (!segs.length) return { ok:false, err:'Enter at least one stream URL.' };
   for (var i = 0; i < segs.length; i++){
@@ -1038,6 +1142,97 @@ function renderStreamTypePreview(){
 }
 
 /* ══════════════════════════════════════════════════════════════
+   SOURCE MODE
+   ══════════════════════════════════════════════════════════════ */
+function setSourceMode(mode){
+  state.sourceMode = mode;
+  $$('#sourceModeTabs .src-mode').forEach(function(btn){
+    btn.classList.toggle('active', btn.dataset.mode === mode);
+  });
+  $('modeUrl').style.display = mode === 'url' ? 'block' : 'none';
+  $('modeHls').style.display = mode === 'hls' ? 'block' : 'none';
+  $('modePartner').style.display = mode === 'partner' ? 'block' : 'none';
+  updateTimelinePreview();
+  updateSaveEnabled();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   PARTNER PICKER
+   ══════════════════════════════════════════════════════════════ */
+function loadPartners(){
+  var picker = $('partnerPicker');
+  if (!picker) return;
+  picker.innerHTML = '<div class="partner-empty">Loading partners…</div>';
+
+  db.collection(LIVE_PARTNERS).get().then(function(snap){
+    state.allPartners = [];
+    snap.forEach(function(doc){
+      var d = doc.data() || {};
+      d.id = doc.id;
+      state.allPartners.push(d);
+    });
+    state.allPartners.sort(function(a, b){
+      return String(a.name || '').localeCompare(String(b.name || ''));
+    });
+
+    if (!state.allPartners.length){
+      picker.innerHTML =
+        '<div class="partner-empty">'+
+          'No partners registered yet. <a href="admin-live.html">Register one →</a>'+
+        '</div>';
+      return;
+    }
+
+    picker.innerHTML = '';
+    state.allPartners.forEach(function(p){
+      var btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'partner-opt' + (state.selectedPartnerId === p.id ? ' active' : '');
+      btn.dataset.pid = p.id;
+
+      var logoHtml = p.logoUrl ? '<img alt="" src="'+esc(p.logoUrl)+'" />' : '<span>'+esc(initials(p.name))+'</span>';
+      var protoLabel = (p.protocol || 'hls').toUpperCase();
+      var pub = p.public === false ? 'Private' : 'Public';
+
+      btn.innerHTML =
+        '<div class="pl-logo">'+logoHtml+'</div>'+
+        '<div class="pl-info">'+
+          '<div class="pl-name">'+esc(p.name)+'</div>'+
+          '<div class="pl-meta">'+
+            '<span class="stat">'+esc(protoLabel)+'</span>'+
+            (p.category ? '<span>'+esc(p.category)+'</span>' : '')+
+            (p.region ? '<span class="stat">'+esc(p.region)+'</span>' : '')+
+            '<span>'+esc(pub)+'</span>'+
+          '</div>'+
+        '</div>'+
+        '<div class="pl-check">'+icon('check')+'</div>';
+
+      btn.addEventListener('click', function(){
+        state.selectedPartnerId = p.id;
+        $$('#partnerPicker .partner-opt').forEach(function(b){
+          b.classList.toggle('active', b.dataset.pid === p.id);
+        });
+        updateSaveEnabled();
+        updateTimelinePreview();
+      });
+
+      picker.appendChild(btn);
+    });
+    refreshIcons();
+  }).catch(function(err){
+    console.warn('[partners load]', err);
+    picker.innerHTML = '<div class="partner-empty">Could not load partners. Check your permissions.</div>';
+  });
+}
+
+function initials(name){
+  if (!name) return '?';
+  var p = String(name).trim().split(/\s+/);
+  if (p.length >= 2) return (p[0][0]+p[1][0]).toUpperCase();
+  return p[0].slice(0,2).toUpperCase();
+}
+
+/* ══════════════════════════════════════════════════════════════
    ADS UI
    ══════════════════════════════════════════════════════════════ */
 function syncAdProviderUI(){
@@ -1063,12 +1258,6 @@ function toast(msg, type, ms){
   toast._t = setTimeout(function(){ t.classList.remove('show'); }, ms);
 }
 
-function initials(name, email){
-  if (name && name.trim()){ var p = name.trim().split(/\s+/); return p.length >= 2 ? (p[0][0]+p[1][0]).toUpperCase() : p[0].slice(0,2).toUpperCase(); }
-  if (email) return email.slice(0,2).toUpperCase();
-  return '??';
-}
-
 /* ══════════════════════════════════════════════════════════════
    STATE
    ══════════════════════════════════════════════════════════════ */
@@ -1083,7 +1272,10 @@ var state = {
   allChannels: [],
   channelStreams: {},
   slotsInChannel: [null,null,null,null,null,null,null,null],
-  segments: [{ url: '', startTime: '20:00', endTime: '21:00' }]
+  segments: [{ url: '', startTime: '20:00', endTime: '21:00' }],
+  sourceMode: 'url',
+  allPartners: [],
+  selectedPartnerId: null
 };
 var RE_EDIT_ID = getParam('id');
 var chUnsub = null;
@@ -1146,7 +1338,7 @@ function applyAuth(user){
   if (user){
     inBtn.style.display = 'none';
     chip.style.display = 'inline-flex';
-    $('userAvatar').textContent = initials(user.displayName, user.email);
+    $('userAvatar').textContent = initials(user.displayName || user.email);
     $('userName').textContent = user.displayName || user.email.split('@')[0];
 
     var userRef = db.collection(USERS).doc(user.uid);
@@ -1418,7 +1610,6 @@ function renderSegments(){
 
     container.appendChild(card);
 
-    /* Gap indicator between segment 1 and 2 */
     if (idx === 0 && state.segments.length === 2 && state.segments[0].endTime && state.segments[1].startTime){
       var gapMin = timeToMinutes(state.segments[1].startTime) - timeToMinutes(state.segments[0].endTime);
       if (gapMin > 0){
@@ -1453,12 +1644,42 @@ function updateTimelinePreview(){
   var container = $('timelinePreview');
   if (!container) return;
 
-  var isNativeHls = $('useHlsToggle') && $('useHlsToggle').checked;
-  if (isNativeHls) {
-    container.innerHTML = '<div class="stream-title">Native HLS Stream</div>' +
+  var mode = state.sourceMode;
+
+  if (mode === 'partner'){
+    var p = state.allPartners.find(function(x){ return x.id === state.selectedPartnerId; });
+    if (!p){
+      container.innerHTML =
+        '<div class="stream-title">Partner timeline</div>' +
+        '<div class="stream-meta" style="margin-top:8px;">' +
+          '<span><i data-lucide="info"></i> Pick a partner to see the timeline</span>' +
+        '</div>';
+      refreshIcons();
+      return;
+    }
+    var pStart = $('partnerStartTime').value || '00:00';
+    var pDur = parseInt($('partnerDuration').value, 10) || 120;
+    var pEnd = minutesToTime(timeToMinutes(pStart) + pDur);
+    container.innerHTML =
+      '<div class="stream-title">'+esc(p.name)+'</div>' +
       '<div class="stream-meta" style="margin-top:8px;">' +
-        '<span><i data-lucide="radio"></i> Live HLS Playback</span>' +
-        '<span><i data-lucide="megaphone"></i> Ads enabled</span>' +
+        '<span><i data-lucide="shield-check"></i> Partner feed (' + esc((p.protocol||'hls').toUpperCase()) + ')</span>' +
+        '<span><i data-lucide="clock"></i> '+esc(pStart)+' → '+esc(pEnd)+'</span>' +
+        '<span><i data-lucide="hash"></i> URL hidden from viewers</span>' +
+      '</div>';
+    refreshIcons();
+    return;
+  }
+
+  if (mode === 'hls'){
+    var hStart = $('hlsStartTime') ? ($('hlsStartTime').value || '00:00') : '00:00';
+    var hDur = parseInt($('hlsDuration') ? $('hlsDuration').value : '120', 10) || 120;
+    var hEnd = minutesToTime(timeToMinutes(hStart) + hDur);
+    container.innerHTML =
+      '<div class="stream-title">Native HLS</div>' +
+      '<div class="stream-meta" style="margin-top:8px;">' +
+        '<span><i data-lucide="radio"></i> HLS playback</span>' +
+        '<span><i data-lucide="clock"></i> '+esc(hStart)+' → '+esc(hEnd)+'</span>' +
       '</div>';
     refreshIcons();
     return;
@@ -1507,8 +1728,10 @@ function wireSegmentEvents(){
   document.addEventListener('input', function(e){
     var t = e.target;
     if (!t) return;
-    if (t.id === 'hlsUrlInput') {
+    if (t.id === 'hlsUrlInput' || t.id === 'hlsStartTime' || t.id === 'hlsDuration'
+        || t.id === 'partnerStartTime' || t.id === 'partnerDuration'){
       updateSaveEnabled();
+      updateTimelinePreview();
       return;
     }
     if (t.classList.contains('seg-url')){
@@ -1632,13 +1855,20 @@ function renderStreamPreview(){
   if ($('summaryStreamTitle')) $('summaryStreamTitle').textContent = title || 'Stream title will appear here';
 
   var totalMin = 0;
-  state.segments.forEach(function(s){
-    if (s.startTime && s.endTime){
-      var d = timeToMinutes(s.endTime) - timeToMinutes(s.startTime);
-      if (d <= 0) d += 1440;
-      totalMin += d;
-    }
-  });
+  var mode = state.sourceMode;
+  if (mode === 'partner'){
+    totalMin = parseInt($('partnerDuration') ? $('partnerDuration').value : '120', 10) || 120;
+  } else if (mode === 'hls'){
+    totalMin = parseInt($('hlsDuration') ? $('hlsDuration').value : '120', 10) || 120;
+  } else {
+    state.segments.forEach(function(s){
+      if (s.startTime && s.endTime){
+        var d = timeToMinutes(s.endTime) - timeToMinutes(s.startTime);
+        if (d <= 0) d += 1440;
+        totalMin += d;
+      }
+    });
+  }
   if ($('prevDuration')) $('prevDuration').textContent = totalMin > 0 ? formatDuration(totalMin) : '-- min';
 
   var ch = state.allChannels.find(function(c){ return c.id === state.selectedChannelId; });
@@ -1676,7 +1906,7 @@ function syncAuthTabs(){
   $$('.tab').forEach(function(t){ t.classList.toggle('active', t.dataset.mode === authMode); });
   if (authMode === 'signup'){
     $('authTitle').textContent = 'Create account';
-    $('authSub').textContent = 'Join Novalink to start ticketing.';
+    $('authSub').textContent = 'Join Novalink to start streaming.';
     $('nameGroup').style.display = 'block';
     $('authSubmit').innerHTML = icon('user-plus') + '<span>Create account</span>';
     $('authPassword').autocomplete = 'new-password';
@@ -1714,29 +1944,27 @@ function clearStreamFields(){
   state.heroImage = '';
   state.streamId = null;
   state.editing = false;
+  state.selectedPartnerId = null;
 
-  // Default segment times to "5 min ago → +1 hour" so it's instantly live.
   var dt = defaultSegmentTimes();
   state.segments = [{ url: '', startTime: dt.startTime, endTime: dt.endTime }];
 
   var addBtn = $('addSegmentBtn');
   if (addBtn) addBtn.style.display = 'inline-flex';
 
-  // Reset HLS toggle
-  if ($('useHlsToggle')) {
-    $('useHlsToggle').checked = false;
-    $('hlsUrlContainer').style.display = 'none';
-    $('segmentsContainer').style.display = 'block';
-    if (addBtn) addBtn.style.display = 'inline-flex';
-    var rulesCard = document.querySelector('.rules-card');
-    if (rulesCard) rulesCard.style.display = 'block';
-  }
+  // Reset mode to URL
+  setSourceMode('url');
+  if ($('hlsUrlInput')) $('hlsUrlInput').value = '';
+  if ($('hlsStartTime')) $('hlsStartTime').value = '00:00';
+  if ($('hlsDuration')) $('hlsDuration').value = '120';
+  if ($('partnerStartTime')) $('partnerStartTime').value = '00:00';
+  if ($('partnerDuration')) $('partnerDuration').value = '120';
+  $$('#partnerPicker .partner-opt').forEach(function(b){ b.classList.remove('active'); });
 
   renderCover();
   renderSegments();
   $('saveLbl').textContent = 'Save Stream';
   $('submitBtn').innerHTML = icon('shield-check') + '<span>Save &amp; Publish Stream</span>';
-  // Auto-fill date with today, always.
   $('streamDate').value = getTodayLocal();
   $('replayToggle').checked = true;
   $('recordToggle').checked = true;
@@ -1764,53 +1992,57 @@ function loadStreamIntoForm(d){
   $('streamTagline').value = d.eventTagline || '';
   $('streamDescription').value = d.eventDescription || '';
   $('descCounter').textContent = ($('streamDescription').value.length) + ' / 2000';
-  // If no date on doc, default to today.
   $('streamDate').value = d.startDate || getTodayLocal();
 
-  // Handle Native HLS
-  var isNative = d.isNative || false;
-  if ($('useHlsToggle')) {
-    $('useHlsToggle').checked = isNative;
-    $('hlsUrlContainer').style.display = isNative ? 'block' : 'none';
-    $('hlsUrlInput').value = d.hlsUrl || '';
+  // Determine source mode from doc
+  var mode = 'url';
+  if (d.partnerId){ mode = 'partner'; }
+  else if (d.isNative || d.streamPlatform === 'native-hls'){ mode = 'hls'; }
 
-    var segContainer = $('segmentsContainer');
-    var addBtn = $('addSegmentBtn');
-    var rulesCard = document.querySelector('.rules-card');
-
-    if (segContainer) segContainer.style.display = isNative ? 'none' : 'block';
-    if (addBtn) addBtn.style.display = isNative ? 'none' : 'inline-flex';
-    if (rulesCard) rulesCard.style.display = isNative ? 'none' : 'block';
-  }
-
-  /* Load segments — backwards compatible */
-  if (!isNative && Array.isArray(d.segments) && d.segments.length){
-    state.segments = d.segments.map(function(s){
-      return {
-        url: s.url || '',
-        startTime: s.startTime || '20:00',
-        endTime: s.endTime || '21:00'
-      };
-    });
-    if (state.segments.length > MAX_SEGMENTS) state.segments = state.segments.slice(0, MAX_SEGMENTS);
-  } else if (!isNative && d.streamUrl){
-    var start = d.startTime || '20:00';
-    var dur = parseInt(d.durationMinutes, 10) || 60;
-    var sMin = timeToMinutes(start);
-    var eMin = sMin + dur;
-    state.segments = [{
-      url: d.streamUrl,
-      startTime: start,
-      endTime: minutesToTime(eMin)
-    }];
+  if (mode === 'partner'){
+    state.selectedPartnerId = d.partnerId || null;
+    if ($('partnerStartTime')) $('partnerStartTime').value = d.startTime || '00:00';
+    if ($('partnerDuration')) $('partnerDuration').value = d.durationMinutes || 120;
+    // Update active partner chip after partners load
+    setTimeout(function(){
+      $$('#partnerPicker .partner-opt').forEach(function(b){
+        b.classList.toggle('active', b.dataset.pid === state.selectedPartnerId);
+      });
+    }, 400);
+  } else if (mode === 'hls'){
+    if ($('hlsUrlInput')) $('hlsUrlInput').value = d.hlsUrl || d.streamUrl || '';
+    if ($('hlsStartTime')) $('hlsStartTime').value = d.startTime || '00:00';
+    if ($('hlsDuration')) $('hlsDuration').value = d.durationMinutes || 120;
   } else {
-    var dt2 = defaultSegmentTimes();
-    state.segments = [{ url: '', startTime: dt2.startTime, endTime: dt2.endTime }];
+    if (Array.isArray(d.segments) && d.segments.length){
+      state.segments = d.segments.map(function(s){
+        return {
+          url: s.url || '',
+          startTime: s.startTime || '20:00',
+          endTime: s.endTime || '21:00'
+        };
+      });
+      if (state.segments.length > MAX_SEGMENTS) state.segments = state.segments.slice(0, MAX_SEGMENTS);
+    } else if (d.streamUrl){
+      var start = d.startTime || '20:00';
+      var dur = parseInt(d.durationMinutes, 10) || 60;
+      var sMin = timeToMinutes(start);
+      var eMin = sMin + dur;
+      state.segments = [{
+        url: d.streamUrl,
+        startTime: start,
+        endTime: minutesToTime(eMin)
+      }];
+    } else {
+      var dt2 = defaultSegmentTimes();
+      state.segments = [{ url: '', startTime: dt2.startTime, endTime: dt2.endTime }];
+    }
   }
 
   var addBtn = $('addSegmentBtn');
-  if (addBtn && !isNative) addBtn.style.display = state.segments.length >= MAX_SEGMENTS ? 'none' : 'inline-flex';
+  if (addBtn && mode === 'url') addBtn.style.display = state.segments.length >= MAX_SEGMENTS ? 'none' : 'inline-flex';
   renderSegments();
+  setSourceMode(mode);
 
   if (typeof d.replayEnabled === 'boolean') $('replayToggle').checked = d.replayEnabled;
   if (typeof d.autoRecord === 'boolean') $('recordToggle').checked = d.autoRecord;
@@ -1850,7 +2082,6 @@ function saveStream(){
   var date = $('streamDate').value;
   if (!date){ toast('Stream date is required.', 'error'); goToView('details'); $('streamDate').focus(); return; }
 
-  // Warn if the date is in the future — ads won't fire until the start time.
   var todayStr = getTodayLocal();
   if (date > todayStr){
     var proceed = confirm(
@@ -1876,7 +2107,6 @@ function saveStream(){
   btn.disabled = true;
   lbl.innerHTML = '<span class="spinner"></span> Saving…';
 
-  /* Compute total duration */
   var totalDuration = 0;
   validSegments.forEach(function(s){
     var d = timeToMinutes(s.endTime) - timeToMinutes(s.startTime);
@@ -1884,39 +2114,17 @@ function saveStream(){
     totalDuration += d;
   });
 
+  var mode = state.sourceMode;
   var firstSeg = validSegments[0];
-  var firstPlatform = detectPlatformFromUrl(firstSeg.url);
-
-  // Check if using Native HLS
-  var isNativeHls = $('useHlsToggle') && $('useHlsToggle').checked;
-  var hlsUrl = isNativeHls ? $('hlsUrlInput').value.trim() : '';
 
   var payload = {
     kind: 'stream',
     eventName: title,
     streamTitle: title,
-    streamType: isNativeHls ? 'native' : getSelectedStreamType(),
     eventTagline: $('streamTagline').value.trim(),
     eventDescription: $('streamDescription').value.trim(),
     startDate: date,
-    /* Legacy single-segment fields for backwards compatibility */
-    startTime: isNativeHls ? '00:00' : firstSeg.startTime,
-    durationMinutes: isNativeHls ? 120 : totalDuration,
-    streamPlatform: isNativeHls ? 'native-hls' : firstPlatform,
-    streamUrl: isNativeHls ? hlsUrl : firstSeg.url,
-
-    // Native HLS fields
-    isNative: isNativeHls,
-    hlsUrl: hlsUrl,
-
-    /* New multi-segment fields */
-    segments: isNativeHls ? [] : validSegments.map(function(s){
-      return {
-        url: s.url.trim(),
-        startTime: s.startTime,
-        endTime: s.endTime
-      };
-    }),
+    durationMinutes: totalDuration,
     heroImage: state.heroImage || '',
     coverImage: state.heroImage || '',
     channelId: state.selectedChannelId,
@@ -1946,6 +2154,42 @@ function saveStream(){
     contentConfirmed: true,
     contentConfirmedAt: firebase.firestore.FieldValue.serverTimestamp()
   };
+
+  if (mode === 'partner'){
+    var p = state.allPartners.find(function(x){ return x.id === state.selectedPartnerId; });
+    payload.streamType = getSelectedStreamType();
+    payload.streamPlatform = 'partner';
+    payload.partnerId = state.selectedPartnerId;
+    payload.partnerName = p ? p.name : '';
+    payload.startTime = firstSeg.startTime;
+    // Do NOT store the URL. The viewer resolves it from livePartners.
+    payload.streamUrl = '';
+    payload.isNative = false;
+    payload.hlsUrl = '';
+    payload.segments = [];
+  } else if (mode === 'hls'){
+    payload.streamType = 'native';
+    payload.streamPlatform = 'native-hls';
+    payload.isNative = true;
+    payload.hlsUrl = $('hlsUrlInput').value.trim();
+    payload.streamUrl = payload.hlsUrl;
+    payload.startTime = $('hlsStartTime').value || '00:00';
+    payload.segments = [];
+  } else {
+    payload.streamType = getSelectedStreamType();
+    payload.streamPlatform = detectPlatformFromUrl(firstSeg.url);
+    payload.isNative = false;
+    payload.hlsUrl = '';
+    payload.streamUrl = firstSeg.url;
+    payload.startTime = firstSeg.startTime;
+    payload.segments = validSegments.map(function(s){
+      return {
+        url: s.url.trim(),
+        startTime: s.startTime,
+        endTime: s.endTime
+      };
+    });
+  }
 
   var ref = state.streamId ? db.collection(STREAMS).doc(state.streamId) : db.collection(STREAMS).doc();
   var isNew = !state.streamId;
@@ -2018,7 +2262,7 @@ document.addEventListener('DOMContentLoaded', function(){
   $('heroGoChannel').addEventListener('click', function(){ if (state.isAdmin) goToView('channel'); });
   $('heroGoSource').addEventListener('click', function(){ if (state.isAdmin) goToView('source'); });
 
-  /* Cover */
+  // Cover
   $('coverChoose').addEventListener('click', function(e){ e.stopPropagation(); $('coverFile').click(); });
   $('coverPreview').addEventListener('click', function(){ $('coverFile').click(); });
   $('coverFile').addEventListener('change', function(e){
@@ -2038,7 +2282,7 @@ document.addEventListener('DOMContentLoaded', function(){
     renderCover();
   });
 
-  /* Inputs */
+  // Inputs
   ['streamTitle','streamDate'].forEach(function(id){
     var el = $(id);
     if (el) el.addEventListener('input', renderStreamPreview);
@@ -2057,53 +2301,44 @@ document.addEventListener('DOMContentLoaded', function(){
     });
   }
 
-  // HLS Toggle
-  var hlsToggle = $('useHlsToggle');
-  if (hlsToggle) {
-    hlsToggle.addEventListener('change', function() {
-      var isHls = hlsToggle.checked;
-      $('hlsUrlContainer').style.display = isHls ? 'block' : 'none';
+  // Source mode picker
+  $$('#sourceModeTabs .src-mode').forEach(function(btn){
+    btn.addEventListener('click', function(){ setSourceMode(btn.dataset.mode); });
+  });
 
-      var segContainer = $('segmentsContainer');
-      var addBtn = $('addSegmentBtn');
-      var rulesCard = document.querySelector('.rules-card');
-      var platformInfo = document.querySelector('.platform-info');
-
-      if (segContainer) segContainer.style.display = isHls ? 'none' : 'block';
-      if (addBtn) addBtn.style.display = isHls ? 'none' : 'inline-flex';
-      if (rulesCard) rulesCard.style.display = isHls ? 'none' : 'block';
-      if (platformInfo) platformInfo.style.display = isHls ? 'none' : 'block';
-
-      updateTimelinePreview();
-      updateSaveEnabled();
-    });
-  }
-
-  // Go Live Now — sets date to today and times to 5 min ago → +2 hours.
+  // Go Live Now
   var goLiveBtn = $('goLiveNowBtn');
   if (goLiveBtn){
     goLiveBtn.addEventListener('click', function(){
       $('streamDate').value = getTodayLocal();
-
       var now = new Date();
       var startMin = (now.getHours() * 60 + now.getMinutes()) - 5;
       if (startMin < 0) startMin += 1440;
       var endMin = startMin + 120;
 
-      if (state.segments.length === 0){
-        state.segments = [{ url: '', startTime: '', endTime: '' }];
+      if (state.sourceMode === 'hls'){
+        if ($('hlsStartTime')) $('hlsStartTime').value = minutesToTime(startMin);
+        if ($('hlsDuration')) $('hlsDuration').value = 120;
+      } else if (state.sourceMode === 'partner'){
+        if ($('partnerStartTime')) $('partnerStartTime').value = minutesToTime(startMin);
+        if ($('partnerDuration')) $('partnerDuration').value = 120;
+      } else {
+        if (state.segments.length === 0){
+          state.segments = [{ url: '', startTime: '', endTime: '' }];
+        }
+        state.segments[0].startTime = minutesToTime(startMin);
+        state.segments[0].endTime = minutesToTime(endMin);
+        renderSegments();
       }
-      state.segments[0].startTime = minutesToTime(startMin);
-      state.segments[0].endTime = minutesToTime(endMin);
 
-      renderSegments();
       renderStreamPreview();
+      updateTimelinePreview();
       updateSaveEnabled();
       toast('Schedule set to "Live Now" — ads will fire.', 'success', 2400);
     });
   }
 
-  // Reset Schedule — restores sensible defaults.
+  // Reset schedule
   var resetBtn = $('resetScheduleBtn');
   if (resetBtn){
     resetBtn.addEventListener('click', function(){
@@ -2111,8 +2346,13 @@ document.addEventListener('DOMContentLoaded', function(){
       $('streamDate').value = getTodayLocal();
       var dt = defaultSegmentTimes();
       state.segments = [{ url: state.segments[0] ? state.segments[0].url : '', startTime: dt.startTime, endTime: dt.endTime }];
+      if ($('hlsStartTime')) $('hlsStartTime').value = '00:00';
+      if ($('hlsDuration')) $('hlsDuration').value = '120';
+      if ($('partnerStartTime')) $('partnerStartTime').value = '00:00';
+      if ($('partnerDuration')) $('partnerDuration').value = '120';
       renderSegments();
       renderStreamPreview();
+      updateTimelinePreview();
       updateSaveEnabled();
       toast('Schedule reset.', 'info', 1800);
     });
@@ -2185,7 +2425,7 @@ document.addEventListener('DOMContentLoaded', function(){
     .then(function(){ btn.disabled = false; syncAuthTabs(); });
   });
 
-  /* Init */
+  // Init
   autoFillDateToToday();
   syncAdProviderUI();
   syncMidrollTimingVisibility();
@@ -2193,6 +2433,8 @@ document.addEventListener('DOMContentLoaded', function(){
   renderStreamPreview();
   renderSlotGrid();
   renderSegments();
+  setSourceMode('url');
+  loadPartners();
   wireSegmentEvents();
 
   auth.onAuthStateChanged(function(user){
@@ -2204,4 +2446,4 @@ document.addEventListener('DOMContentLoaded', function(){
 })();
 </script>
 </body>
-                </html>
+  </html>
