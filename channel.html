@@ -67,7 +67,14 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .ch-crumb{display:inline-flex;align-items:center;gap:7px;font-size:11.5px;font-weight:800;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.65);margin-bottom:8px}
 .ch-crumb:hover{color:var(--cy)}
 .ch-crumb i{width:13px;height:13px}
-.ch-name-big{font-size:clamp(1.6rem,3.6vw,2.4rem);font-weight:900;letter-spacing:-.02em;line-height:1.05;color:#fff;margin-bottom:8px;text-shadow:0 4px 20px rgba(0,0,0,.6);word-break:break-word}
+.ch-name-big{font-size:clamp(1.6rem,3.6vw,2.4rem);font-weight:900;letter-spacing:-.02em;line-height:1.05;color:#fff;margin-bottom:8px;text-shadow:0 4px 20px rgba(0,0,0,.6);word-break:break-word;display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.ch-partner-pill{
+  display:inline-flex;align-items:center;gap:5px;
+  background:rgba(0,255,255,.15);border:1px solid rgba(0,255,255,.5);
+  color:var(--cy);font-size:10px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;
+  padding:4px 9px;border-radius:99px;
+}
+.ch-partner-pill i{width:11px;height:11px}
 .ch-meta-row{display:flex;align-items:center;gap:14px;flex-wrap:wrap;font-size:13px;color:rgba(255,255,255,.78);font-weight:500}
 .ch-meta-row span{display:inline-flex;align-items:center;gap:6px}
 .ch-meta-row i{width:13px;height:13px;color:var(--cy);flex-shrink:0}
@@ -87,7 +94,7 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:0 20px 64px}
 .section-title .cnt{font-size:11px;font-weight:800;color:var(--mut);background:var(--sf2);padding:2px 9px;border-radius:99px;letter-spacing:0;font-family:var(--mono)}
 .section-head .hint{font-size:12.5px;color:var(--mut);font-weight:500}
 
-/* STREAM ROW (horizontal scroll) */
+/* STREAM ROW */
 .stream-row{
   display:flex;gap:14px;overflow-x:auto;padding:4px 4px 12px;
   scroll-snap-type:x mandatory;
@@ -99,7 +106,7 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:0 20px 64px}
 .stream-row .stream-card{flex:0 0 280px;scroll-snap-align:start}
 @media (max-width:560px){.stream-row .stream-card{flex:0 0 240px}}
 
-/* STREAM GRID (for "all streams" fallback) */
+/* STREAM GRID */
 .stream-grid{display:grid;gap:16px;grid-template-columns:repeat(auto-fill,minmax(260px,1fr))}
 
 /* STREAM CARD */
@@ -129,6 +136,15 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:0 20px 64px}
 .stream-badge.upcoming{background:rgba(10,15,20,.85);color:#67e8f9;border:1px solid rgba(103,232,249,.35);backdrop-filter:blur(8px)}
 .stream-badge.replay{background:rgba(139,92,246,.92)}
 .stream-badge.highlight{background:linear-gradient(135deg,rgba(139,92,246,.95),rgba(124,58,237,.95))}
+.partner-tag{
+  position:absolute;top:10px;right:10px;z-index:3;
+  background:rgba(0,255,255,.9);color:#04161c;
+  font-size:9px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;
+  padding:4px 8px;border-radius:5px;
+  display:inline-flex;align-items:center;gap:4px;
+  backdrop-filter:blur(6px);
+}
+.partner-tag i{width:10px;height:10px}
 .platform-tag{
   position:absolute;bottom:10px;right:10px;z-index:3;
   background:rgba(10,15,20,.75);color:#fff;
@@ -171,7 +187,7 @@ main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:0 20px 64px}
 .stream-status.ended{color:var(--mut)}
 .stream-status.ended i{color:var(--mut)}
 
-/* EMPTY / LOADING / ERROR */
+/* STATE */
 .state{max-width:560px;margin:60px auto;background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:44px 32px;text-align:center;box-shadow:0 8px 24px rgba(15,23,42,.06)}
 .state .ico{width:56px;height:56px;margin:0 auto 16px;border-radius:16px;background:var(--sf2);display:flex;align-items:center;justify-content:center;color:var(--mut)}
 .state .ico i{width:28px;height:28px}
@@ -287,14 +303,17 @@ function categoryLabel(c){
     sports:'Sports', concerts:'Concerts', entertainment:'Entertainment',
     news:'News', music:'Music', gaming:'Gaming', education:'Education',
     talk:'Talk Shows', movies:'Movies', business:'Business',
-    creative:'Creative', other:'Other'
+    creative:'Creative', other:'Other',
+    documentary:'Documentary', nature:'Nature & Wildlife', science:'Science',
+    kids:'Kids'
   }[c] || '';
 }
 
 function platformLabel(p){
   return {
-    youtube:'YouTube', twitch:'Twitch', vimeo:'Vimeo',
-    facebook:'Facebook', custom:'Embed'
+    youtube:'YouTube', twitch:'Twitch', vimeo:'Vimeo', facebook:'Facebook',
+    custom:'Embed', 'native-hls':'HLS', 'native-dash':'DASH', 'native-mpegts':'MPEG-TS',
+    partner:'Partner Feed'
   }[p] || 'Live';
 }
 
@@ -330,6 +349,10 @@ function streamTypeOf(s){
   return s.streamType === 'highlight' ? 'highlight' : 'live';
 }
 
+function isPartnerStream(s){
+  return !!(s.partnerId || s.streamPlatform === 'partner');
+}
+
 /* ══════════════════════════════════════════════════════════════
    STATE
    ══════════════════════════════════════════════════════════════ */
@@ -337,6 +360,7 @@ var currentUser = null;
 var channelId = null;
 var channelData = null;
 var allStreams = [];
+var hasPartnerStreams = false;
 
 /* ══════════════════════════════════════════════════════════════
    AUTH WIDGET
@@ -394,6 +418,7 @@ function buildStreamCard(s){
   var dateStr = prettyDate(s.startDate, s.startTime);
   var platform = platformLabel(s.streamPlatform);
   var isHL = streamTypeOf(s) === 'highlight';
+  var isPartner = isPartnerStream(s);
 
   var badgeClass = 'upcoming', badgeText = 'Upcoming';
   if (st.status === 'live'){
@@ -420,9 +445,14 @@ function buildStreamCard(s){
     ? "background-image:url('"+esc(s.heroImage)+"');background-size:cover;background-position:center;"
     : '';
 
+  var partnerTagHTML = isPartner
+    ? '<span class="partner-tag">'+icon('shield-check')+' Partner</span>'
+    : '';
+
   card.innerHTML =
     '<div class="stream-thumb" style="'+thumbStyle+'">'+
       '<span class="stream-badge '+badgeClass+'">'+esc(badgeText)+'</span>'+
+      partnerTagHTML +
       '<span class="platform-tag">'+esc(platform)+'</span>'+
       '<div class="play-ico">'+icon('play')+'</div>'+
     '</div>'+
@@ -448,7 +478,6 @@ function renderChannel(){
   var ch = channelData;
   if (!ch){ renderError('Channel not found', 'This channel may have been deleted.'); return; }
 
-  // Split streams
   var live = [], upcoming = [], past = [];
   allStreams.forEach(function(s){
     var st = streamStatus(s);
@@ -457,7 +486,6 @@ function renderChannel(){
     else if (st.replayOk) past.push(s);
   });
 
-  // Sort: live by start time, upcoming soonest first, past newest first
   live.sort(function(a, b){ return (streamStatus(a).startMs || 0) - (streamStatus(b).startMs || 0); });
   upcoming.sort(function(a, b){ return (streamStatus(a).startMs || 0) - (streamStatus(b).startMs || 0); });
   past.sort(function(a, b){ return (streamStatus(b).startMs || 0) - (streamStatus(a).startMs || 0); });
@@ -466,7 +494,6 @@ function renderChannel(){
   var totalCount = allStreams.length;
   var catLabel = ch.category ? categoryLabel(ch.category) : 'Channel';
 
-  // Build HTML
   var bannerStyle = ch.bannerUrl
     ? "background-image:url('"+esc(ch.bannerUrl)+"');background-size:cover;background-position:center;"
     : '';
@@ -474,6 +501,10 @@ function renderChannel(){
   var logoHTML = ch.logoUrl
     ? '<img alt="'+esc(ch.name)+'" src="'+esc(ch.logoUrl)+'" />'
     : '<span>'+esc(initials(ch.name))+'</span>';
+
+  var partnerPillHTML = hasPartnerStreams
+    ? '<span class="ch-partner-pill">'+icon('shield-check')+' Partner</span>'
+    : '';
 
   var liveRowHTML = live.length ? (
     '<section class="section">'+
@@ -521,7 +552,7 @@ function renderChannel(){
         '<div class="ch-hero-logo">'+logoHTML+'</div>'+
         '<div class="ch-hero-text">'+
           '<a href="streams.html" class="ch-crumb">'+icon('arrow-left')+' All streams</a>'+
-          '<h1 class="ch-name-big">'+esc(ch.name)+'</h1>'+
+          '<h1 class="ch-name-big">'+esc(ch.name)+' '+partnerPillHTML+'</h1>'+
           '<div class="ch-meta-row">'+
             '<span class="ch-cat">'+esc(catLabel)+'</span>'+
             (ch.channelNumber ? '<span>'+icon('hash')+' CH '+esc(String(ch.channelNumber))+'</span>' : '')+
@@ -540,7 +571,6 @@ function renderChannel(){
   $('main').innerHTML = html;
   refreshIcons();
 
-  // Populate rows
   if (live.length){
     var rowL = $('rowLive');
     live.forEach(function(s){ rowL.appendChild(buildStreamCard(s)); });
@@ -572,7 +602,6 @@ function loadChannel(){
       channelData = doc.data() || {};
       channelData.id = doc.id;
 
-      // If channel is hidden (active: false), still allow direct link but warn in title
       if (channelData.active === false){
         document.title = '(Hidden) ' + channelData.name + ' · Novalink';
       }
@@ -583,10 +612,12 @@ function loadChannel(){
         .get()
         .then(function(snap){
           allStreams = [];
+          hasPartnerStreams = false;
           snap.forEach(function(s){
             var d = s.data() || {};
             d.id = s.id;
             allStreams.push(d);
+            if (isPartnerStream(d)) hasPartnerStreams = true;
           });
           renderChannel();
         });
@@ -628,4 +659,4 @@ document.addEventListener('DOMContentLoaded', function(){
 })();
 </script>
 </body>
-  </html>
+</html>
