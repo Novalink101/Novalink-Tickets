@@ -456,7 +456,7 @@ var DOUBLE_TAP_WINDOW = 300;
 var GAP_ADS_MAX_MS = 60 * 60 * 1000;
 var QUEUE_LOOKAHEAD_MS = 24 * 60 * 60 * 1000;
 var UP_NEXT_LEAD_MS = 5 * 60 * 1000;
-var SKIP_EXTRA_DELAY_SECONDS = 0; /* CHANGED: was 6, now 0 for exact skip timing */
+var SKIP_EXTRA_DELAY_SECONDS = 0;
 var AD_START_TIMEOUT_MS = 3000;
 var AD_HARD_FALLBACK_MS = 8000;
 
@@ -670,7 +670,8 @@ var liveSyncState = {
   seekableStart: 0,
   seekableEnd: 0,
   behindLive: 0,
-  isBehindLive: false
+  isBehindLive: false,
+  lockToLiveEdge: true
 };
 
 var tapState = { lastTapTime: 0, lastTapSide: null };
@@ -1536,6 +1537,11 @@ function doSeek(delta, rippleEl){
   var player = getActivePlayer();
   if (!player) return;
 
+  // If the user is seeking backwards during a live stream, unlock from the live edge
+  if (currentPhase === 'live' && delta < 0) {
+    liveSyncState.lockToLiveEdge = false;
+  }
+
   if (player.type === 'youtube'){
     var cur = player.instance.getCurrentTime() || 0;
     var dur = player.instance.getDuration() || 0;
@@ -1593,6 +1599,12 @@ function wireProgressBar(){
     var dur = getPlayerDuration();
     if (dur <= 0) return;
     if (liveSyncState.isLive && pct > 0.985){ seekToLiveEdge(); return; }
+    
+    // If user manually seeks, unlock from live edge
+    if (currentPhase === 'live') {
+      liveSyncState.lockToLiveEdge = false;
+    }
+    
     var targetTime = pct * dur;
     if (player.type === 'youtube') player.instance.seekTo(targetTime, true);
     else { try { player.instance.currentTime = targetTime; } catch(e){} }
@@ -1651,6 +1663,13 @@ function updateProgressFill(){
     var behind = liveSyncState.seekableEnd - cur;
     liveSyncState.behindLive = behind;
     liveSyncState.isBehindLive = behind > 10;
+
+    // Auto-resync to live edge if the viewer drifts too far behind
+    if (currentPhase === 'live' && liveSyncState.lockToLiveEdge && behind > 20){
+      try {
+        v.currentTime = Math.max(0, liveSyncState.seekableEnd - 0.5);
+      } catch(e){}
+    }
   }
   if (currentPhase === 'live'){
     if (liveSyncState.isBehindLive){
@@ -1683,6 +1702,7 @@ function getPlayerDuration(){
 function seekToLiveEdge(){
   var player = getActivePlayer();
   if (!player) return;
+  liveSyncState.lockToLiveEdge = true;
   if (player.type === 'youtube'){
     var dur = player.instance.getDuration() || 0;
     if (dur > 0) player.instance.seekTo(dur - 0.5, true);
@@ -1781,6 +1801,7 @@ function decideAndPlay(){
     stopGapAdLoop();
     hideQueueBanner();
     hideCurtain();
+    liveSyncState.lockToLiveEdge = true;
 
     var active = getActiveSegment();
     if (active){
@@ -1823,6 +1844,7 @@ function decideAndPlay(){
     stopGapAdLoop();
     hideQueueBanner();
     hideCurtain();
+    liveSyncState.lockToLiveEdge = false;
     var segs = getSegments();
     var last = segs[segs.length - 1];
     if (last && currentLoadedSegmentIndex !== segs.length - 1){
@@ -1925,6 +1947,25 @@ function buildVideoEl(id){
 
 function wireNativeVideoEvents(video){
   video.addEventListener('loadedmetadata', function(){ liveSyncState.duration = video.duration || 0; updateProgressFill(); });
+  
+  // Jump to live edge on first play
+  video.addEventListener('canplay', function jumpToLiveOnLoad(){
+    if (!liveSyncState.isLive) return;
+    try {
+      if (video.seekable && video.seekable.length) {
+        var end = video.seekable.end(video.seekable.length - 1);
+        if (end > 0 && video.currentTime < end - 5) {
+          video.currentTime = Math.max(0, end - 0.5);
+        }
+      } else if (isFinite(video.duration) && video.duration > 0) {
+        if (video.currentTime < video.duration - 5) {
+          video.currentTime = video.duration - 0.5;
+        }
+      }
+    } catch(e){}
+    video.removeEventListener('canplay', jumpToLiveOnLoad);
+  }, { once: false });
+  
   video.addEventListener('timeupdate', function(){ updateProgressFill(); updateJumpLiveButton(); });
   video.addEventListener('progress', function(){ updateProgressFill(); });
   video.addEventListener('waiting', function(){ var b = $('nlBuffering'); if (b) b.classList.add('show'); });
@@ -2083,6 +2124,24 @@ function createYTPlayer(videoId){
         ytReady = true;
         hideCurtain();
         try { event.target.mute(); event.target.playVideo(); } catch(e){}
+        
+        // Jump to the live edge if this is a live stream
+        var seekAttempts = 0;
+        var seekToLive = setInterval(function(){
+          seekAttempts++;
+          if (seekAttempts > 10){ clearInterval(seekToLive); return; }
+          try {
+            var dur = event.target.getDuration() || 0;
+            var cur = event.target.getCurrentTime() || 0;
+            // For live YouTube, duration keeps growing. Jump to (dur - 2) if we're more than 10s behind.
+            if (dur > 0 && cur < dur - 10) {
+              event.target.seekTo(dur - 1, true);
+            } else if (dur > 0) {
+              clearInterval(seekToLive);
+            }
+          } catch(e){}
+        }, 800);
+        
         var attempts = 0;
         clearInterval(autoplayRetryTimer);
         autoplayRetryTimer = setInterval(function(){
@@ -2217,7 +2276,7 @@ function startGapAdLoop(){
   var hasAds = (adPool.preroll.length || adPool.midroll.length || adPool.postroll.length);
   if (hasAds){
     adState.gapAdActive = true;
-    // CHANGED: pass true for forceUnskippable
+    // Pass true for forceUnskippable
     showAd('preroll', function(){
       adState.gapAdActive = false;
       if (!$('curtain') || !$('curtain').classList.contains('show')) showCountdownCurtain();
@@ -2246,7 +2305,7 @@ function startIdleAdLoop(){
 
   var hasAds = (adPool.preroll.length || adPool.midroll.length || adPool.postroll.length);
   if (hasAds){
-    // CHANGED: pass true for forceUnskippable
+    // Pass true for forceUnskippable
     showAd('preroll', function(){
       if (isChannelIdle){
         gapAdTimer = setTimeout(function(){ if (isChannelIdle) startIdleAdLoop(); }, 800);
@@ -2499,9 +2558,6 @@ function clearAdTimers(){
   clearTimeout(adState.autoplayRetryId);
 }
 
-/* ══════════════════════════════════════════════════════════════
-   SHOW AD (with forceUnskippable support)
-   ══════════════════════════════════════════════════════════════ */
 function showAd(slot, onComplete, forceUnskippable){
   var overlay = $('adOverlay'), media = $('adMedia'), title = $('adTitle');
   var cta = $('adCta'), ctaLabel = $('adCtaLabel');
@@ -2521,7 +2577,7 @@ function showAd(slot, onComplete, forceUnskippable){
   var skipAfter = parseInt(adSettings.skipAfterSeconds, 10);
   if (isNaN(skipAfter)) skipAfter = 5;
   
-  // CHANGED: Force unskippable if requested
+  // Force unskippable if requested
   if (forceUnskippable) {
     skipAfter = -1;
   }
@@ -2541,7 +2597,7 @@ function showAd(slot, onComplete, forceUnskippable){
     if (skipStarted) return;
     skipStarted = true;
     
-    // CHANGED: If skipAfter is -1, make the button completely unclickable and hide the countdown
+    // If skipAfter is -1, make the button completely unclickable and hide the countdown
     if (seconds === -1){ 
         skipBtn.disabled = true; 
         skipText.textContent = 'Ad'; 
@@ -2615,7 +2671,7 @@ function showAd(slot, onComplete, forceUnskippable){
       vid.addEventListener('error', function(){ fallbackToHouseAd(); });
       vid.addEventListener('playing', function(){ beginSkipCountdown(skipAfter); });
       
-      // FIX: Only force the skip countdown if the video is actually playing
+      // Only force the skip countdown if the video is actually playing
       adState.adStartWatchdogId = setTimeout(function(){
         if (!skipStarted){
           if (vid.readyState >= 2 && !vid.paused){ beginSkipCountdown(skipAfter); }
