@@ -456,7 +456,7 @@ var DOUBLE_TAP_WINDOW = 300;
 var GAP_ADS_MAX_MS = 60 * 60 * 1000;
 var QUEUE_LOOKAHEAD_MS = 24 * 60 * 60 * 1000;
 var UP_NEXT_LEAD_MS = 5 * 60 * 1000;
-var SKIP_EXTRA_DELAY_SECONDS = 6;
+var SKIP_EXTRA_DELAY_SECONDS = 0; /* CHANGED: was 6, now 0 for exact skip timing */
 var AD_START_TIMEOUT_MS = 3000;
 var AD_HARD_FALLBACK_MS = 8000;
 
@@ -1445,24 +1445,6 @@ function exitChannelIdle(){
   if (idle) idle.classList.remove('show');
 }
 
-function startIdleAdLoop(){
-  if (!isChannelIdle) return;
-  var overlay = $('adOverlay');
-  var showingAd = overlay && overlay.classList.contains('show');
-  if (showingAd) return;
-
-  var hasAds = (adPool.preroll.length || adPool.midroll.length || adPool.postroll.length);
-  if (hasAds){
-    showAd('preroll', function(){
-      if (isChannelIdle){
-        gapAdTimer = setTimeout(function(){ if (isChannelIdle) startIdleAdLoop(); }, 800);
-      }
-    });
-  } else {
-    gapAdRetryTimer = setTimeout(function(){ if (isChannelIdle) startIdleAdLoop(); }, 10000);
-  }
-}
-
 /* ══════════════════════════════════════════════════════════════
    NETWORK
    ══════════════════════════════════════════════════════════════ */
@@ -2218,7 +2200,7 @@ function hideQueueBanner(){
 }
 
 /* ══════════════════════════════════════════════════════════════
-   GAP ADS LOOP
+   GAP ADS LOOP (UNSKIPPABLE)
    ══════════════════════════════════════════════════════════════ */
 function startGapAdLoop(){
   clearTimeout(gapAdTimer);
@@ -2235,11 +2217,12 @@ function startGapAdLoop(){
   var hasAds = (adPool.preroll.length || adPool.midroll.length || adPool.postroll.length);
   if (hasAds){
     adState.gapAdActive = true;
+    // CHANGED: pass true for forceUnskippable
     showAd('preroll', function(){
       adState.gapAdActive = false;
       if (!$('curtain') || !$('curtain').classList.contains('show')) showCountdownCurtain();
       if (mode === 'gap-ads') gapAdTimer = setTimeout(function(){ if (mode === 'gap-ads') startGapAdLoop(); }, 400);
-    });
+    }, true);
   } else {
     if (!($('curtain') && $('curtain').classList.contains('show'))) showCountdownCurtain();
     gapAdRetryTimer = setTimeout(function(){ if (mode === 'gap-ads') startGapAdLoop(); }, 5000);
@@ -2250,6 +2233,28 @@ function stopGapAdLoop(){
   clearTimeout(gapAdTimer);
   clearTimeout(gapAdRetryTimer);
   adState.gapAdActive = false;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   IDLE ADS LOOP (UNSKIPPABLE)
+   ══════════════════════════════════════════════════════════════ */
+function startIdleAdLoop(){
+  if (!isChannelIdle) return;
+  var overlay = $('adOverlay');
+  var showingAd = overlay && overlay.classList.contains('show');
+  if (showingAd) return;
+
+  var hasAds = (adPool.preroll.length || adPool.midroll.length || adPool.postroll.length);
+  if (hasAds){
+    // CHANGED: pass true for forceUnskippable
+    showAd('preroll', function(){
+      if (isChannelIdle){
+        gapAdTimer = setTimeout(function(){ if (isChannelIdle) startIdleAdLoop(); }, 800);
+      }
+    }, true); 
+  } else {
+    gapAdRetryTimer = setTimeout(function(){ if (isChannelIdle) startIdleAdLoop(); }, 10000);
+  }
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -2494,7 +2499,10 @@ function clearAdTimers(){
   clearTimeout(adState.autoplayRetryId);
 }
 
-function showAd(slot, onComplete){
+/* ══════════════════════════════════════════════════════════════
+   SHOW AD (with forceUnskippable support)
+   ══════════════════════════════════════════════════════════════ */
+function showAd(slot, onComplete, forceUnskippable){
   var overlay = $('adOverlay'), media = $('adMedia'), title = $('adTitle');
   var cta = $('adCta'), ctaLabel = $('adCtaLabel');
   var skipBtn = $('adSkip'), skipText = $('adSkipText'), countdown = $('adCountdown');
@@ -2512,6 +2520,11 @@ function showAd(slot, onComplete){
   progressFill.style.width = '0%';
   var skipAfter = parseInt(adSettings.skipAfterSeconds, 10);
   if (isNaN(skipAfter)) skipAfter = 5;
+  
+  // CHANGED: Force unskippable if requested
+  if (forceUnskippable) {
+    skipAfter = -1;
+  }
 
   var fsBtn = $('adFullscreen');
   if (fsBtn){
@@ -2523,10 +2536,19 @@ function showAd(slot, onComplete){
     };
   }
   var skipStarted = false;
+  
   function beginSkipCountdown(seconds){
     if (skipStarted) return;
     skipStarted = true;
-    if (seconds === -1){ skipBtn.disabled = true; skipText.textContent = 'Ad'; countdown.textContent = ''; return; }
+    
+    // CHANGED: If skipAfter is -1, make the button completely unclickable and hide the countdown
+    if (seconds === -1){ 
+        skipBtn.disabled = true; 
+        skipText.textContent = 'Ad'; 
+        countdown.textContent = ''; 
+        return; 
+    }
+    
     var totalWait = (seconds || 0) + SKIP_EXTRA_DELAY_SECONDS;
     if (totalWait <= 0){ skipBtn.disabled = false; skipText.textContent = 'Skip ad'; countdown.textContent = ''; return; }
     var remaining = totalWait;
@@ -2542,6 +2564,7 @@ function showAd(slot, onComplete){
       } else { countdown.textContent = remaining; }
     }, 1000);
   }
+  
   function fallbackToHouseAd(){
     media.innerHTML = '';
     media.appendChild(buildHouseAd());
@@ -2550,6 +2573,7 @@ function showAd(slot, onComplete){
     ctaLabel.textContent = adSettings.houseAdCtaLabel || 'Advertise here';
     beginSkipCountdown(skipAfter);
   }
+  
   function attachRobustVideoPlayback(vid){
     var tryPlay = function(attempt){
       var p = vid.play();
@@ -2590,13 +2614,24 @@ function showAd(slot, onComplete){
       vid.addEventListener('ended', function(){ hideAd(); if (onComplete) onComplete(); });
       vid.addEventListener('error', function(){ fallbackToHouseAd(); });
       vid.addEventListener('playing', function(){ beginSkipCountdown(skipAfter); });
+      
+      // FIX: Only force the skip countdown if the video is actually playing
       adState.adStartWatchdogId = setTimeout(function(){
         if (!skipStarted){
           if (vid.readyState >= 2 && !vid.paused){ beginSkipCountdown(skipAfter); }
           else { fallbackToHouseAd(); }
         }
       }, AD_START_TIMEOUT_MS);
-      adState.adHardFallbackId = setTimeout(function(){ if (!skipStarted){ beginSkipCountdown(skipAfter); } }, AD_HARD_FALLBACK_MS);
+      
+      adState.adHardFallbackId = setTimeout(function(){ 
+        if (!skipStarted){ 
+            // Only force the skip countdown if the video is actually playing
+            if (vid && !vid.paused && vid.readyState >= 2) {
+                beginSkipCountdown(skipAfter); 
+            }
+        } 
+      }, AD_HARD_FALLBACK_MS);
+      
       attachRobustVideoPlayback(vid);
     } else if (ad.mediaUrl){
       var img = document.createElement('img');
