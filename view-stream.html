@@ -697,6 +697,9 @@ var adState = {
   autoplayRetryId: null
 };
 
+/* Global unmute-on-first-click listener flag */
+var _nlUnmuteBound = false;
+
 /* ══════════════════════════════════════════════════════════════
    SEGMENTS + TIMING
    ══════════════════════════════════════════════════════════════ */
@@ -1886,7 +1889,7 @@ function scheduleSlotEnd(){
 }
 
 /* ══════════════════════════════════════════════════════════════
-   SEGMENT LOADING — FIXED: uses active segment's own URL
+   SEGMENT LOADING — uses active segment's own URL
    ══════════════════════════════════════════════════════════════ */
 function loadSegment(active){
   // Partner streams: resolve URL from livePartners (admin-only doc)
@@ -1923,7 +1926,6 @@ function routeToPlayer(url, platform){
   if (platform === 'native-dash') return loadDashPlayer(url);
   if (platform === 'native-mpegts') return loadMpegTsPlayer(url);
   if (platform === 'video-file') return loadDirectVideoPlayer(url);
-  // Default: try HLS
   return loadHlsPlayer(url);
 }
 
@@ -2241,7 +2243,6 @@ function handleSegmentEnd(){
     var active = getActiveSegment();
     if (active && active.index < segs.length - 1){
       // Advance to the next segment even if wall clock says we're still "live".
-      // Force-reload by resetting the loaded index.
       currentLoadedSegmentIndex = -1;
       decideAndPlay();
     }
@@ -2638,7 +2639,7 @@ function showAd(slot, onComplete, forceUnskippable){
   overlay.classList.add('show');
   media.innerHTML = '';
   progressFill.style.width = '0%';
-  skipBtn.style.display = '';   // Reset skip button visibility
+  skipBtn.style.display = '';
 
   var skipAfter = parseInt(adSettings.skipAfterSeconds, 10);
   if (isNaN(skipAfter)) skipAfter = 5;
@@ -2660,7 +2661,6 @@ function showAd(slot, onComplete, forceUnskippable){
     skipStarted = true;
 
     if (seconds === -1){
-      // Unskippable — hide the button entirely
       skipBtn.style.display = 'none';
       return;
     }
@@ -2698,16 +2698,30 @@ function showAd(slot, onComplete, forceUnskippable){
     beginSkipCountdown(skipAfter);
   }
 
+  /* ── Smart autoplay: try unmuted first, fall back to muted ── */
   function attachRobustVideoPlayback(vid){
-    // Ads ALWAYS start muted. Unmute only on explicit user interaction.
-    vid.muted = true;
+    // Start unmuted. On pages where the viewer has interacted at all
+    // (clicked the stream card, scrolled, tapped something), the browser
+    // will allow unmuted autoplay — so ads play WITH SOUND.
+    vid.muted = false;
+
     var tryPlay = function(attempt){
       var p = vid.play();
       if (p && typeof p.then === 'function'){
-        p.then(function(){}).catch(function(){
+        p.then(function(){
+          // Success. If we ended up muted from a previous fallback,
+          // try to unmute now — playback has started and the browser
+          // may have granted audio permission once the gesture landed.
+          if (vid.muted){
+            vid.muted = false;
+          }
+        }).catch(function(){
           if (attempt === 1){
-            adState.autoplayRetryId = setTimeout(function(){ tryPlay(2); }, 400);
+            // Unmuted autoplay was blocked. Silently retry muted.
+            vid.muted = true;
+            adState.autoplayRetryId = setTimeout(function(){ tryPlay(2); }, 200);
           } else {
+            // Even muted retry failed. Show the tap overlay.
             if (tapOverlay){
               tapOverlay.classList.add('show');
               tapOverlay.onclick = function(){
@@ -2715,13 +2729,27 @@ function showAd(slot, onComplete, forceUnskippable){
                 try { vid.muted = false; } catch(e){}
                 try { vid.play().catch(function(){}); } catch(e){}
               };
-              beginSkipCountdown(0);
             }
+            beginSkipCountdown(0);
           }
         });
       }
     };
     tryPlay(1);
+  }
+
+  /* ── Global one-time unmute: if the ad is muted and the viewer
+        clicks anywhere on the page, unmute the ad. ── */
+  function bindGlobalUnmute(){
+    if (_nlUnmuteBound) return;
+    _nlUnmuteBound = true;
+    document.addEventListener('click', function unmuteOnce(){
+      var adVid = document.querySelector('#adMedia video');
+      if (adVid && adVid.muted){
+        try { adVid.muted = false; } catch(e){}
+      }
+      document.removeEventListener('click', unmuteOnce);
+    }, { once: true });
   }
 
   if (ad){
@@ -2734,7 +2762,7 @@ function showAd(slot, onComplete, forceUnskippable){
       var vid = document.createElement('video');
       vid.src = ad.mediaUrl;
       vid.autoplay = true;
-      vid.muted = true;   // <-- ALWAYS muted on load
+      vid.muted = false;   // start unmuted — tryPlay will handle fallback
       vid.playsInline = true;
       vid.preload = 'auto';
       vid.setAttribute('playsinline', '');
@@ -2760,6 +2788,7 @@ function showAd(slot, onComplete, forceUnskippable){
       }, AD_HARD_FALLBACK_MS);
 
       attachRobustVideoPlayback(vid);
+      bindGlobalUnmute();
     } else if (ad.mediaUrl){
       var img = document.createElement('img');
       img.src = ad.mediaUrl;
