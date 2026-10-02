@@ -113,17 +113,21 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .rc-meta span{display:inline-flex;align-items:center;gap:5px}
 .rc-meta i{width:13px;height:13px;flex-shrink:0}
 .rc-actions{display:flex;gap:8px;align-items:center;flex-shrink:0;flex-wrap:wrap}
-.rc-expand-icon{width:36px;height:36px;border-radius:50%;background:var(--sf2);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform 0.3s var(--ease)}
-.review-card.expanded .rc-expand-icon{transform:rotate(180deg)}
-.rc-expand-icon i{width:16px;height:16px;color:var(--tx2)}
 
 .rc-details{padding:0 20px 20px;border-top:1px dashed var(--bd);background:var(--sf2);display:none}
 .review-card.expanded .rc-details{display:block}
 .rc-details-inner{padding-top:18px}
 .rc-section{margin-bottom:22px}
 .rc-section:last-child{margin-bottom:0}
-.rc-section-head{font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--cy3);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.rc-section-head{font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--cy3);margin-bottom:10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
 .rc-section-head i{width:14px;height:14px}
+
+.save-indicator{font-size:11px;font-weight:900;padding:3px 10px;border-radius:99px;transition:all .2s ease;text-transform:uppercase;letter-spacing:.05em;margin-left:auto}
+.save-indicator:empty{display:none}
+.save-indicator.unsaved{background:#fef3c7;color:#92400e}
+.save-indicator.saving{background:#e0f2fe;color:#0369a1}
+.save-indicator.saved{background:#d1fae5;color:#065f46}
+.save-indicator.error{background:#fee2e2;color:#991b1b}
 
 .rc-desc{font-size:13.5px;color:var(--tx2);line-height:1.6;background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;white-space:pre-wrap;word-break:break-word}
 
@@ -132,7 +136,6 @@ input,select,textarea{font-family:inherit;font-size:14px}
 .kv .k{font-size:10px;font-weight:800;color:var(--mut);letter-spacing:.05em;text-transform:uppercase;margin-bottom:2px}
 .kv .v{font-size:13px;font-weight:700;color:var(--tx);word-break:break-word}
 
-/* PAYMENT LINK GRID */
 .tier-pay-block{background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:12px}
 .tier-pay-block:last-child{margin-bottom:0}
 .tier-pay-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
@@ -274,7 +277,7 @@ input,select,textarea{font-family:inherit;font-size:14px}
       <div class="page-head">
         <span class="eyebrow"><i data-lucide="clipboard-check"></i> Event Review</span>
         <h1>Pending events</h1>
-        <p>Review what creators have submitted. Attach Yoco links per tier, then approve.</p>
+        <p>Paste Yoco links per tier. They save automatically when you tab out or stop typing.</p>
       </div>
 
       <div class="stats">
@@ -390,7 +393,6 @@ var ADMINS = [
   "customerservicesnovalink@gmail.com"
 ];
 
-/* ── TIERS — semantic keys ── */
 var TIER_KEYS = ["elite","silver","standard"];
 var QTY_OPTIONS = [1, 2, 3, 4, 5];
 var TIER_COLOR_DEFAULTS = {
@@ -411,7 +413,6 @@ var activeFilter = "pending_review";
 var unsubscribe = null;
 var openEventIds = {};
 var pendingDeleteId = null;
-var pendingDeleteTicketCount = 0;
 
 function $(id){ return document.getElementById(id); }
 function refreshIcons(){ if(window.lucide) lucide.createIcons(); }
@@ -476,10 +477,12 @@ function formatTimestamp(ts){
 }
 
 function getTierName(ev, tierKey){
+  if (!tierKey) tierKey = "standard";
   if (ev && ev.tierNames && ev.tierNames[tierKey]) return ev.tierNames[tierKey];
   return TIER_NAME_DEFAULTS[tierKey] || tierKey;
 }
 function getTierColor(ev, tierKey){
+  if (!tierKey) tierKey = "standard";
   if (ev && ev.tierColours && ev.tierColours[tierKey]) return ev.tierColours[tierKey];
   return TIER_COLOR_DEFAULTS[tierKey] || "#00FFFF";
 }
@@ -488,14 +491,11 @@ function getTierPrice(ev, tierKey){
   var v = parseFloat(ev.tierPrices[tierKey]);
   return isNaN(v) ? 0 : v;
 }
-
-/* Active tiers = first N of TIER_KEYS, filtered by tierActive, never empty */
 function getActiveTiers(ev){
   var count = parseInt(ev && ev.activeTierCount, 10);
   if (isNaN(count) || count < 1) count = TIER_KEYS.length;
   if (count > TIER_KEYS.length) count = TIER_KEYS.length;
   var keys = TIER_KEYS.slice(0, count);
-
   var activeFilter = ev && ev.tierActive;
   if (activeFilter){
     var filtered = keys.filter(function(k){ return activeFilter[k] !== false; });
@@ -504,8 +504,6 @@ function getActiveTiers(ev){
   return keys;
 }
 
-/* Normalise paymentLinks to the new format: { tier: { "1": url, "2": url, ... } }
-   Legacy flat string: { tier: "url" } → { tier: { "1": "url" } } */
 function normalizeLinks(raw){
   var out = {};
   TIER_KEYS.forEach(function(k){
@@ -516,7 +514,6 @@ function normalizeLinks(raw){
     var v = raw[k];
     if (!v) return;
     if (typeof v === "string"){
-      /* legacy flat string — assign to qty 1 only */
       if (!out[k]) out[k] = { "1":"", "2":"", "3":"", "4":"", "5":"" };
       out[k]["1"] = v;
     } else if (typeof v === "object"){
@@ -530,7 +527,6 @@ function normalizeLinks(raw){
   return out;
 }
 
-/* STATE VIEWS */
 function showLoading(){
   $("loadingState").style.display = "block";
   $("signinState").style.display = "none";
@@ -571,7 +567,6 @@ function showContent(){
   $("content").style.display = "block";
 }
 
-/* LOAD */
 function attachEventsListener(){
   if (unsubscribe){ try { unsubscribe(); } catch(e){} }
   showLoading();
@@ -684,11 +679,7 @@ function buildCard(ev){
   var actionsHTML = "";
   if (ev.status === "pending_review" || ev.status === "pending"){
     actionsHTML =
-      '<button class="btn btn-success btn-sm approve-btn" data-id="' + esc(ev.id) + '"><i data-lucide="check"></i> Approve</button>' +
-      '<button class="btn btn-ghost btn-sm toggle-btn"><i data-lucide="chevron-down"></i></button>';
-  } else {
-    actionsHTML =
-      '<button class="btn btn-ghost btn-sm toggle-btn"><i data-lucide="chevron-down"></i></button>';
+      '<button class="btn btn-success btn-sm approve-btn" data-id="' + esc(ev.id) + '"><i data-lucide="check"></i> Approve</button>';
   }
 
   card.innerHTML =
@@ -716,13 +707,6 @@ function buildCard(ev){
     if (e.target.closest("button")) return;
     toggleCard(ev.id);
   });
-  var toggleBtn = card.querySelector(".toggle-btn");
-  if (toggleBtn){
-    toggleBtn.addEventListener("click", function(e){
-      e.stopPropagation();
-      toggleCard(ev.id);
-    });
-  }
 
   var approveBtn = card.querySelector(".approve-btn");
   if (approveBtn){
@@ -793,7 +777,6 @@ function buildDetailsHTML(ev){
       '</div>';
   }
 
-  /* Payment link blocks per tier — 5 inputs each */
   var payBlocksHTML = "";
   tiers.forEach(function(k){
     var name = getTierName(ev, k);
@@ -828,13 +811,13 @@ function buildDetailsHTML(ev){
 
   var tierHTML =
     '<div class="rc-section">' +
-      '<div class="rc-section-head"><i data-lucide="tag"></i> Yoco payment links</div>' +
+      '<div class="rc-section-head"><i data-lucide="tag"></i> Yoco payment links' +
+        '<span class="save-indicator" id="saveIndicator-' + esc(ev.id) + '"></span>' +
+      '</div>' +
       payBlocksHTML +
       '<p class="link-note">' +
-        'Create one Yoco payment link <strong>per quantity</strong> in the Yoco app ' +
-        '(e.g. R 120 for 1 Elite ticket, R 240 for 2 tickets, and so on). ' +
-        'The system picks the correct link based on how many tickets the buyer chooses. ' +
-        'Max 5 tickets per purchase.' +
+        'Paste a Yoco link in each field. <strong>Links save automatically when you tab out or stop typing.</strong> ' +
+        'No need to tap a button. The system picks the right link based on how many tickets the buyer chooses. Max 5 tickets per purchase.' +
       '</p>' +
     '</div>';
 
@@ -855,10 +838,7 @@ function buildDetailsHTML(ev){
     footerHTML +=
       '<a href="view-event.html?id=' + encodeURIComponent(ev.id) + '" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">' +
         '<i data-lucide="external-link"></i> Open public page' +
-      '</a>' +
-      '<button class="btn btn-accent btn-sm save-links-btn" data-id="' + esc(ev.id) + '">' +
-        '<i data-lucide="save"></i> Save Yoco links' +
-      '</button>';
+      '</a>';
   } else if (ev.status === "rejected"){
     footerHTML +=
       '<button class="btn btn-ghost btn-sm restore-btn" data-id="' + esc(ev.id) + '">' +
@@ -886,18 +866,57 @@ function buildDetailsHTML(ev){
   return descHTML + kvHTML + tierHTML + footerHTML + rejectPanelHTML;
 }
 
+/* ══════════════════════════════════════════════════════════════
+   AUTO-SAVE LOGIC
+   ══════════════════════════════════════════════════════════════ */
+var autoSaveTimers = {};
+
+function setSaveIndicator(eventId, state, text){
+  var el = $("saveIndicator-" + eventId);
+  if (!el) return;
+  el.textContent = text || "";
+  el.className = "save-indicator" + (state ? " " + state : "");
+}
+
+function autoSaveLinks(eventId, card){
+  var links = collectYocoLinks(card);
+
+  console.log('[autoSave] ' + eventId + ' →', JSON.stringify(links));
+
+  setSaveIndicator(eventId, 'saving', 'Saving…');
+
+  db.collection(EVENTS).doc(eventId).update({
+    paymentLinks: links,
+    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function(){
+    console.log('[autoSave] saved OK for ' + eventId);
+    setSaveIndicator(eventId, 'saved', '✓ Saved');
+    setTimeout(function(){ setSaveIndicator(eventId, '', ''); }, 2200);
+  }).catch(function(err){
+    console.error('[autoSave] failed:', err);
+    setSaveIndicator(eventId, 'error', '✗ Save failed');
+    showToast("Could not save link: " + (err.message || "unknown error"), "error", 5000);
+  });
+}
+
+function collectYocoLinks(card){
+  var links = {};
+  card.querySelectorAll(".yoco-input").forEach(function(inp){
+    var tier = inp.dataset.yocoTier;
+    var q = String(inp.dataset.yocoQty || "1");
+    var val = (inp.value || "").trim();
+    if (!tier) return;
+    if (!links[tier]) links[tier] = {};
+    if (val) links[tier][q] = val;
+  });
+  return links;
+}
+
 function wireDetailInteractions(card, ev){
   var approveFinal = card.querySelector(".approve-final-btn");
   if (approveFinal){
     approveFinal.addEventListener("click", function(){
       approveEvent(ev.id, card);
-    });
-  }
-
-  var saveLinks = card.querySelector(".save-links-btn");
-  if (saveLinks){
-    saveLinks.addEventListener("click", function(){
-      saveYocoLinks(ev.id, card);
     });
   }
 
@@ -942,44 +961,59 @@ function wireDetailInteractions(card, ev){
     });
   }
 
+  /* ═══ Yoco link inputs: blur → save, typing → save after 900ms ═══ */
   card.querySelectorAll(".yoco-input").forEach(function(inp){
+    var saveTimer = null;
+
+    inp.addEventListener('blur', function(){
+      var val = this.value.trim();
+      if (val && val.indexOf('http://') !== 0 && val.indexOf('https://') !== 0){
+        this.value = 'https://' + val;
+        val = this.value;
+      }
+      this.classList.toggle("ok", val.length > 8 && val.indexOf("http") === 0);
+      autoSaveLinks(ev.id, card);
+    });
+
     inp.addEventListener("input", function(){
       var val = this.value.trim();
       this.classList.toggle("ok", val.length > 8 && val.indexOf("http") === 0);
+
+      setSaveIndicator(ev.id, 'unsaved', 'Unsaved…');
+
+      clearTimeout(saveTimer);
+      saveTimer = setTimeout(function(){
+        autoSaveLinks(ev.id, card);
+      }, 900);
     });
   });
 }
 
-/* COLLECT LINKS — returns { tier: { "1": url, "2": url, ... } } */
-function collectYocoLinks(card){
-  var links = {};
-  card.querySelectorAll(".yoco-input").forEach(function(inp){
-    var tier = inp.dataset.yocoTier;
-    var q = String(inp.dataset.yocoQty || "1");
-    var val = (inp.value || "").trim();
-    if (!tier) return;
-    if (!links[tier]) links[tier] = {};
-    if (val) links[tier][q] = val;
-  });
-  return links;
-}
-
-/* ACTIONS */
+/* ══════════════════════════════════════════════════════════════
+   ACTIONS
+   ══════════════════════════════════════════════════════════════ */
 async function approveEvent(eventId, card){
   var ev = allEvents.find(function(e){ return e.id === eventId; });
   if (!ev) return;
 
+  /* First: save any pending link changes */
   var links = collectYocoLinks(card);
-  var tiers = getActiveTiers(ev);
+  try {
+    await db.collection(EVENTS).doc(eventId).update({
+      paymentLinks: links
+    });
+  } catch(err){
+    console.warn('Could not save links before approving:', err);
+  }
 
-  /* Check: every active tier needs at least a 1-ticket link */
+  var tiers = getActiveTiers(ev);
   var missing = tiers.filter(function(k){ return !links[k] || !links[k]["1"]; });
 
   if (missing.length){
     var missingNames = missing.map(function(k){ return getTierName(ev, k); }).join(", ");
     var proceed = confirm(
       "These tiers don't have a payment link for 1 ticket:\n\n" + missingNames +
-      "\n\nBuyers will see 'I've paid — contact us' on those tiers instead of a Yoco button.\n\nApprove anyway?"
+      "\n\nBuyers will see 'I've paid — contact us' on those tiers.\n\nApprove anyway?"
     );
     if (!proceed) return;
   }
@@ -1004,37 +1038,6 @@ async function approveEvent(eventId, card){
   } catch(err){
     console.error("approveEvent error:", err);
     showToast("Could not approve: " + (err.message || "unknown error"), "error", 5000);
-    if (btn){
-      btn.disabled = false;
-      btn.innerHTML = orig;
-      refreshIcons();
-    }
-  }
-}
-
-async function saveYocoLinks(eventId, card){
-  var links = collectYocoLinks(card);
-  var btn = card.querySelector(".save-links-btn");
-  var orig = btn ? btn.innerHTML : "";
-  if (btn){
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span> Saving…';
-  }
-
-  try {
-    await db.collection(EVENTS).doc(eventId).update({
-      paymentLinks: links,
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    showToast("Yoco links saved.", "success", 3000);
-    if (btn){
-      btn.disabled = false;
-      btn.innerHTML = orig;
-      refreshIcons();
-    }
-  } catch(err){
-    console.error("saveYocoLinks error:", err);
-    showToast("Could not save: " + (err.message || "unknown error"), "error", 5000);
     if (btn){
       btn.disabled = false;
       btn.innerHTML = orig;
@@ -1101,13 +1104,14 @@ async function restoreEvent(eventId, card){
   }
 }
 
-/* DELETE */
+/* ══════════════════════════════════════════════════════════════
+   DELETE
+   ══════════════════════════════════════════════════════════════ */
 async function openDeleteModal(eventId){
   var ev = allEvents.find(function(e){ return e.id === eventId; });
   if (!ev) return;
 
   pendingDeleteId = eventId;
-  pendingDeleteTicketCount = 0;
 
   var cover = ev.heroImage || ev.coverImage || "";
   var thumb = $("deleteSummaryThumb");
@@ -1121,7 +1125,7 @@ async function openDeleteModal(eventId){
   if (ev.venueName) subBits.push(ev.venueName);
   if (ev.city) subBits.push(ev.city);
   $("deleteSummarySub").innerHTML = subBits.map(function(s){
-    return '<span><i data-lucide="dot"></i> ' + esc(s) + '</span>';
+    return '<span>' + esc(s) + '</span>';
   }).join('');
 
   $("deleteTicketsWarn").style.display = "none";
@@ -1139,22 +1143,10 @@ async function openDeleteModal(eventId){
   try {
     var snap = await db.collection(EVENTS).doc(eventId).collection("tickets").get();
     var total = snap.size;
-    var paid = 0;
-    snap.forEach(function(d){
-      var t = d.data() || {};
-      var s = String(t.status || "").toLowerCase();
-      if (s === "valid" || s === "pending" || s === "checked-in" || s === "checked_in") paid++;
-    });
-    pendingDeleteTicketCount = total;
-
     if (total > 0){
-      var warnBox = $("deleteTicketsWarn");
       var countEl = $("deleteTicketsCount");
-      var msg = paid === total
-        ? "This event has " + total + " ticket" + (total === 1 ? "" : "s") + " on file."
-        : "This event has " + total + " ticket" + (total === 1 ? "" : "s") + " on file (" + paid + " active).";
-      if (countEl) countEl.textContent = msg;
-      warnBox.style.display = "block";
+      if (countEl) countEl.textContent = "This event has " + total + " ticket" + (total === 1 ? "" : "s") + " on file.";
+      $("deleteTicketsWarn").style.display = "block";
       $("deleteWarnBox").classList.add("has-tickets");
       $("deleteWarnTitle").textContent = "Heads up — this event has sales";
     }
@@ -1167,7 +1159,6 @@ function closeDeleteModal(){
   $("deleteModal").classList.remove("open");
   document.body.style.overflow = "";
   pendingDeleteId = null;
-  pendingDeleteTicketCount = 0;
 }
 
 function wireDeleteModal(){
@@ -1270,4 +1261,4 @@ window.addEventListener("beforeunload", function(){
 })();
 </script>
 </body>
-  </html>
+                                                                                                              </html>
