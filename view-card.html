@@ -61,7 +61,6 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 .ls i{width:32px;height:32px;margin:0 auto 12px;color:var(--cy3);animation:sp 1.2s linear infinite;display:block}
 @keyframes sp{to{transform:rotate(360deg)}}
 
-/* TICKET */
 .ticket{background:var(--sf);border:1px solid var(--bd);border-radius:22px;overflow:hidden;box-shadow:0 20px 60px rgba(10,15,20,0.12);margin-bottom:16px}
 .ticket-hero{background:linear-gradient(135deg,var(--tc-1,#0a0f14),var(--tc-2,#1a2129));color:var(--tc-text,#fff);padding:22px 24px;position:relative;overflow:hidden}
 .ticket-hero::after{content:'';position:absolute;right:-60px;top:-60px;width:200px;height:200px;background:radial-gradient(circle,rgba(0,255,255,0.18),transparent 70%);pointer-events:none}
@@ -192,7 +191,6 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
             <span class="ticket-ref-value" id="ticketRef">NL-XXXX-XXXX-XXXX</span>
           </div>
 
-          <!-- SLOT A: live QR -->
           <div id="qrSlot" style="display:none">
             <div class="qr-wrap">
               <div class="qr-box" id="qrBox"></div>
@@ -200,7 +198,6 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
             </div>
           </div>
 
-          <!-- SLOT B: time-locked countdown -->
           <div id="lockedSlot" style="display:none">
             <div class="lock-wrap">
               <div class="lock-icon purple"><i data-lucide="hourglass"></i></div>
@@ -216,7 +213,6 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
             </div>
           </div>
 
-          <!-- SLOT C: pending payment -->
           <div id="pendingSlot" style="display:none">
             <div class="lock-wrap">
               <div class="lock-icon amber"><i data-lucide="lock"></i></div>
@@ -234,7 +230,6 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
             </div>
           </div>
 
-          <!-- SLOT D: cancelled / expired -->
           <div id="deadSlot" style="display:none">
             <div class="lock-wrap">
               <div class="lock-icon danger"><i data-lucide="x-circle"></i></div>
@@ -320,7 +315,6 @@ var collectionName = "events";
 var unlockTimer = null;
 var eventStartMs = null;
 
-/* ── HELPERS ── */
 function $(id){ return document.getElementById(id); }
 function refreshIcons(){ if(window.lucide) lucide.createIcons(); }
 function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
@@ -375,26 +369,58 @@ function buildTicketRef(eId, tId, existingRand){
   return "NL-" + short4(eId) + "-" + short4(tId) + "-" + rand;
 }
 
-/* ── TIERS — semantic keys ── */
+var TIER_DEFAULTS = { elite: "#1a202c", silver: "#cbd5e1", standard: "#00FFFF" };
+var TIER_DEFAULT_NAMES = { elite: "Elite", silver: "Silver", standard: "Standard" };
+
 function getTierName(ev, tierKey){
+  if (!tierKey) tierKey = "standard";
   if (ev && ev.tierNames && ev.tierNames[tierKey]) return ev.tierNames[tierKey];
-  var N = { elite:"Elite", silver:"Silver", standard:"Standard" };
-  return N[tierKey] || tierKey || "Standard";
+  return TIER_DEFAULT_NAMES[tierKey] || tierKey;
 }
 function getTierColour(ev, tierKey){
+  if (!tierKey) tierKey = "standard";
   if (ev && ev.tierColours && ev.tierColours[tierKey]) return ev.tierColours[tierKey];
-  var D = { elite:"#1a202c", silver:"#cbd5e1", standard:"#00FFFF" };
-  return D[tierKey] || "#00FFFF";
-}
-function getPaymentLink(ev, tierKey){
-  if (!ev || !ev.paymentLinks) return "";
-  return String(ev.paymentLinks[tierKey] || "").trim();
+  return TIER_DEFAULTS[tierKey] || "#00FFFF";
 }
 
-/* ── SEAT DISPLAY ── */
+/* ═══ PAYMENT LINK — defensive, prepends https:// if missing, logs everything ═══ */
+function getPaymentLink(ev, tierKey, qty){
+  try {
+    if (!ev || !ev.paymentLinks){
+      console.log('[getPaymentLink] no paymentLinks on event');
+      return "";
+    }
+    var pl = ev.paymentLinks[tierKey];
+    if (!pl){
+      console.log('[getPaymentLink] no link for tier "' + tierKey + '"');
+      return "";
+    }
+    var q = String(qty || 1);
+    var url = "";
+    if (typeof pl === "object" && pl !== null){
+      if (pl[q]) url = String(pl[q]).trim();
+      else if (pl["1"]) url = String(pl["1"]).trim();
+    } else if (typeof pl === "string"){
+      url = String(pl).trim();
+    }
+    if (!url){
+      console.log('[getPaymentLink] empty for tier "' + tierKey + '" qty ' + q);
+      return "";
+    }
+    if (url.indexOf("http://") !== 0 && url.indexOf("https://") !== 0){
+      url = "https://" + url;
+    }
+    console.log('[getPaymentLink] returning ' + url);
+    return url;
+  } catch(e){
+    console.error('[getPaymentLink] error:', e);
+    return "";
+  }
+}
+
 function formatSeatDisplay(t){
-  /* New tickets carry structured seat fields.
-     Old tickets only have `seat`. */
+  if (!t) return "";
+  if (t.generalAdmission) return "General admission";
   if (t.seatBlock || t.seatSection || t.seatTable || t.seatRow || t.seatNumber){
     var parts = [];
     if (t.seatBlock)   parts.push(t.seatBlock);
@@ -402,12 +428,11 @@ function formatSeatDisplay(t){
     if (t.seatTable)   parts.push("Table " + t.seatTable);
     if (t.seatRow)     parts.push("Row " + t.seatRow);
     if (t.seatNumber)  parts.push("Seat " + t.seatNumber);
-    return parts.join(" · ");
+    if (parts.length) return parts.join(" · ");
   }
   return t.seat || "";
 }
 
-/* ── COLOUR HELPERS ── */
 function hexToRgbObj(hex){
   var c = String(hex || "").replace("#","");
   if (c.length === 3) c = c[0]+c[0]+c[1]+c[1]+c[2]+c[2];
@@ -464,7 +489,6 @@ function applyHeroPalette(hex){
   hero.style.setProperty("--tc-logo", logo);
 }
 
-/* ── STATE VIEWS ── */
 function showLoading(){
   $("loadingState").style.display = "block";
   $("errorState").style.display = "none";
@@ -516,7 +540,6 @@ function isQrUnlocked(nowMs){
   return nowMs >= (eventStartMs - UNLOCK_BEFORE_MS);
 }
 
-/* ── RENDER TICKET ── */
 function renderTicket(){
   if (!ticketData || !eventData) return;
 
@@ -540,13 +563,11 @@ function renderTicket(){
 
   $("ticketRef").textContent = ref;
 
-  /* Info grid */
   $("guestName").textContent = t.guestName || t.buyerName || "Guest";
   $("tierName").textContent = getTierName(ev, t.tier);
   $("quantity").textContent = t.quantity || 1;
   $("amount").textContent = formatMoney(t.pricePaid || 0);
 
-  /* Seat row — GA, structured, or legacy */
   if (t.generalAdmission){
     $("seatRow").style.display = "block";
     $("seatValue").textContent = "General admission";
@@ -586,13 +607,23 @@ function showPendingSlot(t, ev, ref){
   var waMsg = buildPendingWhatsAppMessage(t, ev, ref);
   $("whatsappPendingBtn").href = "https://wa.me/" + WHATSAPP_NUMBER + "?text=" + encodeURIComponent(waMsg);
 
-  var link = getPaymentLink(ev, t.tier);
+  /* Use group size as qty for link lookup */
+  var qty = t.groupSize || t.quantity || 1;
+  console.log('[pendingSlot] looking up link for tier=' + t.tier + ' qty=' + qty);
+
+  var link = getPaymentLink(ev, t.tier, qty);
+  if (!link){
+    link = getPaymentLink(ev, t.tier, 1);
+  }
+
   var yocoBtn = $("yocoRetryBtn");
   if (link){
     yocoBtn.href = link;
     yocoBtn.style.display = "inline-flex";
+    console.log('[pendingSlot] Yoco button set to ' + link);
   } else {
     yocoBtn.style.display = "none";
+    console.log('[pendingSlot] no link available — Yoco button hidden');
   }
 }
 
@@ -648,7 +679,6 @@ function buildPendingWhatsAppMessage(t, ev, ref){
   return lines.join("\n");
 }
 
-/* ── QR ── */
 function renderQR(ref){
   var box = $("qrBox");
   if (!box) return;
@@ -679,7 +709,6 @@ function fallbackQRText(box, ref){
   box.appendChild(img);
 }
 
-/* ── UNLOCK COUNTDOWN ── */
 function startUnlockCountdown(){
   if (unlockTimer){ clearInterval(unlockTimer); unlockTimer = null; }
   if (!eventStartMs) return;
@@ -722,7 +751,6 @@ function startUnlockCountdown(){
   unlockTimer = setInterval(tick, 1000);
 }
 
-/* ── LOAD ── */
 async function loadTicket(){
   eventId = getParam("event") || getParam("id");
   ticketId = getParam("ticket");
@@ -771,7 +799,6 @@ async function loadTicket(){
   }
 }
 
-/* ── BOOT ── */
 document.addEventListener("DOMContentLoaded", function(){
   $("year").textContent = new Date().getFullYear();
   refreshIcons();
@@ -784,9 +811,9 @@ document.addEventListener("DOMContentLoaded", function(){
 });
 
 window.addEventListener("beforeunload", function(){
-  if (unlockTimer){ clearInterval(unlockTimer); }
+  if (unlockTimer){ clearInterval(unlockTimer); unlockTimer = null; }
 });
 })();
 </script>
 </body>
-</html>
+              </html>
