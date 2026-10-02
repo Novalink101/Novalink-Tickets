@@ -457,7 +457,7 @@ img{max-width:100%;display:block}
       </div>
 
       <p class="subtitle" style="margin-top:16px;margin-bottom:0;font-size:12px;text-align:center;">
-        After you tap <strong>I've paid</strong>, we'll confirm your payment on Yoco and unlock your QR code. This usually takes a few minutes.
+        After you tap <strong>I've paid</strong>, we'll confirm your payment on Yoco and unlock your QR code.
       </p>
     </div>
 
@@ -492,10 +492,7 @@ var db = firebase.firestore();
 var auth = firebase.auth();
 var EVENTS = "events";
 var PENDING_TTL_MS = 24 * 60 * 60 * 1000;
-
-/* ═══ HARD CAP: max 5 tickets per purchase, always ═══ */
 var MAX_QTY = 5;
-
 var WHATSAPP_NUMBER = "27696835184";
 
 var currentUser = null;
@@ -507,7 +504,6 @@ var guestNames = [""];
 var pendingTicket = null;
 var countdownTimer = null;
 
-/* seating */
 var seatingEnabled = false;
 var gaEnabled = false;
 var blocks = [];
@@ -515,7 +511,6 @@ var soldSeats = {};
 var assignment = null;
 var allTierUnits = [];
 
-/* ── HELPERS ── */
 function $(id){ return document.getElementById(id); }
 function refreshIcons(){ if(window.lucide) lucide.createIcons(); }
 function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
@@ -550,7 +545,6 @@ function formatEventDate(dateStr, timeStr){
   } catch(e){ return dateStr; }
 }
 
-/* TIERS */
 var ALL_TIER_KEYS = ["elite","silver","standard"];
 var TIER_FB_NAMES = { elite:"Elite", silver:"Silver", standard:"Standard" };
 var TIER_FB_COLORS = { elite:"#1a202c", silver:"#cbd5e1", standard:"#00FFFF" };
@@ -571,18 +565,24 @@ function getTierPrice(key){
   return isNaN(v) ? 0 : v;
 }
 
-/* Payment link — new format { tier: { "1": url, "2": url, ... } }, legacy { tier: url } */
+/* ═══ PAYMENT LINK — auto-prepend https:// if missing ═══ */
 function getPaymentLink(key, quantity){
   if (!eventData || !eventData.paymentLinks) return "";
   var pl = eventData.paymentLinks[key];
   if (!pl) return "";
   var q = String(quantity || 1);
+  var url = "";
   if (typeof pl === "object"){
-    if (pl[q]) return String(pl[q]).trim();
-    return "";
+    if (pl[q]) url = String(pl[q]).trim();
+    else if (pl["1"]) url = String(pl["1"]).trim();
+  } else {
+    url = String(pl || "").trim();
   }
-  if (q === "1") return String(pl || "").trim();
-  return "";
+  if (!url) return "";
+  if (url.indexOf("http://") !== 0 && url.indexOf("https://") !== 0){
+    url = "https://" + url;
+  }
+  return url;
 }
 
 function isTierActive(key){
@@ -599,7 +599,6 @@ function getActiveTierKeys(){
   if (!filtered.length && eventData.tierActive) return keys;
   return filtered;
 }
-function isSingleTier(){ return getActiveTierKeys().length === 1; }
 
 function getCheapestAvailableTier(){
   var keys = getActiveTierKeys().filter(tierHasSeats);
@@ -623,7 +622,6 @@ function hasTwoWords(name){
   return String(name).trim().split(/\s+/).filter(Boolean).length >= 2;
 }
 
-/* SEAT UNITS */
 function buildAllUnits(){
   allTierUnits = [];
   if (!seatingEnabled || !blocks.length) return;
@@ -655,19 +653,11 @@ function buildAllUnits(){
             : chairsPerTable;
 
           var unit = {
-            tier: tier,
-            blockIdx: blockIdx,
-            blockName: b.name,
-            blockLetter: blockLetter,
-            sectionIdx: (sections > 1) ? s : 0,
-            sectionLabel: sectionLabel,
-            kind: "table",
-            tableNumber: t,
-            tableLabel: tableLabel,
-            length: totalChairs,
-            seats: []
+            tier: tier, blockIdx: blockIdx, blockName: b.name, blockLetter: blockLetter,
+            sectionIdx: (sections > 1) ? s : 0, sectionLabel: sectionLabel,
+            kind: "table", tableNumber: t, tableLabel: tableLabel,
+            length: totalChairs, seats: []
           };
-
           for (var c = 1; c <= totalChairs; c++){
             var seatId = blockLetter + "-" + secPart + tableLabel + "-C" + String(c).padStart(2, "0");
             unit.seats.push({ num: c, id: seatId });
@@ -686,17 +676,10 @@ function buildAllUnits(){
         for (var r = 0; r < rowsPerSection; r++){
           var rowLetter = String.fromCharCode(65 + r);
           var unit2 = {
-            tier: tier,
-            blockIdx: blockIdx,
-            blockName: b.name,
-            blockLetter: blockLetter,
-            sectionIdx: (sections > 1) ? s2 : 0,
-            sectionLabel: sectionLabel2,
-            kind: "row",
-            rowNumber: r,
-            rowLabel: rowLetter,
-            length: seatsPerRow,
-            seats: []
+            tier: tier, blockIdx: blockIdx, blockName: b.name, blockLetter: blockLetter,
+            sectionIdx: (sections > 1) ? s2 : 0, sectionLabel: sectionLabel2,
+            kind: "row", rowNumber: r, rowLabel: rowLetter,
+            length: seatsPerRow, seats: []
           };
           for (var c2 = 1; c2 <= seatsPerRow; c2++){
             var seatId2 = blockLetter + "-" + secPart2 + rowLetter + "-" + String(c2).padStart(2, "0");
@@ -776,7 +759,6 @@ async function loadSoldSeats(){
   }
 }
 
-/* STATE VIEWS */
 function showLoading(){
   $("loadingState").style.display = "block";
   $("errorState").style.display = "none";
@@ -812,7 +794,6 @@ function updateSigninNote(){
   note.style.display = currentUser ? "none" : "flex";
 }
 
-/* RENDER EVENT */
 function renderEvent(){
   if (!eventData) return;
 
@@ -870,12 +851,8 @@ function renderEvent(){
 
   var keys = getActiveTierKeys();
   if (keys.length){
-    if (keys.length === 1){
-      selectTier(keys[0], true);
-    } else {
-      var pref = cheapest.key || keys[0];
-      selectTier(pref, true);
-    }
+    if (keys.length === 1) selectTier(keys[0], true);
+    else selectTier(cheapest.key || keys[0], true);
   }
 
   if (eventData.seatingPlanImage){
@@ -948,7 +925,6 @@ function selectTier(tierKey, silent){
 }
 
 function clampQtyToTier(){
-  /* HARD CAP: always max 5 */
   var max = maxQtyForTier(selectedTier);
   if (qty > max) qty = max;
   if (qty < 1) qty = 1;
@@ -957,13 +933,11 @@ function clampQtyToTier(){
 
 function maxQtyForTier(tierKey){
   if (!tierKey) return 1;
-  /* HARD CAP: never above 5, regardless of tier or block layout */
   if (!seatingEnabled) return MAX_QTY;
 
   var staticCap = maxRowSizeInTier(tierKey) || 1;
   if (staticCap > MAX_QTY) staticCap = MAX_QTY;
 
-  /* dynamic cap: largest free consecutive run in this tier */
   var dynamicCap = 0;
   allTierUnits.forEach(function(u){
     if (u.tier !== tierKey) return;
@@ -980,7 +954,6 @@ function maxQtyForTier(tierKey){
     }
   });
 
-  /* GA tier — no unit-based cap, so just apply the hard cap */
   if (dynamicCap === 0 && gaEnabled){
     var hasGA = blocks.some(function(b){
       return (b.tier || "standard") === tierKey && b.preset === "general-admission";
@@ -1021,7 +994,6 @@ function updateSidebarTotal(){
   $("sidebarTotal").textContent = total > 0 ? formatMoney(total) : "Free";
 }
 
-/* ASSIGNMENT */
 function recomputeAssignment(skipUnitKey){
   if (!seatingEnabled || !selectedTier){
     $("assignBox").style.display = "none";
@@ -1064,20 +1036,10 @@ function recomputeAssignment(skipUnitKey){
   }
 
   assignment = {
-    ga: false,
-    tier: u.tier,
-    blockIdx: u.blockIdx,
-    blockName: u.blockName,
-    sectionIdx: u.sectionIdx,
-    sectionLabel: u.sectionLabel,
-    kind: u.kind,
-    rowNumber: u.rowNumber,
-    rowLabel: u.rowLabel,
-    tableNumber: u.tableNumber,
-    startNum: startNum,
-    endNum: endNum,
-    seats: seatIds,
-    unitKey: found.unitKey
+    ga: false, tier: u.tier, blockIdx: u.blockIdx, blockName: u.blockName,
+    sectionIdx: u.sectionIdx, sectionLabel: u.sectionLabel, kind: u.kind,
+    rowNumber: u.rowNumber, rowLabel: u.rowLabel, tableNumber: u.tableNumber,
+    startNum: startNum, endNum: endNum, seats: seatIds, unitKey: found.unitKey
   };
 
   $("assignBox").style.display = "block";
@@ -1098,29 +1060,21 @@ function renderAssignmentSummary(){
   if (assignment.sectionLabel) parts.push(assignment.sectionLabel);
   if (assignment.kind === "row"){
     parts.push("Row " + assignment.rowLabel);
-    if (assignment.startNum === assignment.endNum){
-      parts.push("Seat " + assignment.startNum);
-    } else {
-      parts.push("Seats " + assignment.startNum + "–" + assignment.endNum);
-    }
+    if (assignment.startNum === assignment.endNum) parts.push("Seat " + assignment.startNum);
+    else parts.push("Seats " + assignment.startNum + "–" + assignment.endNum);
   } else {
     parts.push("Table " + assignment.tableNumber);
-    if (assignment.startNum === assignment.endNum){
-      parts.push("Chair " + assignment.startNum);
-    } else {
-      parts.push("Chairs " + assignment.startNum + "–" + assignment.endNum);
-    }
+    if (assignment.startNum === assignment.endNum) parts.push("Chair " + assignment.startNum);
+    else parts.push("Chairs " + assignment.startNum + "–" + assignment.endNum);
   }
   $("assignValue").textContent = parts.join(" · ");
 
   var sub = $("assignSub");
   if (sub){
-    sub.textContent = assignment.seats.length + " seat" +
-      (assignment.seats.length === 1 ? "" : "s") + " held for you";
+    sub.textContent = assignment.seats.length + " seat" + (assignment.seats.length === 1 ? "" : "s") + " held for you";
   }
 }
 
-/* BUY MODAL */
 function openBuyModal(){
   if (!currentUser){
     showToast("Please sign in to reserve tickets.", "error", 3500);
@@ -1289,7 +1243,6 @@ function validateGuestForm(){
   return ok;
 }
 
-/* CREATE PENDING TICKETS */
 async function createPendingTickets(){
   if (!currentUser) throw new Error("Sign in required");
   if (!validateGuestForm()) throw new Error("__validation__");
@@ -1309,8 +1262,6 @@ async function createPendingTickets(){
   var expiresAtMs = nowMs + PENDING_TTL_MS;
   var buyerUid = currentUser.uid;
   var groupId = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-
-  /* Payment link picked based on quantity */
   var paymentLink = getPaymentLink(selectedTier, qty) || "";
 
   var createdTickets = [];
@@ -1360,16 +1311,10 @@ async function createPendingTickets(){
     batch.set(eventRef.collection("tickets").doc(ticketId), ticketData);
 
     createdTickets.push({
-      ticketId: ticketId,
-      reference: reference,
-      rand: rand,
-      tier: selectedTier,
-      tierName: getTierName(selectedTier),
-      guestName: guestName,
-      guestIndex: g,
-      seat: seatId,
-      amount: price,
-      expiresAtMs: expiresAtMs
+      ticketId: ticketId, reference: reference, rand: rand,
+      tier: selectedTier, tierName: getTierName(selectedTier),
+      guestName: guestName, guestIndex: g, seat: seatId,
+      amount: price, expiresAtMs: expiresAtMs
     });
   }
 
@@ -1382,17 +1327,11 @@ async function createPendingTickets(){
   var primary = createdTickets[0];
 
   return {
-    groupId: groupId,
-    qty: qty,
-    tickets: createdTickets,
-    reference: primary.reference,
-    ticketId: primary.ticketId,
-    amount: totalAmount,
-    tier: selectedTier,
-    tierName: getTierName(selectedTier),
-    expiresAtMs: expiresAtMs,
-    guestNames: guestNames.slice(0, qty),
-    guestEmail: buyerEmail,
+    groupId: groupId, qty: qty, tickets: createdTickets,
+    reference: primary.reference, ticketId: primary.ticketId,
+    amount: totalAmount, tier: selectedTier,
+    tierName: getTierName(selectedTier), expiresAtMs: expiresAtMs,
+    guestNames: guestNames.slice(0, qty), guestEmail: buyerEmail,
     seats: seatingEnabled && assignment && !assignment.ga ? assignment.seats.slice(0, qty) : []
   };
 }
@@ -1412,7 +1351,6 @@ function buildTicketRef(eId, tId, rand){
   return "NL-" + short4(eId) + "-" + short4(tId) + "-" + (rand || rand4());
 }
 
-/* PAYMENT */
 async function goToPaymentStep(){
   if (!validateGuestForm()){
     showToast("Please fill in the highlighted fields.", "error", 2500);
@@ -1475,7 +1413,6 @@ function renderPaymentStep(bundle){
   $("refInline").textContent = bundle.reference;
   $("amountToPay").textContent = bundle.amount > 0 ? formatMoney(bundle.amount) : "Free";
 
-  /* Payment link picked by quantity */
   var link = getPaymentLink(bundle.tier, bundle.qty);
   var yocoBtn = $("yocoBtn");
   var waBtn = $("whatsappBtn");
@@ -1577,7 +1514,6 @@ function fallbackCopy(text){
   document.body.removeChild(ta);
 }
 
-/* LOAD EVENT */
 async function loadEvent(){
   eventId = getParam("id");
   if (!eventId){ showError("Missing event", "No event ID was provided in the link."); return; }
@@ -1614,7 +1550,6 @@ async function loadEvent(){
   }
 }
 
-/* WIRE UP */
 document.addEventListener("DOMContentLoaded", function(){
   $("year").textContent = new Date().getFullYear();
   refreshIcons();
@@ -1666,4 +1601,4 @@ window.addEventListener("beforeunload", function(){
 })();
 </script>
 </body>
-      </html>
+        </html>
