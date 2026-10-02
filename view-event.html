@@ -4,7 +4,7 @@
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="theme-color" content="#0a0f14" />
-<title>Create an Event · Novalink Studio</title>
+<title>Event · Novalink</title>
 <script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
@@ -15,697 +15,464 @@
   --bg:#f6f8fb;--sf:#ffffff;--sf2:#f1f4f8;
   --bd:#e4e9f0;--bd2:#d3dbe5;
   --tx:#0a0f14;--tx2:#2b3644;--mut:#6b7787;
-  --nv:#1e2f4d;--ink:#0a0f14;
-  --dg:#dc2626;--dgf:#fef2f2;--sv:#059669;--svf:#ecfdf5;
+  --rd:14px;--font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --dg:#dc2626;--dgf:#fef2f2;--sv:#059669;--svf:#ecfdf5;--nv:#1e2f4d;
   --am:#f59e0b;--amf:#fffbeb;
-  --rd:14px;--ease:cubic-bezier(0.25,0.8,0.25,1);
-  --font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --ease:cubic-bezier(0.25,0.8,0.25,1);
   --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--font);background:var(--bg);color:var(--tx);line-height:1.6;min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
-.container{max-width:1400px;margin:0 auto;padding:0 24px;width:100%}
-h1,h2,h3,h4{line-height:1.15;font-weight:700}
+.container{max-width:1080px;margin:0 auto;padding:0 24px;width:100%}
+h1,h2,h3{line-height:1.15;font-weight:700}
 a{color:inherit;text-decoration:none}
-button{font:inherit;font-family:inherit;cursor:pointer}
-input,select,textarea{font-family:inherit;font-size:14px}
+button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation}
+img{max-width:100%;display:block}
 
-.site-header{background:var(--sf);border-bottom:1px solid var(--bd);padding:14px 0;position:sticky;top:0;z-index:40}
-.hdr{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.logo{display:inline-flex;align-items:center;gap:10px}
-.logo svg{width:30px;height:37px;display:block}
-.logo b{font-weight:800;font-size:1.1rem;color:var(--nv)}
-.studio-badge{background:var(--ink);color:var(--cy);font-size:10.5px;font-weight:900;padding:5px 11px;border-radius:99px;text-transform:uppercase;letter-spacing:.06em}
+.logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none;margin-left:12px}
+.logo .mark{width:34px;height:42px;flex-shrink:0}
+.logo .wm{font-weight:800;font-size:1.1rem;color:var(--nv)}
 
-main{flex:1;padding:24px 0 64px}
-.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:start}
-.split-wide{display:grid;grid-template-columns:minmax(0,1fr);gap:20px}
-@media (max-width:960px){.split{grid-template-columns:1fr;gap:20px}}
-
-.card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rd);padding:26px;box-shadow:0 6px 20px rgba(10,15,20,.05);min-width:0}
-.card-h{text-align:center;margin-bottom:22px}
-.card-h h1{font-size:1.5rem;color:var(--nv);margin-bottom:6px}
-.card-h p{color:var(--mut);font-size:13.5px}
-
-/* ═══ STEPS ═══ */
-.steps-wrap{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rd);padding:14px;margin-bottom:22px;box-shadow:0 6px 20px rgba(10,15,20,.04)}
-.steps{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-bottom:12px}
-@media (max-width:820px){.steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:480px){.steps{grid-template-columns:1fr}}
-.step{display:flex;align-items:center;gap:10px;padding:11px 13px;background:var(--bg);border:2px solid var(--bd2);border-radius:11px;cursor:pointer;font-size:12.5px;font-weight:800;color:var(--tx2);transition:.2s;text-align:left;min-width:0}
-.step:hover{border-color:var(--cy)}
-.step.active{background:var(--ink);color:#fff;border-color:var(--ink);box-shadow:0 6px 18px rgba(10,15,20,.18)}
-.step.active .step-num{background:var(--cy);color:#04161c}
-.step.done{border-color:var(--cy2);background:var(--cyf);color:var(--cy3)}
-.step.done .step-num{background:var(--cy2);color:#04161c}
-.step-num{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--bd2);color:var(--tx2);font-size:12px;font-weight:900;flex-shrink:0}
-.step-lbl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.progress{height:6px;background:var(--bg);border-radius:99px;overflow:hidden}
-.progress-fill{height:100%;background:linear-gradient(90deg,var(--cy),var(--cy2));border-radius:99px;transition:width .35s var(--ease)}
-.progress-text{display:flex;justify-content:space-between;margin-top:8px;font-size:11px;font-weight:800;color:var(--mut);letter-spacing:.04em;text-transform:uppercase}
-
-.panel{display:none;animation:fade .3s var(--ease)}
-.panel.active{display:block}
-@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
-
-/* ═══ FORMS ═══ */
-.fg{margin-bottom:16px;min-width:0}
-.fg label{display:block;font-size:11px;font-weight:800;color:var(--tx2);margin-bottom:7px;text-transform:uppercase;letter-spacing:.06em}
-.fg input,.fg select,.fg textarea{width:100%;padding:11px 14px;background:var(--bg);border:1px solid var(--bd2);border-radius:10px;color:var(--tx);font-size:14px;transition:.2s;min-width:0}
-.fg input:focus,.fg select:focus,.fg textarea:focus{outline:none;border-color:var(--cy);background:#fff;box-shadow:0 0 0 3px rgba(0,255,255,.15)}
-.fg textarea{resize:vertical;min-height:80px}
-.fg select{appearance:none;padding-right:38px;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7787' stroke-width='3'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:12px;cursor:pointer}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
-@media (max-width:600px){.row2,.row3{grid-template-columns:1fr}}
-.hint{font-size:11.5px;color:var(--mut);margin-top:6px;font-style:italic}
-.hint.rec{color:var(--cy3);font-weight:800;font-style:normal}
-
-.divider{margin:22px 0;border-top:1px dashed var(--bd);position:relative;text-align:center}
-.divider span{background:var(--sf);padding:0 12px;font-size:11px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;position:relative;top:-10px}
-
-/* ═══ BUTTONS ═══ */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 20px;border-radius:11px;font-weight:800;font-size:13.5px;border:1px solid transparent;cursor:pointer;transition:.15s;white-space:nowrap;font-family:inherit;text-decoration:none}
-.btn i{width:16px;height:16px}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:12px;font-weight:600;font-size:14px;border:1px solid transparent;cursor:pointer;transition:all 0.2s var(--ease);white-space:nowrap;font-family:inherit;text-decoration:none}
+.btn svg,.btn i{width:17px;height:17px}
 .btn-accent{background:linear-gradient(135deg,var(--cy),var(--cy2));color:#04161c}
-.btn-accent:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,255,255,.35)}
-.btn-ghost{background:transparent;color:var(--tx2);border-color:var(--bd2)}
+.btn-accent:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,255,255,0.35)}
+.btn-ghost{background:transparent;color:var(--tx2);border:1px solid var(--bd2)}
 .btn-ghost:hover:not(:disabled){background:var(--sf2);border-color:var(--cy);color:var(--cy3)}
-.btn-danger{background:var(--dgf);color:var(--dg);border-color:#fecaca}
-.btn-danger:hover:not(:disabled){background:var(--dg);color:#fff}
+.btn-whatsapp{background:#25D366;color:#fff;border-color:#25D366}
+.btn-whatsapp:hover{background:#1eb855;transform:translateY(-2px);box-shadow:0 8px 24px rgba(37,211,102,0.35)}
 .btn-block{width:100%}
-.btn-sm{padding:8px 14px;font-size:12.5px;border-radius:9px}
-.btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
-.step-nav{display:flex;justify-content:space-between;gap:12px;margin-top:24px;padding-top:18px;border-top:1px dashed var(--bd)}
-.step-nav .btn{flex:1;max-width:220px}
-@media (max-width:520px){.step-nav{flex-direction:column}.step-nav .btn{max-width:none}}
+.btn-lg{padding:15px 26px;font-size:15px}
+.btn:disabled{opacity:0.55;cursor:not-allowed;transform:none!important}
 
-/* ═══ PLAN CARDS ═══ */
-.plan-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
-.plan-card{position:relative;padding:16px;background:var(--sf);border:2px solid var(--bd2);border-radius:12px;cursor:pointer;transition:.2s;display:flex;flex-direction:column;gap:4px;overflow:hidden}
-.plan-card:hover{border-color:var(--cy);transform:translateY(-2px)}
-.plan-card.selected{background:var(--ink);color:#fff;border-color:var(--ink);box-shadow:0 8px 20px rgba(10,15,20,.2)}
-.plan-card.selected .plan-name,.plan-card.selected .plan-fee,.plan-card.selected .plan-desc{color:#fff}
-.plan-card.selected .plan-fee small{color:var(--cy)}
-.plan-card input{position:absolute;opacity:0;pointer-events:none}
-.plan-badge{position:absolute;top:0;right:0;background:var(--cy2);color:#04161c;font-size:8.5px;font-weight:900;padding:3px 8px;border-radius:0 10px 0 8px;letter-spacing:.06em;text-transform:uppercase}
-.plan-name{font-size:13px;font-weight:800}
-.plan-fee{font-size:22px;font-weight:900;color:var(--cy3);line-height:1}
-.plan-fee small{font-size:11px;font-weight:700;color:var(--mut);margin-left:2px}
-.plan-desc{font-size:10.5px;color:var(--mut);line-height:1.4;margin-top:4px}
+.site-header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,0.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--bd);padding:12px 0}
+.header-inner{display:flex;align-items:center;justify-content:space-between;gap:12px}
 
-/* ═══ TIERS ═══ */
-.tier-list{display:flex;flex-direction:column;gap:8px}
-.tier-row{display:grid;grid-template-columns:20px minmax(80px,1.2fr) 80px minmax(110px,1fr) 90px;gap:10px;align-items:center;padding:10px 12px;background:var(--bg);border:1px solid var(--bd2);border-radius:10px;min-width:0}
-@media (max-width:640px){.tier-row{grid-template-columns:20px 1fr;grid-auto-rows:auto}.tier-row .tier-qty,.tier-row .curr,.tier-row .tier-rev{grid-column:2 / -1}}
-.tier-swatch{width:20px;height:20px;border-radius:6px;border:1px solid rgba(0,0,0,.15);flex-shrink:0}
-.tier-name{padding:8px 10px;font-size:13px;font-weight:800;background:#fff;border:1px solid var(--bd2);border-radius:8px;min-width:0;width:100%}
-.tier-name[readonly]{background:var(--sf2);color:var(--mut);cursor:not-allowed}
-.tier-qty{font-size:11px;font-weight:800;color:var(--cy3);background:var(--cyf);padding:5px 9px;border-radius:6px;text-align:center;white-space:nowrap}
-.curr{display:flex;align-items:stretch;width:100%}
-.curr-prefix{display:inline-flex;align-items:center;justify-content:center;padding:0 12px;background:var(--bg);border:1px solid var(--bd2);border-right:none;border-radius:10px 0 0 10px;font-weight:800;color:var(--cy3);font-size:14px}
-.curr input{border-top-left-radius:0!important;border-bottom-left-radius:0!important;padding:8px 10px;font-weight:800}
-.tier-rev{font-size:12.5px;font-weight:800;color:var(--tx2);text-align:right;font-family:var(--mono);white-space:nowrap}
-.tier-color-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
-.tier-color-item{display:flex;align-items:center;gap:10px;padding:9px 11px;background:var(--bg);border:1px solid var(--bd2);border-radius:10px}
-.tier-color-swatch{width:20px;height:20px;border-radius:6px;flex-shrink:0}
-.tier-color-item label{flex:1;font-size:12px;font-weight:700;color:var(--tx2);margin:0;text-transform:none;letter-spacing:0}
-.tier-color-item input[type=color]{width:44px;height:32px;padding:2px 4px;border-radius:8px;border:1px solid var(--bd2);background:#fff;cursor:pointer}
-.tier-color-item input[type=color]:disabled{opacity:.5;cursor:not-allowed}
+.page{flex:1;padding:28px 0 64px}
 
-.locked-note{display:flex;gap:10px;padding:11px 14px;background:var(--amf);border:1px solid #fde68a;border-radius:10px;margin-bottom:14px;font-size:12.5px;color:#92400e;line-height:1.55;font-weight:600}
-.locked-note i{width:15px;height:15px;flex-shrink:0;margin-top:2px}
-.locked-note strong{font-weight:900}
-
-/* ═══════════════════════════════════════════════════
-   SEATING EDITOR (Step 4) — picture + numeric blocks
-   ═══════════════════════════════════════════════════ */
-.seat-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:12px;background:var(--bg);border:1px solid var(--bd2);border-radius:12px;margin-bottom:14px}
-.mode-pill{padding:9px 16px;border-radius:99px;font-size:12.5px;font-weight:800;background:#fff;border:1.5px solid var(--bd2);color:var(--tx2);cursor:pointer;transition:.15s}
-.mode-pill.active{background:var(--ink);color:#fff;border-color:var(--ink)}
-.mode-pill:disabled{opacity:.4;cursor:not-allowed}
-.seat-spacer{flex:1}
-
-/* Picture upload */
-.upload-box{
-  position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;
-  padding:32px 20px;border:2px dashed var(--bd2);border-radius:14px;background:var(--bg);
-  cursor:pointer;transition:.15s;text-align:center;min-height:160px;
-}
-.upload-box:hover{border-color:var(--cy);background:var(--cyf)}
-.upload-box.has-image{padding:0;border-style:solid;border-color:var(--cy);background:#fff;min-height:0}
-.upload-box i{width:34px;height:34px;color:var(--cy3);margin-bottom:10px}
-.upload-box .up-title{font-size:14px;font-weight:900;color:var(--nv);margin-bottom:4px}
-.upload-box .up-sub{font-size:12px;color:var(--mut);max-width:340px;line-height:1.5}
-.upload-box input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
-.upload-preview{position:relative;width:100%;border-radius:12px;overflow:hidden}
-.upload-preview img{display:block;width:100%;height:auto;max-height:420px;object-fit:contain;background:#f6f8fb}
-.upload-remove{
-  position:absolute;top:10px;right:10px;
-  background:rgba(10,15,20,.75);color:#fff;border:none;
-  padding:7px 12px;border-radius:99px;font-size:11.5px;font-weight:800;
-  display:inline-flex;align-items:center;gap:5px;font-family:inherit;
-}
-.upload-remove:hover{background:var(--dg)}
-.upload-remove i{width:13px;height:13px}
-
-/* Blocks editor */
-.block-tabs{display:flex;flex-wrap:wrap;gap:6px;padding:10px;background:var(--bg);border:1px solid var(--bd2);border-radius:12px;margin-bottom:14px;align-items:center}
-.block-tab{padding:8px 14px;border-radius:99px;font-size:12px;font-weight:800;color:var(--tx2);background:#fff;border:1.5px solid var(--bd2);cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:6px;font-family:inherit}
-.block-tab:hover{border-color:var(--cy)}
-.block-tab.active{background:var(--ink);color:#fff;border-color:var(--ink)}
-.block-tab .cnt{font-size:10px;font-weight:900;background:rgba(0,0,0,.08);padding:1px 7px;border-radius:99px}
-.block-tab.active .cnt{background:rgba(0,255,255,.2);color:var(--cy)}
-.block-tab-add{padding:8px 14px;border-radius:99px;font-size:12px;font-weight:800;color:var(--cy3);background:transparent;border:1.5px dashed var(--cy);cursor:pointer;font-family:inherit}
-.block-tab-add:hover{background:var(--cyf)}
-.block-tab-add:disabled{opacity:.4;cursor:not-allowed;border-style:solid;border-color:var(--bd2);color:var(--mut)}
-
-.block-editor{background:var(--bg);border:1px solid var(--bd2);border-radius:12px;padding:16px;margin-bottom:14px}
-.block-editor-h{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
-.block-editor-h h3{font-size:14px;color:var(--nv);font-weight:800}
-.block-editor-actions{display:flex;gap:6px;flex-wrap:wrap}
-
-.total-chip{display:inline-flex;align-items:center;gap:6px;background:var(--cyf);color:var(--cy3);font-size:11.5px;font-weight:900;padding:6px 11px;border-radius:8px;margin-top:12px;font-family:var(--mono)}
-
-/* Live preview — simple numbered grid */
-.seat-preview{background:#fafbfc;border:1px solid var(--bd);border-radius:12px;padding:22px 16px;margin-top:14px;overflow-x:auto}
-.seat-preview-inner{display:flex;flex-direction:column;gap:18px;min-width:max-content}
-.preview-block{background:#fff;border:1.5px solid var(--cy);border-radius:12px;padding:16px 18px 18px}
-.preview-block:last-child{margin-bottom:0}
-.preview-block-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:12px;flex-wrap:wrap}
-.preview-block-title{font-size:14px;font-weight:900;color:var(--cy3);letter-spacing:.02em}
-.preview-block-meta{font-size:11.5px;font-weight:700;color:var(--mut)}
-.preview-rows{display:flex;flex-direction:column;gap:6px}
-.preview-row{display:flex;align-items:center;gap:8px}
-.preview-row-lbl{width:26px;font-family:var(--mono);font-size:11.5px;font-weight:900;color:var(--mut);text-align:right;flex-shrink:0}
-.preview-row-seats{display:flex;gap:4px;flex-wrap:nowrap}
-.preview-row-tier{margin-left:12px;font-size:10.5px;font-weight:900;color:var(--mut);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
-.seat-num{width:26px;height:26px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:900;color:#fff;border:1px solid rgba(0,0,0,.15);flex-shrink:0}
-.seat-num.light{color:#0a0f14}
-.preview-tables{display:flex;flex-wrap:wrap;gap:26px;justify-content:flex-start;padding:8px 4px}
-.table-wrap{position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.table-shape{position:relative;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:900;color:#fff;border:1px solid rgba(0,0,0,.15);border-radius:50%}
-.table-shape.light{color:#0a0f14}
-.chair-dot{position:absolute;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9.5px;font-weight:900;color:#fff;border:1px solid rgba(0,0,0,.15);transform:translate(-50%,-50%)}
-.chair-dot.light{color:#0a0f14}
-
-/* Fullscreen viewer */
-.fs-overlay{position:fixed;inset:0;background:#0a0f14;z-index:9999;display:none;flex-direction:column;padding:12px}
-.fs-overlay.open{display:flex}
-.fs-hdr{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;color:#fff;flex-wrap:wrap}
-.fs-hdr h2{color:#fff;font-size:0.95rem;font-weight:900;letter-spacing:.06em;text-transform:uppercase}
-.fs-hdr h2 span{color:var(--cy)}
-.fs-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.fs-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;padding:7px 12px;border-radius:8px;font-weight:700;font-size:11.5px;cursor:pointer;font-family:inherit}
-.fs-btn:hover{background:var(--cy);color:#04161c;border-color:var(--cy)}
-.fs-btn.close:hover{background:var(--dg);color:#fff;border-color:var(--dg)}
-.fs-body{flex:1;min-height:0;overflow:auto;background:#f6f8fb;border-radius:10px;padding:16px;-webkit-overflow-scrolling:touch}
-@media (max-width:600px){
-  .fs-overlay{padding:8px}
-  .fs-hdr h2{font-size:0.82rem}
-  .fs-btn{padding:6px 10px;font-size:11px}
-  .fs-body{padding:10px}
-}
-
-/* ═══ TICKET PREVIEW ═══ */
-.ticket-wrap{perspective:1600px}
-.ticket{padding:22px;border-radius:18px;box-shadow:0 22px 44px -12px rgba(0,0,0,.22);display:flex;flex-direction:column;gap:14px;position:relative;overflow:hidden;border:1px solid rgba(0,0,0,.05);background:linear-gradient(135deg,var(--tkt-bg1,#e6ffff),var(--tkt-bg2,#b3ffff));color:var(--tkt-text,#0a0f14)}
-.ticket-h{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
-.ticket-logo{font-weight:800;font-size:12px;letter-spacing:1.5px;color:var(--tkt-logo,var(--nv))}
-.ticket-badges{display:flex;gap:6px}
-.ticket-badge{font-size:9px;font-weight:900;padding:3px 8px;border-radius:4px;letter-spacing:.5px;text-transform:uppercase;background:var(--tkt-badge-bg,rgba(0,0,0,.08));color:var(--tkt-badge-text,#4a5568)}
-.ticket-body{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;min-width:0}
-.ticket-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
-.ticket-title{font-size:19px;font-weight:900;line-height:1.1;text-transform:uppercase;letter-spacing:-.3px;word-break:break-word}
-.ticket-meta{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--tkt-muted,rgba(0,0,0,.6));word-break:break-word}
-.ticket-guest{font-size:14px;font-weight:800;margin-top:6px;word-break:break-word}
-.ticket-seat{font-size:11px;font-weight:600;color:var(--tkt-muted,rgba(0,0,0,.6))}
-.ticket-qr{width:64px;height:64px;background:#fff;border-radius:8px;flex-shrink:0}
-.ticket-loc{display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:600;color:var(--tkt-muted,rgba(0,0,0,.6))}
-.ticket-loc i{width:12px;height:12px}
-.ticket-barcode{background:#fff;border-radius:6px;padding:7px 8px;display:flex;flex-direction:column;align-items:center;gap:3px}
-.barcode{width:100%;height:26px;background:repeating-linear-gradient(to right,#000 0 2px,#fff 2px 4px,#000 4px 6px,#fff 6px 10px,#000 10px 12px,#fff 12px 16px)}
-.barcode-num{font-family:var(--mono);font-size:9px;font-weight:700;color:#000;letter-spacing:1.5px}
-
-/* ═══ REVENUE ═══ */
-.rev-card{background:linear-gradient(135deg,#0a0f14,#1a2129);color:#fff;border-radius:14px;padding:20px;box-shadow:0 12px 30px rgba(10,15,20,.2);border:1px solid #1f2937}
-.rev-head{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#67e8f9;margin-bottom:14px}
-.rev-head i{width:15px;height:15px}
-.rev-row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;font-size:13.5px;color:#c9d2dd;border-bottom:1px solid rgba(255,255,255,.06)}
-.rev-row:last-child{border-bottom:none}
-.rev-row.net{padding-top:14px;margin-top:6px;border-top:1px dashed rgba(0,255,255,.3);font-size:15px}
-.rev-row.net span:first-child{color:#fff;font-weight:900;text-transform:uppercase;letter-spacing:.05em;font-size:12px}
-.rev-amt{font-family:var(--mono);font-weight:800;color:#fff;font-size:14px}
-.rev-row.fee .rev-amt{color:#fbbf24}
-.rev-row.net .rev-amt{color:var(--cy);font-size:22px;font-weight:900}
-.rev-plan{color:var(--cy);font-weight:800}
-.rev-warn{margin-top:10px;background:#7f1d1d;color:#fecaca;padding:9px 12px;border-radius:8px;font-size:11.5px;font-weight:700;line-height:1.5;display:none}
-.rev-warn.show{display:block}
-
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
-.stat{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;position:relative;overflow:hidden}
-.stat::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--cy)}
-.stat.rev::before{background:var(--sv)}
-.stat.fee::before{background:var(--am)}
-.stat .lbl{font-size:10px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin-bottom:4px}
-.stat .val{font-size:22px;font-weight:900;color:var(--nv);font-family:var(--mono);letter-spacing:-.5px;line-height:1}
-.stat.rev .val{color:var(--sv)}
-.stat.fee .val{color:#b45309}
-
-/* ═══ MODAL ═══ */
-.modal-wrap{position:fixed;inset:0;background:rgba(10,15,20,.6);backdrop-filter:blur(8px);display:none;align-items:flex-start;justify-content:center;z-index:100;padding:24px 20px;overflow-y:auto}
-.modal-wrap.open{display:flex}
-.modal{background:var(--sf);border:1px solid var(--bd);border-radius:18px;max-width:460px;width:100%;padding:30px 26px;position:relative;margin:auto;box-shadow:0 24px 60px rgba(10,15,20,.25)}
-.modal h3{text-align:center;margin-bottom:8px;font-size:1.3rem}
-.modal .sub{text-align:center;color:var(--mut);font-size:13.5px;margin-bottom:20px}
-.modal-close{position:absolute;top:14px;right:14px;background:var(--bg);border:1px solid var(--bd);color:var(--tx2);padding:6px;border-radius:10px;display:flex}
-.modal-close i{width:16px;height:16px}
-.modal-close:hover{background:var(--dgf);color:var(--dg)}
-.tabs{display:flex;gap:6px;background:var(--bg);border:1px solid var(--bd);border-radius:12px;padding:4px;margin-bottom:20px}
-.tab{flex:1;padding:10px;background:transparent;border:none;border-radius:9px;color:var(--mut);font-size:13px;font-weight:700;text-transform:uppercase;cursor:pointer}
-.tab.active{background:var(--ink);color:#fff}
-
-/* ═══ TOAST ═══ */
-#toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,18px);background:var(--ink);color:var(--cy);font-size:13px;font-weight:800;padding:13px 22px;border-radius:99px;box-shadow:0 14px 34px rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:.22s;z-index:20000;max-width:90vw;text-align:center;display:flex;align-items:center;gap:9px}
-#toast.show{opacity:1;transform:translate(-50%,0)}
-#toast svg{width:15px;height:15px;flex-shrink:0}
-#toast.success{background:#065f46;color:#d1fae5}
-#toast.error{background:#991b1b;color:#fef2f2}
-
-.spin{width:14px;height:14px;border:2px solid rgba(0,0,0,.2);border-top-color:#04161c;border-radius:50%;animation:sp .7s linear infinite;display:inline-block}
+.state{text-align:center;padding:60px 24px;max-width:520px;margin:0 auto}
+.state .ic{width:72px;height:72px;border-radius:50%;background:var(--dgf);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;color:var(--dg)}
+.state .ic i{width:32px;height:32px}
+.state .ic.amber{background:var(--amf);color:var(--am)}
+.state h2{margin-bottom:8px;color:var(--nv)}
+.state p{color:var(--mut);margin-bottom:22px;font-size:14.5px;line-height:1.6}
+.state .actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.ls i{width:32px;height:32px;margin:0 auto 12px;color:var(--cy3);animation:sp 1.2s linear infinite;display:block}
 @keyframes sp{to{transform:rotate(360deg)}}
+
+.hero{background:#0a0f14;color:#fff;position:relative;overflow:hidden;border-radius:18px;margin-bottom:24px}
+.hero-inner{position:relative;z-index:2;padding:32px 32px 28px}
+@media (max-width:640px){.hero-inner{padding:22px 20px}}
+.hero-cover{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0.28;z-index:0}
+.hero::after{content:'';position:absolute;inset:0;background:linear-gradient(180deg,rgba(10,15,20,0.4) 0%,rgba(10,15,20,0.92) 100%);z-index:1;pointer-events:none}
+.hero-badges{display:flex;gap:8px;margin-bottom:14px;flex-wrap:wrap;position:relative;z-index:2}
+.hero-badge{display:inline-flex;align-items:center;gap:6px;font-size:10.5px;font-weight:900;letter-spacing:0.08em;text-transform:uppercase;padding:5px 11px;border-radius:99px;background:rgba(0,255,255,0.15);border:1px solid rgba(0,255,255,0.4);color:#67e8f9}
+.hero-badge.type{background:rgba(255,255,255,0.12);border-color:rgba(255,255,255,0.2);color:#fff}
+.hero h1{font-size:clamp(1.8rem,4.4vw,2.6rem);font-weight:900;line-height:1.08;letter-spacing:-0.02em;margin-bottom:12px;color:#fff;position:relative;z-index:2}
+.hero-tagline{color:rgba(255,255,255,0.82);font-size:15px;line-height:1.55;max-width:640px;margin-bottom:20px;position:relative;z-index:2}
+.hero-meta{display:flex;gap:16px;flex-wrap:wrap;font-size:13px;color:rgba(255,255,255,0.75);position:relative;z-index:2}
+.hero-meta span{display:inline-flex;align-items:center;gap:7px;font-weight:600}
+.hero-meta i{width:14px;height:14px;flex-shrink:0}
+
+.event-layout{display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:24px;align-items:start}
+@media (max-width:960px){.event-layout{grid-template-columns:minmax(0,1fr)}}
+
+.card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rd);padding:22px 24px;box-shadow:0 4px 16px rgba(10,15,20,0.04);margin-bottom:20px}
+.card h2{font-size:1.05rem;color:var(--nv);font-weight:800;margin-bottom:14px;display:flex;align-items:center;gap:9px}
+.card h2 i{width:17px;height:17px;color:var(--cy3);flex-shrink:0}
+.card p{font-size:14px;color:var(--tx2);line-height:1.65;white-space:pre-wrap;word-break:break-word}
+
+.kv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px}
+.kv{background:var(--sf2);border:1px solid var(--bd);border-radius:10px;padding:10px 12px}
+.kv .k{font-size:10px;font-weight:800;color:var(--mut);letter-spacing:0.05em;text-transform:uppercase;margin-bottom:3px}
+.kv .v{font-size:13.5px;font-weight:700;color:var(--tx);word-break:break-word}
+
+.tier-list{display:flex;flex-direction:column;gap:10px;margin-top:4px}
+.tier-opt{display:flex;align-items:center;gap:14px;padding:14px;border:2px solid var(--bd);border-radius:12px;background:var(--sf);cursor:pointer;transition:all 0.15s var(--ease);font-family:inherit;text-align:left;width:100%}
+.tier-opt:hover{border-color:var(--cy);background:var(--cyf)}
+.tier-opt.selected{border-color:var(--cy);background:var(--cyf);box-shadow:0 0 0 3px rgba(0,255,255,0.18)}
+.tier-opt .sw{width:36px;height:36px;border-radius:10px;flex-shrink:0;border:1px solid rgba(0,0,0,0.08)}
+.tier-opt .tier-info{flex:1;min-width:0}
+.tier-opt .tier-name{font-size:14.5px;font-weight:800;color:var(--tx);letter-spacing:-0.005em;margin-bottom:2px}
+.tier-opt .tier-desc{font-size:11.5px;color:var(--mut);font-weight:500}
+.tier-opt .tier-price{font-family:var(--mono);font-weight:900;font-size:16px;color:var(--cy3);flex-shrink:0;white-space:nowrap}
+
+.venue-pic{border:1px solid var(--bd);border-radius:12px;overflow:hidden;background:var(--sf2)}
+.venue-pic img{display:block;width:100%;height:auto;max-height:480px;object-fit:contain;background:#fafbfc}
+.venue-pic-note{display:flex;gap:10px;padding:11px 14px;background:var(--cyf);border-top:1px solid var(--cy);font-size:12px;color:var(--tx2);line-height:1.5}
+.venue-pic-note i{width:14px;height:14px;color:var(--cy3);flex-shrink:0;margin-top:2px}
+
+.assign-box{background:linear-gradient(135deg,#0a0f14,#1a2129);color:#fff;border-radius:14px;padding:20px;margin-top:14px;position:relative;overflow:hidden}
+.assign-box::after{content:'';position:absolute;right:-40px;top:-40px;width:180px;height:180px;background:radial-gradient(circle,rgba(0,255,255,.15),transparent 70%);pointer-events:none}
+.assign-label{font-size:10.5px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.55);margin-bottom:8px}
+.assign-value{font-family:var(--mono);font-size:22px;font-weight:900;color:var(--cy);letter-spacing:0.02em;margin-bottom:4px;word-break:break-word;line-height:1.25}
+.assign-sub{font-size:12.5px;color:rgba(255,255,255,0.6);margin-top:6px;line-height:1.5}
+.assign-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;position:relative;z-index:2}
+.assign-btn{display:inline-flex;align-items:center;gap:6px;background:rgba(0,255,255,0.15);border:1px solid rgba(0,255,255,0.4);color:var(--cy);font-size:12px;font-weight:800;padding:8px 14px;border-radius:99px;cursor:pointer;transition:all 0.15s ease;font-family:inherit}
+.assign-btn:hover:not(:disabled){background:rgba(0,255,255,0.25)}
+.assign-btn:disabled{opacity:0.45;cursor:not-allowed}
+.assign-btn i{width:14px;height:14px}
+.assign-error{display:flex;gap:10px;padding:12px 14px;background:#7f1d1d;color:#fecaca;border-radius:10px;font-size:12.5px;line-height:1.55;margin-top:14px}
+.assign-error i{width:15px;height:15px;flex-shrink:0;margin-top:2px}
+
+.sidebar{position:sticky;top:96px}
+@media (max-width:960px){.sidebar{position:static;order:-1}}
+.buy-card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rd);padding:22px;box-shadow:0 10px 32px rgba(10,15,20,0.08)}
+.buy-card h3{font-size:1.1rem;color:var(--nv);margin-bottom:6px}
+.buy-card .from{font-size:12.5px;color:var(--mut);margin-bottom:16px}
+.buy-card .from strong{font-family:var(--mono);font-size:18px;color:var(--cy3);font-weight:900;display:block;margin-top:2px}
+.buy-card .cta{margin-top:8px}
+
+.qty-row{display:flex;align-items:center;gap:12px;padding:14px;background:var(--sf2);border:1px solid var(--bd);border-radius:10px;margin:14px 0}
+.qty-row .lbl{flex:1;font-size:13px;font-weight:700;color:var(--tx2)}
+.qty-btn{width:36px;height:36px;border-radius:10px;background:var(--sf);border:1px solid var(--bd2);display:flex;align-items:center;justify-content:center;transition:all 0.15s var(--ease);flex-shrink:0}
+.qty-btn:hover:not(:disabled){border-color:var(--cy);background:var(--cyf);color:var(--cy3)}
+.qty-btn:disabled{opacity:0.35;cursor:not-allowed}
+.qty-btn i{width:16px;height:16px}
+.qty-value{font-family:var(--mono);font-weight:900;font-size:17px;width:36px;text-align:center;color:var(--tx)}
+.qty-max-hint{font-size:11px;color:var(--mut);text-align:center;margin-top:-6px;margin-bottom:12px;font-weight:600}
+
+.total-row{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-top:1px dashed var(--bd);margin-top:12px;font-size:14px}
+.total-row .lbl{font-weight:700;color:var(--tx2)}
+.total-row .val{font-family:var(--mono);font-size:20px;font-weight:900;color:var(--nv)}
+
+.info-note{display:flex;gap:10px;padding:12px 14px;background:var(--cyf);border:1px solid var(--cy);border-radius:10px;margin-top:14px;font-size:12.5px;color:var(--tx2);line-height:1.55}
+.info-note i{width:16px;height:16px;color:var(--cy3);flex-shrink:0;margin-top:2px}
+
+.signin-note{display:flex;gap:10px;padding:12px 14px;background:var(--amf);border:1px solid #fde68a;border-radius:10px;margin-top:14px;font-size:12.5px;color:#92400e;line-height:1.55;font-weight:600}
+.signin-note i{width:16px;height:16px;flex-shrink:0;margin-top:2px}
+
+.modal-overlay{position:fixed;inset:0;background:rgba(10,15,20,0.65);backdrop-filter:blur(8px);display:none;align-items:flex-start;justify-content:center;z-index:100;padding:24px 20px;overflow-y:auto;opacity:0;transition:opacity 0.3s ease}
+.modal-overlay.open{display:flex;opacity:1}
+.modal{background:var(--sf);border:1px solid var(--bd);border-radius:20px;max-width:520px;width:100%;padding:28px 26px;position:relative;margin:auto;box-shadow:0 24px 60px rgba(10,15,20,0.25);transform:translateY(20px) scale(0.96);opacity:0;transition:transform 0.4s var(--ease),opacity 0.3s ease}
+.modal-overlay.open .modal{transform:translateY(0) scale(1);opacity:1}
+.modal-close{position:absolute;top:14px;right:14px;background:var(--sf2);border:1px solid var(--bd);color:var(--tx2);padding:7px;border-radius:10px;display:flex;align-items:center;justify-content:center;transition:all 0.2s ease;cursor:pointer}
+.modal-close:hover{background:var(--dgf);color:var(--dg);transform:rotate(90deg)}
+.modal-close i{width:16px;height:16px}
+.modal h2{font-size:1.25rem;color:var(--nv);margin-bottom:6px;padding-right:36px}
+.modal .subtitle{color:var(--mut);font-size:13.5px;margin-bottom:20px;line-height:1.5}
+
+.field{margin-bottom:14px}
+.field label{display:block;font-size:11px;font-weight:900;color:var(--tx2);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px}
+.field input{width:100%;padding:12px 14px;background:var(--sf2);border:1px solid var(--bd2);border-radius:10px;color:var(--tx);font-size:15px;font-family:inherit;transition:all 0.15s var(--ease)}
+.field input:focus{outline:none;border-color:var(--cy);background:#fff;box-shadow:0 0 0 3px rgba(0,255,255,0.15)}
+.field input.error{border-color:var(--dg);background:var(--dgf);box-shadow:0 0 0 3px rgba(220,38,38,0.12)}
+.field input.error:focus{border-color:var(--dg);box-shadow:0 0 0 3px rgba(220,38,38,0.2)}
+.field-error-msg{font-size:11.5px;color:var(--dg);font-weight:700;margin-top:5px;display:none;line-height:1.4}
+.field-error-msg.show{display:block}
+
+.step-indicator{display:flex;gap:6px;margin-bottom:22px}
+.step-dot{flex:1;height:4px;border-radius:99px;background:var(--bd);transition:background 0.3s ease}
+.step-dot.active{background:var(--cy3)}
+.step-dot.done{background:var(--sv)}
+
+.guest-list{display:flex;flex-direction:column;gap:12px}
+.guest-input-row{display:flex;gap:10px;align-items:flex-start}
+.guest-input-row .badge{width:34px;height:44px;border-radius:10px;background:var(--sf2);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:var(--mono);font-weight:900;font-size:13px;color:var(--cy3);transition:border-color 0.15s ease,background 0.15s ease}
+.guest-input-row .badge.lead{background:var(--cyf);border-color:var(--cy);color:var(--cy3)}
+.guest-input-row .badge.error{background:var(--dgf);border-color:var(--dg);color:var(--dg)}
+.guest-input-row .field{margin-bottom:0;flex:1;min-width:0}
+.guest-input-row .field input{font-size:14px;padding:11px 12px}
+.guest-label{font-size:10.5px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;line-height:1.3}
+.guest-label .required-star{color:var(--dg);font-weight:900}
+.guest-label .seat-tag{display:inline-flex;align-items:center;gap:4px;background:var(--sf2);border:1px solid var(--bd);padding:1px 7px;border-radius:99px;font-family:var(--mono);font-size:10px;color:var(--cy3);margin-left:6px;font-weight:900;letter-spacing:0;text-transform:none}
+
+.ref-box{background:linear-gradient(135deg,#0a0f14,#1a2129);color:#fff;border-radius:14px;padding:18px 20px;margin-bottom:18px;position:relative;overflow:hidden}
+.ref-box::after{content:'';position:absolute;right:-40px;top:-40px;width:140px;height:140px;background:radial-gradient(circle,rgba(0,255,255,0.18),transparent 70%);pointer-events:none}
+.ref-label{font-size:10.5px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.5);margin-bottom:6px}
+.ref-value{font-family:var(--mono);font-size:22px;font-weight:900;color:var(--cy);letter-spacing:0.04em;margin-bottom:12px;word-break:break-all;line-height:1.2}
+.ref-copy{display:inline-flex;align-items:center;gap:6px;background:rgba(0,255,255,0.15);border:1px solid rgba(0,255,255,0.4);color:var(--cy);font-size:11.5px;font-weight:800;padding:6px 12px;border-radius:99px;cursor:pointer;transition:all 0.15s ease;font-family:inherit}
+.ref-copy:hover{background:rgba(0,255,255,0.25)}
+.ref-copy i{width:13px;height:13px}
+.ref-copy.copied{background:var(--sv);border-color:var(--sv);color:#fff}
+
+.countdown{display:flex;align-items:center;justify-content:center;gap:10px;background:var(--amf);border:1px solid #fde68a;border-radius:10px;padding:11px 14px;margin-bottom:18px;font-size:13px;color:#92400e;font-weight:700}
+.countdown i{width:16px;height:16px;flex-shrink:0}
+.countdown strong{font-family:var(--mono);font-weight:900;font-size:14px}
+
+.amount-box{display:flex;justify-content:space-between;align-items:center;padding:16px;background:var(--sf2);border:1px solid var(--bd);border-radius:12px;margin-bottom:18px}
+.amount-box .label{font-size:12px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:0.05em}
+.amount-box .value{font-family:var(--mono);font-size:24px;font-weight:900;color:var(--nv)}
+
+.instruction{background:var(--cyf);border:1px solid var(--cy);border-radius:12px;padding:14px 16px;margin-bottom:18px}
+.instruction h4{font-size:12.5px;font-weight:900;color:var(--cy3);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:10px;display:flex;align-items:center;gap:7px}
+.instruction h4 i{width:14px;height:14px}
+.instruction ol{margin:0;padding-left:18px;font-size:13px;color:var(--tx2);line-height:1.7}
+.instruction ol li{margin-bottom:6px}
+.instruction ol li:last-child{margin-bottom:0}
+.instruction code{background:#fff;border:1px solid var(--bd);border-radius:5px;padding:1px 6px;font-family:var(--mono);font-size:11.5px;color:var(--cy3);font-weight:800}
+
+.btn-group{display:flex;flex-direction:column;gap:10px;margin-top:6px}
+.btn-group .btn{width:100%}
+
+.link-missing{display:flex;gap:10px;padding:12px 14px;background:var(--amf);border:1px solid #fde68a;border-radius:10px;margin-bottom:14px;font-size:12.5px;color:#92400e;line-height:1.55;font-weight:600}
+.link-missing i{width:16px;height:16px;flex-shrink:0;margin-top:2px}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120%);background:#0a0f14;color:#fff;padding:12px 18px;border-radius:12px;font-size:13.5px;z-index:200;transition:transform 0.4s var(--ease),opacity 0.3s ease;display:flex;align-items:center;gap:10px;pointer-events:none;opacity:0;max-width:calc(100vw - 40px);font-family:var(--font)}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.success{background:#065f46}
+.toast.error{background:#991b1b}
+.toast i{width:16px;height:16px;flex-shrink:0}
+
+.footer{background:#0a0f14;color:#c9d2dd;padding:28px 0 20px;margin-top:auto;font-size:13px}
+.fb{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;color:#6b7787;font-size:12px}
+
+@media (max-width:520px){
+  .hero-inner{padding:20px}
+  .card{padding:16px 18px}
+  .modal{padding:22px 18px}
+  .ref-value{font-size:18px}
+  .assign-value{font-size:18px}
+}
 </style>
 </head>
 <body>
 
 <header class="site-header">
-  <div class="container hdr">
+  <div class="container header-inner">
     <a href="index.html" class="logo">
-      <svg viewBox="0 0 60 74"><path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/><path fill="#00FFFF" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/></svg>
-      <b>NOVALINK</b>
+      <svg class="mark" viewBox="0 0 60 74"><path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/><path fill="#00FFFF" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/></svg>
+      <span class="wm">NOVALINK</span>
     </a>
-    <span class="studio-badge">Event Studio</span>
+    <a href="events.html" class="btn btn-ghost btn-sm"><i data-lucide="arrow-left"></i> All events</a>
   </div>
 </header>
 
-<main>
+<main class="page">
   <div class="container">
 
-    <div class="steps-wrap">
-      <div class="steps" id="stepTabs">
-        <button type="button" class="step active" data-step="1"><span class="step-num">1</span><span class="step-lbl">Event Details</span></button>
-        <button type="button" class="step" data-step="2"><span class="step-num">2</span><span class="step-lbl">Pricing Plan</span></button>
-        <button type="button" class="step" data-step="3"><span class="step-num">3</span><span class="step-lbl">Tiers</span></button>
-        <button type="button" class="step" data-step="4"><span class="step-num">4</span><span class="step-lbl">Seating Plan</span></button>
-        <button type="button" class="step" data-step="5"><span class="step-num">5</span><span class="step-lbl">Revenue</span></button>
-      </div>
-      <div class="progress"><div class="progress-fill" id="progFill" style="width:20%"></div></div>
-      <div class="progress-text"><span id="progLbl">Step 1 of 5 · Event Details</span><span id="progPct">20%</span></div>
+    <div id="loadingState" class="state ls">
+      <i data-lucide="loader-2"></i>
+      <p>Loading event…</p>
     </div>
 
-    <!-- ═══════════════ STEP 1 — EVENT DETAILS ═══════════════ -->
-    <section class="panel active" data-panel="1">
-      <div class="split">
-        <div class="card">
-          <div class="card-h"><h1>Event Details</h1><p>Who's hosting, where, when, and how much.</p></div>
+    <div id="errorState" class="state" style="display:none">
+      <div class="ic"><i data-lucide="alert-circle"></i></div>
+      <h2 id="errorTitle">Could not load event</h2>
+      <p id="errorMsg">Something went wrong.</p>
+      <div class="actions">
+        <a href="events.html" class="btn btn-accent"><i data-lucide="arrow-left"></i> Back to events</a>
+      </div>
+    </div>
 
-          <div class="divider"><span>Organiser</span></div>
-          <div class="fg"><label for="hostName">Host Name</label><input type="text" id="hostName" placeholder="e.g., John Doe" /></div>
-          <div class="fg"><label for="hostEmail">Host Email</label><input type="email" id="hostEmail" placeholder="john@example.com" /></div>
+    <div id="notLiveState" class="state" style="display:none">
+      <div class="ic amber"><i data-lucide="clock"></i></div>
+      <h2>Not on sale yet</h2>
+      <p id="notLiveMsg">This event is still being reviewed. Check back soon.</p>
+      <div class="actions">
+        <a href="events.html" class="btn btn-accent"><i data-lucide="arrow-left"></i> Back to events</a>
+      </div>
+    </div>
 
-          <div class="divider"><span>Venue</span></div>
-          <div class="row2">
-            <div class="fg"><label for="venueName">Venue Name</label><input type="text" id="venueName" placeholder="Boksburg Stadium" /></div>
-            <div class="fg"><label for="venueCity">City / Town</label>
-              <select id="venueCity">
-                <option value="">Select a city…</option>
-                <option>Boksburg</option><option>Germiston</option><option>Reiger Park</option><option>Boksburg North</option><option>Boksburg West</option>
-              </select>
-            </div>
+    <div id="eventContent" style="display:none">
+      <div class="hero" id="eventHero">
+        <div class="hero-cover" id="heroCover"></div>
+        <div class="hero-inner">
+          <div class="hero-badges">
+            <span class="hero-badge"><i data-lucide="calendar"></i> <span id="heroDate">Date TBA</span></span>
+            <span class="hero-badge type" id="heroType">Event</span>
           </div>
-          <div class="fg"><label for="venueAddress">Full Address (optional)</label><input type="text" id="venueAddress" placeholder="Street, suburb" /></div>
-
-          <div class="divider"><span>Date &amp; Type</span></div>
-          <div class="row2">
-            <div class="fg"><label for="eventType">Event Type</label>
-              <select id="eventType">
-                <option value="" data-min="0" data-max="0">Select…</option>
-                <option value="church" data-min="20" data-max="50">Church</option>
-                <option value="community" data-min="30" data-max="80">Community</option>
-                <option value="workshop" data-min="150" data-max="500">Workshop</option>
-                <option value="concert" data-min="100" data-max="350">Concert</option>
-                <option value="conference" data-min="500" data-max="2500">Conference</option>
-                <option value="gala" data-min="800" data-max="2500">Gala Dinner</option>
-                <option value="festival" data-min="200" data-max="800">Festival</option>
-                <option value="sports" data-min="50" data-max="500">Sports</option>
-                <option value="party" data-min="50" data-max="200">Party</option>
-                <option value="wedding" data-min="0" data-max="0">Wedding (Free)</option>
-                <option value="corporate" data-min="400" data-max="1500">Corporate</option>
-                <option value="other" data-min="50" data-max="500">Other</option>
-              </select>
-              <p class="hint rec" id="typeHint">Choose a type to see a recommended price.</p>
-            </div>
-            <div class="fg"><label for="startTime">Start Time</label><input type="time" id="startTime" /></div>
-          </div>
-          <div class="row2">
-            <div class="fg" id="basePriceGroup"><label for="cost">Base Ticket Price (R)</label>
-              <div class="curr"><span class="curr-prefix">R</span><input type="number" id="cost" min="0" step="0.01" placeholder="25.50" /></div>
-            </div>
-            <div class="fg"><label for="startDate">Start Date</label><input type="date" id="startDate" /></div>
-          </div>
-
-          <div class="divider"><span>Event Name</span></div>
-          <div class="fg"><label for="eventName">Event Name</label><input type="text" id="eventName" placeholder="Neon Nights Live" /></div>
-          <div class="fg"><label for="eventDesc">Description (optional)</label><textarea id="eventDesc" placeholder="What to expect, dress code, age limits…" maxlength="600"></textarea></div>
-
-          <div class="divider"><span>Cover Image</span></div>
-          <div class="fg"><label for="coverUrl">Cover Image URL (optional)</label><input type="url" id="coverUrl" placeholder="https://…" /></div>
-          <div class="fg"><label for="coverFile">Or upload (max 500 KB)</label><input type="file" id="coverFile" accept="image/*" /></div>
-
-          <div class="step-nav">
-            <button type="button" class="btn btn-ghost" disabled>← Previous</button>
-            <button type="button" class="btn btn-accent" data-next="2">Next: Pricing Plan →</button>
-          </div>
-        </div>
-
-        <div>
-          <div class="card">
-            <div style="font-size:10.5px;font-weight:900;color:var(--mut);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">Live Ticket Preview</div>
-            <div class="ticket-wrap">
-              <div class="ticket" id="ticketFront">
-                <div class="ticket-h">
-                  <div class="ticket-logo">NOVALINK</div>
-                  <div class="ticket-badges">
-                    <span class="ticket-badge">PUBLIC</span>
-                    <span class="ticket-badge" id="tierBadge">STANDARD</span>
-                  </div>
-                </div>
-                <div class="ticket-body">
-                  <div class="ticket-info">
-                    <div class="ticket-title" id="tEventName">EVENT NAME</div>
-                    <div class="ticket-meta" id="tDateVenue">DATE · VENUE</div>
-                    <div class="ticket-guest">GUEST NAME</div>
-                    <div class="ticket-seat">Seat not assigned</div>
-                  </div>
-                  <div class="ticket-qr"></div>
-                </div>
-                <div class="ticket-loc"><i data-lucide="map-pin"></i> <span id="tLoc">VENUE</span></div>
-                <div class="ticket-barcode">
-                  <div class="barcode"></div>
-                  <div class="barcode-num">0000 0000 0000 0000</div>
-                </div>
-              </div>
-            </div>
+          <h1 id="heroTitle">Event Name</h1>
+          <p class="hero-tagline" id="heroTagline"></p>
+          <div class="hero-meta">
+            <span><i data-lucide="map-pin"></i> <span id="heroVenue">Venue</span></span>
           </div>
         </div>
       </div>
-    </section>
 
-    <!-- ═══════════════ STEP 2 — PRICING PLAN ═══════════════ -->
-    <section class="panel" data-panel="2">
-      <div class="split">
-        <div class="card">
-          <div class="card-h"><h1>Pricing Plan</h1><p>Pick the plan that matches your scale.</p></div>
-
-          <div class="plan-grid" id="planGrid">
-            <label class="plan-card" data-plan="basic">
-              <input type="radio" name="plan" value="basic" />
-              <div class="plan-name">Basic</div>
-              <div class="plan-fee">5<small>% per ticket</small></div>
-              <div class="plan-desc">Up to 100 tickets · 1 tier · No seating plan</div>
-            </label>
-            <label class="plan-card selected" data-plan="standard">
-              <span class="plan-badge">Popular</span>
-              <input type="radio" name="plan" value="standard" checked />
-              <div class="plan-name">Standard</div>
-              <div class="plan-fee">7<small>% per ticket</small></div>
-              <div class="plan-desc">Up to 500 tickets · 3 tiers · Rows &amp; tables</div>
-            </label>
-            <label class="plan-card" data-plan="premium">
-              <input type="radio" name="plan" value="premium" />
-              <div class="plan-name">Premium</div>
-              <div class="plan-fee">10<small>% per ticket</small></div>
-              <div class="plan-desc">Up to 2,000 tickets · Everything in Standard · Priority support</div>
-            </label>
-            <label class="plan-card" data-plan="enterprise">
-              <input type="radio" name="plan" value="enterprise" />
-              <div class="plan-name">Enterprise</div>
-              <div class="plan-fee">12<small>% per ticket</small></div>
-              <div class="plan-desc">Unlimited · Everything unlocked</div>
-            </label>
-          </div>
-
-          <div class="step-nav">
-            <button type="button" class="btn btn-ghost" data-prev="1">← Back</button>
-            <button type="button" class="btn btn-accent" data-next="3">Next: Tiers →</button>
-          </div>
-        </div>
-
+      <div class="event-layout">
         <div>
+          <div class="card" id="aboutCard">
+            <h2><i data-lucide="file-text"></i> About this event</h2>
+            <p id="aboutText"></p>
+          </div>
+
           <div class="card">
-            <div class="rev-head" style="color:var(--cy3);"><i data-lucide="badge-check"></i> Your Plan</div>
-            <div class="rev-row" style="color:var(--tx2);border-color:var(--bd)"><span>Plan</span><span class="rev-plan" style="color:var(--cy3);" id="planName">Standard · 7%</span></div>
-            <div class="rev-row" style="color:var(--tx2);border-color:var(--bd)"><span>Tier limit</span><span id="planTierLimit">3</span></div>
-            <div class="rev-row" style="color:var(--tx2);border-color:var(--bd)"><span>Rename tiers</span><span id="planRename">Yes</span></div>
-            <div class="rev-row" style="color:var(--tx2);border-color:var(--bd)"><span>Edit colours</span><span id="planColors">Yes</span></div>
-            <div class="rev-row" style="color:var(--tx2);border-color:var(--bd)"><span>Seating plan</span><span id="planSeating">Rows &amp; tables</span></div>
-            <div class="rev-row" style="color:var(--tx2);border-color:var(--bd)"><span>Ticket limit</span><span id="planLimit">500</span></div>
-            <div class="rev-row" style="color:var(--tx2);border-color:var(--bd)"><span>Max blocks</span><span id="planBlocks">Unlimited</span></div>
-          </div>
-        </div>
-      </div>
-    </section>
-        <!-- ═══════════════ STEP 3 — TIERS ═══════════════ -->
-    <section class="panel" data-panel="3">
-      <div class="split">
-        <div class="card">
-          <div class="card-h"><h1>Your Tiers</h1><p>Three tiers: Elite, Silver, Standard.</p></div>
-
-          <div class="locked-note" id="basicTierNote" style="display:none;">
-            <i data-lucide="lock"></i>
-            <div><strong>Basic plan:</strong> one tier, locked to "Standard". Upgrade to Standard or higher for three tiers.</div>
+            <h2><i data-lucide="info"></i> Event details</h2>
+            <div class="kv-grid" id="detailGrid"></div>
           </div>
 
-          <div class="fg">
-            <label>Customise each tier</label>
+          <div class="card" id="tierCard">
+            <h2 id="tierCardTitle"><i data-lucide="tag"></i> Choose your tier</h2>
             <div class="tier-list" id="tierList"></div>
           </div>
 
-          <div class="divider"><span>Tier Colours</span></div>
+          <div class="card" id="seatCard" style="display:none">
+            <h2><i data-lucide="map-pin"></i> Your seats</h2>
 
-          <div class="locked-note" id="basicColorNote" style="display:none;">
-            <i data-lucide="lock"></i>
-            <div><strong>Colours are locked on Basic.</strong> Upgrade to Standard or higher to customise.</div>
-          </div>
+            <div class="venue-pic" id="venuePicWrap" style="display:none;">
+              <img id="venuePicImg" alt="Venue layout" />
+              <div class="venue-pic-note">
+                <i data-lucide="info"></i>
+                <div>Reference image — your seats are assigned automatically below.</div>
+              </div>
+            </div>
 
-          <div class="tier-color-grid" id="tierColorGrid"></div>
-
-          <div class="step-nav">
-            <button type="button" class="btn btn-ghost" data-prev="2">← Back</button>
-            <button type="button" class="btn btn-accent" data-next="4">Next: Seating Plan →</button>
-          </div>
-        </div>
-
-        <div>
-          <div class="card">
-            <div style="font-size:10.5px;font-weight:900;color:var(--mut);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">Live Preview</div>
-            <div class="ticket">
-              <div class="ticket-h">
-                <div class="ticket-logo">NOVALINK</div>
-                <div class="ticket-badges">
-                  <span class="ticket-badge">PUBLIC</span>
-                  <span class="ticket-badge" id="tierBadge2">STANDARD</span>
+            <div id="assignWrap">
+              <div class="assign-box" id="assignBox" style="display:none">
+                <div class="assign-label">Your assigned seats</div>
+                <div class="assign-value" id="assignValue">—</div>
+                <div class="assign-sub" id="assignSub"></div>
+                <div class="assign-actions">
+                  <button type="button" class="assign-btn" id="reassignBtn">
+                    <i data-lucide="refresh-cw"></i> Try different seats
+                  </button>
                 </div>
               </div>
-              <div class="ticket-body">
-                <div class="ticket-info">
-                  <div class="ticket-title" id="tEventName2">EVENT NAME</div>
-                  <div class="ticket-meta" id="tDateVenue2">DATE · VENUE</div>
-                  <div class="ticket-guest">GUEST NAME</div>
-                  <div class="ticket-seat">Seat not assigned</div>
-                </div>
-                <div class="ticket-qr"></div>
+
+              <div class="assign-error" id="assignError" style="display:none;">
+                <i data-lucide="alert-circle"></i>
+                <div id="assignErrorText"></div>
               </div>
             </div>
           </div>
         </div>
+
+        <aside class="sidebar">
+          <div class="buy-card">
+            <h3>Get your tickets</h3>
+            <div class="from">Tickets from <strong id="fromPrice">R 0.00</strong></div>
+
+            <div class="qty-row">
+              <span class="lbl">Quantity</span>
+              <button type="button" class="qty-btn" id="qtyMinus"><i data-lucide="minus"></i></button>
+              <span class="qty-value" id="qtyValue">1</span>
+              <button type="button" class="qty-btn" id="qtyPlus"><i data-lucide="plus"></i></button>
+            </div>
+            <div class="qty-max-hint" id="qtyMaxHint">Max — per purchase</div>
+
+            <div class="total-row">
+              <span class="lbl">Total</span>
+              <span class="val" id="sidebarTotal">R 0.00</span>
+            </div>
+
+            <div class="cta">
+              <button type="button" class="btn btn-accent btn-lg btn-block" id="buyBtn">
+                <i data-lucide="ticket"></i> Reserve tickets
+              </button>
+            </div>
+
+            <div id="signinNote" class="signin-note" style="display:none;">
+              <i data-lucide="lock"></i>
+              <div>You'll need to sign in to reserve. Takes 5 seconds with Google.</div>
+            </div>
+
+            <div class="info-note">
+              <i data-lucide="shield-check"></i>
+              <div>Seats are held for 24 hours. No charge until you complete payment on Yoco.</div>
+            </div>
+          </div>
+        </aside>
       </div>
-    </section>
-
-    <!-- ═══════════════ STEP 4 — SEATING PLAN ═══════════════ -->
-    <section class="panel" data-panel="4">
-      <div class="split-wide">
-        <div class="card">
-          <div class="card-h">
-            <h1>Seating Plan</h1>
-            <p>Upload a venue picture and describe your blocks with numbers. The system assigns seats at purchase.</p>
-          </div>
-
-          <div class="locked-note" id="basicSeatingNote" style="display:none;">
-            <i data-lucide="lock"></i>
-            <div><strong>Basic plan has no seating plan.</strong> Upgrade to Standard or higher to add blocks.</div>
-          </div>
-
-          <div id="seatingEditor">
-
-            <!-- Picture upload -->
-            <div class="divider"><span>Venue Picture (optional)</span></div>
-            <div class="upload-box" id="planUploadBox">
-              <input type="file" id="planImageInput" accept="image/*" />
-              <div id="planUploadEmpty">
-                <i data-lucide="image-plus"></i>
-                <div class="up-title">Upload a picture of your venue</div>
-                <div class="up-sub">Buyers see this as a reference. Optional — you can skip it and just describe the layout below.</div>
-              </div>
-              <div class="upload-preview" id="planUploadPreview" style="display:none;">
-                <img id="planImagePreview" alt="Venue picture" />
-                <button type="button" class="upload-remove" id="planImageRemove">
-                  <i data-lucide="x"></i> Remove
-                </button>
-              </div>
-            </div>
-
-            <!-- Mode pills -->
-            <div class="divider"><span>Layout Mode</span></div>
-            <div class="seat-toolbar">
-              <button type="button" class="mode-pill active" data-mode="rows">Rows</button>
-              <button type="button" class="mode-pill" data-mode="tables">Tables</button>
-              <span class="seat-spacer"></span>
-              <span id="seatingPlanBadge" style="font-size:11px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;">Rows mode</span>
-              <button type="button" class="btn btn-ghost btn-sm" id="openFsBtn"><i data-lucide="maximize-2"></i> Full screen</button>
-            </div>
-
-            <!-- Block tabs + editor -->
-            <div class="divider"><span>Blocks</span></div>
-            <div class="block-tabs" id="blockTabs"></div>
-            <div class="block-editor" id="blockEditor"></div>
-
-            <!-- Live preview -->
-            <div class="divider"><span>Live Preview</span></div>
-            <div class="seat-preview">
-              <div class="seat-preview-inner" id="seatPreview"></div>
-            </div>
-
-          </div>
-
-          <div class="step-nav">
-            <button type="button" class="btn btn-ghost" data-prev="3">← Back</button>
-            <button type="button" class="btn btn-accent" data-next="5">Next: Revenue →</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- ═══════════════ STEP 5 — REVENUE ═══════════════ -->
-    <section class="panel" data-panel="5">
-      <div class="split">
-        <div class="card">
-          <div class="card-h"><h1>Live Revenue</h1><p>Real-time estimate based on plan, tiers and capacity.</p></div>
-
-          <div class="stats">
-            <div class="stat"><div class="lbl">Seats</div><div class="val" id="revTickets">0</div></div>
-            <div class="stat rev"><div class="lbl">Gross</div><div class="val" id="revGross">R0</div></div>
-            <div class="stat fee"><div class="lbl">Fee</div><div class="val" id="revFee">R0</div></div>
-          </div>
-
-          <div class="rev-card">
-            <div class="rev-head"><i data-lucide="trending-up"></i> Live Estimate</div>
-            <div class="rev-row"><span>Plan</span><span class="rev-plan" id="revPlanName">Standard · 7%</span></div>
-            <div class="rev-row"><span>Total capacity</span><span id="revTotal">0 / 500</span></div>
-            <div class="rev-row"><span>Gross revenue</span><span class="rev-amt" id="revGross2">R 0.00</span></div>
-            <div class="rev-row fee"><span>Novalink fee (<span id="revFeePct">7%</span>)</span><span class="rev-amt" id="revFee2">− R 0.00</span></div>
-            <div class="rev-row net"><span>Your Net</span><span class="rev-amt" id="revNet">R 0.00</span></div>
-            <div class="rev-warn" id="revWarn"></div>
-          </div>
-
-          <div class="divider"><span>Per-Tier Breakdown</span></div>
-          <div class="tier-list" id="tierBreakdown"></div>
-
-          <div class="divider"><span>Publish</span></div>
-          <button type="button" class="btn btn-accent btn-block" id="submitBtn" style="padding:14px;">
-            <i data-lucide="shield-check"></i> Save &amp; Finalize Event
-          </button>
-          <p class="hint" style="text-align:center;margin-top:8px;">Once saved, your event appears in the admin review queue.</p>
-
-          <div class="step-nav">
-            <button type="button" class="btn btn-ghost" data-prev="4">← Back to Seating</button>
-          </div>
-        </div>
-
-        <div>
-          <div class="card">
-            <div style="font-size:10.5px;font-weight:900;color:var(--mut);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">Live Preview</div>
-            <div class="ticket">
-              <div class="ticket-h">
-                <div class="ticket-logo">NOVALINK</div>
-                <div class="ticket-badges">
-                  <span class="ticket-badge">PUBLIC</span>
-                  <span class="ticket-badge" id="tierBadge3">STANDARD</span>
-                </div>
-              </div>
-              <div class="ticket-body">
-                <div class="ticket-info">
-                  <div class="ticket-title" id="tEventName3">EVENT NAME</div>
-                  <div class="ticket-meta" id="tDateVenue3">DATE · VENUE</div>
-                  <div class="ticket-guest">GUEST NAME</div>
-                  <div class="ticket-seat">Seat not assigned</div>
-                </div>
-                <div class="ticket-qr"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
+    </div>
 
   </div>
 </main>
 
-<!-- ═══════════════ FULLSCREEN VIEWER ═══════════════ -->
-<div class="fs-overlay" id="fsOverlay">
-  <div class="fs-hdr">
-    <h2>Full Layout · <span id="fsStageName">STAGE</span></h2>
-    <div class="fs-actions">
-      <button type="button" class="fs-btn" id="fsZoomOut">−</button>
-      <span class="fs-btn" style="cursor:default;background:transparent;border-color:rgba(255,255,255,.1);" id="fsZoomLabel">100%</span>
-      <button type="button" class="fs-btn" id="fsZoomIn">+</button>
-      <button type="button" class="fs-btn" id="fsZoomReset">Reset</button>
-      <button type="button" class="fs-btn close" id="fsClose">✕ Close</button>
-    </div>
-  </div>
-  <div class="fs-body" id="fsBody">
-    <div class="seat-preview-inner" id="fsInner"></div>
-  </div>
-  </div>
-  <!-- ═══════════════ AUTH MODAL ═══════════════ -->
-<div class="modal-wrap" id="authModal">
+<div class="modal-overlay" id="buyModal">
   <div class="modal">
-    <button class="modal-close" id="authClose" type="button"><i data-lucide="x"></i></button>
-    <h3 id="authTitle">Welcome back</h3>
-    <p class="sub" id="authSub">Sign in to save events.</p>
-    <div class="tabs">
-      <button class="tab active" data-mode="signin" type="button">Sign in</button>
-      <button class="tab" data-mode="signup" type="button">Create account</button>
+    <div id="step1">
+      <button class="modal-close" id="modalClose1" type="button"><i data-lucide="x"></i></button>
+      <div class="step-indicator">
+        <span class="step-dot active"></span>
+        <span class="step-dot"></span>
+      </div>
+      <h2>Who's coming?</h2>
+      <p class="subtitle" id="guestSubtitle">Enter the name for each ticket.</p>
+
+      <div class="guest-list" id="guestList"></div>
+
+      <div class="field" style="margin-top:16px;" id="emailField">
+        <label for="guestEmailInput">Your email (for confirmation) <span class="required-star">*</span></label>
+        <input type="email" id="guestEmailInput" placeholder="e.g., jane@example.com" autocomplete="email" />
+        <div class="field-error-msg" id="emailError">Please enter a valid email address.</div>
+      </div>
+
+      <div class="amount-box">
+        <span class="label">You'll pay</span>
+        <span class="value" id="modalAmount">R 0.00</span>
+      </div>
+
+      <button type="button" class="btn btn-accent btn-lg btn-block" id="continueBtn">
+        Continue to payment <i data-lucide="arrow-right"></i>
+      </button>
     </div>
-    <button type="button" class="btn btn-ghost btn-block" id="googleBtn" style="margin-bottom:14px;">Continue with Google</button>
-    <form id="authForm">
-      <div class="fg" id="nameGroup" style="display:none;"><label>Full name</label><input type="text" id="authName" /></div>
-      <div class="fg"><label>Email</label><input type="email" id="authEmail" required /></div>
-      <div class="fg"><label>Password</label><input type="password" id="authPassword" required minlength="6" /></div>
-      <button type="submit" class="btn btn-accent btn-block" id="authSubmit">Sign in</button>
-    </form>
+
+    <div id="step2" style="display:none">
+      <button class="modal-close" id="modalClose2" type="button"><i data-lucide="x"></i></button>
+      <div class="step-indicator">
+        <span class="step-dot done"></span>
+        <span class="step-dot active"></span>
+      </div>
+      <h2>Complete your payment</h2>
+      <p class="subtitle">Follow the steps below. Your reservation is saved.</p>
+
+      <div class="ref-box">
+        <div class="ref-label">Your reference number</div>
+        <div class="ref-value" id="refValue">NL-XXXX-XXXX-XXXX</div>
+        <button type="button" class="ref-copy" id="copyRefBtn">
+          <i data-lucide="copy"></i> <span>Copy reference</span>
+        </button>
+      </div>
+
+      <div class="countdown">
+        <i data-lucide="clock"></i>
+        <span>Seats held for <strong id="countdownText">24:00:00</strong></span>
+      </div>
+
+      <div class="amount-box">
+        <span class="label">Amount to pay</span>
+        <span class="value" id="amountToPay">R 0.00</span>
+      </div>
+
+      <div class="instruction">
+        <h4><i data-lucide="list-ordered"></i> How to pay</h4>
+        <ol>
+          <li>Tap <strong>Pay on Yoco</strong> below</li>
+          <li>Paste your reference <code id="refInline">NL-XXXX-XXXX-XXXX</code> into the Yoco <strong>reference</strong> field</li>
+          <li>Complete the payment</li>
+          <li>Come back here and tap <strong>I've paid</strong></li>
+        </ol>
+      </div>
+
+      <div id="linkMissingNote" class="link-missing" style="display:none;">
+        <i data-lucide="alert-triangle"></i>
+        <div>This tier's payment link hasn't been set up yet. Tap <strong>I've paid — contact us</strong> below and we'll send you the payment details on WhatsApp.</div>
+      </div>
+
+      <div class="btn-group">
+        <a href="#" class="btn btn-accent btn-lg" id="yocoBtn" target="_blank" rel="noopener">
+          <i data-lucide="external-link"></i> Pay on Yoco
+        </a>
+        <a href="#" class="btn btn-whatsapp btn-lg" id="whatsappBtn" target="_blank" rel="noopener">
+          <svg viewBox="0 0 24 24" width="18" height="18" fill="currentColor" style="flex-shrink:0"><path d="M20.5 3.5A11.8 11.8 0 0 0 12 0C5.4 0 0 5.4 0 12c0 2.1.5 4.1 1.6 5.9L0 24l6.3-1.6c1.7.9 3.7 1.4 5.7 1.4 6.6 0 12-5.4 12-12 0-3.2-1.2-6.2-3.5-8.3zM12 22c-1.8 0-3.5-.5-5-1.4l-.4-.2-3.7 1 1-3.6-.3-.4A9.9 9.9 0 0 1 2 12c0-5.5 4.5-10 10-10s10 4.5 10 10-4.5 10-10 10z"/></svg>
+          <span id="whatsappLabel">I've paid</span>
+        </a>
+      </div>
+
+      <p class="subtitle" style="margin-top:16px;margin-bottom:0;font-size:12px;text-align:center;">
+        After you tap <strong>I've paid</strong>, we'll confirm your payment on Yoco and unlock your QR codes. This usually takes a few minutes.
+      </p>
+    </div>
+
   </div>
 </div>
 
-<div id="toast"></div>
+<footer class="footer">
+  <div class="container">
+    <div class="fb">
+      <span>&copy; <span id="year"></span> Novalink. All rights reserved.</span>
+      <span>Johannesburg, South Africa</span>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
 
 <script>
 (function(){
 'use strict';
 
-/* ══════════════════════════════════════════════════════════════
-   FIREBASE
-   ══════════════════════════════════════════════════════════════ */
 var firebaseConfig = {
   apiKey: "AIzaSyDSnns131jOlBXAqKo6qy7lTW4Rij-1oWU",
   authDomain: "novalink-864cf.firebaseapp.com",
@@ -718,1373 +485,1154 @@ if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 var db = firebase.firestore();
 var auth = firebase.auth();
 var EVENTS = "events";
+var PENDING_TTL_MS = 24 * 60 * 60 * 1000;
+var HARD_MAX_QTY = 20;
+var WHATSAPP_NUMBER = "27696835184";
 
-/* ══════════════════════════════════════════════════════════════
-   HELPERS
-   ══════════════════════════════════════════════════════════════ */
-var $ = function(id){ return document.getElementById(id); };
-var $$ = function(s){ return Array.from(document.querySelectorAll(s)); };
-var esc = function(s){
-  return String(s == null ? '' : s)
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/"/g, '&quot;');
-};
-var refreshIcons = function(){ if (window.lucide) lucide.createIcons(); };
-var icon = function(n){ return '<i data-lucide="' + n + '"></i>'; };
-var fmtR = function(n){ return 'R' + Math.round(Number(n || 0)).toLocaleString('en-ZA'); };
-var fmtR2 = function(n){ return 'R ' + Number(n || 0).toFixed(2); };
-var uid = function(){
-  return 'x' + Math.random().toString(36).slice(2, 9) + Date.now().toString(36).slice(-4);
-};
+var currentUser = null;
+var eventData = null;
+var eventId = null;
+var selectedTier = null;
+var qty = 1;
+var guestNames = [""];
+var pendingTicket = null;
+var countdownTimer = null;
 
-function toast(msg, type, ms){
-  type = type || 'info'; ms = ms || 3000;
-  var t = $('toast');
-  var ic = type === 'error' ? 'alert-circle'
-        : type === 'success' ? 'check-circle'
-        : 'info';
-  t.className = type;
-  t.innerHTML = icon(ic) + '<span>' + esc(msg) + '</span>';
+/* seating */
+var seatingEnabled = false;
+var blocks = [];
+var soldSeats = {};    // { "A-A-01": true }
+var assignment = null; // { blockId, blockName, sectionIdx, rowIdx, seatStart, seatEnd, seats:[id...] }
+var allTierUnits = []; // [{ tier, blockId, blockName, sectionIdx, rowIdx, length, startSeat }] built at load
+
+/* ────────────────────────────────────────────────────────── */
+function $(id){ return document.getElementById(id); }
+function refreshIcons(){ if (window.lucide) lucide.createIcons(); }
+function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function getParam(n){ try { return new URLSearchParams(window.location.search).get(n); } catch(e){ return null; } }
+
+function showToast(msg, type, ms){
+  type = type || "info"; ms = ms || 3000;
+  var t = $("toast");
+  var ic = type === "error" ? "alert-circle" : (type === "success" ? "check-circle" : "info");
+  t.className = "toast " + type;
+  t.innerHTML = '<i data-lucide="' + ic + '"></i><span>' + esc(msg) + '</span>';
   refreshIcons();
-  requestAnimationFrame(function(){ t.classList.add('show'); });
-  clearTimeout(toast._t);
-  toast._t = setTimeout(function(){ t.classList.remove('show'); }, ms);
+  requestAnimationFrame(function(){ t.classList.add("show"); });
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(function(){ t.classList.remove("show"); }, ms);
 }
 
-function cap(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
-
-/* ══════════════════════════════════════════════════════════════
-   TIERS — 3 fixed, semantic keys
-   ══════════════════════════════════════════════════════════════ */
-var TIER_KEYS = ['elite', 'silver', 'standard'];
-
-var TIER_DEFAULT_NAMES = {
-  elite:    'Elite',
-  silver:   'Silver',
-  standard: 'Standard'
-};
-
-var TIER_DEFAULT_COLORS = {
-  elite:    '#1a202c',
-  silver:   '#cbd5e1',
-  standard: '#00FFFF'
-};
-
-/* ══════════════════════════════════════════════════════════════
-   PLAN FEATURES
-   ══════════════════════════════════════════════════════════════ */
-var PLANS = {
-  basic: {
-    fee: 5, limit: 100,
-    tierLimit: 1,
-    canRename: false, canColor: false,
-    seating: false,
-    maxBlocks: 0
-  },
-  standard: {
-    fee: 7, limit: 500,
-    tierLimit: 3,
-    canRename: true, canColor: true,
-    seating: true,
-    maxBlocks: 999999
-  },
-  premium: {
-    fee: 10, limit: 2000,
-    tierLimit: 3,
-    canRename: true, canColor: true,
-    seating: true,
-    maxBlocks: 999999
-  },
-  enterprise: {
-    fee: 12, limit: 999999,
-    tierLimit: 3,
-    canRename: true, canColor: true,
-    seating: true,
-    maxBlocks: 999999
-  }
-};
-
-/* ══════════════════════════════════════════════════════════════
-   STATE
-   ══════════════════════════════════════════════════════════════ */
-var state = {
-  user: null,
-  step: 1,
-  plan: 'standard',
-  features: PLANS.standard,
-
-  /* tiers */
-  tierNames:  Object.assign({}, TIER_DEFAULT_NAMES),
-  tierColors: Object.assign({}, TIER_DEFAULT_COLORS),
-  tierPrices: { elite: 0, silver: 0, standard: 0 },
-  tierPricesTouched: false,
-  savedNames: null,
-  savedColors: null,
-
-  /* seating */
-  seatingMode: 'rows',        // 'rows' | 'tables'
-  planImage: '',              // base64 data URL
-  blocks: [],
-  selectedBlock: null,
-
-  /* meta */
-  coverImage: '',
-  venue: { name: '', city: '', address: '' }
-};
-
-function activeTierKeys(){
-  if (state.plan === 'basic') return ['standard'];
-  return TIER_KEYS.slice();
+function formatMoney(v){
+  if (typeof v !== "number") v = parseFloat(v) || 0;
+  if (v <= 0) return "Free";
+  return "R " + v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+function formatEventDate(dateStr, timeStr){
+  if (!dateStr) return "Date TBA";
+  try {
+    var d = new Date(dateStr + "T" + (timeStr || "00:00"));
+    if (isNaN(d.getTime())) return dateStr;
+    var opts = { weekday:"long", day:"numeric", month:"long", year:"numeric" };
+    var out = d.toLocaleDateString("en-ZA", opts);
+    if (timeStr) out += " · " + timeStr;
+    return out;
+  } catch(e){ return dateStr; }
 }
 
-/* ══════════════════════════════════════════════════════════════
-   BLOCK MODEL
-   ══════════════════════════════════════════════════════════════ */
-function blockLetter(idx){
-  var n = idx, s = '';
-  do { s = String.fromCharCode(65 + (n % 26)) + s; n = Math.floor(n / 26) - 1; } while (n >= 0);
-  return s;
+/* TIERS */
+var ALL_TIER_KEYS = ["elite","silver","standard"];
+var TIER_FB_NAMES = { elite:"Elite", silver:"Silver", standard:"Standard" };
+var TIER_FB_COLORS = { elite:"#1a202c", silver:"#cbd5e1", standard:"#00FFFF" };
+
+function getTierName(key){
+  if (!key) return "Standard";
+  if (eventData && eventData.tierNames && eventData.tierNames[key]) return eventData.tierNames[key];
+  return TIER_FB_NAMES[key] || key;
 }
-
-function makeBlock(idx){
-  return {
-    id: uid(),
-    name: 'Block ' + blockLetter(idx),
-    mode: 'rows',
-    tier: null,
-    /* rows mode */
-    rowCount: 4,
-    seatsPerRow: 8,
-    /* tables mode */
-    tableCount: 4,
-    chairsPerTable: 8
-  };
+function getTierColor(key){
+  if (!key) return "#00FFFF";
+  if (eventData && eventData.tierColours && eventData.tierColours[key]) return eventData.tierColours[key];
+  return TIER_FB_COLORS[key] || "#00FFFF";
 }
-
-function getBlock(id){
-  return state.blocks.find(function(b){ return b.id === id; });
+function getTierPrice(key){
+  if (!eventData || !eventData.tierPrices) return 0;
+  var v = parseFloat(eventData.tierPrices[key]);
+  return isNaN(v) ? 0 : v;
 }
-
-/* seats in a block */
-function blockSeatCount(block){
-  if (!block) return 0;
-  if (block.mode === 'rows'){
-    return block.rowCount * block.seatsPerRow;
-  }
-  return block.tableCount * block.chairsPerTable;
+function getPaymentLink(key){
+  if (!eventData || !eventData.paymentLinks) return "";
+  return String(eventData.paymentLinks[key] || "").trim();
 }
-
-/* largest single row (or table) in a block — used for max-purchase cap on buyer side */
-function blockLargestUnit(block){
-  if (!block) return 0;
-  if (block.mode === 'rows') return block.seatsPerRow;
-  return block.chairsPerTable;
+function getActiveTierKeys(){
+  if (!eventData) return ALL_TIER_KEYS.slice();
+  var count = parseInt(eventData.activeTierCount, 10);
+  if (isNaN(count) || count < 1) count = ALL_TIER_KEYS.length;
+  if (count > ALL_TIER_KEYS.length) count = ALL_TIER_KEYS.length;
+  return ALL_TIER_KEYS.slice(0, count);
 }
+function isSingleTier(){ return getActiveTierKeys().length === 1; }
 
-/* tier distribution — how many seats fall in each tier */
-function computeTierCounts(){
-  var counts = {};
-  activeTierKeys().forEach(function(k){ counts[k] = 0; });
-  if (!state.features.seating || !state.blocks.length) return counts;
-
-  var fallback = activeTierKeys()[activeTierKeys().length - 1] || 'standard';
-
-  state.blocks.forEach(function(b){
-    var t = b.tier || fallback;
-    counts[t] = (counts[t] || 0) + blockSeatCount(b);
+function getCheapestTier(){
+  var keys = getActiveTierKeys();
+  var cheapest = null, cheapestPrice = Infinity;
+  keys.forEach(function(k){
+    var p = getTierPrice(k);
+    if (p < cheapestPrice){ cheapestPrice = p; cheapest = k; }
   });
-
-  return counts;
+  return { key: cheapest, price: cheapestPrice === Infinity ? 0 : cheapestPrice };
 }
 
-/* ══════════════════════════════════════════════════════════════
-   SEAT ID GENERATION (canonical)
-   ══════════════════════════════════════════════════════════════ */
-function seatIdForRow(blockLetter, rowIdx, seatNum){
-  var rowLbl = String.fromCharCode(65 + rowIdx);
-  return blockLetter + '-' + rowLbl + '-' + String(seatNum).padStart(2, '0');
+function firstNameOf(user){
+  if (!user) return "";
+  if (user.displayName && user.displayName.trim()) return user.displayName.trim();
+  if (user.email) return user.email.split("@")[0];
+  return "";
 }
-function seatIdForTable(blockLetter, tableIdx, chairNum){
-  var tableLbl = 'T' + String(tableIdx).padStart(2, '0');
-  return blockLetter + '-' + tableLbl + '-' + String(chairNum).padStart(2, '0');
-}
-
-/* ══════════════════════════════════════════════════════════════
-   COLOUR HELPERS (for ticket preview + seat swatches)
-   ══════════════════════════════════════════════════════════════ */
-function hexToRgb(h){
-  h = String(h || '').replace('#', '');
-  if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
-  if (h.length !== 6) return null;
-  return {
-    r: parseInt(h.slice(0, 2), 16),
-    g: parseInt(h.slice(2, 4), 16),
-    b: parseInt(h.slice(4, 6), 16)
-  };
-}
-function mix(a, b, t){
-  var ca = hexToRgb(a), cb = hexToRgb(b);
-  if (!ca || !cb) return a;
-  return '#' + ['r','g','b'].map(function(ch){
-    return Math.round(ca[ch] + (cb[ch] - ca[ch]) * t).toString(16).padStart(2, '0');
-  }).join('');
-}
-function relLum(h){
-  var c = hexToRgb(h); if (!c) return 0.5;
-  var arr = [c.r, c.g, c.b].map(function(v){
-    v /= 255;
-    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
-  });
-  return 0.2126 * arr[0] + 0.7152 * arr[1] + 0.0722 * arr[2];
-}
-function isLight(hex){ return relLum(hex) > 0.55; }
-  /* ══════════════════════════════════════════════════════════════
-   PLAN RENDERING
-   ══════════════════════════════════════════════════════════════ */
-function applyPlan(){
-  state.features = PLANS[state.plan];
-
-  $$('.plan-card').forEach(function(c){
-    var r = c.querySelector('input');
-    c.classList.toggle('selected', r && r.checked);
-  });
-
-  /* preserve custom names across downgrades */
-  if (!state.features.canRename){
-    if (!state.savedNames){
-      var changedN = TIER_KEYS.some(function(k){
-        return state.tierNames[k] !== TIER_DEFAULT_NAMES[k];
-      });
-      if (changedN) state.savedNames = Object.assign({}, state.tierNames);
-    }
-    TIER_KEYS.forEach(function(k){ state.tierNames[k] = TIER_DEFAULT_NAMES[k]; });
-  } else if (state.savedNames){
-    TIER_KEYS.forEach(function(k){
-      if (state.savedNames[k]) state.tierNames[k] = state.savedNames[k];
-    });
-    state.savedNames = null;
-  }
-
-  /* preserve custom colours across downgrades */
-  if (!state.features.canColor){
-    if (!state.savedColors){
-      var changedC = TIER_KEYS.some(function(k){
-        return state.tierColors[k] !== TIER_DEFAULT_COLORS[k];
-      });
-      if (changedC) state.savedColors = Object.assign({}, state.tierColors);
-    }
-    TIER_KEYS.forEach(function(k){ state.tierColors[k] = TIER_DEFAULT_COLORS[k]; });
-  } else if (state.savedColors){
-    TIER_KEYS.forEach(function(k){
-      if (state.savedColors[k]) state.tierColors[k] = state.savedColors[k];
-    });
-    state.savedColors = null;
-  }
-
-  if (state.plan === 'basic'){
-    state.tierNames.standard = 'Standard';
-  }
-
-  /* hide/show base price on Basic */
-  $('basePriceGroup').style.display = (state.plan === 'basic') ? 'none' : '';
-
-  /* Step 2 summary panel */
-  $('planName').textContent  = cap(state.plan) + ' · ' + state.features.fee + '%';
-  $('planTierLimit').textContent = state.features.tierLimit;
-  $('planRename').textContent    = state.features.canRename ? 'Yes' : 'No';
-  $('planColors').textContent    = state.features.canColor ? 'Yes' : 'No';
-  $('planSeating').textContent   = state.features.seating ? 'Rows & tables' : 'None';
-  $('planLimit').textContent     = state.features.limit >= 999999 ? 'Unlimited' : state.features.limit;
-  $('planBlocks').textContent    = state.features.maxBlocks >= 999999 ? 'Unlimited' : state.features.maxBlocks;
-
-  /* Step 3 locked notes */
-  $('basicTierNote').style.display  = (state.plan === 'basic') ? 'flex' : 'none';
-  $('basicColorNote').style.display = (state.plan === 'basic') ? 'flex' : 'none';
-
-  /* Step 4 gating */
-  $('basicSeatingNote').style.display = (!state.features.seating) ? 'flex' : 'none';
-  $('seatingEditor').style.display    = (!state.features.seating) ? 'none' : 'block';
-
-  renderTierList();
-  renderTierColorGrid();
-  renderSeatingEditor();
-  renderRevenue();
+function hasTwoWords(name){
+  if (!name) return false;
+  return String(name).trim().split(/\s+/).filter(Boolean).length >= 2;
 }
 
-/* ══════════════════════════════════════════════════════════════
-   TIER LIST
-   ══════════════════════════════════════════════════════════════ */
-function renderTierList(){
-  var list = $('tierList');
-  list.innerHTML = '';
-  activeTierKeys().forEach(function(k){
-    var row = document.createElement('div');
-    row.className = 'tier-row';
-    var readonly = state.features.canRename ? '' : 'readonly';
-    row.innerHTML =
-      '<span class="tier-swatch" style="background:'+state.tierColors[k]+'"></span>' +
-      '<input type="text" class="tier-name" data-tier="'+k+'" value="'+esc(state.tierNames[k])+'" maxlength="20" '+readonly+' />' +
-      '<span class="tier-qty" data-qty="'+k+'">0 seats</span>' +
-      '<div class="curr"><span class="curr-prefix">R</span>' +
-        '<input type="number" class="tier-price" data-tier="'+k+'" min="0" step="0.01" value="'+(state.tierPrices[k]||0)+'" />' +
-      '</div>' +
-      '<span class="tier-rev" data-rev="'+k+'">R 0.00</span>';
-    list.appendChild(row);
-  });
+/* ──────────────────────────────────────────────────────────
+   BUILD ALL SEAT UNITS FROM BLOCKS
+   A "unit" is one row (or one table) with its seats.
+   Each seat has a canonical ID like:
+     A-A-01 (block, row, seat)        — no sections
+     A-S1-A-01 (block, section, row, seat)
+     A-T01-05 (block, table, chair)   — tables, no sections
+     A-S1-T01-05 (tables, section)    — tables with sections
+   ────────────────────────────────────────────────────────── */
+function rowLetter(i){ return String.fromCharCode(65 + i); }
 
-  list.querySelectorAll('.tier-name').forEach(function(inp){
-    inp.addEventListener('input', function(){
-      if (!state.features.canRename){
-        this.value = TIER_DEFAULT_NAMES[this.dataset.tier];
-        return;
+function pad2(n){ return String(n).padStart(2, "0"); }
+
+function buildAllUnits(){
+  allTierUnits = [];
+  soldSeats = {};
+
+  if (!seatingEnabled || !blocks.length) return;
+
+  var hasSections = blocks.some(function(b){ return (b.sectionCount || 1) > 1; });
+
+  blocks.forEach(function(b){
+    var blockPrefix = b.name.replace(/[^A-Za-z]/g, "").charAt(0).toUpperCase() || "A";
+    var tier = b.tier || (getActiveTierKeys()[getActiveTierKeys().length - 1] || "standard");
+    var secCount = b.sectionCount || 1;
+
+    for (var s = 0; s < secCount; s++){
+      var secPart = hasSections ? ("S" + (s + 1) + "-") : "";
+
+      if (b.mode === "rows" || (!b.mode && b.rowCount)){
+        var rowCount = b.rowCount || 1;
+        var seatsPerRow = b.seatsPerRow || 1;
+        for (var r = 0; r < rowCount; r++){
+          var rowLbl = rowLetter(r);
+          var unit = {
+            tier: tier,
+            blockId: b.id,
+            blockName: b.name,
+            blockPrefix: blockPrefix,
+            sectionIdx: secCount > 1 ? s : 0,
+            sectionLabel: secCount > 1 ? ("Section " + (s + 1)) : "",
+            kind: "row",
+            rowIdx: r,
+            rowLabel: rowLbl,
+            length: seatsPerRow,
+            seats: []
+          };
+          for (var c = 1; c <= seatsPerRow; c++){
+            var seatId = blockPrefix + "-" + secPart + rowLbl + "-" + pad2(c);
+            unit.seats.push({ num: c, id: seatId });
+          }
+          allTierUnits.push(unit);
+        }
+      } else if (b.mode === "tables"){
+        var tableCount = b.tableCount || 1;
+        var chairsPerTable = b.chairsPerTable || 1;
+        for (var t = 1; t <= tableCount; t++){
+          var tLabel = "T" + pad2(t);
+          var unit2 = {
+            tier: tier,
+            blockId: b.id,
+            blockName: b.name,
+            blockPrefix: blockPrefix,
+            sectionIdx: secCount > 1 ? s : 0,
+            sectionLabel: secCount > 1 ? ("Section " + (s + 1)) : "",
+            kind: "table",
+            tableIdx: t,
+            tableLabel: tLabel,
+            length: chairsPerTable,
+            seats: []
+          };
+          for (var ch = 1; ch <= chairsPerTable; ch++){
+            var seatId2 = blockPrefix + "-" + secPart + tLabel + "-" + pad2(ch);
+            unit2.seats.push({ num: ch, id: seatId2 });
+          }
+          allTierUnits.push(unit2);
+        }
       }
-      state.tierNames[this.dataset.tier] = this.value.trim() || TIER_DEFAULT_NAMES[this.dataset.tier];
-      renderTierColorGrid();
-      updateTicketBadges();
-      renderBlockEditor();
-    });
-  });
-
-  list.querySelectorAll('.tier-price').forEach(function(inp){
-    inp.addEventListener('input', function(){
-      state.tierPricesTouched = true;
-      var v = parseFloat(this.value);
-      state.tierPrices[this.dataset.tier] = (isNaN(v) || v < 0) ? 0 : Math.round(v * 100) / 100;
-      renderRevenue();
-    });
-  });
-}
-
-/* ══════════════════════════════════════════════════════════════
-   TIER COLOURS
-   ══════════════════════════════════════════════════════════════ */
-function renderTierColorGrid(){
-  var grid = $('tierColorGrid');
-  grid.innerHTML = '';
-  activeTierKeys().forEach(function(k){
-    var item = document.createElement('div');
-    item.className = 'tier-color-item';
-    item.innerHTML =
-      '<span class="tier-color-swatch" style="background:'+state.tierColors[k]+'"></span>' +
-      '<label>'+esc(state.tierNames[k])+'</label>' +
-      '<input type="color" data-tier="'+k+'" value="'+state.tierColors[k]+'" '+
-        (state.features.canColor ? '' : 'disabled')+' />';
-    grid.appendChild(item);
-  });
-
-  grid.querySelectorAll('input[type=color]').forEach(function(inp){
-    inp.addEventListener('input', function(){
-      if (!state.features.canColor) return;
-      state.tierColors[this.dataset.tier] = this.value;
-      renderTierList();
-      renderSeatPreview();
-      updateTicketColors();
-    });
-  });
-
-  updateTicketColors();
-}
-
-/* ══════════════════════════════════════════════════════════════
-   TICKET PREVIEW THEMING
-   ══════════════════════════════════════════════════════════════ */
-function updateTicketBadges(){
-  var keys = activeTierKeys();
-  var top = keys[0] || 'standard';
-  var label = (state.tierNames[top] || 'Standard').toUpperCase();
-  ['tierBadge','tierBadge2','tierBadge3'].forEach(function(id){
-    if ($(id)) $(id).textContent = label;
-  });
-  updateTicketColors();
-}
-
-function updateTicketColors(){
-  var keys = activeTierKeys();
-  var top = keys[0] || 'standard';
-  var hex = state.tierColors[top];
-  var lum = relLum(hex);
-  var bg1, bg2, text, muted;
-
-  if (lum < 0.35){
-    bg1 = mix(hex, '#ffffff', 0.06);
-    bg2 = mix(hex, '#000000', 0.45);
-    text = '#ffffff';
-    muted = 'rgba(255,255,255,0.65)';
-  } else {
-    bg1 = mix(hex, '#ffffff', 0.92);
-    bg2 = mix(hex, '#ffffff', 0.4);
-    var c2lum = relLum(bg2);
-    text = c2lum > 0.5 ? '#0a0f14' : '#ffffff';
-    muted = text === '#ffffff' ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)';
-  }
-
-  ['ticketFront'].forEach(function(id){
-    var el = $(id); if (!el) return;
-    el.style.setProperty('--tkt-bg1', bg1);
-    el.style.setProperty('--tkt-bg2', bg2);
-    el.style.setProperty('--tkt-text', text);
-    el.style.setProperty('--tkt-muted', muted);
-    el.style.setProperty('--tkt-logo', lum < 0.35 ? '#00FFFF' : '#1e2f4d');
-  });
-}
-
-/* ══════════════════════════════════════════════════════════════
-   STEP NAV
-   ══════════════════════════════════════════════════════════════ */
-var STEP_NAMES = {1:'Event Details',2:'Pricing Plan',3:'Tiers',4:'Seating Plan',5:'Revenue'};
-
-function goToStep(n){
-  if (n < 1 || n > 5) return;
-  state.step = n;
-  $$('.panel').forEach(function(p){
-    p.classList.toggle('active', parseInt(p.dataset.panel, 10) === n);
-  });
-  $$('.step').forEach(function(t){
-    var s = parseInt(t.dataset.step, 10);
-    t.classList.toggle('active', s === n);
-    t.classList.toggle('done', s < n);
-  });
-  var pct = Math.round(n / 5 * 100);
-  $('progFill').style.width = pct + '%';
-  $('progLbl').textContent = 'Step ' + n + ' of 5 · ' + STEP_NAMES[n];
-  $('progPct').textContent = pct + '%';
-  window.scrollTo({ top: 0, behavior: 'smooth' });
-  if (n === 4) renderSeatingEditor();
-  if (n === 5) renderRevenue();
-}
-
-/* ══════════════════════════════════════════════════════════════
-   SEATING EDITOR — picture + block inputs
-   ══════════════════════════════════════════════════════════════ */
-function ensureBlocks(){
-  if (!state.blocks.length){
-    var b = makeBlock(0);
-    b.mode = state.seatingMode;
-    state.blocks.push(b);
-    state.selectedBlock = b.id;
-  }
-}
-
-function renderSeatingEditor(){
-  if (!state.features.seating) return;
-  ensureBlocks();
-  renderModePills();
-  renderBlockTabs();
-  renderBlockEditor();
-  renderSeatPreview();
-  renderPlanImage();
-}
-
-function renderModePills(){
-  $$('.mode-pill').forEach(function(p){
-    p.classList.toggle('active', p.dataset.mode === state.seatingMode);
-  });
-  $('seatingPlanBadge').textContent =
-    state.seatingMode === 'tables' ? 'Tables mode' : 'Rows mode';
-}
-
-function renderPlanImage(){
-  var box = $('planUploadBox');
-  var empty = $('planUploadEmpty');
-  var preview = $('planUploadPreview');
-  var img = $('planImagePreview');
-  if (!box) return;
-
-  if (state.planImage){
-    box.classList.add('has-image');
-    empty.style.display = 'none';
-    preview.style.display = 'block';
-    img.src = state.planImage;
-  } else {
-    box.classList.remove('has-image');
-    empty.style.display = 'block';
-    preview.style.display = 'none';
-  }
-  refreshIcons();
-}
-
-function renderBlockTabs(){
-  var tabs = $('blockTabs');
-  tabs.innerHTML = '';
-
-  state.blocks.forEach(function(b){
-    var tab = document.createElement('button');
-    tab.type = 'button';
-    tab.className = 'block-tab' + (b.id === state.selectedBlock ? ' active' : '');
-    tab.innerHTML = esc(b.name) + ' <span class="cnt">' + blockSeatCount(b) + '</span>';
-    tab.addEventListener('click', function(){
-      state.selectedBlock = b.id;
-      renderBlockTabs();
-      renderBlockEditor();
-    });
-    tabs.appendChild(tab);
-  });
-
-  var add = document.createElement('button');
-  add.type = 'button';
-  add.className = 'block-tab-add';
-  add.textContent = '+ Add block';
-  add.addEventListener('click', function(){
-    var b = makeBlock(state.blocks.length);
-    b.mode = state.seatingMode;
-    state.blocks.push(b);
-    state.selectedBlock = b.id;
-    renderBlockTabs();
-    renderBlockEditor();
-    renderSeatPreview();
-    renderRevenue();
-  });
-  tabs.appendChild(add);
-}
-
-function renderBlockEditor(){
-  var editor = $('blockEditor');
-  var b = getBlock(state.selectedBlock);
-  if (!b){ editor.innerHTML = ''; return; }
-
-  var html = '<div class="block-editor-h">' +
-    '<h3>' + esc(b.name) + '</h3>' +
-    '<div class="block-editor-actions">' +
-      '<button type="button" class="btn btn-ghost btn-sm" id="dupBlockBtn">' + icon('copy') + ' Duplicate</button>' +
-      '<button type="button" class="btn btn-danger btn-sm" id="delBlockBtn">' + icon('trash-2') + ' Delete</button>' +
-    '</div>' +
-  '</div>';
-
-  /* name */
-  html += '<div class="fg">' +
-    '<label>Block name</label>' +
-    '<input type="text" id="blockNameInput" value="' + esc(b.name) + '" maxlength="30" />' +
-  '</div>';
-
-  /* tier */
-  html += '<div class="fg">' +
-    '<label>Tier</label>' +
-    '<select id="blockTierInput">' +
-      '<option value="">— Use last tier as default —</option>' +
-      activeTierKeys().map(function(k){
-        return '<option value="'+k+'"'+(b.tier===k?' selected':'')+'>'+esc(state.tierNames[k])+'</option>';
-      }).join('') +
-    '</select>' +
-    '<p class="hint">All seats in this block will be sold at this tier.</p>' +
-  '</div>';
-
-  /* rows vs tables fields */
-  if (state.seatingMode === 'rows'){
-    html += '<div class="row2">' +
-      '<div class="fg" style="margin-bottom:0;">' +
-        '<label>Number of rows</label>' +
-        '<input type="number" id="rowCountInput" min="1" max="50" value="' + b.rowCount + '" />' +
-        '<p class="hint">1 to 50 rows.</p>' +
-      '</div>' +
-      '<div class="fg" style="margin-bottom:0;">' +
-        '<label>Seats per row</label>' +
-        '<input type="number" id="seatsPerRowInput" min="1" max="30" value="' + b.seatsPerRow + '" />' +
-        '<p class="hint">1 to 30. Also the max a buyer can purchase at once.</p>' +
-      '</div>' +
-    '</div>';
-  } else {
-    html += '<div class="row2">' +
-      '<div class="fg" style="margin-bottom:0;">' +
-        '<label>Number of tables</label>' +
-        '<input type="number" id="tableCountInput" min="1" max="50" value="' + b.tableCount + '" />' +
-        '<p class="hint">1 to 50 tables.</p>' +
-      '</div>' +
-      '<div class="fg" style="margin-bottom:0;">' +
-        '<label>Chairs per table</label>' +
-        '<input type="number" id="chairsPerTableInput" min="1" max="20" value="' + b.chairsPerTable + '" />' +
-        '<p class="hint">1 to 20. Also the max a buyer can purchase at once.</p>' +
-      '</div>' +
-    '</div>';
-  }
-
-  html += '<div class="total-chip">' + icon('users') + ' ' + blockSeatCount(b) + ' seats in this block</div>';
-
-  editor.innerHTML = html;
-  refreshIcons();
-
-  /* wire */
-  $('blockNameInput').addEventListener('input', function(){
-    b.name = this.value || 'Block';
-    renderBlockTabs();
-    renderSeatPreview();
-  });
-  $('blockTierInput').addEventListener('change', function(){
-    b.tier = this.value || null;
-    renderSeatPreview();
-    renderRevenue();
-  });
-  $('delBlockBtn').addEventListener('click', function(){
-    if (state.blocks.length <= 1){
-      toast('At least one block is required.', 'error');
-      return;
     }
-    if (!confirm('Delete "' + b.name + '"?')) return;
-    state.blocks = state.blocks.filter(function(x){ return x.id !== b.id; });
-    state.selectedBlock = state.blocks[0].id;
-    renderBlockTabs();
-    renderBlockEditor();
-    renderSeatPreview();
-    renderRevenue();
-  });
-  $('dupBlockBtn').addEventListener('click', function(){
-    var copy = JSON.parse(JSON.stringify(b));
-    copy.id = uid();
-    copy.name = 'Block ' + blockLetter(state.blocks.length);
-    state.blocks.push(copy);
-    state.selectedBlock = copy.id;
-    renderBlockTabs();
-    renderBlockEditor();
-    renderSeatPreview();
-    renderRevenue();
   });
 
-  if (state.seatingMode === 'rows'){
-    var rc = $('rowCountInput');
-    if (rc) rc.addEventListener('input', function(){
-      var v = parseInt(this.value, 10) || 1;
-      v = Math.max(1, Math.min(50, v));
-      b.rowCount = v; this.value = v;
-      refreshTotalChip(b);
-      renderBlockTabs();
-      renderSeatPreview();
-      renderRevenue();
-    });
-    var sp = $('seatsPerRowInput');
-    if (sp) sp.addEventListener('input', function(){
-      var v = parseInt(this.value, 10) || 1;
-      v = Math.max(1, Math.min(30, v));
-      b.seatsPerRow = v; this.value = v;
-      refreshTotalChip(b);
-      renderBlockTabs();
-      renderSeatPreview();
-      renderRevenue();
-    });
+  /* Sort units so the "first" unit is the natural one:
+     by block order (as authored), then section, then row/table. */
+  /* Blocks are already in order. Units are built in that order. */
+}
+
+/* Largest row (or table) size in a tier — static cap */
+function maxRowSizeInTier(tierKey){
+  var max = 0;
+  allTierUnits.forEach(function(u){
+    if (u.tier === tierKey && u.length > max) max = u.length;
+  });
+  return max;
+}
+
+/* Find the first run of N consecutive free seats in one unit of the given tier.
+   Returns { unit, startIdx } or null. */
+function findAssignment(tierKey, count, skipUnitKey){
+  for (var i = 0; i < allTierUnits.length; i++){
+    var u = allTierUnits[i];
+    if (u.tier !== tierKey) continue;
+    if (u.length < count) continue;
+
+    var unitKey = u.blockId + "|" + u.sectionIdx + "|" + (u.kind === "row" ? ("r" + u.rowIdx) : ("t" + u.tableIdx));
+    if (skipUnitKey && unitKey === skipUnitKey) continue;
+
+    /* find first run of `count` consecutive free seats */
+    var runStart = -1;
+    var runLen = 0;
+    for (var s = 0; s < u.seats.length; s++){
+      if (!soldSeats[u.seats[s].id]){
+        if (runStart === -1) runStart = s;
+        runLen++;
+        if (runLen >= count){
+          return { unit: u, startIdx: runStart, unitKey: unitKey };
+        }
+      } else {
+        runStart = -1;
+        runLen = 0;
+      }
+    }
+  }
+  return null;
+}
+
+/* Describe an assignment as a readable string */
+function describeAssignment(a){
+  var u = a.unit;
+  var startSeat = a.startIdx + 1;
+  var endSeat = a.startIdx + a.unit.seats.length ? (a.startIdx + (a.endIdx !== undefined ? a.endIdx : 0) + 1) : startSeat;
+  /* simpler: recompute */
+  endSeat = a.startIdx + (a.count || 1);
+  /* if caller provided explicit range */
+  if (a.rangeStart !== undefined && a.rangeEnd !== undefined){
+    startSeat = a.rangeStart;
+    endSeat = a.rangeEnd;
+  }
+
+  var parts = [];
+  parts.push(u.blockName || "Block");
+  if (u.sectionLabel) parts.push(u.sectionLabel);
+  if (u.kind === "row"){
+    parts.push("Row " + u.rowLabel);
+    parts.push("Seats " + startSeat + (endSeat > startSeat ? "–" + endSeat : ""));
   } else {
-    var tc = $('tableCountInput');
-    if (tc) tc.addEventListener('input', function(){
-      var v = parseInt(this.value, 10) || 1;
-      v = Math.max(1, Math.min(50, v));
-      b.tableCount = v; this.value = v;
-      refreshTotalChip(b);
-      renderBlockTabs();
-      renderSeatPreview();
-      renderRevenue();
+    parts.push("Table " + u.tableIdx);
+    parts.push("Chairs " + startSeat + (endSeat > startSeat ? "–" + endSeat : ""));
+  }
+  return parts.join(" · ");
+}
+
+/* ──────────────────────────────────────────────────────────
+   SEATING SETUP + SOLD SEATS
+   ────────────────────────────────────────────────────────── */
+async function loadSoldSeats(){
+  soldSeats = {};
+  if (!seatingEnabled || !eventId) return;
+  try {
+    var snap = await db.collection(EVENTS).doc(eventId).collection("tickets").get();
+    snap.forEach(function(doc){
+      var d = doc.data() || {};
+      var s = String(d.status || "").toLowerCase();
+      if (s === "cancelled" || s === "expired") return;
+      if (d.seat){
+        soldSeats[String(d.seat)] = true;
+      }
     });
-    var cp = $('chairsPerTableInput');
-    if (cp) cp.addEventListener('input', function(){
-      var v = parseInt(this.value, 10) || 1;
-      v = Math.max(1, Math.min(20, v));
-      b.chairsPerTable = v; this.value = v;
-      refreshTotalChip(b);
-      renderBlockTabs();
-      renderSeatPreview();
-      renderRevenue();
-    });
+  } catch(err){
+    console.warn("Could not load sold seats:", err);
   }
 }
 
-function refreshTotalChip(b){
-  var chip = document.querySelector('#blockEditor .total-chip');
-  if (!chip) return;
-  chip.innerHTML = icon('users') + ' ' + blockSeatCount(b) + ' seats in this block';
+/* ──────────────────────────────────────────────────────────
+   STATE VIEWS
+   ────────────────────────────────────────────────────────── */
+function showLoading(){
+  $("loadingState").style.display = "block";
+  $("errorState").style.display = "none";
+  $("notLiveState").style.display = "none";
+  $("eventContent").style.display = "none";
+}
+function showError(title, msg){
+  $("loadingState").style.display = "none";
+  $("errorState").style.display = "block";
+  $("notLiveState").style.display = "none";
+  $("eventContent").style.display = "none";
+  $("errorTitle").textContent = title || "Could not load event";
+  $("errorMsg").textContent = msg || "Something went wrong.";
+  refreshIcons();
+}
+function showNotLive(msg){
+  $("loadingState").style.display = "none";
+  $("errorState").style.display = "none";
+  $("notLiveState").style.display = "block";
+  $("eventContent").style.display = "none";
+  if (msg) $("notLiveMsg").textContent = msg;
+  refreshIcons();
+}
+function showContent(){
+  $("loadingState").style.display = "none";
+  $("errorState").style.display = "none";
+  $("notLiveState").style.display = "none";
+  $("eventContent").style.display = "block";
+}
+function updateSigninNote(){
+  var note = $("signinNote");
+  if (!note) return;
+  note.style.display = currentUser ? "none" : "flex";
+}
+
+/* ──────────────────────────────────────────────────────────
+   RENDER EVENT
+   ────────────────────────────────────────────────────────── */
+function renderEvent(){
+  if (!eventData) return;
+
+  var name = eventData.eventName || "Untitled Event";
+  document.title = name + " · Novalink";
+
+  $("heroTitle").textContent = name;
+  $("heroDate").textContent = formatEventDate(eventData.startDate, eventData.startTime);
+
+  var typeLabel = eventData.eventType
+    ? eventData.eventType.charAt(0).toUpperCase() + eventData.eventType.slice(1)
+    : "Event";
+  $("heroType").textContent = typeLabel;
+
+  var tagline = eventData.eventTagline || "";
+  $("heroTagline").textContent = tagline;
+  $("heroTagline").style.display = tagline ? "block" : "none";
+
+  var venue = eventData.venueName || eventData.venueAddress || "";
+  var city = eventData.city || "";
+  $("heroVenue").textContent = [venue, city].filter(Boolean).join(", ") || "Venue TBA";
+
+  var cover = eventData.heroImage || eventData.coverImage || "";
+  if (cover){
+    $("heroCover").style.backgroundImage = "url('" + cover.replace(/'/g, "\\'") + "')";
+  }
+
+  var desc = eventData.eventDescription || "";
+  if (desc && desc.trim()){
+    $("aboutText").textContent = desc;
+    $("aboutCard").style.display = "block";
+  } else {
+    $("aboutCard").style.display = "none";
+  }
+
+  /* Details */
+  var details = [];
+  details.push({ k:"Date", v:eventData.startDate || "TBA" });
+  details.push({ k:"Time", v:eventData.startTime || "TBA" });
+  if (venue) details.push({ k:"Venue", v:venue });
+  if (city) details.push({ k:"City", v:city });
+  if (eventData.hostName) details.push({ k:"Host", v:eventData.hostName });
+  var dg = $("detailGrid");
+  dg.innerHTML = "";
+  details.forEach(function(d){
+    var el = document.createElement("div");
+    el.className = "kv";
+    el.innerHTML = '<div class="k">' + esc(d.k) + '</div><div class="v">' + esc(d.v) + '</div>';
+    dg.appendChild(el);
+  });
+
+  renderTiers();
+
+  var cheapest = getCheapestTier();
+  $("fromPrice").textContent = cheapest.price > 0 ? formatMoney(cheapest.price) : "Free";
+
+  var keys = getActiveTierKeys();
+  if (keys.length){
+    if (keys.length === 1) selectTier(keys[0], true);
+    else selectTier(cheapest.key || keys[0], true);
+  }
+
+  /* Venue picture */
+  if (eventData.seatingPlanImage){
+    $("venuePicImg").src = eventData.seatingPlanImage;
+    $("venuePicWrap").style.display = "block";
+  }
+
+  /* Show seat card only if seating is on */
+  if (seatingEnabled){
+    $("seatCard").style.display = "block";
+    recomputeAssignment();
+  }
+
+  updateSigninNote();
   refreshIcons();
 }
 
-/* ══════════════════════════════════════════════════════════════
-   SEATING EDITOR — live preview
-   ══════════════════════════════════════════════════════════════ */
-function renderSeatPreview(){
-  if (!state.features.seating) return;
-  var wrap = $('seatPreview');
-  if (!wrap) return;
-  wrap.innerHTML = '';
+function renderTiers(){
+  var card = $("tierCard");
+  var title = $("tierCardTitle");
+  var list = $("tierList");
+  var keys = getActiveTierKeys();
+  list.innerHTML = "";
 
-  state.blocks.forEach(function(b){
-    var blockEl = document.createElement('div');
-    blockEl.className = 'preview-block';
+  if (!keys.length){
+    list.innerHTML = '<p style="color:var(--mut);font-size:13px;">No tiers available.</p>';
+    return;
+  }
 
-    var total = blockSeatCount(b);
-    var meta = b.mode === 'rows'
-      ? b.rowCount + ' rows · ' + b.seatsPerRow + ' seats/row · ' + total + ' seats'
-      : b.tableCount + ' tables · ' + b.chairsPerTable + ' chairs/table · ' + total + ' seats';
+  if (keys.length === 1){
+    title.innerHTML = '<i data-lucide="ticket"></i> Your ticket';
+  } else {
+    title.innerHTML = '<i data-lucide="tag"></i> Choose your tier';
+  }
 
-    var head = document.createElement('div');
-    head.className = 'preview-block-head';
-    head.innerHTML =
-      '<div class="preview-block-title">' + esc(b.name) + '</div>' +
-      '<div class="preview-block-meta">' + meta + '</div>';
-    blockEl.appendChild(head);
+  keys.forEach(function(k){
+    var price = getTierPrice(k);
+    var name = getTierName(k);
+    var color = getTierColor(k);
+    var btn = document.createElement("button");
+    btn.type = "button";
+    btn.className = "tier-opt";
+    btn.dataset.tier = k;
+    btn.innerHTML =
+      '<span class="sw" style="background:' + esc(color) + '"></span>' +
+      '<span class="tier-info">' +
+        '<span class="tier-name">' + esc(name) + '</span>' +
+        '<span class="tier-desc">' + (price > 0 ? 'Paid entry' : 'Free entry') + '</span>' +
+      '</span>' +
+      '<span class="tier-price">' + (price > 0 ? formatMoney(price) : "Free") + '</span>';
+    btn.addEventListener("click", function(){ selectTier(k); });
+    list.appendChild(btn);
+  });
 
-    if (b.mode === 'rows'){
-      blockEl.appendChild(buildRowsPreview(b));
+  refreshIcons();
+}
+
+function selectTier(tierKey, silent){
+  selectedTier = tierKey;
+  document.querySelectorAll(".tier-opt").forEach(function(el){
+    el.classList.toggle("selected", el.dataset.tier === tierKey);
+  });
+
+  /* recompute max quantity for tier */
+  clampQtyToTier();
+
+  if (seatingEnabled){
+    /* clear any previous assignment and get a new one */
+    assignment = null;
+    recomputeAssignment();
+  }
+
+  updateSidebarTotal();
+}
+
+function clampQtyToTier(){
+  var max = maxQtyForTier(selectedTier);
+  if (qty > max) qty = max;
+  if (qty < 1) qty = 1;
+  updateQtyUI();
+}
+
+function maxQtyForTier(tierKey){
+  if (!seatingEnabled) return HARD_MAX_QTY;
+
+  /* static cap: largest row/table in this tier */
+  var staticCap = maxRowSizeInTier(tierKey) || 1;
+  if (staticCap > HARD_MAX_QTY) staticCap = HARD_MAX_QTY;
+
+  /* dynamic cap: largest currently-free consecutive run in this tier */
+  var dynamicCap = 0;
+  allTierUnits.forEach(function(u){
+    if (u.tier !== tierKey) return;
+    if (u.length <= dynamicCap) return;
+    var runStart = -1, runLen = 0;
+    for (var s = 0; s < u.seats.length; s++){
+      if (!soldSeats[u.seats[s].id]){
+        if (runStart === -1) runStart = s;
+        runLen++;
+        if (runLen > dynamicCap) dynamicCap = runLen;
+      } else {
+        runStart = -1; runLen = 0;
+      }
+    }
+  });
+
+  var cap = Math.min(staticCap, dynamicCap);
+  if (cap < 1) cap = 1;
+  return cap;
+}
+
+function updateQtyUI(){
+  var max = maxQtyForTier(selectedTier);
+  $("qtyValue").textContent = qty;
+  $("qtyMinus").disabled = qty <= 1;
+  $("qtyPlus").disabled = qty >= max;
+
+  var hint = $("qtyMaxHint");
+  if (hint){
+    if (seatingEnabled){
+      hint.textContent = "Max " + max + " seat" + (max === 1 ? "" : "s") + " together per purchase";
     } else {
-      blockEl.appendChild(buildTablesPreview(b));
+      hint.textContent = "Max " + HARD_MAX_QTY + " tickets per purchase";
     }
+  }
 
-    wrap.appendChild(blockEl);
-  });
+  while (guestNames.length < qty) guestNames.push("");
+  if (guestNames.length > qty) guestNames = guestNames.slice(0, qty);
 
-  /* if fullscreen is open, mirror it */
-  var fs = $('fsOverlay');
-  if (fs && fs.classList.contains('open')){
-    renderFsCanvas();
-    applyFsZoom();
+  updateSidebarTotal();
+}
+
+function updateSidebarTotal(){
+  if (!selectedTier){
+    $("sidebarTotal").textContent = "R 0.00";
+    return;
+  }
+  var price = getTierPrice(selectedTier);
+  var total = price * qty;
+  $("sidebarTotal").textContent = total > 0 ? formatMoney(total) : "Free";
+}
+
+/* ──────────────────────────────────────────────────────────
+   ASSIGNMENT
+   ────────────────────────────────────────────────────────── */
+function recomputeAssignment(skipUnitKey){
+  if (!seatingEnabled || !selectedTier){
+    $("assignBox").style.display = "none";
+    $("assignError").style.display = "none";
+    return;
+  }
+
+  var found = findAssignment(selectedTier, qty, skipUnitKey || null);
+
+  if (!found){
+    assignment = null;
+    $("assignBox").style.display = "none";
+    $("assignError").style.display = "flex";
+    $("assignErrorText").textContent = "No " + qty + " seats together in " + getTierName(selectedTier) +
+      ". Try a different quantity, or pick another tier.";
+    return;
+  }
+
+  var u = found.unit;
+  var startSeat = found.startIdx + 1;
+  var endSeat = found.startIdx + qty;
+  var seatIds = [];
+  for (var i = 0; i < qty; i++){
+    seatIds.push(u.seats[found.startIdx + i].id);
+  }
+
+  assignment = {
+    blockId: u.blockId,
+    blockName: u.blockName,
+    sectionIdx: u.sectionIdx,
+    sectionLabel: u.sectionLabel,
+    kind: u.kind,
+    rowIdx: u.rowIdx,
+    rowLabel: u.rowLabel,
+    tableIdx: u.tableIdx,
+    startSeat: startSeat,
+    endSeat: endSeat,
+    seats: seatIds,
+    unitKey: found.unitKey
+  };
+
+  $("assignBox").style.display = "block";
+  $("assignError").style.display = "none";
+  renderAssignmentSummary();
+}
+
+function renderAssignmentSummary(){
+  if (!assignment) return;
+  var parts = [];
+  parts.push(assignment.blockName || "Block");
+  if (assignment.sectionLabel) parts.push(assignment.sectionLabel);
+  if (assignment.kind === "row"){
+    parts.push("Row " + assignment.rowLabel);
+    parts.push("Seat" + (assignment.startSeat === assignment.endSeat ? " " : "s ") +
+      assignment.startSeat + (assignment.endSeat > assignment.startSeat ? "–" + assignment.endSeat : ""));
+  } else {
+    parts.push("Table " + assignment.tableIdx);
+    parts.push("Chair" + (assignment.startSeat === assignment.endSeat ? " " : "s ") +
+      assignment.startSeat + (assignment.endSeat > assignment.startSeat ? "–" + assignment.endSeat : ""));
+  }
+  $("assignValue").textContent = parts.join(" · ");
+
+  var sub = $("assignSub");
+  if (sub){
+    sub.textContent = assignment.seats.length + " seat" +
+      (assignment.seats.length === 1 ? "" : "s") + " held for you";
   }
 }
 
-function tierForBlock(b){
-  var keys = activeTierKeys();
-  var fallback = keys[keys.length - 1] || 'standard';
-  return b.tier || fallback;
-}
-
-function buildRowsPreview(b){
-  var wrap = document.createElement('div');
-  wrap.className = 'preview-rows';
-  var tierKey = tierForBlock(b);
-  var color = state.tierColors[tierKey];
-  var light = isLight(color);
-
-  for (var r = 0; r < b.rowCount; r++){
-    var rowEl = document.createElement('div');
-    rowEl.className = 'preview-row';
-
-    var lbl = document.createElement('span');
-    lbl.className = 'preview-row-lbl';
-    lbl.textContent = String.fromCharCode(65 + r);
-    rowEl.appendChild(lbl);
-
-    var seats = document.createElement('div');
-    seats.className = 'preview-row-seats';
-    for (var s = 1; s <= b.seatsPerRow; s++){
-      var dot = document.createElement('span');
-      dot.className = 'seat-num' + (light ? ' light' : '');
-      dot.style.background = color;
-      dot.textContent = s;
-      seats.appendChild(dot);
-    }
-    rowEl.appendChild(seats);
-
-    if (r === 0){
-      var tlbl = document.createElement('span');
-      tlbl.className = 'preview-row-tier';
-      tlbl.textContent = state.tierNames[tierKey] || tierKey;
-      rowEl.appendChild(tlbl);
-    }
-
-    wrap.appendChild(rowEl);
+/* ──────────────────────────────────────────────────────────
+   BUY MODAL
+   ────────────────────────────────────────────────────────── */
+function openBuyModal(){
+  if (!currentUser){
+    showToast("Please sign in to reserve tickets.", "error", 3500);
+    setTimeout(function(){ window.location.href = "index.html#signin"; }, 1200);
+    return;
   }
-  return wrap;
-}
-
-function buildTablesPreview(b){
-  var wrap = document.createElement('div');
-  wrap.className = 'preview-tables';
-  var tierKey = tierForBlock(b);
-  var color = state.tierColors[tierKey];
-  var light = isLight(color);
-
-  for (var i = 1; i <= b.tableCount; i++){
-    wrap.appendChild(buildTableRound(i, b.chairsPerTable, color, light));
+  if (!selectedTier){
+    showToast("Please choose a tier first.", "error");
+    return;
   }
-  return wrap;
-}
-
-function buildTableRound(idx, chairCount, color, light){
-  var size = 60;
-  var offset = 16;
-  var pad = size / 2 + offset + 6;
-
-  var wrapEl = document.createElement('div');
-  wrapEl.className = 'table-wrap';
-  wrapEl.style.width  = (pad * 2) + 'px';
-  wrapEl.style.height = (pad * 2) + 'px';
-
-  var table = document.createElement('div');
-  table.className = 'table-shape' + (light ? ' light' : '');
-  table.style.position = 'absolute';
-  table.style.left = (pad - size / 2) + 'px';
-  table.style.top  = (pad - size / 2) + 'px';
-  table.style.width  = size + 'px';
-  table.style.height = size + 'px';
-  table.style.background = color;
-  table.textContent = idx;
-  table.style.fontSize = '18px';
-  wrapEl.appendChild(table);
-
-  var radius = (size / 2) + offset;
-  for (var c = 1; c <= chairCount; c++){
-    var angle = (-Math.PI / 2) + (2 * Math.PI * (c - 1) / chairCount);
-    var cx = pad + Math.cos(angle) * radius;
-    var cy = pad + Math.sin(angle) * radius;
-    var chair = document.createElement('span');
-    chair.className = 'chair-dot' + (light ? ' light' : '');
-    chair.style.background = color;
-    chair.style.left = cx + 'px';
-    chair.style.top  = cy + 'px';
-    chair.textContent = c;
-    wrapEl.appendChild(chair);
+  if (seatingEnabled && !assignment){
+    showToast("No seats available right now for that quantity.", "error", 3500);
+    return;
   }
-  return wrapEl;
-}
 
-/* ══════════════════════════════════════════════════════════════
-   FULLSCREEN VIEWER
-   ══════════════════════════════════════════════════════════════ */
-var fsZoom = 1;
+  var price = getTierPrice(selectedTier);
+  var total = price * qty;
+  $("modalAmount").textContent = total > 0 ? formatMoney(total) : "Free";
 
-function openFullscreen(){
-  $('fsOverlay').classList.add('open');
-  document.body.style.overflow = 'hidden';
-  fsZoom = 1;
-  var name = ($('eventName') && $('eventName').value) || 'Layout';
-  var fsName = $('fsStageName');
-  if (fsName) fsName.textContent = name.toUpperCase();
-  renderFsCanvas();
-  applyFsZoom();
-}
+  var lead = firstNameOf(currentUser) || "";
+  if (!guestNames[0] && lead) guestNames[0] = lead;
+  while (guestNames.length < qty) guestNames.push("");
+  if (guestNames.length > qty) guestNames = guestNames.slice(0, qty);
 
-function closeFullscreen(){
-  $('fsOverlay').classList.remove('open');
-  document.body.style.overflow = '';
-}
+  renderGuestInputs();
 
-function renderFsCanvas(){
-  var src = $('seatPreview');
-  var dst = $('fsInner');
-  if (!src || !dst) return;
-  dst.innerHTML = src.innerHTML;
+  var ge = $("guestEmailInput");
+  if (!ge.value && currentUser.email) ge.value = currentUser.email;
+  clearFieldError("guestEmailInput", "emailError");
+
+  var sub = $("guestSubtitle");
+  if (qty === 1) sub.textContent = "Enter the name for your ticket.";
+  else sub.textContent = "Enter a name for each of the " + qty + " tickets. The first ticket must be in your own name.";
+
+  $("step1").style.display = "block";
+  $("step2").style.display = "none";
+  $("buyModal").classList.add("open");
+  document.body.style.overflow = "hidden";
   refreshIcons();
 }
 
-function applyFsZoom(){
-  var inner = $('fsInner');
-  if (!inner) return;
-  inner.style.transform = 'scale(' + fsZoom + ')';
-  inner.style.transformOrigin = 'top left';
-  var lbl = $('fsZoomLabel');
-  if (lbl) lbl.textContent = Math.round(fsZoom * 100) + '%';
+function closeBuyModal(){
+  $("buyModal").classList.remove("open");
+  document.body.style.overflow = "";
+  if (countdownTimer){ clearInterval(countdownTimer); countdownTimer = null; }
 }
 
-/* ══════════════════════════════════════════════════════════════
-   REVENUE
-   ══════════════════════════════════════════════════════════════ */
-function renderRevenue(){
-  var counts = computeTierCounts();
-  var keys = activeTierKeys();
-  var total = 0, gross = 0;
+function setFieldError(id, errId, msg){
+  var inp = $(id), err = $(errId);
+  if (inp) inp.classList.add("error");
+  if (err){ if (msg) err.textContent = msg; err.classList.add("show"); }
+}
+function clearFieldError(id, errId){
+  var inp = $(id), err = $(errId);
+  if (inp) inp.classList.remove("error");
+  if (err) err.classList.remove("show");
+}
+function setGuestBadgeError(idx, hasError){
+  var badge = document.querySelector('.guest-input-row .badge[data-badge-idx="' + idx + '"]');
+  if (badge) badge.classList.toggle("error", !!hasError);
+}
 
-  keys.forEach(function(k){
-    var q = counts[k] || 0;
-    var p = state.tierPrices[k] || 0;
-    total += q;
-    gross += q * p;
+function renderGuestInputs(){
+  var wrap = $("guestList");
+  wrap.innerHTML = "";
 
-    var qEl = document.querySelector('[data-qty="'+k+'"]');
-    if (qEl) qEl.textContent = q + ' seat' + (q === 1 ? '' : 's');
-    var rEl = document.querySelector('[data-rev="'+k+'"]');
-    if (rEl) rEl.textContent = 'R ' + (q * p).toFixed(2);
+  guestNames.forEach(function(val, i){
+    var row = document.createElement("div");
+    row.className = "guest-input-row";
+    var isLead = i === 0;
+    var badgeCls = "badge" + (isLead ? " lead" : "");
+    var badgeLabel = isLead ? "You" : String(i + 1);
+    var labelText, placeholder;
+    var requiredStar = '<span class="required-star"> *</span>';
+    if (isLead){ labelText = 'Your name and surname' + requiredStar; placeholder = 'e.g., Nathan Nyl'; }
+    else { labelText = 'Ticket ' + (i + 1) + ' — guest name and surname' + requiredStar; placeholder = 'e.g., John Doe'; }
+
+    var seatTag = "";
+    if (seatingEnabled && assignment && assignment.seats[i]){
+      var sid = assignment.seats[i];
+      /* short display: strip "A-" if section prefix not needed — but we'll show full id */
+      seatTag = ' <span class="seat-tag">Seat ' + esc(sid) + '</span>';
+    }
+
+    row.innerHTML =
+      '<div class="' + badgeCls + '" data-badge-idx="' + i + '">' + esc(badgeLabel) + '</div>' +
+      '<div class="field">' +
+        '<div class="guest-label">' + labelText + seatTag + '</div>' +
+        '<input type="text" class="guest-name-input" data-idx="' + i + '" placeholder="' + esc(placeholder) + '" value="' + esc(val) + '" maxlength="60" autocomplete="' + (isLead ? 'name' : 'off') + '" />' +
+        '<div class="field-error-msg" data-err-idx="' + i + '"></div>' +
+      '</div>';
+    wrap.appendChild(row);
   });
 
-  var fee = gross * (state.features.fee / 100);
-  var net = gross - fee;
+  wrap.querySelectorAll(".guest-name-input").forEach(function(inp){
+    inp.addEventListener("input", function(){
+      var idx = parseInt(this.dataset.idx, 10);
+      guestNames[idx] = this.value;
+      this.classList.remove("error");
+      var errEl = document.querySelector('.field-error-msg[data-err-idx="' + idx + '"]');
+      if (errEl) errEl.classList.remove("show");
+      setGuestBadgeError(idx, false);
+    });
+  });
+  refreshIcons();
+}
 
-  $('revTickets').textContent = total;
-  $('revGross').textContent = fmtR(gross);
-  $('revFee').textContent = fmtR(fee);
-  $('revPlanName').textContent = cap(state.plan) + ' · ' + state.features.fee + '%';
-  $('revTotal').textContent = total + ' / ' +
-    (state.features.limit >= 999999 ? 'unlimited' : state.features.limit);
-  $('revGross2').textContent = fmtR2(gross);
-  $('revFeePct').textContent = state.features.fee + '%';
-  $('revFee2').textContent = '− ' + fmtR2(fee);
-  $('revNet').textContent = fmtR2(net);
+function validateGuestForm(){
+  var ok = true;
+  var firstBadInput = null;
 
-  var warn = $('revWarn');
-  if (total > state.features.limit && state.features.limit < 999999){
-    warn.textContent = 'Capacity (' + total + ') exceeds the ' + cap(state.plan) +
-      ' limit of ' + state.features.limit + '.';
-    warn.classList.add('show');
-  } else {
-    warn.classList.remove('show');
+  for (var i = 0; i < guestNames.length; i++){
+    var inp = document.querySelector('.guest-name-input[data-idx="' + i + '"]');
+    var errEl = document.querySelector('.field-error-msg[data-err-idx="' + i + '"]');
+    if (inp) inp.classList.remove("error");
+    if (errEl) errEl.classList.remove("show");
+    setGuestBadgeError(i, false);
+  }
+  clearFieldError("guestEmailInput", "emailError");
+
+  for (var j = 0; j < guestNames.length; j++){
+    var raw = (guestNames[j] || "").trim();
+    var inp2 = document.querySelector('.guest-name-input[data-idx="' + j + '"]');
+    var errEl2 = document.querySelector('.field-error-msg[data-err-idx="' + j + '"]');
+    if (!raw){
+      if (inp2) inp2.classList.add("error");
+      if (errEl2){
+        errEl2.textContent = j === 0 ? "Please enter your name and surname." : "Please enter a name for ticket " + (j + 1) + ".";
+        errEl2.classList.add("show");
+      }
+      setGuestBadgeError(j, true);
+      ok = false;
+      if (!firstBadInput) firstBadInput = inp2;
+      continue;
+    }
+    if (raw.length > 60){
+      if (inp2) inp2.classList.add("error");
+      if (errEl2){ errEl2.textContent = "Must be 60 characters or fewer."; errEl2.classList.add("show"); }
+      setGuestBadgeError(j, true);
+      ok = false;
+      if (!firstBadInput) firstBadInput = inp2;
+      continue;
+    }
+    if (j === 0 && !hasTwoWords(raw)){
+      if (inp2) inp2.classList.add("error");
+      if (errEl2){ errEl2.textContent = "Please enter your name AND surname (two words)."; errEl2.classList.add("show"); }
+      setGuestBadgeError(j, true);
+      ok = false;
+      if (!firstBadInput) firstBadInput = inp2;
+      continue;
+    }
   }
 
-  var bd = $('tierBreakdown');
-  bd.innerHTML = '';
-  keys.forEach(function(k){
-    var q = counts[k] || 0;
-    var p = state.tierPrices[k] || 0;
-    var row = document.createElement('div');
-    row.className = 'tier-row';
-    row.innerHTML =
-      '<span class="tier-swatch" style="background:'+state.tierColors[k]+'"></span>' +
-      '<span style="font-weight:800;font-size:13px;">'+esc(state.tierNames[k])+'</span>' +
-      '<span class="tier-qty">'+q+' seat'+(q === 1 ? '' : 's')+'</span>' +
-      '<span class="tier-qty" style="background:var(--bg);color:var(--tx2);">R '+p.toFixed(2)+'</span>' +
-      '<span class="tier-rev">R '+(q * p).toFixed(2)+'</span>';
-    bd.appendChild(row);
-  });
+  var email = ($("guestEmailInput").value || "").trim();
+  if (!email || email.indexOf("@") === -1 || email.indexOf(".") === -1){
+    setFieldError("guestEmailInput", "emailError", "Please enter a valid email address.");
+    ok = false;
+    if (!firstBadInput) firstBadInput = $("guestEmailInput");
+  }
 
-  updateTicketBadges();
-  updatePreviewFields();
+  if (firstBadInput){
+    setTimeout(function(){
+      try { firstBadInput.focus(); } catch(e){}
+      try { firstBadInput.scrollIntoView({ behavior:"smooth", block:"center" }); } catch(e){}
+    }, 50);
+  }
+  return ok;
 }
 
-function updatePreviewFields(){
-  var name  = ($('eventName') && $('eventName').value) || 'EVENT NAME';
-  var venue = ($('venueName') && $('venueName').value) || 'VENUE';
-  var city  = ($('venueCity') && $('venueCity').value) || '';
-  var date  = ($('startDate') && $('startDate').value) || 'DATE';
-  var dv = date + ' · ' + venue + (city ? ', ' + city : '');
-  ['tEventName','tEventName2','tEventName3'].forEach(function(id){
-    if ($(id)) $(id).textContent = name;
-  });
-  ['tDateVenue','tDateVenue2','tDateVenue3'].forEach(function(id){
-    if ($(id)) $(id).textContent = dv;
-  });
-  if ($('tLoc')) $('tLoc').textContent = venue + (city ? ', ' + city : '');
-}
+/* ──────────────────────────────────────────────────────────
+   CREATE PENDING TICKETS
+   ────────────────────────────────────────────────────────── */
+async function createPendingTickets(){
+  if (!currentUser) throw new Error("Sign in required");
+  if (!validateGuestForm()) throw new Error("__validation__");
 
-/* ══════════════════════════════════════════════════════════════
-   BUILD SECTIONS + PAYLOAD
-   ══════════════════════════════════════════════════════════════ */
-function buildSections(){
-  var keys = activeTierKeys();
-  var fallback = keys[keys.length - 1] || 'standard';
+  if (seatingEnabled && assignment){
+    for (var i = 0; i < assignment.seats.length; i++){
+      if (soldSeats[assignment.seats[i]]){
+        throw new Error("Seat " + assignment.seats[i] + " just got taken. Please try different seats.");
+      }
+    }
+  }
 
-  return state.blocks.map(function(b, idx){
-    var bLetter = blockLetter(idx);
-    var tierKey = b.tier || fallback;
+  var buyerEmail = ($("guestEmailInput").value || "").trim();
+  var price = getTierPrice(selectedTier);
+  var totalAmount = price * qty;
+  var nowMs = Date.now();
+  var expiresAtMs = nowMs + PENDING_TTL_MS;
+  var buyerUid = currentUser.uid;
+  var groupId = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
+  var paymentLink = getPaymentLink(selectedTier) || "";
 
-    var sec = {
-      id: b.id,
-      letter: bLetter,
-      name: b.name,
-      mode: b.mode,
-      tier: tierKey
+  var createdTickets = [];
+  var batch = db.batch();
+  var eventRef = db.collection(EVENTS).doc(eventId);
+
+  for (var g = 0; g < qty; g++){
+    var guestName = (guestNames[g] || "").trim();
+    var ticketId = eventRef.collection("tickets").doc().id;
+    var rand = rand4();
+    var reference = buildTicketRef(eventId, ticketId, rand);
+    var seatId = (seatingEnabled && assignment) ? assignment.seats[g] : "";
+
+    var ticketData = {
+      ticketId: ticketId,
+      eventId: eventId,
+      eventName: eventData.eventName || "Untitled Event",
+      buyerUid: buyerUid,
+      buyerEmail: buyerEmail,
+      buyerName: (guestNames[0] || "").trim(),
+      guestName: guestName,
+      guestIndex: g,
+      groupId: groupId,
+      groupSize: qty,
+      tier: selectedTier,
+      tierName: getTierName(selectedTier),
+      seat: seatId,
+      seatBlock: assignment ? assignment.blockName : "",
+      seatSection: assignment ? assignment.sectionLabel : "",
+      seatRow: assignment && assignment.kind === "row" ? assignment.rowLabel : "",
+      seatTable: assignment && assignment.kind === "table" ? assignment.tableIdx : null,
+      seatNumber: assignment ? (assignment.startSeat + g) : null,
+      quantity: 1,
+      pricePaid: price,
+      pricePerTicket: price,
+      status: "pending",
+      paymentRef: reference,
+      paymentRefRand: rand,
+      paymentLink: paymentLink,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      expiresAt: firebase.firestore.Timestamp.fromMillis(expiresAtMs),
+      source: "web"
     };
 
-    if (b.mode === 'rows'){
-      sec.rows = [];
-      for (var r = 0; r < b.rowCount; r++){
-        var rowLbl = String.fromCharCode(65 + r);
-        var seats = [];
-        for (var s = 1; s <= b.seatsPerRow; s++){
-          seats.push({
-            seat: s,
-            id: seatIdForRow(bLetter, r, s)
-          });
-        }
-        sec.rows.push({ row: rowLbl, seats: seats });
-      }
-      sec.rowCount = b.rowCount;
-      sec.seatsPerRow = b.seatsPerRow;
-    } else {
-      sec.tables = [];
-      for (var t = 1; t <= b.tableCount; t++){
-        var tableLbl = 'T' + String(t).padStart(2, '0');
-        var chairs = [];
-        for (var c = 1; c <= b.chairsPerTable; c++){
-          chairs.push({
-            chair: c,
-            id: seatIdForTable(bLetter, t, c)
-          });
-        }
-        sec.tables.push({
-          table: t,
-          label: tableLbl,
-          chairs: chairs
-        });
-      }
-      sec.tableCount = b.tableCount;
-      sec.chairsPerTable = b.chairsPerTable;
-    }
+    batch.set(eventRef.collection("tickets").doc(ticketId), ticketData);
 
-    return sec;
-  });
-}
+    createdTickets.push({
+      ticketId: ticketId,
+      reference: reference,
+      rand: rand,
+      tier: selectedTier,
+      tierName: getTierName(selectedTier),
+      guestName: guestName,
+      guestIndex: g,
+      seat: seatId,
+      amount: price,
+      expiresAtMs: expiresAtMs
+    });
+  }
 
-function buildPayload(){
-  var keys = activeTierKeys();
-  var tierNames = {}, tierColours = {}, tierPrices = {};
-  keys.forEach(function(k){
-    tierNames[k]   = state.tierNames[k];
-    tierColours[k] = state.tierColors[k];
-    tierPrices[k]  = state.tierPrices[k] || 0;
-  });
+  try { await batch.commit(); }
+  catch(err){
+    console.error("createPendingTickets failed:", err);
+    throw new Error(err.message || "Could not save your reservation.");
+  }
 
-  var cost = parseFloat($('cost').value) || 0;
-  var counts = computeTierCounts();
-  var gross = 0, totalTickets = 0;
-  keys.forEach(function(k){
-    var q = counts[k] || 0;
-    totalTickets += q;
-    gross += q * (state.tierPrices[k] || 0);
-  });
-  var fee = gross * (state.features.fee / 100);
+  var primary = createdTickets[0];
 
   return {
-    eventName: $('eventName').value.trim() || 'Untitled Event',
-    eventDescription: $('eventDesc').value.trim(),
-    hostName: $('hostName').value.trim(),
-    hostEmail: $('hostEmail').value.trim(),
-    venueName: state.venue.name,
-    venueAddress: state.venue.address,
-    city: state.venue.city,
-    startDate: $('startDate').value,
-    startTime: $('startTime').value,
-    eventType: $('eventType').value,
-    cost: cost,
-    costFormatted: cost <= 0 ? 'Free' : 'R ' + cost.toFixed(2),
-    coverImage: state.coverImage,
-    heroImage: state.coverImage,
-
-    tierColor: state.tierColors[keys[0]] || '#00FFFF',
-    activeTierCount: keys.length,
-    tierNames: tierNames,
-    tierColours: tierColours,
-    tierPrices: tierPrices,
-
-    plan: { id: state.plan, fee: state.features.fee, limit: state.features.limit },
-
-    seatingMode: state.features.seating ? state.seatingMode : null,
-    seatingPlan: state.features.seating
-      ? { enabled: true, version: 3, mode: state.seatingMode }
-      : { enabled: false, version: 3 },
-    venueImage: state.planImage || '',
-    sections: state.features.seating ? buildSections() : [],
-
-    totalAttendees: totalTickets,
-    revenue: {
-      gross: gross,
-      fee: fee,
-      net: gross - fee,
-      planFeePct: state.features.fee,
-      planId: state.plan,
-      totalTickets: totalTickets
-    },
-    source: 'user',
-    status: 'pending_review'
+    groupId: groupId,
+    qty: qty,
+    tickets: createdTickets,
+    reference: primary.reference,
+    ticketId: primary.ticketId,
+    amount: totalAmount,
+    tier: selectedTier,
+    tierName: getTierName(selectedTier),
+    expiresAtMs: expiresAtMs,
+    guestNames: guestNames.slice(0, qty),
+    guestEmail: buyerEmail,
+    seats: seatingEnabled && assignment ? assignment.seats.slice(0, qty) : []
   };
 }
 
-/* ══════════════════════════════════════════════════════════════
-   SAVE
-   ══════════════════════════════════════════════════════════════ */
-function saveEvent(){
-  var user = state.user || auth.currentUser;
-  if (!user){
-    toast('Please sign in to save.', 'error');
-    openAuth();
+function short4(s){
+  var t = String(s || "").replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+  if (t.length <= 4) return t.padStart(4, "0");
+  return t.slice(-4);
+}
+function rand4(){
+  var c = "ABCDEFGHJKMNPQRSTUVWXYZ23456789";
+  var out = "";
+  for (var i = 0; i < 4; i++) out += c[Math.floor(Math.random() * c.length)];
+  return out;
+}
+function buildTicketRef(eId, tId, rand){
+  return "NL-" + short4(eId) + "-" + short4(tId) + "-" + (rand || rand4());
+}
+
+/* ──────────────────────────────────────────────────────────
+   CONTINUE TO PAYMENT
+   ────────────────────────────────────────────────────────── */
+async function goToPaymentStep(){
+  if (!validateGuestForm()){
+    showToast("Please fill in the highlighted fields.", "error", 2500);
     return;
   }
 
-  var missing = [];
-  if (!$('hostName').value.trim()) missing.push('Host name');
-  if (!$('hostEmail').value.trim()) missing.push('Host email');
-  if (!$('startDate').value) missing.push('Start date');
-  if (!$('startTime').value) missing.push('Start time');
-  if (!$('eventName').value.trim()) missing.push('Event name');
-  if (!$('venueName').value.trim()) missing.push('Venue name');
-  if (!$('venueCity').value) missing.push('City');
-
-  if (missing.length){
-    toast('Please fill in: ' + missing.join(', '), 'error', 5000);
-    goToStep(1);
-    return;
-  }
-
-  /* Block validation */
-  if (state.features.seating){
-    for (var i = 0; i < state.blocks.length; i++){
-      var b = state.blocks[i];
-      if (!b.name || !b.name.trim()){
-        toast('Block ' + (i + 1) + ' needs a name.', 'error');
-        goToStep(4);
-        return;
-      }
-    }
-  }
-
-  state.venue.name = $('venueName').value.trim();
-  state.venue.city = $('venueCity').value;
-  state.venue.address = $('venueAddress').value.trim() ||
-    (state.venue.name + ', ' + state.venue.city);
-
-  var payload = buildPayload();
-  payload.ownerUid = user.uid;
-  payload.ownerEmail = user.email || '';
-  payload.ownerName = user.displayName || (user.email || '').split('@')[0];
-  payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-  payload.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
-
-  var btn = $('submitBtn');
+  var btn = $("continueBtn");
   var orig = btn.innerHTML;
   btn.disabled = true;
-  btn.innerHTML = '<span class="spin"></span> Saving…';
+  btn.innerHTML = '<i data-lucide="loader-2"></i> Reserving…';
+  refreshIcons();
 
-  var ref = db.collection(EVENTS).doc();
-  payload.id = ref.id;
-
-  ref.set(payload).then(function(){
-    btn.innerHTML = icon('check-circle') + ' Event Saved ✓';
-    refreshIcons();
-    toast('Event saved! It now appears in the admin review queue.', 'success', 4500);
-    setTimeout(function(){
-      if (confirm('Event saved. View your dashboard?')) window.location.href = 'dashboard.html';
-    }, 900);
-  }).catch(function(err){
-    console.error('[save]', err);
-    toast('Save failed: ' + (err.message || 'unknown error'), 'error', 6000);
+  var bundle;
+  try { bundle = await createPendingTickets(); }
+  catch(err){
+    if (err.message === "__validation__"){
+      btn.disabled = false;
+      btn.innerHTML = orig;
+      refreshIcons();
+      return;
+    }
+    showToast(err.message || "Could not reserve your tickets.", "error", 4000);
     btn.disabled = false;
     btn.innerHTML = orig;
     refreshIcons();
-  });
-}
+    return;
+  }
 
-/* ══════════════════════════════════════════════════════════════
-   AUTH
-   ══════════════════════════════════════════════════════════════ */
-var authMode = 'signin';
+  pendingTicket = bundle;
 
-function openAuth(){
-  authMode = 'signin';
-  syncAuthTabs();
-  $('authModal').classList.add('open');
-  document.body.style.overflow = 'hidden';
+  try {
+    sessionStorage.setItem("novalink_pending_payment", JSON.stringify({
+      eventId: eventId, ticketId: bundle.ticketId, groupId: bundle.groupId,
+      reference: bundle.reference, tier: bundle.tier, qty: bundle.qty,
+      amount: bundle.amount, startedAt: Date.now(), expiresAt: bundle.expiresAtMs
+    }));
+  } catch(e){}
+
+  try {
+    bundle.tickets.forEach(function(t){
+      localStorage.setItem("novalink_ticket_" + t.ticketId, JSON.stringify({
+        eventId: eventId, ticketId: t.ticketId, groupId: bundle.groupId,
+        reference: t.reference, tier: t.tier, seat: t.seat,
+        amount: t.amount, expiresAt: t.expiresAtMs, savedAt: Date.now()
+      }));
+    });
+  } catch(e){}
+
+  renderPaymentStep(bundle);
+  $("step1").style.display = "none";
+  $("step2").style.display = "block";
   refreshIcons();
+
+  btn.disabled = false;
+  btn.innerHTML = orig;
 }
 
-function closeAuth(){
-  $('authModal').classList.remove('open');
-  document.body.style.overflow = '';
-}
+function renderPaymentStep(bundle){
+  $("refValue").textContent = bundle.reference;
+  $("refInline").textContent = bundle.reference;
+  $("amountToPay").textContent = bundle.amount > 0 ? formatMoney(bundle.amount) : "Free";
 
-function syncAuthTabs(){
-  $$('.tab').forEach(function(t){
-    t.classList.toggle('active', t.dataset.mode === authMode);
-  });
-  if (authMode === 'signup'){
-    $('authTitle').textContent = 'Create account';
-    $('authSub').textContent = 'Join Novalink to publish events.';
-    $('nameGroup').style.display = 'block';
-    $('authSubmit').textContent = 'Create account';
+  var link = getPaymentLink(bundle.tier);
+  var yocoBtn = $("yocoBtn");
+  var waBtn = $("whatsappBtn");
+  var waLabel = $("whatsappLabel");
+  var missing = $("linkMissingNote");
+
+  if (link){
+    yocoBtn.href = link;
+    yocoBtn.style.display = "inline-flex";
+    missing.style.display = "none";
+    waLabel.textContent = "I've paid";
   } else {
-    $('authTitle').textContent = 'Welcome back';
-    $('authSub').textContent = 'Sign in to save events.';
-    $('nameGroup').style.display = 'none';
-    $('authSubmit').textContent = 'Sign in';
+    yocoBtn.style.display = "none";
+    missing.style.display = "flex";
+    waLabel.textContent = "I've paid — contact us";
+  }
+
+  var waMsg = buildWhatsAppMessage(bundle);
+  waBtn.href = "https://wa.me/" + WHATSAPP_NUMBER + "?text=" + encodeURIComponent(waMsg);
+  startCountdown(bundle.expiresAtMs);
+}
+
+function buildWhatsAppMessage(bundle){
+  var eventName = eventData.eventName || "Event";
+  var lines = [
+    "Hi Novalink — I've paid for my tickets.",
+    "",
+    "Event: " + eventName,
+    "Reference: " + bundle.reference,
+    "Tier: " + bundle.tierName,
+    "Quantity: " + bundle.qty,
+    "Amount: " + formatMoney(bundle.amount),
+    "Email: " + bundle.guestEmail,
+    ""
+  ];
+
+  if (bundle.qty > 1){
+    lines.push("Guests & seats:");
+    bundle.tickets.forEach(function(t, i){
+      var line = "  " + (i + 1) + ". " + t.guestName;
+      if (t.seat) line += " (" + t.seat + ")";
+      lines.push(line);
+    });
+    lines.push("");
+  } else {
+    var l0 = "Name: " + bundle.guestNames[0];
+    if (bundle.seats && bundle.seats[0]) l0 += " (" + bundle.seats[0] + ")";
+    lines.push(l0);
+    lines.push("");
+  }
+
+  if (bundle.amount > 0) lines.push("Please confirm my payment and unlock my QR codes.");
+  else lines.push("This is a free event — please unlock my QR codes.");
+  return lines.join("\n");
+}
+
+function startCountdown(expiresAtMs){
+  if (countdownTimer) clearInterval(countdownTimer);
+  function tick(){
+    var left = expiresAtMs - Date.now();
+    if (left <= 0){
+      $("countdownText").textContent = "EXPIRED";
+      $("countdownText").style.color = "var(--dg)";
+      if (countdownTimer){ clearInterval(countdownTimer); countdownTimer = null; }
+      return;
+    }
+    var h = Math.floor(left / 3600000);
+    var m = Math.floor((left % 3600000) / 60000);
+    var s = Math.floor((left % 60000) / 1000);
+    $("countdownText").textContent = String(h).padStart(2,"0") + ":" + String(m).padStart(2,"0") + ":" + String(s).padStart(2,"0");
+  }
+  tick();
+  countdownTimer = setInterval(tick, 1000);
+}
+
+function copyRef(){
+  if (!pendingTicket) return;
+  var text = pendingTicket.reference;
+  var btn = $("copyRefBtn");
+  var done = function(){
+    btn.classList.add("copied");
+    btn.innerHTML = '<i data-lucide="check"></i> <span>Copied!</span>';
+    refreshIcons();
+    setTimeout(function(){
+      btn.classList.remove("copied");
+      btn.innerHTML = '<i data-lucide="copy"></i> <span>Copy reference</span>';
+      refreshIcons();
+    }, 2000);
+  };
+  if (navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(done).catch(function(){ fallbackCopy(text); done(); });
+  } else { fallbackCopy(text); done(); }
+}
+function fallbackCopy(text){
+  var ta = document.createElement("textarea");
+  ta.value = text; ta.style.position = "fixed"; ta.style.opacity = "0";
+  document.body.appendChild(ta); ta.select();
+  try { document.execCommand("copy"); } catch(e){}
+  document.body.removeChild(ta);
+}
+
+/* ──────────────────────────────────────────────────────────
+   LOAD EVENT
+   ────────────────────────────────────────────────────────── */
+async function loadEvent(){
+  eventId = getParam("id");
+  if (!eventId){ showError("Missing event", "No event ID was provided in the link."); return; }
+
+  try {
+    var snap = await db.collection(EVENTS).doc(eventId).get();
+    if (!snap.exists){ showError("Event not found", "This event may have been removed."); return; }
+    eventData = snap.data() || {};
+    eventData.id = snap.id;
+
+    var status = String(eventData.status || "").toLowerCase();
+    if (status !== "live"){
+      if (status === "pending_review" || status === "pending") showNotLive("This event is still being reviewed. Check back soon.");
+      else if (status === "rejected") showNotLive("This event is not available.");
+      else showNotLive("This event isn't on sale yet.");
+      return;
+    }
+
+    /* seating setup */
+    if (eventData.blocks && Array.isArray(eventData.blocks) && eventData.blocks.length){
+      seatingEnabled = true;
+      blocks = eventData.blocks;
+      buildAllUnits();
+      await loadSoldSeats();
+      buildAllUnits(); /* rebuild in case soldSeats is used in caps */
+    }
+
+    renderEvent();
+    showContent();
+    updateSigninNote();
+    refreshIcons();
+  } catch(err){
+    console.error("loadEvent error:", err);
+    showError("Could not load event", err.message || "Please refresh and try again.");
   }
 }
 
-/* ══════════════════════════════════════════════════════════════
+/* ──────────────────────────────────────────────────────────
    WIRE UP
-   ══════════════════════════════════════════════════════════════ */
-document.addEventListener('DOMContentLoaded', function(){
+   ────────────────────────────────────────────────────────── */
+document.addEventListener("DOMContentLoaded", function(){
+  $("year").textContent = new Date().getFullYear();
   refreshIcons();
+  showLoading();
 
-  var d = new Date();
-  d.setDate(d.getDate() + 1);
-  $('startDate').value = d.toISOString().slice(0, 10);
-
-  /* step nav */
-  $$('.step').forEach(function(t){
-    t.addEventListener('click', function(){ goToStep(parseInt(this.dataset.step, 10)); });
+  $("qtyMinus").addEventListener("click", function(){
+    if (qty > 1){ qty--; updateQtyUI(); recomputeAssignment(); }
   });
-  $$('[data-next]').forEach(function(b){
-    b.addEventListener('click', function(){ goToStep(parseInt(this.dataset.next, 10)); });
-  });
-  $$('[data-prev]').forEach(function(b){
-    b.addEventListener('click', function(){ goToStep(parseInt(this.dataset.prev, 10)); });
+  $("qtyPlus").addEventListener("click", function(){
+    var max = maxQtyForTier(selectedTier);
+    if (qty < max){ qty++; updateQtyUI(); recomputeAssignment(); }
   });
 
-  /* plan change */
-  $$('input[name="plan"]').forEach(function(r){
-    r.addEventListener('change', function(){
-      state.plan = this.value;
-      applyPlan();
-    });
+  $("reassignBtn").addEventListener("click", function(){
+    if (!seatingEnabled) return;
+    var skip = assignment ? assignment.unitKey : null;
+    recomputeAssignment(skip);
+    if (assignment) showToast("New seats assigned.", "success", 1800);
   });
 
-  /* seating mode pills */
-  $$('.mode-pill').forEach(function(p){
-    p.addEventListener('click', function(){
-      if (this.disabled) return;
-      state.seatingMode = this.dataset.mode;
-      state.blocks.forEach(function(b){ b.mode = state.seatingMode; });
-      renderSeatingEditor();
-      renderRevenue();
-    });
+  $("buyBtn").addEventListener("click", openBuyModal);
+
+  $("modalClose1").addEventListener("click", closeBuyModal);
+  $("modalClose2").addEventListener("click", closeBuyModal);
+  $("buyModal").addEventListener("click", function(e){ if (e.target === $("buyModal")) closeBuyModal(); });
+
+  $("continueBtn").addEventListener("click", goToPaymentStep);
+  $("copyRefBtn").addEventListener("click", copyRef);
+
+  $("guestEmailInput").addEventListener("input", function(){
+    clearFieldError("guestEmailInput", "emailError");
   });
 
-  /* picture upload */
-  $('planImageInput').addEventListener('change', function(e){
-    var f = e.target.files && e.target.files[0];
-    if (!f) return;
-    if (!/^image\//.test(f.type)){
-      toast('Please choose an image file.', 'error');
-      return;
-    }
-    if (f.size > 1.5 * 1024 * 1024){
-      toast('Image must be under 1.5 MB.', 'error');
-      return;
-    }
-    var reader = new FileReader();
-    reader.onload = function(ev){
-      state.planImage = ev.target.result;
-      renderPlanImage();
-      toast('Venue picture added.', 'success');
-    };
-    reader.readAsDataURL(f);
-  });
-  $('planImageRemove').addEventListener('click', function(e){
-    e.preventDefault();
-    e.stopPropagation();
-    state.planImage = '';
-    $('planImageInput').value = '';
-    renderPlanImage();
-    toast('Picture removed.', 'info');
+  document.addEventListener("keydown", function(e){
+    if (e.key === "Escape" && $("buyModal").classList.contains("open")) closeBuyModal();
   });
 
-  /* fullscreen viewer */
-  $('openFsBtn').addEventListener('click', openFullscreen);
-  $('fsClose').addEventListener('click', closeFullscreen);
-  $('fsZoomIn').addEventListener('click', function(){
-    fsZoom = Math.min(3, fsZoom + 0.25); applyFsZoom();
-  });
-  $('fsZoomOut').addEventListener('click', function(){
-    fsZoom = Math.max(0.4, fsZoom - 0.25); applyFsZoom();
-  });
-  $('fsZoomReset').addEventListener('click', function(){
-    fsZoom = 1; applyFsZoom();
-  });
-  document.addEventListener('keydown', function(e){
-    if (e.key === 'Escape' && $('fsOverlay').classList.contains('open')){
-      closeFullscreen();
-    }
-  });
-
-  /* event type → recommended prices */
-  $('eventType').addEventListener('change', function(){
-    var opt = this.options[this.selectedIndex];
-    var min = parseFloat(opt.dataset.min) || 0;
-    var max = parseFloat(opt.dataset.max) || 0;
-    var hint = $('typeHint');
-
-    if (!this.value){
-      hint.textContent = 'Choose a type to see a recommended price.';
-      hint.className = 'hint rec';
-      return;
-    }
-    if (min === 0 && max === 0){
-      hint.textContent = 'Recommended: Free (R0).';
-    } else {
-      hint.textContent = 'Recommended: R' + min.toFixed(2) + ' – R' + max.toFixed(2) + ' per ticket.';
-    }
-
-    var mid = (min + max) / 2;
-    if (mid <= 0) return;
-
-    function applyRecommended(base){
-      var mult = { elite: 4, silver: 1.5, standard: 1 };
-      activeTierKeys().forEach(function(k){
-        state.tierPrices[k] = Math.round(base * (mult[k] || 1) * 100) / 100;
-      });
-      renderTierList();
-      renderRevenue();
-    }
-
-    if (state.tierPricesTouched){
-      if (confirm('You have custom tier prices set.\n\nReplace them with recommended prices for this event type?')){
-        state.tierPricesTouched = false;
-        applyRecommended(mid);
-        $('cost').value = mid.toFixed(2);
-      }
-    } else {
-      applyRecommended(mid);
-      $('cost').value = mid.toFixed(2);
-    }
-  });
-
-  /* preview updates */
-  ['eventName','startDate','venueName','venueCity'].forEach(function(id){
-    var evt = (id === 'venueCity') ? 'change' : 'input';
-    $(id).addEventListener(evt, updatePreviewFields);
-  });
-
-  /* cover image */
-  $('coverUrl').addEventListener('input', function(){
-    state.coverImage = this.value.trim();
-  });
-  $('coverFile').addEventListener('change', function(){
-    var f = this.files && this.files[0];
-    if (!f) return;
-    if (!/^image\//.test(f.type)){ toast('Use an image file.', 'error'); return; }
-    if (f.size > 500 * 1024){ toast('Image must be under 500 KB.', 'error'); return; }
-    var reader = new FileReader();
-    reader.onload = function(e){
-      state.coverImage = e.target.result;
-      $('coverUrl').value = '';
-      toast('Cover loaded.', 'success');
-    };
-    reader.readAsDataURL(f);
-  });
-
-  /* save */
-  $('submitBtn').addEventListener('click', saveEvent);
-
-  /* auth */
-  $('authClose').addEventListener('click', closeAuth);
-  $('authModal').addEventListener('click', function(e){
-    if (e.target === this) closeAuth();
-  });
-  $$('.tab').forEach(function(t){
-    t.addEventListener('click', function(){
-      authMode = this.dataset.mode;
-      syncAuthTabs();
-    });
-  });
-  $('googleBtn').addEventListener('click', function(){
-    auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
-      .then(function(){ toast('Signed in.', 'success'); closeAuth(); })
-      .catch(function(err){ toast(err.message, 'error'); });
-  });
-  $('authForm').addEventListener('submit', function(e){
-    e.preventDefault();
-    var email = $('authEmail').value.trim();
-    var pw    = $('authPassword').value;
-    var name  = $('authName').value.trim();
-    if (!email || !pw){ toast('Fill in all fields.', 'error'); return; }
-    if (authMode === 'signup' && pw.length < 6){
-      toast('Password must be 6+ characters.', 'error');
-      return;
-    }
-    var btn = $('authSubmit');
-    btn.disabled = true;
-    var p = (authMode === 'signup')
-      ? auth.createUserWithEmailAndPassword(email, pw).then(function(c){
-          if (name) return c.user.updateProfile({ displayName: name }).then(function(){ return c; });
-          return c;
-        })
-      : auth.signInWithEmailAndPassword(email, pw);
-    p.then(function(){ toast('Signed in.', 'success'); closeAuth(); })
-     .catch(function(err){ toast(err.message || 'Auth failed', 'error'); })
-     .then(function(){ btn.disabled = false; });
-  });
-
-  /* initial paint */
-  applyPlan();
-  renderRevenue();
-  updateTicketBadges();
-  updatePreviewFields();
-
-  auth.onAuthStateChanged(function(u){
-    state.user = u;
-    if (u) toast('Signed in as ' + (u.displayName || u.email), 'success', 2000);
+  auth.onAuthStateChanged(function(user){
+    currentUser = user;
+    updateSigninNote();
+    if (!eventData) loadEvent();
   });
 });
+
+window.addEventListener("beforeunload", function(){
+  if (countdownTimer) clearInterval(countdownTimer);
+});
+
 })();
 </script>
 </body>
-</html>
+  </html>
