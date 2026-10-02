@@ -97,12 +97,12 @@ img{max-width:100%;display:block}
 .tier-opt .tier-desc{font-size:11.5px;color:var(--mut);font-weight:500}
 .tier-opt .tier-price{font-family:var(--mono);font-weight:900;font-size:16px;color:var(--cy3);flex-shrink:0;white-space:nowrap}
 
-.venue-pic{border:1px solid var(--bd);border-radius:12px;overflow:hidden;background:var(--sf2)}
+.venue-pic{border:1px solid var(--bd);border-radius:12px;overflow:hidden;background:var(--sf2);margin-bottom:14px}
 .venue-pic img{display:block;width:100%;height:auto;max-height:480px;object-fit:contain;background:#fafbfc}
 .venue-pic-note{display:flex;gap:10px;padding:11px 14px;background:var(--cyf);border-top:1px solid var(--cy);font-size:12px;color:var(--tx2);line-height:1.5}
 .venue-pic-note i{width:14px;height:14px;color:var(--cy3);flex-shrink:0;margin-top:2px}
 
-.assign-box{background:linear-gradient(135deg,#0a0f14,#1a2129);color:#fff;border-radius:14px;padding:20px;margin-top:14px;position:relative;overflow:hidden}
+.assign-box{background:linear-gradient(135deg,#0a0f14,#1a2129);color:#fff;border-radius:14px;padding:20px;position:relative;overflow:hidden}
 .assign-box::after{content:'';position:absolute;right:-40px;top:-40px;width:180px;height:180px;background:radial-gradient(circle,rgba(0,255,255,.15),transparent 70%);pointer-events:none}
 .assign-label{font-size:10.5px;font-weight:900;letter-spacing:0.1em;text-transform:uppercase;color:rgba(255,255,255,0.55);margin-bottom:8px}
 .assign-value{font-family:var(--mono);font-size:22px;font-weight:900;color:var(--cy);letter-spacing:0.02em;margin-bottom:4px;word-break:break-word;line-height:1.25}
@@ -110,10 +110,12 @@ img{max-width:100%;display:block}
 .assign-actions{display:flex;gap:8px;margin-top:14px;flex-wrap:wrap;position:relative;z-index:2}
 .assign-btn{display:inline-flex;align-items:center;gap:6px;background:rgba(0,255,255,0.15);border:1px solid rgba(0,255,255,0.4);color:var(--cy);font-size:12px;font-weight:800;padding:8px 14px;border-radius:99px;cursor:pointer;transition:all 0.15s ease;font-family:inherit}
 .assign-btn:hover:not(:disabled){background:rgba(0,255,255,0.25)}
-.assign-btn:disabled{opacity:0.45;cursor:not-allowed}
 .assign-btn i{width:14px;height:14px}
 .assign-error{display:flex;gap:10px;padding:12px 14px;background:#7f1d1d;color:#fecaca;border-radius:10px;font-size:12.5px;line-height:1.55;margin-top:14px}
 .assign-error i{width:15px;height:15px;flex-shrink:0;margin-top:2px}
+
+.ga-box{background:var(--cyf);border:1px solid var(--cy);border-radius:12px;padding:14px 16px;font-size:13px;color:var(--tx2);line-height:1.55}
+.ga-box strong{color:var(--cy3);font-weight:900}
 
 .sidebar{position:sticky;top:96px}
 @media (max-width:960px){.sidebar{position:static;order:-1}}
@@ -298,7 +300,7 @@ img{max-width:100%;display:block}
           </div>
 
           <div class="card" id="seatCard" style="display:none">
-            <h2><i data-lucide="map-pin"></i> Your seats</h2>
+            <h2 id="seatCardTitle"><i data-lucide="map-pin"></i> Your seats</h2>
 
             <div class="venue-pic" id="venuePicWrap" style="display:none;">
               <img id="venuePicImg" alt="Venue layout" />
@@ -323,6 +325,10 @@ img{max-width:100%;display:block}
               <div class="assign-error" id="assignError" style="display:none;">
                 <i data-lucide="alert-circle"></i>
                 <div id="assignErrorText"></div>
+              </div>
+
+              <div class="ga-box" id="gaBox" style="display:none;">
+                <strong>General admission.</strong> No assigned seat — bring your QR code to the door. Seating is first-come, first-served.
               </div>
             </div>
           </div>
@@ -500,10 +506,12 @@ var countdownTimer = null;
 
 /* seating */
 var seatingEnabled = false;
+var gaEnabled = false;
 var blocks = [];
-var soldSeats = {};    // { "A-A-01": true }
-var assignment = null; // { blockId, blockName, sectionIdx, rowIdx, seatStart, seatEnd, seats:[id...] }
-var allTierUnits = []; // [{ tier, blockId, blockName, sectionIdx, rowIdx, length, startSeat }] built at load
+var soldSeats = {};      // { "A-A-01": true }
+var assignment = null;   // current assignment
+var allTierUnits = [];   // [{ tier, blockIdx, blockName, blockLetter, sectionIdx, sectionLabel, kind, ..., seats: [{num, id}] }]
+var blocksByTier = {};   // { tier: [blockIdx, blockIdx] } — for GA and available tier detection
 
 /* ────────────────────────────────────────────────────────── */
 function $(id){ return document.getElementById(id); }
@@ -564,145 +572,155 @@ function getPaymentLink(key){
   if (!eventData || !eventData.paymentLinks) return "";
   return String(eventData.paymentLinks[key] || "").trim();
 }
+function isTierActive(key){
+  /* if no tierActive map, assume all active (backwards compat) */
+  if (!eventData || !eventData.tierActive) return true;
+  return eventData.tierActive[key] !== false;
+}
 function getActiveTierKeys(){
   if (!eventData) return ALL_TIER_KEYS.slice();
   var count = parseInt(eventData.activeTierCount, 10);
   if (isNaN(count) || count < 1) count = ALL_TIER_KEYS.length;
   if (count > ALL_TIER_KEYS.length) count = ALL_TIER_KEYS.length;
-  return ALL_TIER_KEYS.slice(0, count);
-}
-function isSingleTier(){ return getActiveTierKeys().length === 1; }
-
-function getCheapestTier(){
-  var keys = getActiveTierKeys();
-  var cheapest = null, cheapestPrice = Infinity;
-  keys.forEach(function(k){
-    var p = getTierPrice(k);
-    if (p < cheapestPrice){ cheapestPrice = p; cheapest = k; }
-  });
-  return { key: cheapest, price: cheapestPrice === Infinity ? 0 : cheapestPrice };
-}
-
-function firstNameOf(user){
-  if (!user) return "";
-  if (user.displayName && user.displayName.trim()) return user.displayName.trim();
-  if (user.email) return user.email.split("@")[0];
-  return "";
-}
-function hasTwoWords(name){
-  if (!name) return false;
-  return String(name).trim().split(/\s+/).filter(Boolean).length >= 2;
+  var keys = ALL_TIER_KEYS.slice(0, count);
+  /* filter by active flag */
+  return keys.filter(isTierActive);
 }
 
 /* ──────────────────────────────────────────────────────────
-   BUILD ALL SEAT UNITS FROM BLOCKS
-   A "unit" is one row (or one table) with its seats.
-   Each seat has a canonical ID like:
-     A-A-01 (block, row, seat)        — no sections
-     A-S1-A-01 (block, section, row, seat)
-     A-T01-05 (block, table, chair)   — tables, no sections
-     A-S1-T01-05 (tables, section)    — tables with sections
+   BUILD ALL SEAT UNITS FROM BLOCKS (preset-based)
    ────────────────────────────────────────────────────────── */
-function rowLetter(i){ return String.fromCharCode(65 + i); }
-
-function pad2(n){ return String(n).padStart(2, "0"); }
-
 function buildAllUnits(){
   allTierUnits = [];
-  soldSeats = {};
+  blocksByTier = {};
 
   if (!seatingEnabled || !blocks.length) return;
 
-  var hasSections = blocks.some(function(b){ return (b.sectionCount || 1) > 1; });
+  blocks.forEach(function(b, blockIdx){
+    var blockLetter = String.fromCharCode(65 + blockIdx); /* A, B, C... */
+    var tier = b.tier || "standard";
+    var preset = b.preset || "rows-simple";
+    var sections = b.sections || 1;
 
-  blocks.forEach(function(b){
-    var blockPrefix = b.name.replace(/[^A-Za-z]/g, "").charAt(0).toUpperCase() || "A";
-    var tier = b.tier || (getActiveTierKeys()[getActiveTierKeys().length - 1] || "standard");
-    var secCount = b.sectionCount || 1;
+    if (!blocksByTier[tier]) blocksByTier[tier] = [];
+    blocksByTier[tier].push(blockIdx);
 
-    for (var s = 0; s < secCount; s++){
-      var secPart = hasSections ? ("S" + (s + 1) + "-") : "";
+    /* General admission: no seat units, tracked separately */
+    if (preset === "general-admission") return;
 
-      if (b.mode === "rows" || (!b.mode && b.rowCount)){
-        var rowCount = b.rowCount || 1;
-        var seatsPerRow = b.seatsPerRow || 1;
-        for (var r = 0; r < rowCount; r++){
-          var rowLbl = rowLetter(r);
+    var isTables = preset.indexOf("tables") === 0;
+
+    if (isTables){
+      var tablesPerSection = b.tables || 1;
+      var longSide = b.longSide || 3;
+      var shortSide = b.shortSide || 1;
+      var chairsPerTable = b.chairsPerTable || 4;
+
+      for (var s = 0; s < sections; s++){
+        var secPart = (sections > 1) ? ("S" + (s + 1) + "-") : "";
+        var sectionLabel = (sections > 1) ? ("Section " + (s + 1)) : "";
+
+        for (var t = 1; t <= tablesPerSection; t++){
+          var tableLabel = "T" + String(t).padStart(2, "0");
+          var totalChairs = (preset === "tables-rect")
+            ? (longSide * 2 + shortSide * 2)
+            : chairsPerTable;
+
           var unit = {
             tier: tier,
-            blockId: b.id,
+            blockIdx: blockIdx,
             blockName: b.name,
-            blockPrefix: blockPrefix,
-            sectionIdx: secCount > 1 ? s : 0,
-            sectionLabel: secCount > 1 ? ("Section " + (s + 1)) : "",
-            kind: "row",
-            rowIdx: r,
-            rowLabel: rowLbl,
-            length: seatsPerRow,
+            blockLetter: blockLetter,
+            sectionIdx: (sections > 1) ? s : 0,
+            sectionLabel: sectionLabel,
+            kind: "table",
+            tableNumber: t,
+            tableLabel: tableLabel,
+            length: totalChairs,
             seats: []
           };
-          for (var c = 1; c <= seatsPerRow; c++){
-            var seatId = blockPrefix + "-" + secPart + rowLbl + "-" + pad2(c);
+
+          for (var c = 1; c <= totalChairs; c++){
+            var seatId = blockLetter + "-" + secPart + tableLabel + "-C" + String(c).padStart(2, "0");
             unit.seats.push({ num: c, id: seatId });
           }
           allTierUnits.push(unit);
         }
-      } else if (b.mode === "tables"){
-        var tableCount = b.tableCount || 1;
-        var chairsPerTable = b.chairsPerTable || 1;
-        for (var t = 1; t <= tableCount; t++){
-          var tLabel = "T" + pad2(t);
+      }
+    } else {
+      /* rows-simple, rows-sections, rows-aisle, multi-blocks — all treated the same */
+      var rowsPerSection = b.rows || 1;
+      var seatsPerRow = b.seatsPerRow || 1;
+
+      for (var s2 = 0; s2 < sections; s2++){
+        var secPart2 = (sections > 1) ? ("S" + (s2 + 1) + "-") : "";
+        var sectionLabel2 = (sections > 1) ? ("Section " + (s2 + 1)) : "";
+
+        for (var r = 0; r < rowsPerSection; r++){
+          var rowLetter = String.fromCharCode(65 + r);
           var unit2 = {
             tier: tier,
-            blockId: b.id,
+            blockIdx: blockIdx,
             blockName: b.name,
-            blockPrefix: blockPrefix,
-            sectionIdx: secCount > 1 ? s : 0,
-            sectionLabel: secCount > 1 ? ("Section " + (s + 1)) : "",
-            kind: "table",
-            tableIdx: t,
-            tableLabel: tLabel,
-            length: chairsPerTable,
+            blockLetter: blockLetter,
+            sectionIdx: (sections > 1) ? s2 : 0,
+            sectionLabel: sectionLabel2,
+            kind: "row",
+            rowNumber: r,
+            rowLabel: rowLetter,
+            length: seatsPerRow,
             seats: []
           };
-          for (var ch = 1; ch <= chairsPerTable; ch++){
-            var seatId2 = blockPrefix + "-" + secPart + tLabel + "-" + pad2(ch);
-            unit2.seats.push({ num: ch, id: seatId2 });
+
+          for (var c2 = 1; c2 <= seatsPerRow; c2++){
+            var seatId2 = blockLetter + "-" + secPart2 + rowLetter + "-" + String(c2).padStart(2, "0");
+            unit2.seats.push({ num: c2, id: seatId2 });
           }
           allTierUnits.push(unit2);
         }
       }
     }
   });
-
-  /* Sort units so the "first" unit is the natural one:
-     by block order (as authored), then section, then row/table. */
-  /* Blocks are already in order. Units are built in that order. */
 }
 
-/* Largest row (or table) size in a tier — static cap */
+function tierHasSeats(tierKey){
+  if (gaEnabled && blocksByTier[tierKey] && blocksByTier[tierKey].length){
+    /* GA tier has "seats" but they're not unit-based */
+    var hasGA = blocks.some(function(b){
+      return (b.tier || "standard") === tierKey && b.preset === "general-admission";
+    });
+    if (hasGA) return true;
+  }
+  return allTierUnits.some(function(u){ return u.tier === tierKey; });
+}
+
+/* largest row (or table) size in a tier */
 function maxRowSizeInTier(tierKey){
   var max = 0;
   allTierUnits.forEach(function(u){
     if (u.tier === tierKey && u.length > max) max = u.length;
   });
+  /* GA has a "capacity" per block but no per-row limit — cap at HARD_MAX_QTY */
+  if (max === 0 && gaEnabled){
+    var hasGA = blocks.some(function(b){
+      return (b.tier || "standard") === tierKey && b.preset === "general-admission";
+    });
+    if (hasGA) max = HARD_MAX_QTY;
+  }
   return max;
 }
 
-/* Find the first run of N consecutive free seats in one unit of the given tier.
-   Returns { unit, startIdx } or null. */
+/* Find assignment */
 function findAssignment(tierKey, count, skipUnitKey){
   for (var i = 0; i < allTierUnits.length; i++){
     var u = allTierUnits[i];
     if (u.tier !== tierKey) continue;
     if (u.length < count) continue;
 
-    var unitKey = u.blockId + "|" + u.sectionIdx + "|" + (u.kind === "row" ? ("r" + u.rowIdx) : ("t" + u.tableIdx));
+    var unitKey = u.blockIdx + "|" + u.sectionIdx + "|" + (u.kind === "row" ? ("r" + u.rowNumber) : ("t" + u.tableNumber));
     if (skipUnitKey && unitKey === skipUnitKey) continue;
 
-    /* find first run of `count` consecutive free seats */
-    var runStart = -1;
-    var runLen = 0;
+    var runStart = -1, runLen = 0;
     for (var s = 0; s < u.seats.length; s++){
       if (!soldSeats[u.seats[s].id]){
         if (runStart === -1) runStart = s;
@@ -711,42 +729,15 @@ function findAssignment(tierKey, count, skipUnitKey){
           return { unit: u, startIdx: runStart, unitKey: unitKey };
         }
       } else {
-        runStart = -1;
-        runLen = 0;
+        runStart = -1; runLen = 0;
       }
     }
   }
   return null;
 }
 
-/* Describe an assignment as a readable string */
-function describeAssignment(a){
-  var u = a.unit;
-  var startSeat = a.startIdx + 1;
-  var endSeat = a.startIdx + a.unit.seats.length ? (a.startIdx + (a.endIdx !== undefined ? a.endIdx : 0) + 1) : startSeat;
-  /* simpler: recompute */
-  endSeat = a.startIdx + (a.count || 1);
-  /* if caller provided explicit range */
-  if (a.rangeStart !== undefined && a.rangeEnd !== undefined){
-    startSeat = a.rangeStart;
-    endSeat = a.rangeEnd;
-  }
-
-  var parts = [];
-  parts.push(u.blockName || "Block");
-  if (u.sectionLabel) parts.push(u.sectionLabel);
-  if (u.kind === "row"){
-    parts.push("Row " + u.rowLabel);
-    parts.push("Seats " + startSeat + (endSeat > startSeat ? "–" + endSeat : ""));
-  } else {
-    parts.push("Table " + u.tableIdx);
-    parts.push("Chairs " + startSeat + (endSeat > startSeat ? "–" + endSeat : ""));
-  }
-  return parts.join(" · ");
-}
-
 /* ──────────────────────────────────────────────────────────
-   SEATING SETUP + SOLD SEATS
+   SOLD SEATS
    ────────────────────────────────────────────────────────── */
 async function loadSoldSeats(){
   soldSeats = {};
@@ -842,7 +833,6 @@ function renderEvent(){
     $("aboutCard").style.display = "none";
   }
 
-  /* Details */
   var details = [];
   details.push({ k:"Date", v:eventData.startDate || "TBA" });
   details.push({ k:"Time", v:eventData.startTime || "TBA" });
@@ -860,13 +850,18 @@ function renderEvent(){
 
   renderTiers();
 
-  var cheapest = getCheapestTier();
+  var cheapest = getCheapestAvailableTier();
   $("fromPrice").textContent = cheapest.price > 0 ? formatMoney(cheapest.price) : "Free";
 
+  /* Auto-select */
   var keys = getActiveTierKeys();
   if (keys.length){
-    if (keys.length === 1) selectTier(keys[0], true);
-    else selectTier(cheapest.key || keys[0], true);
+    if (keys.length === 1){
+      selectTier(keys[0], true);
+    } else {
+      var pref = cheapest.key || keys[0];
+      selectTier(pref, true);
+    }
   }
 
   /* Venue picture */
@@ -875,7 +870,7 @@ function renderEvent(){
     $("venuePicWrap").style.display = "block";
   }
 
-  /* Show seat card only if seating is on */
+  /* Seating card */
   if (seatingEnabled){
     $("seatCard").style.display = "block";
     recomputeAssignment();
@@ -885,11 +880,21 @@ function renderEvent(){
   refreshIcons();
 }
 
+function getCheapestAvailableTier(){
+  var keys = getActiveTierKeys().filter(tierHasSeats);
+  if (!keys.length) keys = getActiveTierKeys();
+  var cheapest = null, cheapestPrice = Infinity;
+  keys.forEach(function(k){
+    var p = getTierPrice(k);
+    if (p < cheapestPrice){ cheapestPrice = p; cheapest = k; }
+  });
+  return { key: cheapest, price: cheapestPrice === Infinity ? 0 : cheapestPrice };
+}
+
 function renderTiers(){
-  var card = $("tierCard");
   var title = $("tierCardTitle");
   var list = $("tierList");
-  var keys = getActiveTierKeys();
+  var keys = getActiveTierKeys().filter(tierHasSeats);
   list.innerHTML = "";
 
   if (!keys.length){
@@ -931,11 +936,9 @@ function selectTier(tierKey, silent){
     el.classList.toggle("selected", el.dataset.tier === tierKey);
   });
 
-  /* recompute max quantity for tier */
   clampQtyToTier();
 
   if (seatingEnabled){
-    /* clear any previous assignment and get a new one */
     assignment = null;
     recomputeAssignment();
   }
@@ -952,12 +955,12 @@ function clampQtyToTier(){
 
 function maxQtyForTier(tierKey){
   if (!seatingEnabled) return HARD_MAX_QTY;
+  if (!tierKey) return 1;
 
-  /* static cap: largest row/table in this tier */
   var staticCap = maxRowSizeInTier(tierKey) || 1;
   if (staticCap > HARD_MAX_QTY) staticCap = HARD_MAX_QTY;
 
-  /* dynamic cap: largest currently-free consecutive run in this tier */
+  /* Dynamic cap: largest free consecutive run */
   var dynamicCap = 0;
   allTierUnits.forEach(function(u){
     if (u.tier !== tierKey) return;
@@ -973,6 +976,14 @@ function maxQtyForTier(tierKey){
       }
     }
   });
+
+  /* GA tier — no unit-based cap */
+  if (dynamicCap === 0 && gaEnabled){
+    var hasGA = blocks.some(function(b){
+      return (b.tier || "standard") === tierKey && b.preset === "general-admission";
+    });
+    if (hasGA) return HARD_MAX_QTY;
+  }
 
   var cap = Math.min(staticCap, dynamicCap);
   if (cap < 1) cap = 1;
@@ -1017,39 +1028,57 @@ function recomputeAssignment(skipUnitKey){
   if (!seatingEnabled || !selectedTier){
     $("assignBox").style.display = "none";
     $("assignError").style.display = "none";
+    $("gaBox").style.display = "none";
     return;
   }
 
+  /* GA tier — no assignment, show GA box */
+  var isGA = blocks.some(function(b){
+    return (b.tier || "standard") === selectedTier && b.preset === "general-admission";
+  }) && !allTierUnits.some(function(u){ return u.tier === selectedTier; });
+
+  if (isGA){
+    assignment = { ga: true, tier: selectedTier, count: qty };
+    $("assignBox").style.display = "none";
+    $("assignError").style.display = "none";
+    $("gaBox").style.display = "block";
+    return;
+  }
+
+  $("gaBox").style.display = "none";
   var found = findAssignment(selectedTier, qty, skipUnitKey || null);
 
   if (!found){
     assignment = null;
     $("assignBox").style.display = "none";
     $("assignError").style.display = "flex";
-    $("assignErrorText").textContent = "No " + qty + " seats together in " + getTierName(selectedTier) +
+    $("assignErrorText").textContent = "No " + qty + " seat" + (qty === 1 ? "" : "s") +
+      " together in " + getTierName(selectedTier) +
       ". Try a different quantity, or pick another tier.";
     return;
   }
 
   var u = found.unit;
-  var startSeat = found.startIdx + 1;
-  var endSeat = found.startIdx + qty;
+  var startNum = found.startIdx + 1;
+  var endNum = found.startIdx + qty;
   var seatIds = [];
   for (var i = 0; i < qty; i++){
     seatIds.push(u.seats[found.startIdx + i].id);
   }
 
   assignment = {
-    blockId: u.blockId,
+    ga: false,
+    tier: u.tier,
+    blockIdx: u.blockIdx,
     blockName: u.blockName,
     sectionIdx: u.sectionIdx,
     sectionLabel: u.sectionLabel,
     kind: u.kind,
-    rowIdx: u.rowIdx,
+    rowNumber: u.rowNumber,
     rowLabel: u.rowLabel,
-    tableIdx: u.tableIdx,
-    startSeat: startSeat,
-    endSeat: endSeat,
+    tableNumber: u.tableNumber,
+    startNum: startNum,
+    endNum: endNum,
     seats: seatIds,
     unitKey: found.unitKey
   };
@@ -1061,17 +1090,29 @@ function recomputeAssignment(skipUnitKey){
 
 function renderAssignmentSummary(){
   if (!assignment) return;
+  if (assignment.ga){
+    $("assignValue").textContent = "General admission";
+    $("assignSub").textContent = "No assigned seat — bring your QR code to the door.";
+    return;
+  }
+
   var parts = [];
   parts.push(assignment.blockName || "Block");
   if (assignment.sectionLabel) parts.push(assignment.sectionLabel);
   if (assignment.kind === "row"){
     parts.push("Row " + assignment.rowLabel);
-    parts.push("Seat" + (assignment.startSeat === assignment.endSeat ? " " : "s ") +
-      assignment.startSeat + (assignment.endSeat > assignment.startSeat ? "–" + assignment.endSeat : ""));
+    if (assignment.startNum === assignment.endNum){
+      parts.push("Seat " + assignment.startNum);
+    } else {
+      parts.push("Seats " + assignment.startNum + "–" + assignment.endNum);
+    }
   } else {
-    parts.push("Table " + assignment.tableIdx);
-    parts.push("Chair" + (assignment.startSeat === assignment.endSeat ? " " : "s ") +
-      assignment.startSeat + (assignment.endSeat > assignment.startSeat ? "–" + assignment.endSeat : ""));
+    parts.push("Table " + assignment.tableNumber);
+    if (assignment.startNum === assignment.endNum){
+      parts.push("Chair " + assignment.startNum);
+    } else {
+      parts.push("Chairs " + assignment.startNum + "–" + assignment.endNum);
+    }
   }
   $("assignValue").textContent = parts.join(" · ");
 
@@ -1163,9 +1204,8 @@ function renderGuestInputs(){
     else { labelText = 'Ticket ' + (i + 1) + ' — guest name and surname' + requiredStar; placeholder = 'e.g., John Doe'; }
 
     var seatTag = "";
-    if (seatingEnabled && assignment && assignment.seats[i]){
+    if (seatingEnabled && assignment && !assignment.ga && assignment.seats[i]){
       var sid = assignment.seats[i];
-      /* short display: strip "A-" if section prefix not needed — but we'll show full id */
       seatTag = ' <span class="seat-tag">Seat ' + esc(sid) + '</span>';
     }
 
@@ -1254,6 +1294,17 @@ function validateGuestForm(){
   return ok;
 }
 
+function firstNameOf(user){
+  if (!user) return "";
+  if (user.displayName && user.displayName.trim()) return user.displayName.trim();
+  if (user.email) return user.email.split("@")[0];
+  return "";
+}
+function hasTwoWords(name){
+  if (!name) return false;
+  return String(name).trim().split(/\s+/).filter(Boolean).length >= 2;
+}
+
 /* ──────────────────────────────────────────────────────────
    CREATE PENDING TICKETS
    ────────────────────────────────────────────────────────── */
@@ -1261,7 +1312,7 @@ async function createPendingTickets(){
   if (!currentUser) throw new Error("Sign in required");
   if (!validateGuestForm()) throw new Error("__validation__");
 
-  if (seatingEnabled && assignment){
+  if (seatingEnabled && assignment && !assignment.ga){
     for (var i = 0; i < assignment.seats.length; i++){
       if (soldSeats[assignment.seats[i]]){
         throw new Error("Seat " + assignment.seats[i] + " just got taken. Please try different seats.");
@@ -1287,7 +1338,8 @@ async function createPendingTickets(){
     var ticketId = eventRef.collection("tickets").doc().id;
     var rand = rand4();
     var reference = buildTicketRef(eventId, ticketId, rand);
-    var seatId = (seatingEnabled && assignment) ? assignment.seats[g] : "";
+    var seatId = (seatingEnabled && assignment && !assignment.ga) ? assignment.seats[g] : "";
+    var isGA = assignment && assignment.ga;
 
     var ticketData = {
       ticketId: ticketId,
@@ -1303,11 +1355,12 @@ async function createPendingTickets(){
       tier: selectedTier,
       tierName: getTierName(selectedTier),
       seat: seatId,
-      seatBlock: assignment ? assignment.blockName : "",
-      seatSection: assignment ? assignment.sectionLabel : "",
-      seatRow: assignment && assignment.kind === "row" ? assignment.rowLabel : "",
-      seatTable: assignment && assignment.kind === "table" ? assignment.tableIdx : null,
-      seatNumber: assignment ? (assignment.startSeat + g) : null,
+      seatBlock: assignment && !isGA ? assignment.blockName : "",
+      seatSection: assignment && !isGA ? assignment.sectionLabel : "",
+      seatRow: assignment && !isGA && assignment.kind === "row" ? assignment.rowLabel : "",
+      seatTable: assignment && !isGA && assignment.kind === "table" ? assignment.tableNumber : null,
+      seatNumber: assignment && !isGA ? (assignment.startNum + g) : null,
+      generalAdmission: isGA ? true : false,
       quantity: 1,
       pricePaid: price,
       pricePerTicket: price,
@@ -1356,7 +1409,7 @@ async function createPendingTickets(){
     expiresAtMs: expiresAtMs,
     guestNames: guestNames.slice(0, qty),
     guestEmail: buyerEmail,
-    seats: seatingEnabled && assignment ? assignment.seats.slice(0, qty) : []
+    seats: seatingEnabled && assignment && !assignment.ga ? assignment.seats.slice(0, qty) : []
   };
 }
 
@@ -1376,7 +1429,7 @@ function buildTicketRef(eId, tId, rand){
 }
 
 /* ──────────────────────────────────────────────────────────
-   CONTINUE TO PAYMENT
+   PAYMENT
    ────────────────────────────────────────────────────────── */
 async function goToPaymentStep(){
   if (!validateGuestForm()){
@@ -1566,9 +1619,9 @@ async function loadEvent(){
     if (eventData.blocks && Array.isArray(eventData.blocks) && eventData.blocks.length){
       seatingEnabled = true;
       blocks = eventData.blocks;
+      gaEnabled = blocks.some(function(b){ return b.preset === "general-admission"; });
       buildAllUnits();
       await loadSoldSeats();
-      buildAllUnits(); /* rebuild in case soldSeats is used in caps */
     }
 
     renderEvent();
@@ -1598,8 +1651,8 @@ document.addEventListener("DOMContentLoaded", function(){
   });
 
   $("reassignBtn").addEventListener("click", function(){
-    if (!seatingEnabled) return;
-    var skip = assignment ? assignment.unitKey : null;
+    if (!seatingEnabled || !assignment || assignment.ga) return;
+    var skip = assignment.unitKey;
     recomputeAssignment(skip);
     if (assignment) showToast("New seats assigned.", "success", 1800);
   });
@@ -1635,4 +1688,4 @@ window.addEventListener("beforeunload", function(){
 })();
 </script>
 </body>
-  </html>
+                    </html>
