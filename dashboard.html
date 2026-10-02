@@ -159,6 +159,9 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
   .card{padding:16px}
   .picker-bar{padding:14px}
 }
+@media (max-width:820px){
+  .two-col{grid-template-columns:minmax(0,1fr) !important;}
+}
 </style>
 </head>
 <body>
@@ -334,11 +337,6 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
   </div>
 </main>
 
-<style>
-@media (max-width:820px){
-  .two-col{grid-template-columns:minmax(0,1fr) !important;}
-}
-</style>
 <footer class="footer">
   <div class="container">
     <div class="footer-links">
@@ -355,18 +353,14 @@ button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation
 
 <div class="toast" id="toast"></div>
 
-<script src="routing-engine.js"></script>
 <script>
-  (function(){
+(function(){
 'use strict';
 
 function $(id){ return document.getElementById(id); }
 function refreshIcons(){ if(window.lucide) lucide.createIcons(); }
 function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 
-/* ============================================================
-   FIREBASE
-   ============================================================ */
 var firebaseConfig = {
   apiKey: "AIzaSyDSnns131jOlBXAqKo6qy7lTW4Rij-1oWU",
   authDomain: "novalink-864cf.firebaseapp.com",
@@ -380,17 +374,11 @@ var db = firebase.firestore();
 var auth = firebase.auth();
 var EVENTS = "events";
 
-/* ══════════════════════════════════════════════════════════════
-   ADMIN EMAILS — both Novalink admins
-   ══════════════════════════════════════════════════════════════ */
 var ADMINS = [
   "nylnathan340@gmail.com",
   "customerservicesnovalink@gmail.com"
 ];
 
-/* ============================================================
-   STATE
-   ============================================================ */
 var currentUser = null;
 var isAdmin = false;
 var myEvents = [];
@@ -400,9 +388,6 @@ var allTickets = [];
 var filteredTickets = [];
 var liveTicketUnsub = null;
 
-/* ============================================================
-   HELPERS
-   ============================================================ */
 function initialsFrom(name, email){
   if (name && name.trim()) {
     var p = name.trim().split(/\s+/);
@@ -442,24 +427,33 @@ function formatDate(ts){
 }
 
 function buildTicketRef(eventId, ticketId){
-  var RE = window.NovalinkRoutingEngine;
-  if (RE && typeof RE.buildTicketRef === "function") return RE.buildTicketRef(eventId, ticketId);
   function sh(x){ var t = String(x||"").replace(/[^A-Za-z0-9]/g,"").toUpperCase(); return t.length <= 4 ? t : t.slice(-4); }
   var e = sh(eventId), t = sh(ticketId);
   if (!e || !t) return "NL-XXXXXX";
   return "NL-" + e + "-" + t;
 }
 
-function tierColorOf(event, tierKey){
-  if (event && event.tierColours && event.tierColours[tierKey]) return event.tierColours[tierKey];
-  var D = { black:"#1a202c", gold:"#ecc94b", silver:"#cbd5e1", cyan:"#00FFFF", tier5:"#a855f7", tier6:"#f472b6" };
-  return D[tierKey] || "#00FFFF";
-}
+/* ── TIERS — semantic keys ── */
+var TIER_DEFAULTS = {
+  elite:    "#1a202c",
+  silver:   "#cbd5e1",
+  standard: "#00FFFF"
+};
+var TIER_DEFAULT_NAMES = {
+  elite:    "Elite",
+  silver:   "Silver",
+  standard: "Standard"
+};
 
+function tierColorOf(event, tierKey){
+  if (!tierKey) tierKey = "standard";
+  if (event && event.tierColours && event.tierColours[tierKey]) return event.tierColours[tierKey];
+  return TIER_DEFAULTS[tierKey] || "#00FFFF";
+}
 function tierNameOf(event, tierKey){
+  if (!tierKey) tierKey = "standard";
   if (event && event.tierNames && event.tierNames[tierKey]) return event.tierNames[tierKey];
-  var N = { black:"Elite", gold:"VIP", silver:"Silver", cyan:"Standard", tier5:"Platinum", tier6:"Diamond" };
-  return N[tierKey] || tierKey || "Standard";
+  return TIER_DEFAULT_NAMES[tierKey] || tierKey;
 }
 
 function statusLabel(s){
@@ -467,16 +461,18 @@ function statusLabel(s){
   if (s === "cancelled") return "Cancelled";
   return "Valid";
 }
-
 function statusClass(s){
   if (s === "checked-in" || s === "checked_in" || s === "used") return "checked";
   if (s === "cancelled") return "cancelled";
   return "valid";
 }
 
-/* ============================================================
-   AUTH
-   ============================================================ */
+function getParam(n){
+  try { return new URLSearchParams(window.location.search).get(n); }
+  catch(e){ return null; }
+}
+
+/* AUTH */
 function applyAuth(user){
   currentUser = user;
   isAdmin = !!(user && ADMINS.map(function(e){ return e.toLowerCase(); }).indexOf(String(user.email).toLowerCase()) !== -1);
@@ -490,16 +486,11 @@ function applyAuth(user){
     $("userMenuBtn").style.display = "none";
   }
 
-  /* Show "Go live" only for admins */
   var ddCreateStream = $("ddCreateStream");
-  if (ddCreateStream) {
-    ddCreateStream.style.display = isAdmin ? "flex" : "none";
-  }
+  if (ddCreateStream) ddCreateStream.style.display = isAdmin ? "flex" : "none";
 }
 
-/* ============================================================
-   STATE VIEWS
-   ============================================================ */
+/* STATE VIEWS */
 function showLoading(){
   $("loadingState").style.display = "block";
   $("errorState").style.display = "none";
@@ -543,9 +534,7 @@ function showDashboard(){
   refreshIcons();
 }
 
-/* ============================================================
-   LOAD EVENTS (owned by current user)
-   ============================================================ */
+/* LOAD EVENTS */
 function loadMyEvents(){
   var q = db.collection(EVENTS);
   if (!isAdmin) {
@@ -575,11 +564,6 @@ function loadMyEvents(){
   });
 }
 
-function getParam(n){
-  try { return new URLSearchParams(window.location.search).get(n); }
-  catch(e){ return null; }
-}
-
 function populateEventPicker(){
   var sel = $("eventSelect");
   sel.innerHTML = "";
@@ -593,9 +577,7 @@ function populateEventPicker(){
   });
 }
 
-/* ============================================================
-   SELECT EVENT + LOAD TICKETS
-   ============================================================ */
+/* SELECT EVENT */
 function selectEvent(eventId){
   if (!eventId) return;
   currentEventId = eventId;
@@ -635,17 +617,13 @@ function selectEvent(eventId){
     });
 }
 
-/* ============================================================
-   STATS
-   ============================================================ */
+/* STATS */
 function renderStats(){
   var ev = currentEvent || {};
   var planFeePct = (ev.plan && ev.plan.fee) || (ev.revenue && ev.revenue.planFeePct) || 7;
   var capacity = ev.totalAttendees || 0;
 
-  var liveTickets = allTickets.filter(function(t){
-    return t.status !== "cancelled";
-  });
+  var liveTickets = allTickets.filter(function(t){ return t.status !== "cancelled"; });
 
   var soldCount = liveTickets.length;
   var gross = 0;
@@ -673,9 +651,7 @@ function renderStats(){
   $("statCheckedSub").textContent = attendancePct + "% attendance";
 }
 
-/* ============================================================
-   TIER BREAKDOWN
-   ============================================================ */
+/* TIER BREAKDOWN */
 function renderTierBreakdown(){
   var wrap = $("tierBars");
   var ev = currentEvent || {};
@@ -689,7 +665,7 @@ function renderTierBreakdown(){
 
   var byTier = {};
   liveTickets.forEach(function(t){
-    var k = t.tier || "cyan";
+    var k = t.tier || "standard";
     if (!byTier[k]) byTier[k] = { count: 0, revenue: 0 };
     byTier[k].count++;
     var p = parseFloat(t.pricePaid);
@@ -723,9 +699,7 @@ function renderTierBreakdown(){
   $("tierBreakdownMeta").textContent = liveTickets.length + " tickets · " + tierKeys.length + " tier" + (tierKeys.length === 1 ? "" : "s");
 }
 
-/* ============================================================
-   RECENT SALES FEED
-   ============================================================ */
+/* RECENT SALES */
 function renderRecentFeed(){
   var feed = $("recentFeed");
   var ev = currentEvent || {};
@@ -737,9 +711,8 @@ function renderRecentFeed(){
   var recent = allTickets.slice(0, 20);
   var html = "";
   recent.forEach(function(t){
-    var tierKey = t.tier || "cyan";
+    var tierKey = t.tier || "standard";
     var tierName = tierNameOf(ev, tierKey);
-    var colour = tierColorOf(ev, tierKey);
     var initial = initialsFrom(t.guestName || "", t.buyerEmail || "");
     var seatTxt = t.seat ? (" · " + t.seat) : "";
     var ref = buildTicketRef(currentEventId, t.ticketId || t.id);
@@ -761,11 +734,9 @@ function renderRecentFeed(){
   });
   feed.innerHTML = html;
   $("recentMeta").textContent = "Showing " + recent.length + " of " + allTickets.length + " tickets";
-  }
+}
 
-/* ============================================================
-   ATTENDEE TABLE
-   ============================================================ */
+/* ATTENDEE TABLE */
 function renderAttendeeTable(){
   var tbody = $("attTableBody");
   var ev = currentEvent || {};
@@ -782,7 +753,7 @@ function renderAttendeeTable(){
 
   var html = "";
   list.forEach(function(t){
-    var tierKey = t.tier || "cyan";
+    var tierKey = t.tier || "standard";
     var tierName = tierNameOf(ev, tierKey);
     var colour = tierColorOf(ev, tierKey);
     var ref = buildTicketRef(currentEventId, t.ticketId || t.id);
@@ -815,7 +786,7 @@ function applyAttendeeSearch(){
       var email = String(t.buyerEmail || "").toLowerCase();
       var seat = String(t.seat || "").toLowerCase();
       var ref = buildTicketRef(currentEventId, t.ticketId || t.id).toLowerCase();
-      var tier = String(tierNameOf(ev, t.tier || "cyan")).toLowerCase();
+      var tier = String(tierNameOf(ev, t.tier || "standard")).toLowerCase();
       return name.indexOf(q) !== -1
           || email.indexOf(q) !== -1
           || seat.indexOf(q) !== -1
@@ -826,9 +797,7 @@ function applyAttendeeSearch(){
   renderAttendeeTable();
 }
 
-/* ============================================================
-   CSV EXPORT
-   ============================================================ */
+/* CSV EXPORT */
 function csvEscape(v){
   var s = String(v == null ? "" : v);
   if (/[",\n\r]/.test(s)) return '"' + s.replace(/"/g, '""') + '"';
@@ -842,7 +811,7 @@ function exportCsv(){
   var headers = ["Guest Name", "Buyer Email", "Tier", "Seat", "Ticket Ref", "Status", "Price Paid", "Bought At"];
   var lines = [headers.join(",")];
   allTickets.forEach(function(t){
-    var tierKey = t.tier || "cyan";
+    var tierKey = t.tier || "standard";
     var row = [
       t.guestName || "",
       t.buyerEmail || "",
@@ -867,9 +836,7 @@ function exportCsv(){
   showToast("Exported " + allTickets.length + " attendees", "success", 2600);
 }
 
-/* ============================================================
-   EVENT LISTENERS
-   ============================================================ */
+/* LISTENERS */
 function wireListeners(){
 
   $("userMenuBtn").addEventListener("click", function(e){
@@ -885,7 +852,6 @@ function wireListeners(){
   $("ddMyCards").addEventListener("click", function(){ window.location.href = "my-cards.html"; });
   $("ddScanner").addEventListener("click", function(){ window.location.href = "scanner.html"; });
 
-  /* Admin-only — Go live */
   if ($("ddCreateStream")) {
     $("ddCreateStream").addEventListener("click", function(){
       if (!isAdmin) { showToast("Stream Studio is restricted to admins.", "error"); return; }
@@ -924,9 +890,7 @@ function wireListeners(){
   });
 }
 
-/* ============================================================
-   BOOT
-   ============================================================ */
+/* BOOT */
 document.addEventListener("DOMContentLoaded", function(){
   $("year").textContent = new Date().getFullYear();
   refreshIcons();
@@ -953,4 +917,4 @@ window.addEventListener("beforeunload", function(){
 })();
 </script>
 </body>
-</html>
+  </html>
