@@ -63,6 +63,17 @@ h3{font-size:1.2rem}
 .btn-ghost:hover{background:var(--surface-2);border-color:var(--cyan-500);color:var(--cyan-700)}
 .btn-sm{padding:8px 12px;font-size:13px}
 
+/* Quick access buttons (My Cards + Scanner) */
+.quick-links{display:none;gap:6px;align-items:center}
+@media (min-width:768px){.quick-links{display:flex}}
+.quick-link{display:inline-flex;align-items:center;gap:6px;padding:8px 12px;border-radius:10px;background:var(--surface-2);border:1px solid var(--border);color:var(--text-2);font-size:13px;font-weight:700;transition:all 0.2s ease}
+.quick-link:hover{background:#fff;border-color:var(--cyan-500);color:var(--cyan-700);transform:translateY(-1px)}
+.quick-link i{width:14px;height:14px}
+.quick-link .count{background:var(--cyan-500);color:#04161c;font-family:var(--mono);font-size:10.5px;font-weight:900;padding:1px 7px;border-radius:99px;line-height:1.4}
+.quick-link .count.amber{background:#f59e0b;color:#fff}
+.quick-link .count.amber.pulse{animation:pulseAmber 1.5s infinite}
+@keyframes pulseAmber{0%,100%{opacity:1}50%{opacity:0.55}}
+
 .user-menu-btn{display:none;align-items:center;gap:8px;padding:5px 12px 5px 5px;background:var(--surface-2);border:1px solid var(--border);border-radius:99px;font-family:inherit;transition:all 0.2s ease}
 .user-menu-btn:hover{border-color:var(--cyan-500);box-shadow:0 0 0 3px rgba(6,182,212,0.1)}
 .user-menu-btn .avatar{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--cyan-400),var(--cyan-600));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;color:#04161c;flex-shrink:0}
@@ -87,36 +98,37 @@ h3{font-size:1.2rem}
 .user-dropdown-separator{height:1px;background:var(--border);margin:6px 8px}
 
 /* HERO */
-.hero{position:relative;background:#0a0f14;color:#fff;overflow:hidden;padding:60px 0 56px}
-.hero::before{
-  content:'';position:absolute;inset:0;
-  background:
-    radial-gradient(circle at 78% 30%, rgba(0,255,255,.16), transparent 55%),
-    radial-gradient(circle at 12% 82%, rgba(0,255,255,.08), transparent 45%),
-    linear-gradient(160deg,#0a0f14 0%,#0f172a 45%,#0a0f14 100%);
-  z-index:0;
-}
-.hero::after{
-  content:'';position:absolute;inset:0;
-  background-image:radial-gradient(circle at 1px 1px, rgba(255,255,255,.04) 1px, transparent 0);
-  background-size:24px 24px;pointer-events:none;z-index:1;
-}
-.hero-in{position:relative;z-index:2;max-width:1180px;margin:0 auto;padding:0 24px}
-@media (max-width:560px){.hero{padding:44px 0 40px}.hero-in{padding:0 14px}}
+.hero{position:relative;background:#0a0f14;color:#fff;overflow:hidden;padding:60px 0 56px;min-height:520px}
+.hero-bg{position:absolute;inset:0;z-index:0;overflow:hidden}
+.hero-slide{position:absolute;inset:0;background-size:cover;background-position:center;opacity:0;transition:opacity 1.2s ease-in-out;transform:scale(1.06)}
+.hero-slide.active{opacity:0.35;transform:scale(1)}
+.hero-slide.placeholder{background:linear-gradient(135deg,#0a0f14 0%,#0f172a 45%,#0a0f14 100%)}
+.hero-overlay{position:absolute;inset:0;z-index:1;background:linear-gradient(160deg,rgba(10,15,20,0.85) 0%,rgba(15,23,42,0.72) 45%,rgba(10,15,20,0.9) 100%);pointer-events:none}
+.hero-overlay::after{content:'';position:absolute;inset:0;background-image:radial-gradient(circle at 1px 1px, rgba(255,255,255,.04) 1px, transparent 0);background-size:24px 24px}
+.hero::before{content:'';position:absolute;inset:0;background:radial-gradient(circle at 78% 30%, rgba(0,255,255,.16), transparent 55%),radial-gradient(circle at 12% 82%, rgba(0,255,255,.08), transparent 45%);z-index:2;pointer-events:none}
 
-.hero-tag{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(34,211,238,.42);background:rgba(34,211,238,.1);color:#67e8f9;font-size:11px;font-weight:900;letter-spacing:.11em;text-transform:uppercase;padding:7px 14px;border-radius:99px;margin-bottom:20px}
+.hero-dots{position:absolute;bottom:20px;left:50%;transform:translateX(-50%);display:flex;gap:8px;z-index:5}
+.hero-dot{width:8px;height:8px;border-radius:50%;background:rgba(255,255,255,0.35);border:none;padding:0;transition:all 0.3s ease;cursor:pointer}
+.hero-dot.active{background:#00FFFF;width:24px;border-radius:99px;box-shadow:0 0 12px rgba(0,255,255,0.6)}
+.hero-dot:hover:not(.active){background:rgba(255,255,255,0.6)}
+
+.hero-in{position:relative;z-index:3;max-width:1180px;margin:0 auto;padding:0 24px}
+@media (max-width:560px){.hero{padding:44px 0 60px;min-height:480px}.hero-in{padding:0 14px}}
+
+.hero-tag{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(34,211,238,.42);background:rgba(34,211,238,.1);color:#67e8f9;font-size:11px;font-weight:900;letter-spacing:.11em;text-transform:uppercase;padding:7px 14px;border-radius:99px;margin-bottom:20px;backdrop-filter:blur(6px)}
 .hero-tag i{width:13px;height:13px}
-.hero h1{font-size:clamp(2rem,5vw,3.4rem);font-weight:900;line-height:1.05;letter-spacing:-.03em;margin-bottom:14px;max-width:760px;color:#fff}
+.hero h1{font-size:clamp(2rem,5vw,3.4rem);font-weight:900;line-height:1.05;letter-spacing:-.03em;margin-bottom:14px;max-width:760px;color:#fff;text-shadow:0 4px 24px rgba(0,0,0,0.4)}
 .hero h1 span{background:linear-gradient(135deg,#67e8f9,#22d3ee,#06b6d4);-webkit-background-clip:text;background-clip:text;color:transparent}
-.hero .lead{color:rgba(255,255,255,.82);font-size:clamp(1rem,1.5vw,1.15rem);max-width:620px;line-height:1.6;margin-bottom:28px}
+.hero .lead{color:rgba(255,255,255,.85);font-size:clamp(1rem,1.5vw,1.15rem);max-width:620px;line-height:1.6;margin-bottom:28px;text-shadow:0 2px 12px rgba(0,0,0,0.35)}
 
 .hero-ctas{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;margin-bottom:22px;max-width:900px}
 @media (max-width:720px){.hero-ctas{grid-template-columns:1fr;gap:10px}}
 .hero-cta{
   display:flex;flex-direction:column;align-items:flex-start;gap:10px;
   padding:20px 20px 18px;border-radius:16px;
-  background:rgba(255,255,255,.05);
-  border:1px solid rgba(255,255,255,.12);
+  background:rgba(10,15,20,.55);
+  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);
+  border:1px solid rgba(255,255,255,.14);
   transition:.2s var(--ease-smooth);
   text-decoration:none;color:#fff;
   position:relative;overflow:hidden;
@@ -126,12 +138,12 @@ h3{font-size:1.2rem}
   background:var(--cta-accent, #00FFFF);opacity:.6;
   transition:opacity .2s ease, height .2s ease;
 }
-.hero-cta:hover{background:rgba(255,255,255,.1);border-color:rgba(255,255,255,.25);transform:translateY(-3px);box-shadow:0 20px 40px rgba(0,0,0,.3)}
+.hero-cta:hover{background:rgba(10,15,20,.75);border-color:rgba(255,255,255,.3);transform:translateY(-3px);box-shadow:0 20px 40px rgba(0,0,0,.4)}
 .hero-cta:hover::after{opacity:1;height:4px}
 .hero-cta .ico{width:42px;height:42px;border-radius:12px;background:var(--cta-icon-bg, rgba(0,255,255,.15));border:1px solid var(--cta-accent, #00FFFF);display:flex;align-items:center;justify-content:center;color:var(--cta-accent, #00FFFF)}
 .hero-cta .ico i{width:22px;height:22px;stroke-width:2}
 .hero-cta .t{font-size:15.5px;font-weight:900;letter-spacing:-.005em}
-.hero-cta .s{font-size:12.5px;color:rgba(255,255,255,.7);line-height:1.45;font-weight:500}
+.hero-cta .s{font-size:12.5px;color:rgba(255,255,255,.75);line-height:1.45;font-weight:500}
 .hero-cta .go{display:inline-flex;align-items:center;gap:5px;font-size:12px;font-weight:900;color:var(--cta-accent, #00FFFF);letter-spacing:.04em;text-transform:uppercase;margin-top:4px}
 .hero-cta .go i{width:12px;height:12px;transition:transform .2s ease}
 .hero-cta:hover .go i{transform:translateX(4px)}
@@ -141,17 +153,17 @@ h3{font-size:1.2rem}
 .hero-cta.trips{--cta-accent:#a78bfa;--cta-icon-bg:rgba(167,139,250,.15)}
 
 .hero-create{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
-.hero-create-label{font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.5);margin-right:6px}
+.hero-create-label{font-size:11px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:rgba(255,255,255,.55);margin-right:6px}
 .create-chip{
   display:inline-flex;align-items:center;gap:6px;
   padding:7px 13px;border-radius:99px;
-  background:rgba(255,255,255,.06);
-  border:1px solid rgba(255,255,255,.14);
-  color:rgba(255,255,255,.85);
+  background:rgba(10,15,20,.55);backdrop-filter:blur(10px);
+  border:1px solid rgba(255,255,255,.16);
+  color:rgba(255,255,255,.9);
   font-size:12px;font-weight:700;
   transition:.15s ease;text-decoration:none;
 }
-.create-chip:hover{background:rgba(255,255,255,.14);border-color:rgba(0,255,255,.35);color:#fff}
+.create-chip:hover{background:rgba(10,15,20,.8);border-color:rgba(0,255,255,.45);color:#fff}
 .create-chip i{width:13px;height:13px;flex-shrink:0}
 
 /* SECTION */
@@ -296,6 +308,12 @@ h3{font-size:1.2rem}
 .empty-block i{width:36px;height:36px;color:var(--border-2);margin:0 auto 10px;display:block}
 .empty-block p{font-size:13.5px;line-height:1.55;margin:0}
 .empty-block a{color:var(--cyan-700);font-weight:800;text-decoration:underline}
+
+@media (max-width:767px){
+  .quick-links{display:flex}
+  .quick-link .lbl{display:none}
+  .quick-link{padding:8px 10px}
+}
 </style>
 </head>
 <body>
@@ -322,6 +340,20 @@ h3{font-size:1.2rem}
     </nav>
 
     <div class="header-actions">
+      <!-- Quick access: My Cards + Scanner -->
+      <div class="quick-links" id="quickLinks" style="display:none;">
+        <a href="my-cards.html" class="quick-link" title="My cards">
+          <i data-lucide="ticket"></i>
+          <span class="lbl">My cards</span>
+          <span class="count" id="quickCardsCount" style="display:none;">0</span>
+        </a>
+        <a href="scanner.html" class="quick-link" title="Scanner">
+          <i data-lucide="scan-line"></i>
+          <span class="lbl">Scanner</span>
+          <span class="count amber" id="quickScanCount" style="display:none;">0</span>
+        </a>
+      </div>
+
       <button id="signInBtn" class="btn btn-primary btn-sm" type="button"><i data-lucide="log-in"></i> Sign in</button>
       <button id="userMenuBtn" class="user-menu-btn" type="button">
         <span class="avatar" id="userAvatar">?</span>
@@ -342,6 +374,8 @@ h3{font-size:1.2rem}
         <button class="user-dropdown-item" id="ddCreateStream" type="button" style="display:none;"><i data-lucide="radio"></i> Go live</button>
         <button class="user-dropdown-item" id="ddMyCards" type="button"><i data-lucide="ticket"></i> My cards</button>
         <button class="user-dropdown-item" id="ddScanner" type="button"><i data-lucide="scan-line"></i> Scanner</button>
+        <button class="user-dropdown-item" id="ddAdminReview" type="button" style="display:none;"><i data-lucide="clipboard-check"></i> Review events</button>
+        <button class="user-dropdown-item" id="ddAdminPayments" type="button" style="display:none;"><i data-lucide="credit-card"></i> Payments</button>
         <button class="user-dropdown-item" id="ddManageAds" type="button" style="display:none;"><i data-lucide="megaphone"></i> Manage ads</button>
         <button class="user-dropdown-item" id="ddManageChannels" type="button" style="display:none;"><i data-lucide="tv"></i> Manage channels</button>
         <button class="user-dropdown-item" id="ddManagePartners" type="button" style="display:none;"><i data-lucide="link"></i> Manage partners</button>
@@ -354,7 +388,12 @@ h3{font-size:1.2rem}
 </header>
 
 <!-- ═══════════════ HERO ═══════════════ -->
-<section class="hero">
+<section class="hero" id="heroSection">
+  <div class="hero-bg" id="heroBg">
+    <div class="hero-slide placeholder active"></div>
+  </div>
+  <div class="hero-overlay"></div>
+
   <div class="hero-in">
     <span class="hero-tag"><i data-lucide="sparkles"></i> Watch · Book · Travel</span>
     <h1>Everything you need<br><span>in one platform.</span></h1>
@@ -388,6 +427,8 @@ h3{font-size:1.2rem}
       <a href="create-streams.html" id="heroGoLive" class="create-chip" style="display:none;"><i data-lucide="radio"></i> Go live</a>
     </div>
   </div>
+
+  <div class="hero-dots" id="heroDots"></div>
 </section>
 
 <!-- ═══════════════ LIVE NOW ═══════════════ -->
@@ -499,6 +540,8 @@ h3{font-size:1.2rem}
       </div>
       <div class="footer-col">
         <h4>Admin</h4>
+        <a href="admin-event-review.html">Event review</a>
+        <a href="admin-payments.html">Payments</a>
         <a href="admin-live.html">Partner channels</a>
         <a href="admin-channels.html">Channels</a>
         <a href="admin-ads.html">Ads</a>
@@ -601,6 +644,122 @@ var currentUser = null;
 var isAdmin = false;
 var authMode = 'signin';
 
+/* ══════════════════════════════════════════════════════════════
+   HERO CAROUSEL
+   ══════════════════════════════════════════════════════════════ */
+var heroSlides = [];
+var heroIndex = 0;
+var heroTimer = null;
+var HERO_INTERVAL_MS = 5000;
+var HERO_MAX_SLIDES = 5;
+
+function buildHeroSlidesFromEvents(events){
+  var slides = [];
+  events.forEach(function(e){
+    var img = e.heroImage || e.coverImage;
+    if (img && slides.length < HERO_MAX_SLIDES){
+      slides.push(img);
+    }
+  });
+  return slides;
+}
+
+function initHeroCarousel(imageUrls){
+  var bg = $('heroBg');
+  var dots = $('heroDots');
+  if (!bg) return;
+
+  // Clear previous slides
+  bg.innerHTML = '';
+  if (dots) dots.innerHTML = '';
+  heroSlides = [];
+  heroIndex = 0;
+  if (heroTimer){ clearInterval(heroTimer); heroTimer = null; }
+
+  if (!imageUrls || !imageUrls.length){
+    // Fallback: keep the placeholder gradient
+    var ph = document.createElement('div');
+    ph.className = 'hero-slide placeholder active';
+    bg.appendChild(ph);
+    if (dots) dots.style.display = 'none';
+    return;
+  }
+
+  if (dots) dots.style.display = 'flex';
+
+  // Preload and build slides
+  imageUrls.forEach(function(url, i){
+    var slide = document.createElement('div');
+    slide.className = 'hero-slide' + (i === 0 ? ' active' : '');
+    slide.style.backgroundImage = "url('" + String(url).replace(/'/g, "\\'") + "')";
+    bg.appendChild(slide);
+    heroSlides.push(slide);
+
+    if (dots){
+      var dot = document.createElement('button');
+      dot.className = 'hero-dot' + (i === 0 ? ' active' : '');
+      dot.type = 'button';
+      dot.setAttribute('aria-label', 'Slide ' + (i + 1));
+      dot.addEventListener('click', function(){ goToHeroSlide(i); });
+      dots.appendChild(dot);
+    }
+  });
+
+  // Start auto-rotate
+  if (heroSlides.length > 1){
+    heroTimer = setInterval(nextHeroSlide, HERO_INTERVAL_MS);
+  }
+
+  // Pause on hover
+  var hero = $('heroSection');
+  if (hero){
+    hero.addEventListener('mouseenter', function(){
+      if (heroTimer){ clearInterval(heroTimer); heroTimer = null; }
+    });
+    hero.addEventListener('mouseleave', function(){
+      if (!heroTimer && heroSlides.length > 1){
+        heroTimer = setInterval(nextHeroSlide, HERO_INTERVAL_MS);
+      }
+    });
+  }
+
+  // Pause when tab is hidden
+  document.addEventListener('visibilitychange', function(){
+    if (document.hidden){
+      if (heroTimer){ clearInterval(heroTimer); heroTimer = null; }
+    } else {
+      if (!heroTimer && heroSlides.length > 1){
+        heroTimer = setInterval(nextHeroSlide, HERO_INTERVAL_MS);
+      }
+    }
+  });
+}
+
+function nextHeroSlide(){
+  if (!heroSlides.length) return;
+  var next = (heroIndex + 1) % heroSlides.length;
+  goToHeroSlide(next);
+}
+
+function goToHeroSlide(i){
+  if (i === heroIndex) return;
+  heroSlides.forEach(function(s, idx){
+    s.classList.toggle('active', idx === i);
+  });
+  var dots = document.querySelectorAll('.hero-dot');
+  dots.forEach(function(d, idx){
+    d.classList.toggle('active', idx === i);
+  });
+  heroIndex = i;
+  // Reset the timer when user manually switches
+  if (heroTimer){
+    clearInterval(heroTimer);
+    if (heroSlides.length > 1){
+      heroTimer = setInterval(nextHeroSlide, HERO_INTERVAL_MS);
+    }
+  }
+}
+
 var $ = function(id){ return document.getElementById(id); };
 var esc = function(s){ return String(s == null ? '' : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); };
 var refreshIcons = function(){ if (window.lucide) lucide.createIcons(); };
@@ -632,6 +791,74 @@ function isAdminEmail(user){
   if (!user || !user.email) return false;
   var e = String(user.email).toLowerCase();
   return ADMIN_EMAILS.some(function(x){ return x.toLowerCase() === e; });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   QUICK LINKS (My Cards + Scanner)
+   ══════════════════════════════════════════════════════════════ */
+function updateQuickLinks(){
+  var wrap = $('quickLinks');
+  if (!wrap) return;
+  if (currentUser){
+    wrap.style.display = 'flex';
+    loadQuickCounts();
+  } else {
+    wrap.style.display = 'none';
+  }
+}
+
+function loadQuickCounts(){
+  if (!currentUser) return;
+
+  // Ticket count (across events) + pending count
+  var ticketsPromise = db.collection('events').get().then(function(eventsSnap){
+    var promises = [];
+    eventsSnap.forEach(function(evDoc){
+      promises.push(
+        db.collection('events').doc(evDoc.id)
+          .collection('tickets')
+          .where('buyerUid', '==', currentUser.uid)
+          .get()
+          .then(function(s){ return s.size; })
+          .catch(function(){ return 0; })
+      );
+    });
+    return Promise.all(promises).then(function(counts){
+      return counts.reduce(function(a, b){ return a + b; }, 0);
+    });
+  }).catch(function(){ return 0; });
+
+  // Pending events count for scanner badge (only for event owners with live events)
+  var scannerPromise = db.collection('events')
+    .where('ownerUid', '==', currentUser.uid)
+    .where('status', '==', 'live')
+    .get()
+    .then(function(s){ return s.size; })
+    .catch(function(){ return 0; });
+
+  ticketsPromise.then(function(n){
+    var el = $('quickCardsCount');
+    if (el){
+      if (n > 0){
+        el.textContent = n;
+        el.style.display = 'inline-block';
+      } else {
+        el.style.display = 'none';
+      }
+    }
+  });
+
+  scannerPromise.then(function(n){
+    var el = $('quickScanCount');
+    if (el){
+      if (n > 0){
+        el.textContent = n;
+        el.style.display = 'inline-block';
+      } else {
+        el.style.display = 'none';
+      }
+    }
+  });
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -696,7 +923,6 @@ function isPartnerStream(s){
   return !!(s.partnerId || s.streamPlatform === 'partner');
 }
 
-/* Stream card */
 function buildStreamCard(s){
   var card = document.createElement('div');
   card.className = 'item-card';
@@ -745,7 +971,6 @@ function buildStreamCard(s){
   return card;
 }
 
-/* Event card */
 function buildEventCard(e){
   var card = document.createElement('div');
   card.className = 'item-card';
@@ -787,7 +1012,6 @@ function buildEventCard(e){
   return card;
 }
 
-/* Trip card */
 function buildTripCard(t){
   var card = document.createElement('div');
   card.className = 'item-card';
@@ -827,7 +1051,6 @@ function buildTripCard(t){
   return card;
 }
 
-/* Channel card */
 function buildChannelCard(ch){
   var card = document.createElement('a');
   card.className = 'ch-card';
@@ -880,13 +1103,13 @@ function renderLiveRow(streams){
 }
 
 /* ══════════════════════════════════════════════════════════════
-   EVENTS
+   EVENTS — only show status === 'live'
    ══════════════════════════════════════════════════════════════ */
 function renderEventsRow(events){
   var row = $('eventsRow');
   row.innerHTML = '';
   if (!events.length){
-    row.outerHTML = '<div id="eventsRow" class="empty-block" style="grid-column:1/-1;">'+icon('calendar')+'<p>No events yet. <a href="create-event.html">Be the first to create one →</a></p></div>';
+    row.outerHTML = '<div id="eventsRow" class="empty-block" style="grid-column:1/-1;">'+icon('calendar')+'<p>No live events yet. <a href="create-event.html">Be the first to create one →</a></p></div>';
     refreshIcons();
     return;
   }
@@ -945,7 +1168,12 @@ function renderChannelsRow(channels, streams){
    DATA LOADING
    ══════════════════════════════════════════════════════════════ */
 function loadHomepageData(){
-  db.collection(EVENTS).orderBy('createdAt', 'desc').limit(8).get()
+  // Live events only (for the featured row + hero carousel)
+  db.collection(EVENTS)
+    .where('status', '==', 'live')
+    .orderBy('startDate', 'asc')
+    .limit(8)
+    .get()
     .then(function(snap){
       var events = [];
       snap.forEach(function(doc){
@@ -954,6 +1182,12 @@ function loadHomepageData(){
         events.push(d);
       });
       renderEventsRow(events);
+
+      // Hero carousel: pull cover images from the live events
+      var slideImages = buildHeroSlidesFromEvents(events);
+      if (slideImages.length){
+        initHeroCarousel(slideImages);
+      }
     })
     .catch(function(err){
       console.warn('events:', err);
@@ -1030,6 +1264,8 @@ function applyAuthState(user){
   var ddManageAds = $('ddManageAds');
   var ddManageChannels = $('ddManageChannels');
   var ddManagePartners = $('ddManagePartners');
+  var ddAdminReview = $('ddAdminReview');
+  var ddAdminPayments = $('ddAdminPayments');
 
   if (user){
     var display = user.displayName || user.email.split('@')[0];
@@ -1046,6 +1282,8 @@ function applyAuthState(user){
     if (ddManageChannels) ddManageChannels.style.display = isAdmin ? 'flex' : 'none';
     if (ddManagePartners) ddManagePartners.style.display = isAdmin ? 'flex' : 'none';
     if (ddCreateStream) ddCreateStream.style.display = isAdmin ? 'flex' : 'none';
+    if (ddAdminReview) ddAdminReview.style.display = isAdmin ? 'flex' : 'none';
+    if (ddAdminPayments) ddAdminPayments.style.display = isAdmin ? 'flex' : 'none';
     if (heroGoLive) heroGoLive.style.display = isAdmin ? 'inline-flex' : 'none';
   } else {
     $('signInBtn').style.display = 'inline-flex';
@@ -1057,10 +1295,14 @@ function applyAuthState(user){
     if (ddManageChannels) ddManageChannels.style.display = 'none';
     if (ddManagePartners) ddManagePartners.style.display = 'none';
     if (ddCreateStream) ddCreateStream.style.display = 'none';
+    if (ddAdminReview) ddAdminReview.style.display = 'none';
+    if (ddAdminPayments) ddAdminPayments.style.display = 'none';
     if (heroGoLive) heroGoLive.style.display = 'none';
 
     $('userDropdown').classList.remove('open');
   }
+
+  updateQuickLinks();
   refreshIcons();
 }
 
@@ -1172,6 +1414,18 @@ document.addEventListener('DOMContentLoaded', function(){
       window.location.href = 'create-streams.html';
     });
   }
+  if ($('ddAdminReview')){
+    $('ddAdminReview').addEventListener('click', function(){
+      if (!isAdmin){ toast('Admin only.', 'error'); return; }
+      window.location.href = 'admin-event-review.html';
+    });
+  }
+  if ($('ddAdminPayments')){
+    $('ddAdminPayments').addEventListener('click', function(){
+      if (!isAdmin){ toast('Admin only.', 'error'); return; }
+      window.location.href = 'admin-payments.html';
+    });
+  }
   if ($('ddManageAds')){
     $('ddManageAds').addEventListener('click', function(){
       if (!isAdmin){ toast('Admin only.', 'error'); return; }
@@ -1253,4 +1507,4 @@ document.addEventListener('DOMContentLoaded', function(){
 })();
 </script>
 </body>
-            </html>
+      </html>
