@@ -9,7 +9,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
 :root{
   --cy:#00FFFF;--cy2:#00CCCC;--cy3:#009999;--cyf:#e6ffff;
@@ -102,13 +101,15 @@ img{max-width:100%;display:block}
 .tier-opt .tier-desc{font-size:11.5px;color:var(--mut);font-weight:500}
 .tier-opt .tier-price{font-family:var(--mono);font-weight:900;font-size:16px;color:var(--cy3);flex-shrink:0;white-space:nowrap}
 
-/* SEAT MAP (buyer) */
+/* SEAT MAP — rows */
 .seat-map-wrap{background:var(--sf2);border:1px solid var(--bd);border-radius:14px;padding:20px 16px;display:flex;justify-content:center;overflow-x:auto;-webkit-overflow-scrolling:touch;margin-top:6px}
-.seat-map-grid{display:inline-flex;flex-direction:column;gap:8px;min-width:max-content}
+.seat-map-grid{display:inline-flex;flex-direction:column;gap:8px;min-width:max-content;align-items:center}
 .seat-map-stage{display:inline-block;text-align:center;background:linear-gradient(135deg,#0a0f14,#1a2129);color:#fff;font-size:10px;font-weight:900;letter-spacing:.2em;text-transform:uppercase;padding:6px 26px;border-radius:99px;margin:0 auto 14px;box-shadow:0 6px 16px rgba(10,15,20,0.18);align-self:center}
+.seat-map-block{display:inline-flex;flex-direction:column;gap:8px;align-items:flex-start;margin-bottom:18px}
+.seat-map-block:last-child{margin-bottom:0}
+.seat-map-block-title{font-size:10.5px;font-weight:900;color:var(--cy3);letter-spacing:.08em;text-transform:uppercase;margin-bottom:4px}
 .seat-map-row{display:flex;align-items:center;gap:6px;justify-content:center}
-.seat-map-rowlbl{width:24px;height:32px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12px;font-weight:900;color:var(--mut)}
-.seat-map-aisle{width:20px;flex-shrink:0;align-self:stretch;background:repeating-linear-gradient(to bottom,transparent 0,transparent 4px,#e2e8f0 4px,#e2e8f0 8px);border-radius:2px;margin:0 4px}
+.seat-map-rowlbl{width:26px;height:32px;flex-shrink:0;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:12px;font-weight:900;color:var(--mut)}
 .seat-cell{
   width:36px;height:34px;border-radius:6px 6px 10px 10px;
   background:#e5e7eb;border:1.5px solid #cbd5e1;
@@ -130,6 +131,25 @@ img{max-width:100%;display:block}
 .seat-cell.other-tier{opacity:0.35;cursor:not-allowed}
 .seat-cell.light-text{color:#0a0f14}
 
+/* SEAT MAP — tables */
+.table-wrap{position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.table-shape{position:relative;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:900;color:#fff;border:1.5px solid rgba(0,0,0,.15);cursor:default}
+.table-shape.round{border-radius:50%}
+.table-shape.square{border-radius:8px}
+.table-shape.rectangular{border-radius:8px}
+.table-shape.light{color:#0a0f14}
+.table-shape.tier-owned{box-shadow:0 0 0 3px rgba(0,255,255,0.18)}
+
+.chair-dot{position:absolute;width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:10px;font-weight:900;color:#fff;border:1.5px solid rgba(0,0,0,.15);transform:translate(-50%,-50%);cursor:pointer;transition:transform .15s ease,box-shadow .15s ease}
+.chair-dot:hover:not(.unavailable):not(.other-tier){transform:translate(-50%,-50%) scale(1.15);box-shadow:0 6px 14px rgba(10,15,20,0.2);z-index:5}
+.chair-dot.light{color:#0a0f14}
+.chair-dot.picked{background:#0a0f14!important;color:#00FFFF!important;border-color:#00FFFF!important;box-shadow:0 0 0 3px rgba(0,255,255,0.35);transform:translate(-50%,-50%) scale(1.15);z-index:6}
+.chair-dot.picked::after{content:'✓';position:absolute;top:-5px;right:-5px;width:14px;height:14px;border-radius:50%;background:#00FFFF;color:#04161c;font-size:9px;font-weight:900;display:flex;align-items:center;justify-content:center}
+.chair-dot.unavailable{background:#f1f5f9!important;color:#cbd5e1!important;border-color:#e2e8f0!important;cursor:not-allowed;text-decoration:line-through}
+.chair-dot.other-tier{opacity:0.35;cursor:not-allowed}
+
+.tables-row{display:flex;flex-wrap:wrap;gap:32px;justify-content:center;padding:8px 0}
+
 .seat-legend{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:12px}
 .seat-legend-chip{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:99px;background:var(--sf);border:1px solid var(--bd);font-size:11px;font-weight:800;color:var(--tx2)}
 .seat-legend-chip .sl-dot{width:12px;height:12px;border-radius:4px;flex-shrink:0;border:1px solid rgba(0,0,0,0.12)}
@@ -143,7 +163,7 @@ img{max-width:100%;display:block}
 .seat-picks-display{margin-top:14px}
 .seat-picks-display .spd-head{font-size:11px;font-weight:900;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px}
 .seat-picks-chips{display:flex;gap:6px;flex-wrap:wrap}
-.seat-pick-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;background:var(--sf2);border:1px solid var(--bd);font-size:12px;font-weight:800;color:var(--tx)}
+.seat-pick-chip{display:inline-flex;align-items:center;gap:6px;padding:6px 10px;border-radius:8px;background:var(--sf2);border:1px solid var(--bd);font-size:12px;font-weight:800;color:var(--tx);font-family:var(--mono)}
 .seat-pick-chip .spc-remove{width:16px;height:16px;border-radius:50%;background:var(--dgf);color:var(--dg);border:none;display:flex;align-items:center;justify-content:center;cursor:pointer;font-size:11px;font-weight:900;line-height:1;padding:0}
 .seat-pick-chip .spc-remove:hover{background:var(--dg);color:#fff}
 
@@ -263,6 +283,8 @@ img{max-width:100%;display:block}
   .modal{padding:22px 18px}
   .ref-value{font-size:18px}
   .seat-cell{width:32px;height:30px;font-size:9.5px}
+  .chair-dot{width:22px;height:22px;font-size:9px}
+  .tables-row{gap:22px}
 }
 </style>
 </head>
@@ -333,13 +355,13 @@ img{max-width:100%;display:block}
             <div class="kv-grid" id="detailGrid"></div>
           </div>
 
-          <div class="card">
-            <h2><i data-lucide="tag"></i> Choose your tier</h2>
+          <div class="card" id="tierCard">
+            <h2 id="tierCardTitle"><i data-lucide="tag"></i> Choose your tier</h2>
             <div class="tier-list" id="tierList"></div>
           </div>
 
           <div class="card" id="seatMapCard" style="display:none">
-            <h2><i data-lucide="grid-3x3"></i> Pick your seat<span id="seatMapTierLabel" style="font-weight:600;font-size:12.5px;color:var(--mut);margin-left:6px;"></span></h2>
+            <h2><i data-lucide="grid-3x3"></i> <span id="seatMapTitle">Pick your seat</span><span id="seatMapTierLabel" style="font-weight:600;font-size:12.5px;color:var(--mut);margin-left:6px;"></span></h2>
             <div class="seat-legend" id="seatLegend"></div>
             <div class="seat-map-wrap">
               <div class="seat-map-grid" id="seatMapGrid"></div>
@@ -394,13 +416,11 @@ img{max-width:100%;display:block}
     </div>
 
   </div>
-</main>
-
-<!-- MODAL -->
+  </main>
+  <!-- ═══════════════ BUY MODAL ═══════════════ -->
 <div class="modal-overlay" id="buyModal">
   <div class="modal">
 
-    <!-- STEP 1: guest details -->
     <div id="step1">
       <button class="modal-close" id="modalClose1" type="button"><i data-lucide="x"></i></button>
       <div class="step-indicator">
@@ -428,7 +448,6 @@ img{max-width:100%;display:block}
       </button>
     </div>
 
-    <!-- STEP 2: payment instructions -->
     <div id="step2" style="display:none">
       <button class="modal-close" id="modalClose2" type="button"><i data-lucide="x"></i></button>
       <div class="step-indicator">
@@ -505,6 +524,9 @@ img{max-width:100%;display:block}
 (function(){
 'use strict';
 
+/* ══════════════════════════════════════════════════════════════
+   FIREBASE
+   ══════════════════════════════════════════════════════════════ */
 var firebaseConfig = {
   apiKey: "AIzaSyDSnns131jOlBXAqKo6qy7lTW4Rij-1oWU",
   authDomain: "novalink-864cf.firebaseapp.com",
@@ -519,16 +541,6 @@ var auth = firebase.auth();
 var EVENTS = "events";
 var PENDING_TTL_MS = 24 * 60 * 60 * 1000;
 var MAX_QTY = 5;
-
-var EMAILJS_PUBLIC_KEY = "";
-var EMAILJS_SERVICE_ID = "";
-var EMAILJS_TEMPLATE_ID = "";
-try {
-  if (EMAILJS_PUBLIC_KEY && window.emailjs) {
-    emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY });
-  }
-} catch(e) { console.warn("EmailJS init skipped"); }
-
 var WHATSAPP_NUMBER = "27696835184";
 
 /* ══════════════════════════════════════════════════════════════
@@ -545,17 +557,27 @@ var countdownTimer = null;
 
 /* Seating */
 var seatingEnabled = false;
-var seatingPlan = null;
-var soldSeats = {};       // { "A-3": true } — already sold
-var pickedSeats = [];     // [ "A-1", "A-2" ]
+var sections = [];        // [{ id, name, mode, rows?/tables?, ... }]
+var seatTierMap = {};     // { "B1-A-03": "elite" } — canonical seat id → tier key
+var seatLabelMap = {};    // { "B1-A-03": "A-A-03" } — canonical seat id → short display id
+var seatMetaMap = {};     // { "B1-A-03": { blockName, blockId, kind, row?, table?, chair? } }
+var soldSeats = {};       // { "A-A-03": true }  (uses the SHORT display id, matches what we sell)
+var pickedSeats = [];     // [ "B1-A-03", "B1-A-04" ] — canonical ids
 
 /* ══════════════════════════════════════════════════════════════
    HELPERS
    ══════════════════════════════════════════════════════════════ */
 function $(id){ return document.getElementById(id); }
 function refreshIcons(){ if(window.lucide) lucide.createIcons(); }
-function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
-function getParam(n){ try { return new URLSearchParams(window.location.search).get(n); } catch(e){ return null; } }
+function esc(s){
+  return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){
+    return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];
+  });
+}
+function getParam(n){
+  try { return new URLSearchParams(window.location.search).get(n); }
+  catch(e){ return null; }
+}
 
 function showToast(msg, type, ms){
   type = type || "info"; ms = ms || 3000;
@@ -587,93 +609,102 @@ function formatEventDate(dateStr, timeStr){
   } catch(e){ return dateStr; }
 }
 
-function getTierName(tierKey){
-  if (eventData && eventData.tierNames && eventData.tierNames[tierKey]) return eventData.tierNames[tierKey];
-  var N = { black:"Elite", gold:"VIP", silver:"Silver", cyan:"Standard", tier5:"Platinum", tier6:"Diamond" };
-  return N[tierKey] || tierKey || "Standard";
-}
+/* ══════════════════════════════════════════════════════════════
+   TIERS — 3 fixed, semantic keys
+   ══════════════════════════════════════════════════════════════ */
+var ALL_TIER_KEYS = ["elite", "silver", "standard"];
 
-function getTierColor(tierKey){
-  if (eventData && eventData.tierColours && eventData.tierColours[tierKey]) return eventData.tierColours[tierKey];
-  var D = { black:"#1a202c", gold:"#ecc94b", silver:"#cbd5e1", cyan:"#00FFFF", tier5:"#a855f7", tier6:"#f472b6" };
-  return D[tierKey] || "#00FFFF";
-}
+var TIER_FALLBACK_NAMES = {
+  elite: "Elite", silver: "Silver", standard: "Standard"
+};
+var TIER_FALLBACK_COLORS = {
+  elite: "#1a202c", silver: "#cbd5e1", standard: "#00FFFF"
+};
 
-function getTierPrice(tierKey){
+function getTierName(key){
+  if (!key) return "Standard";
+  if (eventData && eventData.tierNames && eventData.tierNames[key]) {
+    return eventData.tierNames[key];
+  }
+  return TIER_FALLBACK_NAMES[key] || key;
+}
+function getTierColor(key){
+  if (!key) return "#00FFFF";
+  if (eventData && eventData.tierColours && eventData.tierColours[key]) {
+    return eventData.tierColours[key];
+  }
+  return TIER_FALLBACK_COLORS[key] || "#00FFFF";
+}
+function getTierPrice(key){
   if (!eventData || !eventData.tierPrices) return 0;
-  var v = parseFloat(eventData.tierPrices[tierKey]);
+  var v = parseFloat(eventData.tierPrices[key]);
   return isNaN(v) ? 0 : v;
 }
-
-function getPaymentLink(tierKey){
+function getPaymentLink(key){
   if (!eventData || !eventData.paymentLinks) return "";
-  return String(eventData.paymentLinks[tierKey] || "").trim();
+  return String(eventData.paymentLinks[key] || "").trim();
 }
 
 function getActiveTierKeys(){
-  var all = ["black","gold","silver","cyan","tier5","tier6"];
-  if (!eventData) return all.slice(0, 4);
-  var count = parseInt(eventData.activeTierCount, 10) || 4;
-  if (count < 2) count = 2;
-  if (count > 6) count = 6;
-  return all.slice(0, count);
+  if (!eventData) return ALL_TIER_KEYS.slice();
+  var count = parseInt(eventData.activeTierCount, 10);
+  if (isNaN(count) || count < 1) count = ALL_TIER_KEYS.length;
+  if (count > ALL_TIER_KEYS.length) count = ALL_TIER_KEYS.length;
+  return ALL_TIER_KEYS.slice(0, count);
+}
+
+function isSingleTier(){
+  return getActiveTierKeys().length === 1;
 }
 
 function getCheapestTier(){
   var keys = getActiveTierKeys();
-  var cheapest = null;
-  var cheapestPrice = Infinity;
+  var cheapest = null, cheapestPrice = Infinity;
   keys.forEach(function(k){
     var p = getTierPrice(k);
-    if (p < cheapestPrice){
-      cheapestPrice = p;
-      cheapest = k;
-    }
+    if (p < cheapestPrice){ cheapestPrice = p; cheapest = k; }
   });
   return { key: cheapest, price: cheapestPrice === Infinity ? 0 : cheapestPrice };
 }
 
-function getAgeLabel(v){
-  if (!v || v === "all") return "";
-  return v + "+";
-}
-
+/* ══════════════════════════════════════════════════════════════
+   UTILITIES
+   ══════════════════════════════════════════════════════════════ */
 function firstNameOf(user){
   if (!user) return "";
-  if (user.displayName && user.displayName.trim()){
-    return user.displayName.trim();
-  }
+  if (user.displayName && user.displayName.trim()) return user.displayName.trim();
   if (user.email) return user.email.split("@")[0];
   return "";
 }
-
 function hasTwoWords(name){
   if (!name) return false;
-  var parts = String(name).trim().split(/\s+/).filter(Boolean);
-  return parts.length >= 2;
+  return String(name).trim().split(/\s+/).filter(Boolean).length >= 2;
 }
 
 function rowLabel(i){ return String.fromCharCode(65 + i); }
-function seatKey(r, c){ return rowLabel(r) + "-" + (c + 1); }
 
 function hexToRgbObj(hex){
   var c = String(hex||'').replace('#','');
   if (c.length === 3) c = c[0]+c[0]+c[1]+c[1]+c[2]+c[2];
   if (c.length !== 6) return null;
-  return { r:parseInt(c.substring(0,2),16), g:parseInt(c.substring(2,4),16), b:parseInt(c.substring(4,6),16) };
+  return {
+    r: parseInt(c.substring(0,2),16),
+    g: parseInt(c.substring(2,4),16),
+    b: parseInt(c.substring(4,6),16)
+  };
 }
 function relativeLuminance(hex){
   var c = hexToRgbObj(hex); if (!c) return 0;
   var arr = [c.r, c.g, c.b].map(function(v){
     v /= 255;
-    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
+    return v <= 0.03928 ? v/12.92 : Math.pow((v + 0.055)/1.055, 2.4);
   });
-  return 0.2126 * arr[0] + 0.7152 * arr[1] + 0.0722 * arr[2];
+  return 0.2126*arr[0] + 0.7152*arr[1] + 0.0722*arr[2];
 }
 function isLightColour(hex){ return relativeLuminance(hex) > 0.55; }
 
 /* ══════════════════════════════════════════════════════════════
-   REFERENCE
+   REFERENCE GENERATION
    ══════════════════════════════════════════════════════════════ */
 function short4(s){
   var t = String(s || "").replace(/[^A-Za-z0-9]/g, "").toUpperCase();
@@ -689,8 +720,7 @@ function rand4(){
 function buildTicketRef(eId, tId, rand){
   return "NL-" + short4(eId) + "-" + short4(tId) + "-" + (rand || rand4());
 }
-
-/* ══════════════════════════════════════════════════════════════
+  /* ══════════════════════════════════════════════════════════════
    STATE VIEWS
    ══════════════════════════════════════════════════════════════ */
 function showLoading(){
@@ -722,11 +752,71 @@ function showContent(){
   $("notLiveState").style.display = "none";
   $("eventContent").style.display = "block";
 }
-
 function updateSigninNote(){
   var note = $("signinNote");
   if (!note) return;
   note.style.display = currentUser ? "none" : "flex";
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SEATING — BUILD MAPS FROM SECTIONS
+   ══════════════════════════════════════════════════════════════ */
+function buildSeatMaps(){
+  seatTierMap = {};
+  seatLabelMap = {};
+  seatMetaMap = {};
+
+  if (!sections || !sections.length) return;
+
+  sections.forEach(function(sec){
+    var blockId   = sec.id || ('B' + Math.random().toString(36).slice(2,6));
+    var blockName = sec.name || 'Block';
+    var blockLetter = blockName.replace(/[^A-Za-z0-9]/g, '').slice(-1).toUpperCase() || 'A';
+
+    if (sec.mode === 'rows' && Array.isArray(sec.rows)){
+      sec.rows.forEach(function(row){
+        var rowLbl = row.row;    // "A", "B"...
+        var seats = row.seats || [];
+        seats.forEach(function(seat){
+          var canonical = seat.id ||
+            (blockLetter + '-' + rowLbl + '-' + String(seat.seat).padStart(2,'0'));
+          var shortId = blockLetter + '-' + rowLbl + '-' + String(seat.seat).padStart(2,'0');
+
+          seatTierMap[canonical]  = seat.tier || 'standard';
+          seatLabelMap[canonical] = shortId;
+          seatMetaMap[canonical] = {
+            blockId: blockId,
+            blockName: blockName,
+            kind: 'row',
+            row: rowLbl,
+            seat: seat.seat
+          };
+        });
+      });
+    }
+    else if (sec.mode === 'tables' && Array.isArray(sec.tables)){
+      sec.tables.forEach(function(table){
+        var tblLabel = table.label || ('T' + String(table.table).padStart(2,'0'));
+        var chairs = table.chairs || [];
+        chairs.forEach(function(chair){
+          var canonical = chair.id ||
+            (blockLetter + '-' + tblLabel + '-' + String(chair.chair).padStart(2,'0'));
+          var shortId = blockLetter + '-' + tblLabel + '-' + String(chair.chair).padStart(2,'0');
+
+          seatTierMap[canonical]  = chair.tier || table.tier || 'standard';
+          seatLabelMap[canonical] = shortId;
+          seatMetaMap[canonical] = {
+            blockId: blockId,
+            blockName: blockName,
+            kind: 'table',
+            table: table.table,
+            tableLabel: tblLabel,
+            chair: chair.chair
+          };
+        });
+      });
+    }
+  });
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -751,16 +841,8 @@ function renderEvent(){
   $("heroTagline").style.display = tagline ? "block" : "none";
 
   var venue = eventData.venueName || eventData.venueAddress || "";
-  var city = eventData.city || (eventData.location && eventData.location.city) || "";
+  var city  = eventData.city || "";
   $("heroVenue").textContent = [venue, city].filter(Boolean).join(", ") || "Venue TBA";
-
-  var ageLabel = getAgeLabel(eventData.ageRestriction);
-  if (ageLabel){
-    $("heroAge").textContent = ageLabel;
-    $("heroAgeWrap").style.display = "inline-flex";
-  } else {
-    $("heroAgeWrap").style.display = "none";
-  }
 
   var cover = eventData.heroImage || eventData.coverImage || "";
   if (cover){
@@ -775,17 +857,14 @@ function renderEvent(){
     $("aboutCard").style.display = "none";
   }
 
+  /* Detail grid */
   var details = [];
   details.push({ k: "Date", v: eventData.startDate || "TBA" });
   details.push({ k: "Time", v: eventData.startTime || "TBA" });
   if (venue) details.push({ k: "Venue", v: venue });
-  if (city) details.push({ k: "City", v: city });
+  if (city)  details.push({ k: "City",  v: city  });
   if (eventData.hostName) details.push({ k: "Host", v: eventData.hostName });
-  if (ageLabel) details.push({ k: "Age limit", v: ageLabel });
-  if (eventData.refundPolicy){
-    var refundLabels = { "no-refunds":"No refunds", "24h":"24h before", "48h":"48h before", "7d":"7 days before", "anytime":"Anytime" };
-    details.push({ k: "Refunds", v: refundLabels[eventData.refundPolicy] || eventData.refundPolicy });
-  }
+
   var dg = $("detailGrid");
   dg.innerHTML = "";
   details.forEach(function(d){
@@ -800,26 +879,47 @@ function renderEvent(){
   var cheapest = getCheapestTier();
   $("fromPrice").textContent = cheapest.price > 0 ? formatMoney(cheapest.price) : "Free";
 
+  /* Auto-select tier: single tier → auto-select; multi → select cheapest */
   var keys = getActiveTierKeys();
   if (keys.length){
-    selectTier(keys[0]);
+    if (keys.length === 1){
+      selectTier(keys[0], true);
+    } else {
+      var cheapestKey = cheapest.key || keys[0];
+      selectTier(cheapestKey, true);
+    }
   }
 
   updateSigninNote();
   refreshIcons();
 }
 
+/* ══════════════════════════════════════════════════════════════
+   RENDER TIERS
+   ══════════════════════════════════════════════════════════════ */
 function renderTiers(){
+  var card = $("tierCard");
+  var title = $("tierCardTitle");
   var list = $("tierList");
-  list.innerHTML = "";
   var keys = getActiveTierKeys();
-  if (!keys.length){
+
+  list.innerHTML = "";
+
+  if (keys.length === 0){
     list.innerHTML = '<p style="color:var(--mut);font-size:13px;">No tiers available.</p>';
     return;
   }
+
+  /* Single tier → hide the "Choose your tier" framing */
+  if (keys.length === 1){
+    title.innerHTML = '<i data-lucide="ticket"></i> Your ticket';
+  } else {
+    title.innerHTML = '<i data-lucide="tag"></i> Choose your tier';
+  }
+
   keys.forEach(function(k){
     var price = getTierPrice(k);
-    var name = getTierName(k);
+    var name  = getTierName(k);
     var color = getTierColor(k);
     var btn = document.createElement("button");
     btn.type = "button";
@@ -832,22 +932,26 @@ function renderTiers(){
         '<span class="tier-desc">' + (price > 0 ? 'Paid entry' : 'Free entry') + '</span>' +
       '</span>' +
       '<span class="tier-price">' + (price > 0 ? formatMoney(price) : "Free") + '</span>';
-    btn.addEventListener("click", function(){
-      selectTier(k);
-    });
+    btn.addEventListener("click", function(){ selectTier(k); });
     list.appendChild(btn);
   });
+
+  refreshIcons();
 }
 
-function selectTier(tierKey){
+function selectTier(tierKey, silent){
   selectedTier = tierKey;
+
   document.querySelectorAll(".tier-opt").forEach(function(el){
     el.classList.toggle("selected", el.dataset.tier === tierKey);
   });
 
-  // Clear picked seats when changing tier (seat map is per-tier)
-  if (seatingEnabled){
+  /* Changing tier clears picked seats — different tier has different available seats */
+  if (!silent && seatingEnabled){
     pickedSeats = [];
+  }
+
+  if (seatingEnabled){
     renderSeatMap();
     renderPickedSeats();
   }
@@ -871,13 +975,12 @@ function updateSidebarTotal(){
 function updateQtyUI(){
   $("qtyValue").textContent = qty;
   $("qtyMinus").disabled = qty <= 1;
-  $("qtyPlus").disabled = qty >= MAX_QTY;
+  $("qtyPlus").disabled  = qty >= MAX_QTY;
   updateSidebarTotal();
 
   while (guestNames.length < qty) guestNames.push("");
   if (guestNames.length > qty) guestNames = guestNames.slice(0, qty);
 
-  // Trim picked seats if quantity lowered
   if (seatingEnabled && pickedSeats.length > qty){
     pickedSeats = pickedSeats.slice(0, qty);
     renderSeatMap();
@@ -886,35 +989,16 @@ function updateQtyUI(){
 }
 
 /* ══════════════════════════════════════════════════════════════
-   SEAT MAP (BUYER)
+   SEAT MAP — RENDER
    ══════════════════════════════════════════════════════════════ */
-function isSeatForTier(r, c, tierKey){
-  if (!seatingPlan) return false;
-  var rowLbl = rowLabel(r);
-  if (seatingPlan.mode === "row"){
-    return seatingPlan.rowTiers && seatingPlan.rowTiers[rowLbl] === tierKey;
-  }
-  var key = seatKey(r, c);
-  return seatingPlan.seatTiers && seatingPlan.seatTiers[key] === tierKey;
-}
-
-function isSeatAssigned(r, c){
-  if (!seatingPlan) return false;
-  var rowLbl = rowLabel(r);
-  if (seatingPlan.mode === "row"){
-    return !!(seatingPlan.rowTiers && seatingPlan.rowTiers[rowLbl]);
-  }
-  var key = seatKey(r, c);
-  return !!(seatingPlan.seatTiers && seatingPlan.seatTiers[key]);
-}
-
 function renderSeatMap(){
-  var card = $("seatMapCard");
-  var grid = $("seatMapGrid");
+  var card  = $("seatMapCard");
+  var grid  = $("seatMapGrid");
   var label = $("seatMapTierLabel");
+  var title = $("seatMapTitle");
   var legend = $("seatLegend");
 
-  if (!seatingEnabled || !seatingPlan){
+  if (!seatingEnabled || !sections.length){
     card.style.display = "none";
     return;
   }
@@ -924,94 +1008,292 @@ function renderSeatMap(){
     label.textContent = "— " + getTierName(selectedTier) + " · " + formatMoney(getTierPrice(selectedTier));
   }
 
+  var modeLabel = sections[0] && sections[0].mode === 'tables' ? 'table' : 'seat';
+  title.textContent = modeLabel === 'table' ? 'Pick your table seat' : 'Pick your seat';
+
   grid.innerHTML = "";
 
-  // Stage tag
-  var stage = document.createElement("div");
-  stage.className = "seat-map-stage";
-  stage.textContent = "STAGE";
-  grid.appendChild(stage);
+  sections.forEach(function(sec){
+    if (sec.mode === 'rows')   grid.appendChild(buildRowsBlock(sec));
+    if (sec.mode === 'tables') grid.appendChild(buildTablesBlock(sec));
+  });
 
-  var rows = seatingPlan.rows || 6;
-  var cols = seatingPlan.cols || 10;
-  var aisle = !!seatingPlan.aisle;
-  var aisleAfter = seatingPlan.aisleAfter || 5;
-
-  for (var r = 0; r < rows; r++){
-    var rowEl = document.createElement("div");
-    rowEl.className = "seat-map-row";
-
-    var lbl = document.createElement("div");
-    lbl.className = "seat-map-rowlbl";
-    lbl.textContent = rowLabel(r);
-    rowEl.appendChild(lbl);
-
-    for (var c = 0; c < cols; c++){
-      if (aisle && c === aisleAfter){
-        var ai = document.createElement("div");
-        ai.className = "seat-map-aisle";
-        rowEl.appendChild(ai);
-      }
-      var cell = document.createElement("button");
-      cell.type = "button";
-      cell.className = "seat-cell";
-      var key = seatKey(r, c);
-
-      var assigned = isSeatAssigned(r, c);
-      var forThisTier = isSeatForTier(r, c, selectedTier);
-      var isSold = !!soldSeats[key];
-      var isPicked = pickedSeats.indexOf(key) !== -1;
-
-      if (isSold){
-        cell.classList.add("unavailable");
-      } else if (!assigned){
-        // Seat exists but has no tier → treat as unavailable
-        cell.classList.add("unavailable");
-      } else if (!forThisTier){
-        // Assigned to a different tier — show but muted and unclickable
-        cell.classList.add("other-tier");
-      }
-
-      // Paint tier colour
-      if (assigned && !isSold && forThisTier){
-        var color = getTierColor(selectedTier);
-        cell.style.background = color;
-        cell.style.borderColor = color;
-        if (isLightColour(color)) cell.classList.add("light-text");
-      }
-
-      if (isPicked){
-        cell.classList.add("picked");
-      }
-
-      cell.textContent = String(c + 1);
-      cell.dataset.rowIdx = r;
-      cell.dataset.colIdx = c;
-      cell.dataset.seatKey = key;
-
-      if (!isSold && assigned && forThisTier){
-        cell.addEventListener("click", function(ev){
-          ev.preventDefault();
-          toggleSeatPick(this.dataset.seatKey);
-        });
-      }
-      rowEl.appendChild(cell);
-    }
-    grid.appendChild(rowEl);
-  }
-
-  // Legend
   if (legend){
     legend.innerHTML =
       '<span class="seat-legend-chip"><span class="sl-dot" style="background:' + esc(getTierColor(selectedTier)) + '"></span>' + esc(getTierName(selectedTier)) + '</span>' +
       '<span class="seat-legend-chip"><span class="sl-dot picked"></span>Your pick</span>' +
       '<span class="seat-legend-chip"><span class="sl-dot unavailable"></span>Unavailable</span>';
   }
+
+  refreshIcons();
 }
 
-function toggleSeatPick(key){
-  if (!key) return;
-  var idx = pickedSeats.indexOf(key);
+/* ── ROWS MODE BLOCK ── */
+function buildRowsBlock(sec){
+  var wrap = document.createElement("div");
+  wrap.className = "seat-map-block";
+
+  var head = document.createElement("div");
+  head.className = "seat-map-block-title";
+  head.textContent = (sec.name || 'Block') + ' · ' + (sec.level || 'Ground Floor');
+  wrap.appendChild(head);
+
+  var stage = document.createElement("div");
+  stage.className = "seat-map-stage";
+  stage.textContent = "STAGE";
+  wrap.appendChild(stage);
+
+  (sec.rows || []).forEach(function(row){
+    var rowEl = document.createElement("div");
+    rowEl.className = "seat-map-row";
+
+    var lbl = document.createElement("div");
+    lbl.className = "seat-map-rowlbl";
+    lbl.textContent = row.row;
+    rowEl.appendChild(lbl);
+
+    (row.seats || []).forEach(function(seat){
+      rowEl.appendChild(buildSeatCell(sec, seat, row.row));
+    });
+
+    wrap.appendChild(rowEl);
+  });
+
+  return wrap;
+}
+
+function buildSeatCell(sec, seat, rowLbl){
+  var cell = document.createElement("button");
+  cell.type = "button";
+  cell.className = "seat-cell";
+
+  var canonical = seat.id;
+  var shortId   = seatLabelMap[canonical] || canonical;
+  var tier      = seat.tier || seatTierMap[canonical] || 'standard';
+  var isSold    = !!soldSeats[shortId];
+  var isPicked  = pickedSeats.indexOf(canonical) !== -1;
+  var forThisTier = (tier === selectedTier);
+
+  if (isSold){
+    cell.classList.add("unavailable");
+  } else if (!forThisTier){
+    cell.classList.add("other-tier");
+  }
+
+  if (!isSold && forThisTier){
+    var color = getTierColor(tier);
+    cell.style.background  = color;
+    cell.style.borderColor = color;
+    if (isLightColour(color)) cell.classList.add("light-text");
+  }
+
+  if (isPicked) cell.classList.add("picked");
+
+  cell.textContent = String(seat.seat);
+  cell.dataset.canonical = canonical;
+  cell.dataset.shortId   = shortId;
+
+  if (!isSold && forThisTier){
+    cell.addEventListener("click", function(ev){
+      ev.preventDefault();
+      toggleSeatPick(canonical);
+    });
+  } else {
+    cell.disabled = true;
+  }
+
+  return cell;
+}
+
+/* ── TABLES MODE BLOCK ── */
+function buildTablesBlock(sec){
+  var wrap = document.createElement("div");
+  wrap.className = "seat-map-block";
+
+  var head = document.createElement("div");
+  head.className = "seat-map-block-title";
+  head.textContent = (sec.name || 'Block') + ' · ' + (sec.level || 'Ground Floor');
+  wrap.appendChild(head);
+
+  var stage = document.createElement("div");
+  stage.className = "seat-map-stage";
+  stage.textContent = "STAGE";
+  wrap.appendChild(stage);
+
+  var row = document.createElement("div");
+  row.className = "tables-row";
+
+  (sec.tables || []).forEach(function(table){
+    row.appendChild(buildTableEl(sec, table));
+  });
+
+  wrap.appendChild(row);
+  return wrap;
+}
+
+function buildTableEl(sec, table){
+  var wrapEl = document.createElement("div");
+  wrapEl.className = "table-wrap";
+
+  var shapeClass = table.shape === 'square' ? 'square'
+                 : table.shape === 'rectangular' ? 'rectangular'
+                 : 'round';
+
+  var chairCount = (table.chairs || []).length;
+
+  /* Size mapping — cm → px */
+  var roundPx = function(cm){ return Math.max(60, Math.round((cm || 150) * 0.7)); };
+  var w, h;
+  if (shapeClass === 'round'){
+    w = h = roundPx(table.diameterCm);
+  } else if (shapeClass === 'square'){
+    w = h = Math.max(60, Math.round((table.sideCm || 100) * 0.7));
+  } else {
+    w = Math.max(90, Math.round((table.lengthCm || 240) * 0.55));
+    h = Math.max(50, Math.round((table.widthCm  || 90)  * 0.55));
+  }
+
+  wrapEl.style.width  = (w + 40) + 'px';
+  wrapEl.style.height = (h + 40) + 'px';
+
+  var tableEl = document.createElement("div");
+  tableEl.className = "table-shape " + shapeClass;
+  tableEl.style.width  = w + 'px';
+  tableEl.style.height = h + 'px';
+  tableEl.style.background = getTierColor(table.tier || 'standard');
+  tableEl.textContent = table.table;
+  tableEl.style.fontSize = Math.max(12, Math.round(Math.min(w,h) / 3)) + 'px';
+  if (isLightColour(getTierColor(table.tier || 'standard'))){
+    tableEl.classList.add("light");
+  }
+  wrapEl.appendChild(tableEl);
+
+  /* Place chairs */
+  var chairs = table.chairs || [];
+  var n = chairs.length;
+
+  if (shapeClass === 'round'){
+    var radius = (Math.min(w,h) / 2) + 14;
+    chairs.forEach(function(chair, idx){
+      var angle = (-Math.PI / 2) + (2 * Math.PI * idx / n);
+      var cx = Math.cos(angle) * radius;
+      var cy = Math.sin(angle) * radius;
+      var el = chairEl(chair, w/2 + cx, h/2 + cy);
+      wrapEl.appendChild(el);
+    });
+  }
+  else if (shapeClass === 'square'){
+    /* chairsPerSide = n / 4 */
+    var perSide = Math.max(1, Math.round(n / 4));
+    var offset = 16;
+    var chairNum = 0;
+    var placeChair = function(cx, cy){
+      chairNum++;
+      if (chairNum > n) return;
+      wrapEl.appendChild(chairEl(chairs[chairNum - 1], cx, cy));
+    };
+    /* top: left → right */
+    for (var i = 0; i < perSide; i++){
+      placeChair(w * (i+1) / (perSide+1), -offset);
+    }
+    /* right: top → bottom */
+    for (var j = 0; j < perSide; j++){
+      placeChair(w + offset, h * (j+1) / (perSide+1));
+    }
+    /* bottom: right → left */
+    for (var k = 0; k < perSide; k++){
+      placeChair(w - w * (k+1) / (perSide+1), h + offset);
+    }
+    /* left: bottom → top */
+    for (var l = 0; l < perSide; l++){
+      placeChair(-offset, h - h * (l+1) / (perSide+1));
+    }
+  }
+  else {
+    /* rectangular: long sides + short sides */
+    var longN = Math.floor((n - 2 * (n > 6 ? 1 : 0)) / 2);
+    /* Simpler: assume even split — half on long sides, one each short if n≥6 */
+    var shortN = (n >= 6) ? 1 : 0;
+    longN = Math.max(1, Math.floor((n - 2 * shortN) / 2));
+    /* Adjust if we're over/under count */
+    while ((longN * 2 + shortN * 2) > n) longN--;
+    while ((longN * 2 + shortN * 2) < n) longN++;
+
+    var idx2 = 0;
+    var offset2 = 16;
+    var nextChair = function(cx, cy){
+      if (idx2 >= n) return;
+      wrapEl.appendChild(chairEl(chairs[idx2], cx, cy));
+      idx2++;
+    };
+    /* top long side, left → right */
+    for (var a = 0; a < longN; a++){
+      nextChair(w * (a+1) / (longN+1), -offset2);
+    }
+    /* right short side, top → bottom */
+    for (var b = 0; b < shortN; b++){
+      nextChair(w + offset2, h * (b+1) / (shortN+1));
+    }
+    /* bottom long side, right → left */
+    for (var c2 = 0; c2 < longN; c2++){
+      nextChair(w - w * (c2+1) / (longN+1), h + offset2);
+    }
+    /* left short side, bottom → top */
+    for (var d2 = 0; d2 < shortN; d2++){
+      nextChair(-offset2, h - h * (d2+1) / (shortN+1));
+    }
+  }
+
+  return wrapEl;
+}
+
+function chairEl(chair, x, y){
+  var el = document.createElement("button");
+  el.type = "button";
+  el.className = "chair-dot";
+
+  var canonical = chair.id;
+  var shortId   = seatLabelMap[canonical] || canonical;
+  var tier      = chair.tier || seatTierMap[canonical] || 'standard';
+  var isSold    = !!soldSeats[shortId];
+  var isPicked  = pickedSeats.indexOf(canonical) !== -1;
+  var forThisTier = (tier === selectedTier);
+
+  el.style.background = getTierColor(tier);
+  if (isLightColour(getTierColor(tier))) el.classList.add("light");
+
+  if (isSold){
+    el.classList.add("unavailable");
+  } else if (!forThisTier){
+    el.classList.add("other-tier");
+  }
+
+  if (isPicked) el.classList.add("picked");
+
+  el.textContent = String(chair.chair);
+  el.dataset.canonical = canonical;
+  el.dataset.shortId   = shortId;
+  el.style.left = x + 'px';
+  el.style.top  = y + 'px';
+
+  if (!isSold && forThisTier){
+    el.addEventListener("click", function(ev){
+      ev.preventDefault();
+      toggleSeatPick(canonical);
+    });
+  } else {
+    el.disabled = true;
+  }
+
+  return el;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SEAT PICKING
+   ══════════════════════════════════════════════════════════════ */
+function toggleSeatPick(canonical){
+  if (!canonical) return;
+  var idx = pickedSeats.indexOf(canonical);
   if (idx !== -1){
     pickedSeats.splice(idx, 1);
   } else {
@@ -1019,14 +1301,19 @@ function toggleSeatPick(key){
       showToast("You can pick up to " + qty + " seat" + (qty === 1 ? "" : "s") + " (your quantity).", "error", 2600);
       return;
     }
-    pickedSeats.push(key);
+    /* Optional: enforce same-tier only */
+    if (seatTierMap[canonical] && selectedTier && seatTierMap[canonical] !== selectedTier){
+      showToast("That seat is in a different tier.", "error", 2600);
+      return;
+    }
+    pickedSeats.push(canonical);
   }
   renderSeatMap();
   renderPickedSeats();
 }
 
 function renderPickedSeats(){
-  var wrap = $("seatPicksDisplay");
+  var wrap  = $("seatPicksDisplay");
   var chips = $("seatPicksChips");
   if (!wrap || !chips) return;
 
@@ -1036,12 +1323,14 @@ function renderPickedSeats(){
   }
   wrap.style.display = "block";
   chips.innerHTML = "";
-  pickedSeats.forEach(function(key){
+
+  pickedSeats.forEach(function(canonical){
+    var shortId = seatLabelMap[canonical] || canonical;
     var chip = document.createElement("span");
     chip.className = "seat-pick-chip";
-    chip.innerHTML = esc(key) + ' <button type="button" class="spc-remove" title="Remove">×</button>';
+    chip.innerHTML = esc(shortId) + ' <button type="button" class="spc-remove" title="Remove">×</button>';
     chip.querySelector(".spc-remove").addEventListener("click", function(){
-      pickedSeats = pickedSeats.filter(function(k){ return k !== key; });
+      pickedSeats = pickedSeats.filter(function(k){ return k !== canonical; });
       renderSeatMap();
       renderPickedSeats();
     });
@@ -1078,9 +1367,8 @@ async function loadSoldSeats(){
   } catch(err){
     console.warn("Could not load sold seats:", err);
   }
-}
-
-/* ══════════════════════════════════════════════════════════════
+  }
+  /* ══════════════════════════════════════════════════════════════
    BUY MODAL
    ══════════════════════════════════════════════════════════════ */
 function openBuyModal(){
@@ -1096,14 +1384,11 @@ function openBuyModal(){
     return;
   }
 
-  // If seating enabled → require exact number of seats
-  if (seatingEnabled){
-    if (pickedSeats.length !== qty){
-      showToast("Please pick " + qty + " seat" + (qty === 1 ? "" : "s") + " first.", "error", 3500);
-      var el = $("seatMapCard");
-      if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
-      return;
-    }
+  if (seatingEnabled && pickedSeats.length !== qty){
+    showToast("Please pick " + qty + " seat" + (qty === 1 ? "" : "s") + " first.", "error", 3500);
+    var el = $("seatMapCard");
+    if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+    return;
   }
 
   var price = getTierPrice(selectedTier);
@@ -1111,9 +1396,7 @@ function openBuyModal(){
   $("modalAmount").textContent = total > 0 ? formatMoney(total) : "Free";
 
   var lead = firstNameOf(currentUser) || "";
-  if (!guestNames[0] && lead){
-    guestNames[0] = lead;
-  }
+  if (!guestNames[0] && lead) guestNames[0] = lead;
   while (guestNames.length < qty) guestNames.push("");
   if (guestNames.length > qty) guestNames = guestNames.slice(0, qty);
 
@@ -1181,8 +1464,7 @@ function renderGuestInputs(){
     var badgeCls = "badge" + (isLead ? " lead" : "");
     var badgeLabel = isLead ? "You" : String(i + 1);
 
-    var labelText;
-    var placeholder;
+    var labelText, placeholder;
     var requiredStar = '<span class="required-star"> *</span>';
 
     if (isLead){
@@ -1193,10 +1475,10 @@ function renderGuestInputs(){
       placeholder = 'e.g., John Doe';
     }
 
-    // If seating is on, add seat tag to each guest
     var seatTag = "";
     if (seatingEnabled && pickedSeats[i]){
-      seatTag = ' <span class="seat-tag">Seat ' + esc(pickedSeats[i]) + '</span>';
+      var shortId = seatLabelMap[pickedSeats[i]] || pickedSeats[i];
+      seatTag = ' <span class="seat-tag">Seat ' + esc(shortId) + '</span>';
     }
 
     row.innerHTML =
@@ -1243,44 +1525,44 @@ function validateGuestForm(){
 
   for (var i = 0; i < guestNames.length; i++){
     var raw = (guestNames[i] || "").trim();
-    var inp = document.querySelector('.guest-name-input[data-idx="' + i + '"]');
-    var errEl = document.querySelector('.field-error-msg[data-err-idx="' + i + '"]');
+    var inp2 = document.querySelector('.guest-name-input[data-idx="' + i + '"]');
+    var errEl2 = document.querySelector('.field-error-msg[data-err-idx="' + i + '"]');
 
     if (!raw){
-      if (inp) inp.classList.add("error");
-      if (errEl){
-        errEl.textContent = i === 0
+      if (inp2) inp2.classList.add("error");
+      if (errEl2){
+        errEl2.textContent = i === 0
           ? "Please enter your name and surname."
           : "Please enter a name for ticket " + (i + 1) + ".";
-        errEl.classList.add("show");
+        errEl2.classList.add("show");
       }
       setGuestBadgeError(i, true);
       ok = false;
-      if (!firstBadInput) firstBadInput = inp;
+      if (!firstBadInput) firstBadInput = inp2;
       continue;
     }
 
     if (raw.length > 60){
-      if (inp) inp.classList.add("error");
-      if (errEl){
-        errEl.textContent = "Must be 60 characters or fewer.";
-        errEl.classList.add("show");
+      if (inp2) inp2.classList.add("error");
+      if (errEl2){
+        errEl2.textContent = "Must be 60 characters or fewer.";
+        errEl2.classList.add("show");
       }
       setGuestBadgeError(i, true);
       ok = false;
-      if (!firstBadInput) firstBadInput = inp;
+      if (!firstBadInput) firstBadInput = inp2;
       continue;
     }
 
     if (i === 0 && !hasTwoWords(raw)){
-      if (inp) inp.classList.add("error");
-      if (errEl){
-        errEl.textContent = "Please enter your name AND surname (two words).";
-        errEl.classList.add("show");
+      if (inp2) inp2.classList.add("error");
+      if (errEl2){
+        errEl2.textContent = "Please enter your name AND surname (two words).";
+        errEl2.classList.add("show");
       }
       setGuestBadgeError(i, true);
       ok = false;
-      if (!firstBadInput) firstBadInput = inp;
+      if (!firstBadInput) firstBadInput = inp2;
       continue;
     }
   }
@@ -1306,19 +1588,15 @@ function validateGuestForm(){
    CREATE PENDING TICKETS
    ══════════════════════════════════════════════════════════════ */
 async function createPendingTickets(){
-  if (!currentUser){
-    throw new Error("Sign in required");
-  }
-  if (!validateGuestForm()){
-    throw new Error("__validation__");
-  }
+  if (!currentUser) throw new Error("Sign in required");
+  if (!validateGuestForm()) throw new Error("__validation__");
 
-  // If seating → verify still no conflicts for picked seats
   if (seatingEnabled){
     for (var i = 0; i < pickedSeats.length; i++){
-      var sk = pickedSeats[i];
-      if (soldSeats[sk]){
-        throw new Error("Seat " + sk + " just got taken. Please pick another.");
+      var canonical = pickedSeats[i];
+      var shortId = seatLabelMap[canonical] || canonical;
+      if (soldSeats[shortId]){
+        throw new Error("Seat " + shortId + " just got taken. Please pick another.");
       }
     }
   }
@@ -1330,7 +1608,7 @@ async function createPendingTickets(){
   var expiresAtMs = nowMs + PENDING_TTL_MS;
   var buyerUid = currentUser.uid;
 
-  var groupId = (Date.now().toString(36) + Math.random().toString(36).slice(2, 8));
+  var groupId = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   var paymentLink = getPaymentLink(selectedTier) || "";
 
   var createdTickets = [];
@@ -1338,11 +1616,14 @@ async function createPendingTickets(){
   var eventRef = db.collection(EVENTS).doc(eventId);
 
   for (var g = 0; g < qty; g++){
-    var guestName = guestNames[g].trim();
+    var guestName = (guestNames[g] || "").trim();
     var ticketId = eventRef.collection("tickets").doc().id;
     var rand = rand4();
     var reference = buildTicketRef(eventId, ticketId, rand);
-    var seatAssigned = seatingEnabled && pickedSeats[g] ? pickedSeats[g] : "";
+
+    var canonicalSeat = seatingEnabled && pickedSeats[g] ? pickedSeats[g] : "";
+    var shortSeat = canonicalSeat ? (seatLabelMap[canonicalSeat] || canonicalSeat) : "";
+    var seatMeta = canonicalSeat ? (seatMetaMap[canonicalSeat] || null) : null;
 
     var ticketData = {
       ticketId: ticketId,
@@ -1357,7 +1638,11 @@ async function createPendingTickets(){
       groupSize: qty,
       tier: selectedTier,
       tierName: getTierName(selectedTier),
-      seat: seatAssigned,
+      /* short display id — what the scanner reads */
+      seat: shortSeat,
+      /* canonical + meta for future features */
+      seatCanonical: canonicalSeat,
+      seatMeta: seatMeta,
       quantity: 1,
       pricePaid: price,
       pricePerTicket: price,
@@ -1380,7 +1665,8 @@ async function createPendingTickets(){
       tierName: getTierName(selectedTier),
       guestName: guestName,
       guestIndex: g,
-      seat: seatAssigned,
+      seat: shortSeat,
+      seatCanonical: canonicalSeat,
       amount: price,
       expiresAtMs: expiresAtMs
     });
@@ -1407,7 +1693,7 @@ async function createPendingTickets(){
     expiresAtMs: expiresAtMs,
     guestNames: guestNames.slice(0, qty),
     guestEmail: buyerEmail,
-    seats: seatingEnabled ? pickedSeats.slice(0, qty) : []
+    seats: seatingEnabled ? pickedSeats.map(function(c){ return seatLabelMap[c] || c; }).slice(0, qty) : []
   };
 }
 
@@ -1485,13 +1771,13 @@ async function goToPaymentStep(){
 }
 
 function renderPaymentStep(bundle){
-  $("refValue").textContent = bundle.reference;
+  $("refValue").textContent  = bundle.reference;
   $("refInline").textContent = bundle.reference;
   $("amountToPay").textContent = bundle.amount > 0 ? formatMoney(bundle.amount) : "Free";
 
   var link = getPaymentLink(bundle.tier);
   var yocoBtn = $("yocoBtn");
-  var waBtn = $("whatsappBtn");
+  var waBtn   = $("whatsappBtn");
   var waLabel = $("whatsappLabel");
   var missing = $("linkMissingNote");
 
@@ -1641,19 +1927,16 @@ async function loadEvent(){
       return;
     }
 
-    // Seating setup
-    if (eventData.seatingPlan && eventData.seatingPlan.enabled){
+    /* Seating */
+    if (eventData.seatingPlan && eventData.seatingPlan.enabled &&
+        Array.isArray(eventData.sections) && eventData.sections.length){
       seatingEnabled = true;
-      seatingPlan = {
-        rows: parseInt(eventData.seatingPlan.rows, 10) || 6,
-        cols: parseInt(eventData.seatingPlan.cols, 10) || 10,
-        mode: eventData.seatingPlan.mode === "seat" ? "seat" : "row",
-        aisle: !!eventData.seatingPlan.aisle,
-        aisleAfter: parseInt(eventData.seatingPlan.aisleAfter, 10) || 5,
-        rowTiers: eventData.seatingPlan.rowTiers || {},
-        seatTiers: eventData.seatingPlan.seatTiers || {}
-      };
+      sections = eventData.sections;
+      buildSeatMaps();
       await loadSoldSeats();
+    } else {
+      seatingEnabled = false;
+      sections = [];
     }
 
     renderEvent();
@@ -1710,9 +1993,7 @@ document.addEventListener("DOMContentLoaded", function(){
   auth.onAuthStateChanged(function(user){
     currentUser = user;
     updateSigninNote();
-    if (!eventData){
-      loadEvent();
-    }
+    if (!eventData) loadEvent();
   });
 });
 
@@ -1723,4 +2004,4 @@ window.addEventListener("beforeunload", function(){
 })();
 </script>
 </body>
-                </html>
+</html>
