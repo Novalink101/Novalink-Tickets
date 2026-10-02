@@ -71,8 +71,6 @@ h3{font-size:1.2rem}
 .quick-link i{width:14px;height:14px}
 .quick-link .count{background:var(--cyan-500);color:#04161c;font-family:var(--mono);font-size:10.5px;font-weight:900;padding:1px 7px;border-radius:99px;line-height:1.4}
 .quick-link .count.amber{background:#f59e0b;color:#fff}
-.quick-link .count.amber.pulse{animation:pulseAmber 1.5s infinite}
-@keyframes pulseAmber{0%,100%{opacity:1}50%{opacity:0.55}}
 
 .user-menu-btn{display:none;align-items:center;gap:8px;padding:5px 12px 5px 5px;background:var(--surface-2);border:1px solid var(--border);border-radius:99px;font-family:inherit;transition:all 0.2s ease}
 .user-menu-btn:hover{border-color:var(--cyan-500);box-shadow:0 0 0 3px rgba(6,182,212,0.1)}
@@ -643,6 +641,7 @@ var CHANNELS = "channels";
 var currentUser = null;
 var isAdmin = false;
 var authMode = 'signin';
+var dataLoaded = false;
 
 /* ══════════════════════════════════════════════════════════════
    HERO CAROUSEL
@@ -669,7 +668,6 @@ function initHeroCarousel(imageUrls){
   var dots = $('heroDots');
   if (!bg) return;
 
-  // Clear previous slides
   bg.innerHTML = '';
   if (dots) dots.innerHTML = '';
   heroSlides = [];
@@ -677,7 +675,6 @@ function initHeroCarousel(imageUrls){
   if (heroTimer){ clearInterval(heroTimer); heroTimer = null; }
 
   if (!imageUrls || !imageUrls.length){
-    // Fallback: keep the placeholder gradient
     var ph = document.createElement('div');
     ph.className = 'hero-slide placeholder active';
     bg.appendChild(ph);
@@ -687,7 +684,6 @@ function initHeroCarousel(imageUrls){
 
   if (dots) dots.style.display = 'flex';
 
-  // Preload and build slides
   imageUrls.forEach(function(url, i){
     var slide = document.createElement('div');
     slide.className = 'hero-slide' + (i === 0 ? ' active' : '');
@@ -705,12 +701,10 @@ function initHeroCarousel(imageUrls){
     }
   });
 
-  // Start auto-rotate
   if (heroSlides.length > 1){
     heroTimer = setInterval(nextHeroSlide, HERO_INTERVAL_MS);
   }
 
-  // Pause on hover
   var hero = $('heroSection');
   if (hero){
     hero.addEventListener('mouseenter', function(){
@@ -723,7 +717,6 @@ function initHeroCarousel(imageUrls){
     });
   }
 
-  // Pause when tab is hidden
   document.addEventListener('visibilitychange', function(){
     if (document.hidden){
       if (heroTimer){ clearInterval(heroTimer); heroTimer = null; }
@@ -751,7 +744,6 @@ function goToHeroSlide(i){
     d.classList.toggle('active', idx === i);
   });
   heroIndex = i;
-  // Reset the timer when user manually switches
   if (heroTimer){
     clearInterval(heroTimer);
     if (heroSlides.length > 1){
@@ -810,7 +802,7 @@ function updateQuickLinks(){
 function loadQuickCounts(){
   if (!currentUser) return;
 
-  // Ticket count (across events) + pending count
+  // Cards count — walk events and count tickets
   var ticketsPromise = db.collection('events').get().then(function(eventsSnap){
     var promises = [];
     eventsSnap.forEach(function(evDoc){
@@ -828,7 +820,7 @@ function loadQuickCounts(){
     });
   }).catch(function(){ return 0; });
 
-  // Pending events count for scanner badge (only for event owners with live events)
+  // Live events count — for scanner badge
   var scannerPromise = db.collection('events')
     .where('ownerUid', '==', currentUser.uid)
     .where('status', '==', 'live')
@@ -1103,10 +1095,19 @@ function renderLiveRow(streams){
 }
 
 /* ══════════════════════════════════════════════════════════════
-   EVENTS — only show status === 'live'
+   EVENTS — only status === 'live'
    ══════════════════════════════════════════════════════════════ */
 function renderEventsRow(events){
   var row = $('eventsRow');
+  if (!row) return;
+  // In case a previous failure replaced it with an empty-block, rebuild it
+  if (row.tagName !== 'DIV' || !row.classList.contains('hscroll')){
+    var wrap = $('eventsWrap');
+    if (wrap){
+      wrap.innerHTML = '<div class="hscroll" id="eventsRow"></div>';
+      row = $('eventsRow');
+    }
+  }
   row.innerHTML = '';
   if (!events.length){
     row.outerHTML = '<div id="eventsRow" class="empty-block" style="grid-column:1/-1;">'+icon('calendar')+'<p>No live events yet. <a href="create-event.html">Be the first to create one →</a></p></div>';
@@ -1122,6 +1123,14 @@ function renderEventsRow(events){
    ══════════════════════════════════════════════════════════════ */
 function renderTripsRow(trips){
   var row = $('tripsRow');
+  if (!row) return;
+  if (row.tagName !== 'DIV' || !row.classList.contains('hscroll')){
+    var wrap = $('tripsWrap');
+    if (wrap){
+      wrap.innerHTML = '<div class="hscroll" id="tripsRow"></div>';
+      row = $('tripsRow');
+    }
+  }
   row.innerHTML = '';
   if (!trips.length){
     row.outerHTML = '<div id="tripsRow" class="empty-block" style="grid-column:1/-1;">'+icon('map')+'<p>No trips yet. <a href="create-trip.html">Create the first trip →</a></p></div>';
@@ -1168,7 +1177,17 @@ function renderChannelsRow(channels, streams){
    DATA LOADING
    ══════════════════════════════════════════════════════════════ */
 function loadHomepageData(){
-  // Live events only (for the featured row + hero carousel)
+  if (dataLoaded) return;
+  dataLoaded = true;
+
+  loadLiveEventsHome();
+  loadTripsHome();
+  loadStreamsAndChannelsHome();
+}
+
+/* ── Events ── */
+function loadLiveEventsHome(){
+  // Primary query — uses composite index (status + startDate)
   db.collection(EVENTS)
     .where('status', '==', 'live')
     .orderBy('startDate', 'asc')
@@ -1181,21 +1200,50 @@ function loadHomepageData(){
         d.id = doc.id;
         events.push(d);
       });
-      renderEventsRow(events);
-
-      // Hero carousel: pull cover images from the live events
-      var slideImages = buildHeroSlidesFromEvents(events);
-      if (slideImages.length){
-        initHeroCarousel(slideImages);
-      }
+      afterEventsLoaded(events);
     })
     .catch(function(err){
-      console.warn('events:', err);
-      var row = $('eventsRow');
-      if (row) row.outerHTML = '<div id="eventsRow" class="empty-block">'+icon('calendar')+'<p>Could not load events.</p></div>';
-      refreshIcons();
+      console.warn('events primary query failed, using fallback:', err);
+      // Fallback — fetch all, filter client-side (works without the composite index)
+      db.collection(EVENTS)
+        .orderBy('createdAt', 'desc')
+        .limit(100)
+        .get()
+        .then(function(snap){
+          var events = [];
+          snap.forEach(function(doc){
+            var d = doc.data() || {};
+            d.id = doc.id;
+            if (String(d.status || '').toLowerCase() === 'live'){
+              events.push(d);
+            }
+          });
+          events.sort(function(a, b){
+            return String(a.startDate || '').localeCompare(String(b.startDate || ''));
+          });
+          events = events.slice(0, 8);
+          afterEventsLoaded(events);
+        })
+        .catch(function(err2){
+          console.warn('events fallback also failed:', err2);
+          var row = $('eventsRow');
+          if (row) row.outerHTML = '<div id="eventsRow" class="empty-block">'+icon('calendar')+'<p>Could not load events.</p></div>';
+          refreshIcons();
+        });
     });
+}
 
+function afterEventsLoaded(events){
+  renderEventsRow(events);
+
+  var slideImages = buildHeroSlidesFromEvents(events);
+  if (slideImages.length){
+    initHeroCarousel(slideImages);
+  }
+}
+
+/* ── Trips ── */
+function loadTripsHome(){
   db.collection(TRIPS).orderBy('createdAt', 'desc').limit(8).get()
     .then(function(snap){
       var trips = [];
@@ -1212,7 +1260,10 @@ function loadHomepageData(){
       if (row) row.outerHTML = '<div id="tripsRow" class="empty-block">'+icon('map')+'<p>Could not load trips.</p></div>';
       refreshIcons();
     });
+}
 
+/* ── Streams + Channels ── */
+function loadStreamsAndChannelsHome(){
   var streamsPromise = db.collection(STREAMS).orderBy('startDate', 'desc').limit(50).get()
     .then(function(snap){
       var streams = [];
@@ -1500,11 +1551,12 @@ document.addEventListener('DOMContentLoaded', function(){
     loadHomepageData();
   });
 
+  // Safety net: if auth somehow never fires, still load the data
   setTimeout(function(){
-    if (!currentUser) loadHomepageData();
-  }, 800);
+    if (!dataLoaded) loadHomepageData();
+  }, 1500);
 });
 })();
 </script>
 </body>
-      </html>
+        </html>
