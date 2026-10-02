@@ -120,6 +120,7 @@ img{max-width:100%;display:block}
 .qty-btn:disabled{opacity:0.35;cursor:not-allowed}
 .qty-btn i{width:16px;height:16px}
 .qty-value{font-family:var(--mono);font-weight:900;font-size:17px;width:36px;text-align:center;color:var(--tx)}
+.qty-max-hint{font-size:11px;color:var(--mut);text-align:center;margin-top:-6px;margin-bottom:12px;font-weight:600}
 
 .total-row{display:flex;justify-content:space-between;align-items:center;padding:14px 0;border-top:1px dashed var(--bd);margin-top:12px;font-size:14px}
 .total-row .lbl{font-weight:700;color:var(--tx2)}
@@ -152,6 +153,19 @@ img{max-width:100%;display:block}
 .step-dot.active{background:var(--cy3)}
 .step-dot.done{background:var(--sv)}
 
+/* GUEST NAMES LIST */
+.guest-list{display:flex;flex-direction:column;gap:10px}
+.guest-input-row{display:flex;gap:10px;align-items:flex-start}
+.guest-input-row .badge{
+  width:34px;height:44px;border-radius:10px;background:var(--sf2);border:1px solid var(--bd);
+  display:flex;align-items:center;justify-content:center;flex-shrink:0;
+  font-family:var(--mono);font-weight:900;font-size:13px;color:var(--cy3);
+}
+.guest-input-row .field{margin-bottom:0;flex:1;min-width:0}
+.guest-input-row .field input{font-size:14px;padding:11px 12px}
+.guest-input-row .badge.lead{background:var(--cyf);border-color:var(--cy);color:var(--cy3)}
+.guest-label{font-size:10.5px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+
 /* PAYMENT STEP */
 .ref-box{background:linear-gradient(135deg,#0a0f14,#1a2129);color:#fff;border-radius:14px;padding:18px 20px;margin-bottom:18px;position:relative;overflow:hidden}
 .ref-box::after{content:'';position:absolute;right:-40px;top:-40px;width:140px;height:140px;background:radial-gradient(circle,rgba(0,255,255,0.18),transparent 70%);pointer-events:none}
@@ -180,10 +194,6 @@ img{max-width:100%;display:block}
 
 .btn-group{display:flex;flex-direction:column;gap:10px;margin-top:6px}
 .btn-group .btn{width:100%}
-
-.payment-total{display:flex;justify-content:space-between;padding:6px 0;font-size:13px;color:var(--tx2)}
-.payment-total:last-of-type{border-top:1px dashed var(--bd);margin-top:6px;padding-top:12px;font-weight:800;color:var(--nv);font-size:15px}
-.payment-total .val{font-family:var(--mono);font-weight:800}
 
 .link-missing{display:flex;gap:10px;padding:12px 14px;background:var(--amf);border:1px solid #fde68a;border-radius:10px;margin-bottom:14px;font-size:12.5px;color:#92400e;line-height:1.55;font-weight:600}
 .link-missing i{width:16px;height:16px;flex-shrink:0;margin-top:2px}
@@ -290,6 +300,7 @@ img{max-width:100%;display:block}
               <span class="qty-value" id="qtyValue">1</span>
               <button type="button" class="qty-btn" id="qtyPlus"><i data-lucide="plus"></i></button>
             </div>
+            <div class="qty-max-hint">Max 5 tickets per purchase</div>
 
             <div class="total-row">
               <span class="lbl">Total</span>
@@ -309,7 +320,7 @@ img{max-width:100%;display:block}
 
             <div class="info-note">
               <i data-lucide="shield-check"></i>
-              <div>Reserve now, pay within 24 hours. Your seat is held — no charge until you complete payment on Yoco.</div>
+              <div>Reserve now, pay within 24 hours. Your seats are held — no charge until you complete payment on Yoco.</div>
             </div>
           </div>
         </aside>
@@ -330,16 +341,13 @@ img{max-width:100%;display:block}
         <span class="step-dot active"></span>
         <span class="step-dot"></span>
       </div>
-      <h2>Reserve your tickets</h2>
-      <p class="subtitle">We'll hold your seats for 24 hours while you complete payment.</p>
+      <h2>Who's coming?</h2>
+      <p class="subtitle" id="guestSubtitle">Enter the name for each ticket. You can change these later.</p>
 
-      <div class="field">
-        <label for="guestNameInput">Your full name</label>
-        <input type="text" id="guestNameInput" placeholder="e.g., Jane Smith" autocomplete="name" />
-      </div>
+      <div class="guest-list" id="guestList"></div>
 
-      <div class="field">
-        <label for="guestEmailInput">Email (for confirmation)</label>
+      <div class="field" style="margin-top:16px;">
+        <label for="guestEmailInput">Your email (for confirmation)</label>
         <input type="email" id="guestEmailInput" placeholder="e.g., jane@example.com" autocomplete="email" />
       </div>
 
@@ -446,6 +454,7 @@ var db = firebase.firestore();
 var auth = firebase.auth();
 var EVENTS = "events";
 var PENDING_TTL_MS = 24 * 60 * 60 * 1000;
+var MAX_QTY = 5;
 
 /* ══════════════════════════════════════════════════════════════
    EMAILJS — not required for reservation (kept for future use)
@@ -468,11 +477,11 @@ var WHATSAPP_NUMBER = "27696835184";
    STATE
    ══════════════════════════════════════════════════════════════ */
 var currentUser = null;
-var authReady = false;
 var eventData = null;
 var eventId = null;
 var selectedTier = null;
 var qty = 1;
+var guestNames = [""];
 var pendingTicket = null;
 var countdownTimer = null;
 
@@ -565,9 +574,17 @@ function getAgeLabel(v){
   return v + "+";
 }
 
+function firstNameOf(user){
+  if (!user) return "";
+  if (user.displayName && user.displayName.trim()){
+    return user.displayName.trim().split(/\s+/)[0];
+  }
+  if (user.email) return user.email.split("@")[0];
+  return "";
+}
+
 /* ══════════════════════════════════════════════════════════════
    REFERENCE GENERATOR
-   Format: NL-{eventIdLast4}-{ticketIdLast4}-{rand4}
    ══════════════════════════════════════════════════════════════ */
 function short4(s){
   var t = String(s || "").replace(/[^A-Za-z0-9]/g, "").toUpperCase();
@@ -617,9 +634,6 @@ function showContent(){
   $("eventContent").style.display = "block";
 }
 
-/* ══════════════════════════════════════════════════════════════
-   SIGN-IN NOTE VISIBILITY
-   ══════════════════════════════════════════════════════════════ */
 function updateSigninNote(){
   var note = $("signinNote");
   if (!note) return;
@@ -664,7 +678,6 @@ function renderEvent(){
     $("heroCover").style.backgroundImage = "url('" + cover.replace(/'/g, "\\'") + "')";
   }
 
-  // About
   var desc = eventData.eventDescription || "";
   if (desc && desc.trim()){
     $("aboutText").textContent = desc;
@@ -673,7 +686,6 @@ function renderEvent(){
     $("aboutCard").style.display = "none";
   }
 
-  // Detail grid
   var details = [];
   details.push({ k: "Date", v: eventData.startDate || "TBA" });
   details.push({ k: "Time", v: eventData.startTime || "TBA" });
@@ -757,20 +769,23 @@ function updateSidebarTotal(){
 }
 
 /* ══════════════════════════════════════════════════════════════
-   QUANTITY
+   QUANTITY — capped at MAX_QTY (5)
    ══════════════════════════════════════════════════════════════ */
 function updateQtyUI(){
   $("qtyValue").textContent = qty;
   $("qtyMinus").disabled = qty <= 1;
-  $("qtyPlus").disabled = qty >= 10;
+  $("qtyPlus").disabled = qty >= MAX_QTY;
   updateSidebarTotal();
+
+  // Resize the guest name array to match qty
+  while (guestNames.length < qty) guestNames.push("");
+  if (guestNames.length > qty) guestNames = guestNames.slice(0, qty);
 }
 
 /* ══════════════════════════════════════════════════════════════
    BUY MODAL — SIGN-IN REQUIRED
    ══════════════════════════════════════════════════════════════ */
 function openBuyModal(){
-  // HARD GATE: must be signed in to reserve
   if (!currentUser){
     showToast("Please sign in to reserve tickets.", "error", 3500);
     setTimeout(function(){
@@ -785,17 +800,36 @@ function openBuyModal(){
   var price = getTierPrice(selectedTier);
   var total = price * qty;
   $("modalAmount").textContent = total > 0 ? formatMoney(total) : "Free";
+
+  // Prefill first guest name from user display name
+  var lead = firstNameOf(currentUser) || "";
+  // Only prefill the first slot if it's empty
+  if (!guestNames[0] && lead){
+    guestNames[0] = lead;
+  }
+  // Ensure array length matches qty
+  while (guestNames.length < qty) guestNames.push("");
+  if (guestNames.length > qty) guestNames = guestNames.slice(0, qty);
+
+  renderGuestInputs();
+
+  // Prefill email
+  var ge = $("guestEmailInput");
+  if (!ge.value && currentUser.email) ge.value = currentUser.email;
+
+  // Update subtitle
+  var sub = $("guestSubtitle");
+  if (qty === 1){
+    sub.textContent = "Enter the name for your ticket.";
+  } else {
+    sub.textContent = "Enter a name for each of the " + qty + " tickets.";
+  }
+
   $("step1").style.display = "block";
   $("step2").style.display = "none";
   $("buyModal").classList.add("open");
   document.body.style.overflow = "hidden";
   refreshIcons();
-
-  // Prefill from current user
-  var gn = $("guestNameInput");
-  var ge = $("guestEmailInput");
-  if (!gn.value && currentUser.displayName) gn.value = currentUser.displayName;
-  if (!ge.value && currentUser.email) ge.value = currentUser.email;
 }
 
 function closeBuyModal(){
@@ -807,77 +841,154 @@ function closeBuyModal(){
   }
 }
 
+/* ── Guest name inputs ── */
+function renderGuestInputs(){
+  var wrap = $("guestList");
+  wrap.innerHTML = "";
+
+  guestNames.forEach(function(val, i){
+    var row = document.createElement("div");
+    row.className = "guest-input-row";
+
+    var isLead = i === 0;
+    var badgeCls = "badge" + (isLead ? " lead" : "");
+    var badgeLabel = isLead ? "You" : String(i + 1);
+
+    row.innerHTML =
+      '<div class="' + badgeCls + '">' + esc(badgeLabel) + '</div>' +
+      '<div class="field">' +
+        '<div class="guest-label">' + (isLead ? 'Your name' : 'Ticket ' + (i + 1) + ' — guest name') + '</div>' +
+        '<input type="text" class="guest-name-input" data-idx="' + i + '" ' +
+          'placeholder="' + (isLead ? 'e.g., Jane Smith' : 'e.g., John Doe') + '" ' +
+          'value="' + esc(val) + '" ' +
+          'autocomplete="' + (isLead ? 'name' : 'off') + '" />' +
+      '</div>';
+
+    wrap.appendChild(row);
+  });
+
+  // Wire inputs
+  wrap.querySelectorAll(".guest-name-input").forEach(function(inp){
+    inp.addEventListener("input", function(){
+      var idx = parseInt(this.dataset.idx, 10);
+      guestNames[idx] = this.value;
+    });
+  });
+
+  refreshIcons();
+}
+
 /* ══════════════════════════════════════════════════════════════
    CREATE PENDING TICKET — signed-in only
+   One ticket per guest name.
    ══════════════════════════════════════════════════════════════ */
-async function createPendingTicket(){
-  // Enforce sign-in at the source of truth
+async function createPendingTickets(){
   if (!currentUser){
     throw new Error("Sign in required");
   }
 
-  var guestName = ($("guestNameInput").value || "").trim();
-  var guestEmail = ($("guestEmailInput").value || "").trim();
-
-  if (!guestName){
-    throw new Error("Please enter your name.");
-  }
-  if (!guestEmail || guestEmail.indexOf("@") === -1){
+  var buyerEmail = ($("guestEmailInput").value || "").trim();
+  if (!buyerEmail || buyerEmail.indexOf("@") === -1){
     throw new Error("Please enter a valid email address.");
   }
 
-  var ticketId = db.collection(EVENTS).doc(eventId).collection("tickets").doc().id;
-  var rand = rand4();
-  var reference = buildTicketRef(eventId, ticketId, rand);
+  // Validate all guest names
+  for (var i = 0; i < guestNames.length; i++){
+    var nm = (guestNames[i] || "").trim();
+    if (!nm){
+      throw new Error(i === 0
+        ? "Please enter your name."
+        : "Please enter a name for ticket " + (i + 1) + ".");
+    }
+    if (nm.length > 60){
+      throw new Error("Guest names must be 60 characters or fewer.");
+    }
+  }
 
   var price = getTierPrice(selectedTier);
-  var total = price * qty;
+  var totalAmount = price * qty;
   var nowMs = Date.now();
   var expiresAtMs = nowMs + PENDING_TTL_MS;
-
-  // Signed-in UID only — no guest path
   var buyerUid = currentUser.uid;
 
-  var ticketData = {
-    ticketId: ticketId,
-    eventId: eventId,
-    eventName: eventData.eventName || "Untitled Event",
-    buyerUid: buyerUid,
-    buyerEmail: guestEmail,
-    buyerName: guestName,
-    guestName: guestName,
-    tier: selectedTier,
-    tierName: getTierName(selectedTier),
-    quantity: qty,
-    pricePaid: total,
-    pricePerTicket: price,
-    status: "pending",
-    paymentRef: reference,
-    paymentRefRand: rand,
-    paymentLink: getPaymentLink(selectedTier) || "",
-    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
-    expiresAt: firebase.firestore.Timestamp.fromMillis(expiresAtMs),
-    source: "web"
-  };
+  // Shared group ID so all tickets from this purchase are linked
+  var groupId = db.collection("_ids").doc().id || (Date.now().toString(36) + Math.random().toString(36).slice(2, 8));
+  var paymentLink = getPaymentLink(selectedTier) || "";
+
+  var createdTickets = [];
+
+  // Write one ticket per guest name — sequential so we can fail cleanly
+  var batch = db.batch();
+  var eventRef = db.collection(EVENTS).doc(eventId);
+
+  for (var g = 0; g < qty; g++){
+    var guestName = guestNames[g].trim();
+    var ticketId = eventRef.collection("tickets").doc().id;
+    var rand = rand4();
+    var reference = buildTicketRef(eventId, ticketId, rand);
+
+    var ticketData = {
+      ticketId: ticketId,
+      eventId: eventId,
+      eventName: eventData.eventName || "Untitled Event",
+      buyerUid: buyerUid,
+      buyerEmail: buyerEmail,
+      buyerName: (guestNames[0] || "").trim(),
+      guestName: guestName,
+      guestIndex: g,
+      groupId: groupId,
+      groupSize: qty,
+      tier: selectedTier,
+      tierName: getTierName(selectedTier),
+      quantity: 1,
+      pricePaid: price,
+      pricePerTicket: price,
+      status: "pending",
+      paymentRef: reference,
+      paymentRefRand: rand,
+      paymentLink: paymentLink,
+      createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+      expiresAt: firebase.firestore.Timestamp.fromMillis(expiresAtMs),
+      source: "web"
+    };
+
+    batch.set(eventRef.collection("tickets").doc(ticketId), ticketData);
+
+    createdTickets.push({
+      ticketId: ticketId,
+      reference: reference,
+      rand: rand,
+      tier: selectedTier,
+      tierName: getTierName(selectedTier),
+      guestName: guestName,
+      guestIndex: g,
+      amount: price,
+      expiresAtMs: expiresAtMs
+    });
+  }
 
   try {
-    await db.collection(EVENTS).doc(eventId).collection("tickets").doc(ticketId).set(ticketData);
+    await batch.commit();
   } catch(err){
-    console.error("createPendingTicket failed:", err);
+    console.error("createPendingTickets failed:", err);
     throw new Error(err.message || "Could not save your reservation.");
   }
 
+  // The "primary" ticket is the first one — its reference is what buyers use
+  var primary = createdTickets[0];
+
   return {
-    ticketId: ticketId,
-    reference: reference,
-    rand: rand,
-    amount: total,
+    groupId: groupId,
+    qty: qty,
+    tickets: createdTickets,
+    reference: primary.reference,
+    ticketId: primary.ticketId,
+    amount: totalAmount,
     tier: selectedTier,
     tierName: getTierName(selectedTier),
-    qty: qty,
     expiresAtMs: expiresAtMs,
-    guestName: guestName,
-    guestEmail: guestEmail
+    guestNames: guestNames.slice(0, qty),
+    guestEmail: buyerEmail
   };
 }
 
@@ -891,55 +1002,51 @@ async function goToPaymentStep(){
   btn.innerHTML = '<i data-lucide="loader-2"></i> Reserving…';
   refreshIcons();
 
-  var ticket;
+  var bundle;
   try {
-    ticket = await createPendingTicket();
+    bundle = await createPendingTickets();
   } catch(err){
-    showToast(err.message || "Could not reserve your ticket.", "error", 4000);
+    showToast(err.message || "Could not reserve your tickets.", "error", 4000);
     btn.disabled = false;
     btn.innerHTML = orig;
     refreshIcons();
     return;
   }
 
-  if (!ticket){
-    btn.disabled = false;
-    btn.innerHTML = orig;
-    refreshIcons();
-    return;
-  }
-
-  pendingTicket = ticket;
+  pendingTicket = bundle;
 
   // Persist to sessionStorage for payment-success compatibility
   try {
     sessionStorage.setItem("novalink_pending_payment", JSON.stringify({
       eventId: eventId,
-      ticketId: ticket.ticketId,
-      reference: ticket.reference,
-      tier: ticket.tier,
-      qty: ticket.qty,
-      amount: ticket.amount,
+      ticketId: bundle.ticketId,
+      groupId: bundle.groupId,
+      reference: bundle.reference,
+      tier: bundle.tier,
+      qty: bundle.qty,
+      amount: bundle.amount,
       startedAt: Date.now(),
-      expiresAt: ticket.expiresAtMs
+      expiresAt: bundle.expiresAtMs
     }));
   } catch(e){}
 
-  // Also persist to localStorage so buyer can find it later
+  // Also persist each ticket to localStorage
   try {
-    localStorage.setItem("novalink_ticket_" + ticket.ticketId, JSON.stringify({
-      eventId: eventId,
-      ticketId: ticket.ticketId,
-      reference: ticket.reference,
-      tier: ticket.tier,
-      qty: ticket.qty,
-      amount: ticket.amount,
-      expiresAt: ticket.expiresAtMs,
-      savedAt: Date.now()
-    }));
+    bundle.tickets.forEach(function(t){
+      localStorage.setItem("novalink_ticket_" + t.ticketId, JSON.stringify({
+        eventId: eventId,
+        ticketId: t.ticketId,
+        groupId: bundle.groupId,
+        reference: t.reference,
+        tier: t.tier,
+        amount: t.amount,
+        expiresAt: t.expiresAtMs,
+        savedAt: Date.now()
+      }));
+    });
   } catch(e){}
 
-  renderPaymentStep(ticket);
+  renderPaymentStep(bundle);
   $("step1").style.display = "none";
   $("step2").style.display = "block";
   refreshIcons();
@@ -948,12 +1055,12 @@ async function goToPaymentStep(){
   btn.innerHTML = orig;
 }
 
-function renderPaymentStep(ticket){
-  $("refValue").textContent = ticket.reference;
-  $("refInline").textContent = ticket.reference;
-  $("amountToPay").textContent = ticket.amount > 0 ? formatMoney(ticket.amount) : "Free";
+function renderPaymentStep(bundle){
+  $("refValue").textContent = bundle.reference;
+  $("refInline").textContent = bundle.reference;
+  $("amountToPay").textContent = bundle.amount > 0 ? formatMoney(bundle.amount) : "Free";
 
-  var link = getPaymentLink(ticket.tier);
+  var link = getPaymentLink(bundle.tier);
   var yocoBtn = $("yocoBtn");
   var waBtn = $("whatsappBtn");
   var waLabel = $("whatsappLabel");
@@ -970,30 +1077,41 @@ function renderPaymentStep(ticket){
     waLabel.textContent = "I've paid — contact us";
   }
 
-  var waMsg = buildWhatsAppMessage(ticket);
+  var waMsg = buildWhatsAppMessage(bundle);
   waBtn.href = "https://wa.me/" + WHATSAPP_NUMBER + "?text=" + encodeURIComponent(waMsg);
 
-  startCountdown(ticket.expiresAtMs);
+  startCountdown(bundle.expiresAtMs);
 }
 
-function buildWhatsAppMessage(ticket){
+function buildWhatsAppMessage(bundle){
   var eventName = eventData.eventName || "Event";
   var lines = [
     "Hi Novalink — I've paid for my tickets.",
     "",
     "Event: " + eventName,
-    "Reference: " + ticket.reference,
-    "Tier: " + ticket.tierName,
-    "Quantity: " + ticket.qty,
-    "Amount: " + formatMoney(ticket.amount),
-    "Name: " + ticket.guestName,
-    "Email: " + ticket.guestEmail,
+    "Reference: " + bundle.reference,
+    "Tier: " + bundle.tierName,
+    "Quantity: " + bundle.qty,
+    "Amount: " + formatMoney(bundle.amount),
+    "Email: " + bundle.guestEmail,
     ""
   ];
-  if (ticket.amount > 0){
-    lines.push("Please confirm my payment and unlock my QR code.");
+
+  if (bundle.qty > 1){
+    lines.push("Guest names:");
+    bundle.guestNames.forEach(function(n, i){
+      lines.push("  " + (i + 1) + ". " + n);
+    });
+    lines.push("");
   } else {
-    lines.push("This is a free event — please unlock my QR code.");
+    lines.push("Name: " + bundle.guestNames[0]);
+    lines.push("");
+  }
+
+  if (bundle.amount > 0){
+    lines.push("Please confirm my payment and unlock my QR codes.");
+  } else {
+    lines.push("This is a free event — please unlock my QR codes.");
   }
   return lines.join("\n");
 }
@@ -1112,7 +1230,7 @@ document.addEventListener("DOMContentLoaded", function(){
     if (qty > 1){ qty--; updateQtyUI(); }
   });
   $("qtyPlus").addEventListener("click", function(){
-    if (qty < 10){ qty++; updateQtyUI(); }
+    if (qty < MAX_QTY){ qty++; updateQtyUI(); }
   });
   updateQtyUI();
 
@@ -1133,10 +1251,8 @@ document.addEventListener("DOMContentLoaded", function(){
     }
   });
 
-  // Wait for auth to resolve before loading event (so sign-in note is accurate)
   auth.onAuthStateChanged(function(user){
     currentUser = user;
-    authReady = true;
     updateSigninNote();
     if (!eventData){
       loadEvent();
@@ -1151,4 +1267,4 @@ window.addEventListener("beforeunload", function(){
 })();
 </script>
 </body>
-  </html>
+</html>
