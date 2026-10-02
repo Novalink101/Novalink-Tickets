@@ -345,7 +345,7 @@ img{max-width:100%;display:block}
               <span class="qty-value" id="qtyValue">1</span>
               <button type="button" class="qty-btn" id="qtyPlus"><i data-lucide="plus"></i></button>
             </div>
-            <div class="qty-max-hint" id="qtyMaxHint">Max — per purchase</div>
+            <div class="qty-max-hint" id="qtyMaxHint">Max 5 tickets per purchase</div>
 
             <div class="total-row">
               <span class="lbl">Total</span>
@@ -435,15 +435,15 @@ img{max-width:100%;display:block}
         <h4><i data-lucide="list-ordered"></i> How to pay</h4>
         <ol>
           <li>Tap <strong>Pay on Yoco</strong> below</li>
-          <li>Paste your reference <code id="refInline">NL-XXXX-XXXX-XXXX</code> into the Yoco <strong>reference</strong> field</li>
           <li>Complete the payment</li>
           <li>Come back here and tap <strong>I've paid</strong></li>
+          <li>We'll confirm and unlock your QR</li>
         </ol>
       </div>
 
       <div id="linkMissingNote" class="link-missing" style="display:none;">
         <i data-lucide="alert-triangle"></i>
-        <div>This tier's payment link hasn't been set up yet. Tap <strong>I've paid — contact us</strong> below and we'll send you the payment details on WhatsApp.</div>
+        <div>This tier's payment link hasn't been set up for your quantity. Tap <strong>I've paid — contact us</strong> below and we'll send you the payment details on WhatsApp.</div>
       </div>
 
       <div class="btn-group">
@@ -457,7 +457,7 @@ img{max-width:100%;display:block}
       </div>
 
       <p class="subtitle" style="margin-top:16px;margin-bottom:0;font-size:12px;text-align:center;">
-        After you tap <strong>I've paid</strong>, we'll confirm your payment on Yoco and unlock your QR codes. This usually takes a few minutes.
+        After you tap <strong>I've paid</strong>, we'll confirm your payment on Yoco and unlock your QR code. This usually takes a few minutes.
       </p>
     </div>
 
@@ -492,7 +492,10 @@ var db = firebase.firestore();
 var auth = firebase.auth();
 var EVENTS = "events";
 var PENDING_TTL_MS = 24 * 60 * 60 * 1000;
-var HARD_MAX_QTY = 20;
+
+/* ═══ HARD CAP: max 5 tickets per purchase, always ═══ */
+var MAX_QTY = 5;
+
 var WHATSAPP_NUMBER = "27696835184";
 
 var currentUser = null;
@@ -508,15 +511,14 @@ var countdownTimer = null;
 var seatingEnabled = false;
 var gaEnabled = false;
 var blocks = [];
-var soldSeats = {};      // { "A-A-01": true }
-var assignment = null;   // current assignment
-var allTierUnits = [];   // [{ tier, blockIdx, blockName, blockLetter, sectionIdx, sectionLabel, kind, ..., seats: [{num, id}] }]
-var blocksByTier = {};   // { tier: [blockIdx, blockIdx] } — for GA and available tier detection
+var soldSeats = {};
+var assignment = null;
+var allTierUnits = [];
 
-/* ────────────────────────────────────────────────────────── */
+/* ── HELPERS ── */
 function $(id){ return document.getElementById(id); }
-function refreshIcons(){ if (window.lucide) lucide.createIcons(); }
-function esc(s){ return String(s==null?'':s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+function refreshIcons(){ if(window.lucide) lucide.createIcons(); }
+function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 function getParam(n){ try { return new URLSearchParams(window.location.search).get(n); } catch(e){ return null; } }
 
 function showToast(msg, type, ms){
@@ -568,12 +570,22 @@ function getTierPrice(key){
   var v = parseFloat(eventData.tierPrices[key]);
   return isNaN(v) ? 0 : v;
 }
-function getPaymentLink(key){
+
+/* Payment link — new format { tier: { "1": url, "2": url, ... } }, legacy { tier: url } */
+function getPaymentLink(key, quantity){
   if (!eventData || !eventData.paymentLinks) return "";
-  return String(eventData.paymentLinks[key] || "").trim();
+  var pl = eventData.paymentLinks[key];
+  if (!pl) return "";
+  var q = String(quantity || 1);
+  if (typeof pl === "object"){
+    if (pl[q]) return String(pl[q]).trim();
+    return "";
+  }
+  if (q === "1") return String(pl || "").trim();
+  return "";
 }
+
 function isTierActive(key){
-  /* if no tierActive map, assume all active (backwards compat) */
   if (!eventData || !eventData.tierActive) return true;
   return eventData.tierActive[key] !== false;
 }
@@ -583,29 +595,45 @@ function getActiveTierKeys(){
   if (isNaN(count) || count < 1) count = ALL_TIER_KEYS.length;
   if (count > ALL_TIER_KEYS.length) count = ALL_TIER_KEYS.length;
   var keys = ALL_TIER_KEYS.slice(0, count);
-  /* filter by active flag */
-  return keys.filter(isTierActive);
+  var filtered = keys.filter(isTierActive);
+  if (!filtered.length && eventData.tierActive) return keys;
+  return filtered;
+}
+function isSingleTier(){ return getActiveTierKeys().length === 1; }
+
+function getCheapestAvailableTier(){
+  var keys = getActiveTierKeys().filter(tierHasSeats);
+  if (!keys.length) keys = getActiveTierKeys();
+  var cheapest = null, cheapestPrice = Infinity;
+  keys.forEach(function(k){
+    var p = getTierPrice(k);
+    if (p < cheapestPrice){ cheapestPrice = p; cheapest = k; }
+  });
+  return { key: cheapest, price: cheapestPrice === Infinity ? 0 : cheapestPrice };
 }
 
-/* ──────────────────────────────────────────────────────────
-   BUILD ALL SEAT UNITS FROM BLOCKS (preset-based)
-   ────────────────────────────────────────────────────────── */
+function firstNameOf(user){
+  if (!user) return "";
+  if (user.displayName && user.displayName.trim()) return user.displayName.trim();
+  if (user.email) return user.email.split("@")[0];
+  return "";
+}
+function hasTwoWords(name){
+  if (!name) return false;
+  return String(name).trim().split(/\s+/).filter(Boolean).length >= 2;
+}
+
+/* SEAT UNITS */
 function buildAllUnits(){
   allTierUnits = [];
-  blocksByTier = {};
-
   if (!seatingEnabled || !blocks.length) return;
 
   blocks.forEach(function(b, blockIdx){
-    var blockLetter = String.fromCharCode(65 + blockIdx); /* A, B, C... */
+    var blockLetter = String.fromCharCode(65 + blockIdx);
     var tier = b.tier || "standard";
     var preset = b.preset || "rows-simple";
     var sections = b.sections || 1;
 
-    if (!blocksByTier[tier]) blocksByTier[tier] = [];
-    blocksByTier[tier].push(blockIdx);
-
-    /* General admission: no seat units, tracked separately */
     if (preset === "general-admission") return;
 
     var isTables = preset.indexOf("tables") === 0;
@@ -648,7 +676,6 @@ function buildAllUnits(){
         }
       }
     } else {
-      /* rows-simple, rows-sections, rows-aisle, multi-blocks — all treated the same */
       var rowsPerSection = b.rows || 1;
       var seatsPerRow = b.seatsPerRow || 1;
 
@@ -671,7 +698,6 @@ function buildAllUnits(){
             length: seatsPerRow,
             seats: []
           };
-
           for (var c2 = 1; c2 <= seatsPerRow; c2++){
             var seatId2 = blockLetter + "-" + secPart2 + rowLetter + "-" + String(c2).padStart(2, "0");
             unit2.seats.push({ num: c2, id: seatId2 });
@@ -684,8 +710,7 @@ function buildAllUnits(){
 }
 
 function tierHasSeats(tierKey){
-  if (gaEnabled && blocksByTier[tierKey] && blocksByTier[tierKey].length){
-    /* GA tier has "seats" but they're not unit-based */
+  if (gaEnabled){
     var hasGA = blocks.some(function(b){
       return (b.tier || "standard") === tierKey && b.preset === "general-admission";
     });
@@ -694,23 +719,20 @@ function tierHasSeats(tierKey){
   return allTierUnits.some(function(u){ return u.tier === tierKey; });
 }
 
-/* largest row (or table) size in a tier */
 function maxRowSizeInTier(tierKey){
   var max = 0;
   allTierUnits.forEach(function(u){
     if (u.tier === tierKey && u.length > max) max = u.length;
   });
-  /* GA has a "capacity" per block but no per-row limit — cap at HARD_MAX_QTY */
   if (max === 0 && gaEnabled){
     var hasGA = blocks.some(function(b){
       return (b.tier || "standard") === tierKey && b.preset === "general-admission";
     });
-    if (hasGA) max = HARD_MAX_QTY;
+    if (hasGA) max = MAX_QTY;
   }
   return max;
 }
 
-/* Find assignment */
 function findAssignment(tierKey, count, skipUnitKey){
   for (var i = 0; i < allTierUnits.length; i++){
     var u = allTierUnits[i];
@@ -736,9 +758,6 @@ function findAssignment(tierKey, count, skipUnitKey){
   return null;
 }
 
-/* ──────────────────────────────────────────────────────────
-   SOLD SEATS
-   ────────────────────────────────────────────────────────── */
 async function loadSoldSeats(){
   soldSeats = {};
   if (!seatingEnabled || !eventId) return;
@@ -757,9 +776,7 @@ async function loadSoldSeats(){
   }
 }
 
-/* ──────────────────────────────────────────────────────────
-   STATE VIEWS
-   ────────────────────────────────────────────────────────── */
+/* STATE VIEWS */
 function showLoading(){
   $("loadingState").style.display = "block";
   $("errorState").style.display = "none";
@@ -795,9 +812,7 @@ function updateSigninNote(){
   note.style.display = currentUser ? "none" : "flex";
 }
 
-/* ──────────────────────────────────────────────────────────
-   RENDER EVENT
-   ────────────────────────────────────────────────────────── */
+/* RENDER EVENT */
 function renderEvent(){
   if (!eventData) return;
 
@@ -853,7 +868,6 @@ function renderEvent(){
   var cheapest = getCheapestAvailableTier();
   $("fromPrice").textContent = cheapest.price > 0 ? formatMoney(cheapest.price) : "Free";
 
-  /* Auto-select */
   var keys = getActiveTierKeys();
   if (keys.length){
     if (keys.length === 1){
@@ -864,13 +878,11 @@ function renderEvent(){
     }
   }
 
-  /* Venue picture */
   if (eventData.seatingPlanImage){
     $("venuePicImg").src = eventData.seatingPlanImage;
     $("venuePicWrap").style.display = "block";
   }
 
-  /* Seating card */
   if (seatingEnabled){
     $("seatCard").style.display = "block";
     recomputeAssignment();
@@ -878,17 +890,6 @@ function renderEvent(){
 
   updateSigninNote();
   refreshIcons();
-}
-
-function getCheapestAvailableTier(){
-  var keys = getActiveTierKeys().filter(tierHasSeats);
-  if (!keys.length) keys = getActiveTierKeys();
-  var cheapest = null, cheapestPrice = Infinity;
-  keys.forEach(function(k){
-    var p = getTierPrice(k);
-    if (p < cheapestPrice){ cheapestPrice = p; cheapest = k; }
-  });
-  return { key: cheapest, price: cheapestPrice === Infinity ? 0 : cheapestPrice };
 }
 
 function renderTiers(){
@@ -947,6 +948,7 @@ function selectTier(tierKey, silent){
 }
 
 function clampQtyToTier(){
+  /* HARD CAP: always max 5 */
   var max = maxQtyForTier(selectedTier);
   if (qty > max) qty = max;
   if (qty < 1) qty = 1;
@@ -954,13 +956,14 @@ function clampQtyToTier(){
 }
 
 function maxQtyForTier(tierKey){
-  if (!seatingEnabled) return HARD_MAX_QTY;
   if (!tierKey) return 1;
+  /* HARD CAP: never above 5, regardless of tier or block layout */
+  if (!seatingEnabled) return MAX_QTY;
 
   var staticCap = maxRowSizeInTier(tierKey) || 1;
-  if (staticCap > HARD_MAX_QTY) staticCap = HARD_MAX_QTY;
+  if (staticCap > MAX_QTY) staticCap = MAX_QTY;
 
-  /* Dynamic cap: largest free consecutive run */
+  /* dynamic cap: largest free consecutive run in this tier */
   var dynamicCap = 0;
   allTierUnits.forEach(function(u){
     if (u.tier !== tierKey) return;
@@ -977,16 +980,17 @@ function maxQtyForTier(tierKey){
     }
   });
 
-  /* GA tier — no unit-based cap */
+  /* GA tier — no unit-based cap, so just apply the hard cap */
   if (dynamicCap === 0 && gaEnabled){
     var hasGA = blocks.some(function(b){
       return (b.tier || "standard") === tierKey && b.preset === "general-admission";
     });
-    if (hasGA) return HARD_MAX_QTY;
+    if (hasGA) return MAX_QTY;
   }
 
   var cap = Math.min(staticCap, dynamicCap);
   if (cap < 1) cap = 1;
+  if (cap > MAX_QTY) cap = MAX_QTY;
   return cap;
 }
 
@@ -998,11 +1002,7 @@ function updateQtyUI(){
 
   var hint = $("qtyMaxHint");
   if (hint){
-    if (seatingEnabled){
-      hint.textContent = "Max " + max + " seat" + (max === 1 ? "" : "s") + " together per purchase";
-    } else {
-      hint.textContent = "Max " + HARD_MAX_QTY + " tickets per purchase";
-    }
+    hint.textContent = "Max " + max + " ticket" + (max === 1 ? "" : "s") + " per purchase";
   }
 
   while (guestNames.length < qty) guestNames.push("");
@@ -1021,9 +1021,7 @@ function updateSidebarTotal(){
   $("sidebarTotal").textContent = total > 0 ? formatMoney(total) : "Free";
 }
 
-/* ──────────────────────────────────────────────────────────
-   ASSIGNMENT
-   ────────────────────────────────────────────────────────── */
+/* ASSIGNMENT */
 function recomputeAssignment(skipUnitKey){
   if (!seatingEnabled || !selectedTier){
     $("assignBox").style.display = "none";
@@ -1032,7 +1030,6 @@ function recomputeAssignment(skipUnitKey){
     return;
   }
 
-  /* GA tier — no assignment, show GA box */
   var isGA = blocks.some(function(b){
     return (b.tier || "standard") === selectedTier && b.preset === "general-admission";
   }) && !allTierUnits.some(function(u){ return u.tier === selectedTier; });
@@ -1123,9 +1120,7 @@ function renderAssignmentSummary(){
   }
 }
 
-/* ──────────────────────────────────────────────────────────
-   BUY MODAL
-   ────────────────────────────────────────────────────────── */
+/* BUY MODAL */
 function openBuyModal(){
   if (!currentUser){
     showToast("Please sign in to reserve tickets.", "error", 3500);
@@ -1294,20 +1289,7 @@ function validateGuestForm(){
   return ok;
 }
 
-function firstNameOf(user){
-  if (!user) return "";
-  if (user.displayName && user.displayName.trim()) return user.displayName.trim();
-  if (user.email) return user.email.split("@")[0];
-  return "";
-}
-function hasTwoWords(name){
-  if (!name) return false;
-  return String(name).trim().split(/\s+/).filter(Boolean).length >= 2;
-}
-
-/* ──────────────────────────────────────────────────────────
-   CREATE PENDING TICKETS
-   ────────────────────────────────────────────────────────── */
+/* CREATE PENDING TICKETS */
 async function createPendingTickets(){
   if (!currentUser) throw new Error("Sign in required");
   if (!validateGuestForm()) throw new Error("__validation__");
@@ -1327,7 +1309,9 @@ async function createPendingTickets(){
   var expiresAtMs = nowMs + PENDING_TTL_MS;
   var buyerUid = currentUser.uid;
   var groupId = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-  var paymentLink = getPaymentLink(selectedTier) || "";
+
+  /* Payment link picked based on quantity */
+  var paymentLink = getPaymentLink(selectedTier, qty) || "";
 
   var createdTickets = [];
   var batch = db.batch();
@@ -1428,9 +1412,7 @@ function buildTicketRef(eId, tId, rand){
   return "NL-" + short4(eId) + "-" + short4(tId) + "-" + (rand || rand4());
 }
 
-/* ──────────────────────────────────────────────────────────
-   PAYMENT
-   ────────────────────────────────────────────────────────── */
+/* PAYMENT */
 async function goToPaymentStep(){
   if (!validateGuestForm()){
     showToast("Please fill in the highlighted fields.", "error", 2500);
@@ -1493,7 +1475,8 @@ function renderPaymentStep(bundle){
   $("refInline").textContent = bundle.reference;
   $("amountToPay").textContent = bundle.amount > 0 ? formatMoney(bundle.amount) : "Free";
 
-  var link = getPaymentLink(bundle.tier);
+  /* Payment link picked by quantity */
+  var link = getPaymentLink(bundle.tier, bundle.qty);
   var yocoBtn = $("yocoBtn");
   var waBtn = $("whatsappBtn");
   var waLabel = $("whatsappLabel");
@@ -1594,9 +1577,7 @@ function fallbackCopy(text){
   document.body.removeChild(ta);
 }
 
-/* ──────────────────────────────────────────────────────────
-   LOAD EVENT
-   ────────────────────────────────────────────────────────── */
+/* LOAD EVENT */
 async function loadEvent(){
   eventId = getParam("id");
   if (!eventId){ showError("Missing event", "No event ID was provided in the link."); return; }
@@ -1615,7 +1596,6 @@ async function loadEvent(){
       return;
     }
 
-    /* seating setup */
     if (eventData.blocks && Array.isArray(eventData.blocks) && eventData.blocks.length){
       seatingEnabled = true;
       blocks = eventData.blocks;
@@ -1634,9 +1614,7 @@ async function loadEvent(){
   }
 }
 
-/* ──────────────────────────────────────────────────────────
-   WIRE UP
-   ────────────────────────────────────────────────────────── */
+/* WIRE UP */
 document.addEventListener("DOMContentLoaded", function(){
   $("year").textContent = new Date().getFullYear();
   refreshIcons();
@@ -1688,4 +1666,4 @@ window.addEventListener("beforeunload", function(){
 })();
 </script>
 </body>
-  </html>
+      </html>
