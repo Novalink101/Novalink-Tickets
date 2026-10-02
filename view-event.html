@@ -128,6 +128,9 @@ img{max-width:100%;display:block}
 .info-note{display:flex;gap:10px;padding:12px 14px;background:var(--cyf);border:1px solid var(--cy);border-radius:10px;margin-top:14px;font-size:12.5px;color:var(--tx2);line-height:1.55}
 .info-note i{width:16px;height:16px;color:var(--cy3);flex-shrink:0;margin-top:2px}
 
+.signin-note{display:flex;gap:10px;padding:12px 14px;background:var(--amf);border:1px solid #fde68a;border-radius:10px;margin-top:14px;font-size:12.5px;color:#92400e;line-height:1.55;font-weight:600}
+.signin-note i{width:16px;height:16px;flex-shrink:0;margin-top:2px}
+
 /* MODAL */
 .modal-overlay{position:fixed;inset:0;background:rgba(10,15,20,0.65);backdrop-filter:blur(8px);display:none;align-items:flex-start;justify-content:center;z-index:100;padding:24px 20px;overflow-y:auto;opacity:0;transition:opacity 0.3s ease}
 .modal-overlay.open{display:flex;opacity:1}
@@ -299,6 +302,11 @@ img{max-width:100%;display:block}
               </button>
             </div>
 
+            <div id="signinNote" class="signin-note" style="display:none;">
+              <i data-lucide="lock"></i>
+              <div>You'll need to sign in to reserve. Takes 5 seconds with Google.</div>
+            </div>
+
             <div class="info-note">
               <i data-lucide="shield-check"></i>
               <div>Reserve now, pay within 24 hours. Your seat is held — no charge until you complete payment on Yoco.</div>
@@ -440,7 +448,7 @@ var EVENTS = "events";
 var PENDING_TTL_MS = 24 * 60 * 60 * 1000;
 
 /* ══════════════════════════════════════════════════════════════
-   EMAILJS — kept, but not required for reservation
+   EMAILJS — not required for reservation (kept for future use)
    ══════════════════════════════════════════════════════════════ */
 var EMAILJS_PUBLIC_KEY = "";
 var EMAILJS_SERVICE_ID = "";
@@ -454,17 +462,18 @@ try {
 /* ══════════════════════════════════════════════════════════════
    WHATSAPP
    ══════════════════════════════════════════════════════════════ */
-var WHATSAPP_NUMBER = "27696835184"; // Nathan's WhatsApp — update if needed
+var WHATSAPP_NUMBER = "27696835184";
 
 /* ══════════════════════════════════════════════════════════════
    STATE
    ══════════════════════════════════════════════════════════════ */
 var currentUser = null;
+var authReady = false;
 var eventData = null;
 var eventId = null;
 var selectedTier = null;
 var qty = 1;
-var pendingTicket = null; // { ticketId, reference, amount, tier, expiresAt }
+var pendingTicket = null;
 var countdownTimer = null;
 
 /* ══════════════════════════════════════════════════════════════
@@ -557,7 +566,7 @@ function getAgeLabel(v){
 }
 
 /* ══════════════════════════════════════════════════════════════
-   REFERENCE GENERATOR — matches the same format used everywhere
+   REFERENCE GENERATOR
    Format: NL-{eventIdLast4}-{ticketIdLast4}-{rand4}
    ══════════════════════════════════════════════════════════════ */
 function short4(s){
@@ -606,6 +615,15 @@ function showContent(){
   $("errorState").style.display = "none";
   $("notLiveState").style.display = "none";
   $("eventContent").style.display = "block";
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SIGN-IN NOTE VISIBILITY
+   ══════════════════════════════════════════════════════════════ */
+function updateSigninNote(){
+  var note = $("signinNote");
+  if (!note) return;
+  note.style.display = currentUser ? "none" : "flex";
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -676,19 +694,17 @@ function renderEvent(){
     dg.appendChild(el);
   });
 
-  // Tiers
   renderTiers();
 
-  // Cheapest price
   var cheapest = getCheapestTier();
   $("fromPrice").textContent = cheapest.price > 0 ? formatMoney(cheapest.price) : "Free";
 
-  // Auto-select first tier
   var keys = getActiveTierKeys();
   if (keys.length){
     selectTier(keys[0]);
   }
 
+  updateSigninNote();
   refreshIcons();
 }
 
@@ -751,9 +767,17 @@ function updateQtyUI(){
 }
 
 /* ══════════════════════════════════════════════════════════════
-   BUY MODAL
+   BUY MODAL — SIGN-IN REQUIRED
    ══════════════════════════════════════════════════════════════ */
 function openBuyModal(){
+  // HARD GATE: must be signed in to reserve
+  if (!currentUser){
+    showToast("Please sign in to reserve tickets.", "error", 3500);
+    setTimeout(function(){
+      window.location.href = "index.html#signin";
+    }, 1200);
+    return;
+  }
   if (!selectedTier){
     showToast("Please choose a tier first.", "error");
     return;
@@ -768,12 +792,10 @@ function openBuyModal(){
   refreshIcons();
 
   // Prefill from current user
-  if (currentUser){
-    var gn = $("guestNameInput");
-    var ge = $("guestEmailInput");
-    if (!gn.value && currentUser.displayName) gn.value = currentUser.displayName;
-    if (!ge.value && currentUser.email) ge.value = currentUser.email;
-  }
+  var gn = $("guestNameInput");
+  var ge = $("guestEmailInput");
+  if (!gn.value && currentUser.displayName) gn.value = currentUser.displayName;
+  if (!ge.value && currentUser.email) ge.value = currentUser.email;
 }
 
 function closeBuyModal(){
@@ -786,20 +808,22 @@ function closeBuyModal(){
 }
 
 /* ══════════════════════════════════════════════════════════════
-   CREATE PENDING TICKET
-   Writes to: events/{eventId}/tickets/{ticketId}
+   CREATE PENDING TICKET — signed-in only
    ══════════════════════════════════════════════════════════════ */
 async function createPendingTicket(){
+  // Enforce sign-in at the source of truth
+  if (!currentUser){
+    throw new Error("Sign in required");
+  }
+
   var guestName = ($("guestNameInput").value || "").trim();
   var guestEmail = ($("guestEmailInput").value || "").trim();
 
   if (!guestName){
-    showToast("Please enter your name.", "error");
-    return null;
+    throw new Error("Please enter your name.");
   }
   if (!guestEmail || guestEmail.indexOf("@") === -1){
-    showToast("Please enter a valid email address.", "error");
-    return null;
+    throw new Error("Please enter a valid email address.");
   }
 
   var ticketId = db.collection(EVENTS).doc(eventId).collection("tickets").doc().id;
@@ -811,7 +835,8 @@ async function createPendingTicket(){
   var nowMs = Date.now();
   var expiresAtMs = nowMs + PENDING_TTL_MS;
 
-  var buyerUid = currentUser ? currentUser.uid : "guest_" + rand;
+  // Signed-in UID only — no guest path
+  var buyerUid = currentUser.uid;
 
   var ticketData = {
     ticketId: ticketId,
@@ -837,23 +862,23 @@ async function createPendingTicket(){
 
   try {
     await db.collection(EVENTS).doc(eventId).collection("tickets").doc(ticketId).set(ticketData);
-    return {
-      ticketId: ticketId,
-      reference: reference,
-      rand: rand,
-      amount: total,
-      tier: selectedTier,
-      tierName: getTierName(selectedTier),
-      qty: qty,
-      expiresAtMs: expiresAtMs,
-      guestName: guestName,
-      guestEmail: guestEmail
-    };
   } catch(err){
     console.error("createPendingTicket failed:", err);
-    showToast("Could not save your reservation. Please try again.", "error", 5000);
-    return null;
+    throw new Error(err.message || "Could not save your reservation.");
   }
+
+  return {
+    ticketId: ticketId,
+    reference: reference,
+    rand: rand,
+    amount: total,
+    tier: selectedTier,
+    tierName: getTierName(selectedTier),
+    qty: qty,
+    expiresAtMs: expiresAtMs,
+    guestName: guestName,
+    guestEmail: guestEmail
+  };
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -866,7 +891,17 @@ async function goToPaymentStep(){
   btn.innerHTML = '<i data-lucide="loader-2"></i> Reserving…';
   refreshIcons();
 
-  var ticket = await createPendingTicket();
+  var ticket;
+  try {
+    ticket = await createPendingTicket();
+  } catch(err){
+    showToast(err.message || "Could not reserve your ticket.", "error", 4000);
+    btn.disabled = false;
+    btn.innerHTML = orig;
+    refreshIcons();
+    return;
+  }
+
   if (!ticket){
     btn.disabled = false;
     btn.innerHTML = orig;
@@ -876,7 +911,7 @@ async function goToPaymentStep(){
 
   pendingTicket = ticket;
 
-  // Store in sessionStorage so payment-success can find it (legacy compatibility)
+  // Persist to sessionStorage for payment-success compatibility
   try {
     sessionStorage.setItem("novalink_pending_payment", JSON.stringify({
       eventId: eventId,
@@ -918,7 +953,6 @@ function renderPaymentStep(ticket){
   $("refInline").textContent = ticket.reference;
   $("amountToPay").textContent = ticket.amount > 0 ? formatMoney(ticket.amount) : "Free";
 
-  // Yoco link
   var link = getPaymentLink(ticket.tier);
   var yocoBtn = $("yocoBtn");
   var waBtn = $("whatsappBtn");
@@ -936,11 +970,9 @@ function renderPaymentStep(ticket){
     waLabel.textContent = "I've paid — contact us";
   }
 
-  // WhatsApp URL
   var waMsg = buildWhatsAppMessage(ticket);
   waBtn.href = "https://wa.me/" + WHATSAPP_NUMBER + "?text=" + encodeURIComponent(waMsg);
 
-  // Countdown
   startCountdown(ticket.expiresAtMs);
 }
 
@@ -1046,7 +1078,6 @@ async function loadEvent(){
     eventData = snap.data() || {};
     eventData.id = snap.id;
 
-    // GATE: only show if live
     var status = String(eventData.status || "").toLowerCase();
     if (status !== "live"){
       if (status === "pending_review" || status === "pending"){
@@ -1061,6 +1092,7 @@ async function loadEvent(){
 
     renderEvent();
     showContent();
+    updateSigninNote();
     refreshIcons();
   } catch(err){
     console.error("loadEvent error:", err);
@@ -1076,7 +1108,6 @@ document.addEventListener("DOMContentLoaded", function(){
   refreshIcons();
   showLoading();
 
-  // Qty buttons
   $("qtyMinus").addEventListener("click", function(){
     if (qty > 1){ qty--; updateQtyUI(); }
   });
@@ -1085,36 +1116,32 @@ document.addEventListener("DOMContentLoaded", function(){
   });
   updateQtyUI();
 
-  // Buy
   $("buyBtn").addEventListener("click", openBuyModal);
 
-  // Modal close
   $("modalClose1").addEventListener("click", closeBuyModal);
   $("modalClose2").addEventListener("click", closeBuyModal);
   $("buyModal").addEventListener("click", function(e){
     if (e.target === $("buyModal")) closeBuyModal();
   });
 
-  // Continue → payment
   $("continueBtn").addEventListener("click", goToPaymentStep);
-
-  // Copy ref
   $("copyRefBtn").addEventListener("click", copyRef);
 
-  // Esc to close
   document.addEventListener("keydown", function(e){
     if (e.key === "Escape" && $("buyModal").classList.contains("open")){
       closeBuyModal();
     }
   });
 
-  // Auth (optional — guest checkout works)
+  // Wait for auth to resolve before loading event (so sign-in note is accurate)
   auth.onAuthStateChanged(function(user){
     currentUser = user;
+    authReady = true;
+    updateSigninNote();
+    if (!eventData){
+      loadEvent();
+    }
   });
-
-  // Load the event
-  loadEvent();
 });
 
 window.addEventListener("beforeunload", function(){
@@ -1124,4 +1151,4 @@ window.addEventListener("beforeunload", function(){
 })();
 </script>
 </body>
-        </html>
+  </html>
