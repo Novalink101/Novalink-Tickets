@@ -147,6 +147,10 @@ img{max-width:100%;display:block}
 .field label{display:block;font-size:11px;font-weight:900;color:var(--tx2);text-transform:uppercase;letter-spacing:0.06em;margin-bottom:6px}
 .field input{width:100%;padding:12px 14px;background:var(--sf2);border:1px solid var(--bd2);border-radius:10px;color:var(--tx);font-size:15px;font-family:inherit;transition:all 0.15s var(--ease)}
 .field input:focus{outline:none;border-color:var(--cy);background:#fff;box-shadow:0 0 0 3px rgba(0,255,255,0.15)}
+.field input.error{border-color:var(--dg);background:var(--dgf);box-shadow:0 0 0 3px rgba(220,38,38,0.12)}
+.field input.error:focus{border-color:var(--dg);box-shadow:0 0 0 3px rgba(220,38,38,0.2)}
+.field-error-msg{font-size:11.5px;color:var(--dg);font-weight:700;margin-top:5px;display:none;line-height:1.4}
+.field-error-msg.show{display:block}
 
 .step-indicator{display:flex;gap:6px;margin-bottom:22px}
 .step-dot{flex:1;height:4px;border-radius:99px;background:var(--bd);transition:background 0.3s ease}
@@ -154,17 +158,20 @@ img{max-width:100%;display:block}
 .step-dot.done{background:var(--sv)}
 
 /* GUEST NAMES LIST */
-.guest-list{display:flex;flex-direction:column;gap:10px}
+.guest-list{display:flex;flex-direction:column;gap:12px}
 .guest-input-row{display:flex;gap:10px;align-items:flex-start}
 .guest-input-row .badge{
   width:34px;height:44px;border-radius:10px;background:var(--sf2);border:1px solid var(--bd);
   display:flex;align-items:center;justify-content:center;flex-shrink:0;
   font-family:var(--mono);font-weight:900;font-size:13px;color:var(--cy3);
+  transition:border-color 0.15s ease, background 0.15s ease;
 }
+.guest-input-row .badge.lead{background:var(--cyf);border-color:var(--cy);color:var(--cy3)}
+.guest-input-row .badge.error{background:var(--dgf);border-color:var(--dg);color:var(--dg)}
 .guest-input-row .field{margin-bottom:0;flex:1;min-width:0}
 .guest-input-row .field input{font-size:14px;padding:11px 12px}
-.guest-input-row .badge.lead{background:var(--cyf);border-color:var(--cy);color:var(--cy3)}
-.guest-label{font-size:10.5px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px}
+.guest-label{font-size:10.5px;color:var(--mut);font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-bottom:6px;line-height:1.3}
+.guest-label .required-star{color:var(--dg);font-weight:900}
 
 /* PAYMENT STEP */
 .ref-box{background:linear-gradient(135deg,#0a0f14,#1a2129);color:#fff;border-radius:14px;padding:18px 20px;margin-bottom:18px;position:relative;overflow:hidden}
@@ -342,13 +349,14 @@ img{max-width:100%;display:block}
         <span class="step-dot"></span>
       </div>
       <h2>Who's coming?</h2>
-      <p class="subtitle" id="guestSubtitle">Enter the name for each ticket. You can change these later.</p>
+      <p class="subtitle" id="guestSubtitle">Enter the name for each ticket.</p>
 
       <div class="guest-list" id="guestList"></div>
 
-      <div class="field" style="margin-top:16px;">
-        <label for="guestEmailInput">Your email (for confirmation)</label>
+      <div class="field" style="margin-top:16px;" id="emailField">
+        <label for="guestEmailInput">Your email (for confirmation) <span class="required-star">*</span></label>
         <input type="email" id="guestEmailInput" placeholder="e.g., jane@example.com" autocomplete="email" />
+        <div class="field-error-msg" id="emailError">Please enter a valid email address.</div>
       </div>
 
       <div class="amount-box">
@@ -457,7 +465,7 @@ var PENDING_TTL_MS = 24 * 60 * 60 * 1000;
 var MAX_QTY = 5;
 
 /* ══════════════════════════════════════════════════════════════
-   EMAILJS — not required for reservation (kept for future use)
+   EMAILJS — not required for reservation
    ══════════════════════════════════════════════════════════════ */
 var EMAILJS_PUBLIC_KEY = "";
 var EMAILJS_SERVICE_ID = "";
@@ -577,10 +585,17 @@ function getAgeLabel(v){
 function firstNameOf(user){
   if (!user) return "";
   if (user.displayName && user.displayName.trim()){
-    return user.displayName.trim().split(/\s+/)[0];
+    return user.displayName.trim();
   }
   if (user.email) return user.email.split("@")[0];
   return "";
+}
+
+/* ── Detect "single word" — needs at least two words ── */
+function hasTwoWords(name){
+  if (!name) return false;
+  var parts = String(name).trim().split(/\s+/).filter(Boolean);
+  return parts.length >= 2;
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -777,13 +792,12 @@ function updateQtyUI(){
   $("qtyPlus").disabled = qty >= MAX_QTY;
   updateSidebarTotal();
 
-  // Resize the guest name array to match qty
   while (guestNames.length < qty) guestNames.push("");
   if (guestNames.length > qty) guestNames = guestNames.slice(0, qty);
 }
 
 /* ══════════════════════════════════════════════════════════════
-   BUY MODAL — SIGN-IN REQUIRED
+   BUY MODAL
    ══════════════════════════════════════════════════════════════ */
 function openBuyModal(){
   if (!currentUser){
@@ -801,13 +815,11 @@ function openBuyModal(){
   var total = price * qty;
   $("modalAmount").textContent = total > 0 ? formatMoney(total) : "Free";
 
-  // Prefill first guest name from user display name
+  // Prefill the first guest name from the signed-in user (full name if we have it)
   var lead = firstNameOf(currentUser) || "";
-  // Only prefill the first slot if it's empty
   if (!guestNames[0] && lead){
     guestNames[0] = lead;
   }
-  // Ensure array length matches qty
   while (guestNames.length < qty) guestNames.push("");
   if (guestNames.length > qty) guestNames = guestNames.slice(0, qty);
 
@@ -816,13 +828,14 @@ function openBuyModal(){
   // Prefill email
   var ge = $("guestEmailInput");
   if (!ge.value && currentUser.email) ge.value = currentUser.email;
+  clearFieldError("guestEmailInput", "emailError");
 
   // Update subtitle
   var sub = $("guestSubtitle");
   if (qty === 1){
     sub.textContent = "Enter the name for your ticket.";
   } else {
-    sub.textContent = "Enter a name for each of the " + qty + " tickets.";
+    sub.textContent = "Enter a name for each of the " + qty + " tickets. The first ticket must be in your own name.";
   }
 
   $("step1").style.display = "block";
@@ -841,6 +854,27 @@ function closeBuyModal(){
   }
 }
 
+/* ── Field-level validation helpers ── */
+function setFieldError(inputId, errorId, msg){
+  var inp = $(inputId);
+  var err = $(errorId);
+  if (inp) inp.classList.add("error");
+  if (err){
+    if (msg) err.textContent = msg;
+    err.classList.add("show");
+  }
+}
+function clearFieldError(inputId, errorId){
+  var inp = $(inputId);
+  var err = $(errorId);
+  if (inp) inp.classList.remove("error");
+  if (err) err.classList.remove("show");
+}
+function setGuestBadgeError(idx, hasError){
+  var badge = document.querySelector('.guest-input-row .badge[data-badge-idx="' + idx + '"]');
+  if (badge) badge.classList.toggle("error", !!hasError);
+}
+
 /* ── Guest name inputs ── */
 function renderGuestInputs(){
   var wrap = $("guestList");
@@ -854,70 +888,152 @@ function renderGuestInputs(){
     var badgeCls = "badge" + (isLead ? " lead" : "");
     var badgeLabel = isLead ? "You" : String(i + 1);
 
+    var labelText;
+    var placeholder;
+    var requiredStar = '<span class="required-star"> *</span>';
+
+    if (isLead){
+      labelText = 'Your name and surname' + requiredStar;
+      placeholder = 'e.g., Nathan Nyl';
+    } else {
+      labelText = 'Ticket ' + (i + 1) + ' — guest name and surname' + requiredStar;
+      placeholder = 'e.g., John Doe';
+    }
+
     row.innerHTML =
-      '<div class="' + badgeCls + '">' + esc(badgeLabel) + '</div>' +
+      '<div class="' + badgeCls + '" data-badge-idx="' + i + '">' + esc(badgeLabel) + '</div>' +
       '<div class="field">' +
-        '<div class="guest-label">' + (isLead ? 'Your name' : 'Ticket ' + (i + 1) + ' — guest name') + '</div>' +
+        '<div class="guest-label">' + labelText + '</div>' +
         '<input type="text" class="guest-name-input" data-idx="' + i + '" ' +
-          'placeholder="' + (isLead ? 'e.g., Jane Smith' : 'e.g., John Doe') + '" ' +
+          'placeholder="' + esc(placeholder) + '" ' +
           'value="' + esc(val) + '" ' +
+          'maxlength="60" ' +
           'autocomplete="' + (isLead ? 'name' : 'off') + '" />' +
+        '<div class="field-error-msg" data-err-idx="' + i + '"></div>' +
       '</div>';
 
     wrap.appendChild(row);
   });
 
-  // Wire inputs
+  // Wire inputs — clear errors on typing
   wrap.querySelectorAll(".guest-name-input").forEach(function(inp){
     inp.addEventListener("input", function(){
       var idx = parseInt(this.dataset.idx, 10);
       guestNames[idx] = this.value;
+      // Clear error state for this field
+      this.classList.remove("error");
+      var errEl = document.querySelector('.field-error-msg[data-err-idx="' + idx + '"]');
+      if (errEl) errEl.classList.remove("show");
+      setGuestBadgeError(idx, false);
     });
   });
 
   refreshIcons();
 }
 
+/* ── Validate guest form — returns true if all good ── */
+function validateGuestForm(){
+  var ok = true;
+  var firstBadInput = null;
+
+  // Clear all previous errors
+  for (var i = 0; i < guestNames.length; i++){
+    clearFieldError("guest-name-" + i, "err-guest-" + i); // no-op but safe
+    var inp = document.querySelector('.guest-name-input[data-idx="' + i + '"]');
+    var errEl = document.querySelector('.field-error-msg[data-err-idx="' + i + '"]');
+    if (inp) inp.classList.remove("error");
+    if (errEl) errEl.classList.remove("show");
+    setGuestBadgeError(i, false);
+  }
+  clearFieldError("guestEmailInput", "emailError");
+
+  // Validate guest names
+  for (var i = 0; i < guestNames.length; i++){
+    var raw = (guestNames[i] || "").trim();
+    var inp = document.querySelector('.guest-name-input[data-idx="' + i + '"]');
+    var errEl = document.querySelector('.field-error-msg[data-err-idx="' + i + '"]');
+
+    if (!raw){
+      if (inp) inp.classList.add("error");
+      if (errEl){
+        errEl.textContent = i === 0
+          ? "Please enter your name and surname."
+          : "Please enter a name for ticket " + (i + 1) + ".";
+        errEl.classList.add("show");
+      }
+      setGuestBadgeError(i, true);
+      ok = false;
+      if (!firstBadInput) firstBadInput = inp;
+      continue;
+    }
+
+    if (raw.length > 60){
+      if (inp) inp.classList.add("error");
+      if (errEl){
+        errEl.textContent = "Must be 60 characters or fewer.";
+        errEl.classList.add("show");
+      }
+      setGuestBadgeError(i, true);
+      ok = false;
+      if (!firstBadInput) firstBadInput = inp;
+      continue;
+    }
+
+    // First ticket must have at least two words (name + surname)
+    if (i === 0 && !hasTwoWords(raw)){
+      if (inp) inp.classList.add("error");
+      if (errEl){
+        errEl.textContent = "Please enter your name AND surname (two words).";
+        errEl.classList.add("show");
+      }
+      setGuestBadgeError(i, true);
+      ok = false;
+      if (!firstBadInput) firstBadInput = inp;
+      continue;
+    }
+  }
+
+  // Validate email
+  var email = ($("guestEmailInput").value || "").trim();
+  if (!email || email.indexOf("@") === -1 || email.indexOf(".") === -1){
+    setFieldError("guestEmailInput", "emailError", "Please enter a valid email address.");
+    ok = false;
+    if (!firstBadInput) firstBadInput = $("guestEmailInput");
+  }
+
+  // Focus + scroll to first bad field
+  if (firstBadInput){
+    setTimeout(function(){
+      try { firstBadInput.focus(); } catch(e){}
+      try { firstBadInput.scrollIntoView({ behavior: "smooth", block: "center" }); } catch(e){}
+    }, 50);
+  }
+
+  return ok;
+}
+
 /* ══════════════════════════════════════════════════════════════
-   CREATE PENDING TICKET — signed-in only
-   One ticket per guest name.
+   CREATE PENDING TICKETS — signed-in only
    ══════════════════════════════════════════════════════════════ */
 async function createPendingTickets(){
   if (!currentUser){
     throw new Error("Sign in required");
   }
+  if (!validateGuestForm()){
+    throw new Error("__validation__");
+  }
 
   var buyerEmail = ($("guestEmailInput").value || "").trim();
-  if (!buyerEmail || buyerEmail.indexOf("@") === -1){
-    throw new Error("Please enter a valid email address.");
-  }
-
-  // Validate all guest names
-  for (var i = 0; i < guestNames.length; i++){
-    var nm = (guestNames[i] || "").trim();
-    if (!nm){
-      throw new Error(i === 0
-        ? "Please enter your name."
-        : "Please enter a name for ticket " + (i + 1) + ".");
-    }
-    if (nm.length > 60){
-      throw new Error("Guest names must be 60 characters or fewer.");
-    }
-  }
-
   var price = getTierPrice(selectedTier);
   var totalAmount = price * qty;
   var nowMs = Date.now();
   var expiresAtMs = nowMs + PENDING_TTL_MS;
   var buyerUid = currentUser.uid;
 
-  // Shared group ID so all tickets from this purchase are linked
-  var groupId = db.collection("_ids").doc().id || (Date.now().toString(36) + Math.random().toString(36).slice(2, 8));
+  var groupId = (Date.now().toString(36) + Math.random().toString(36).slice(2, 8));
   var paymentLink = getPaymentLink(selectedTier) || "";
 
   var createdTickets = [];
-
-  // Write one ticket per guest name — sequential so we can fail cleanly
   var batch = db.batch();
   var eventRef = db.collection(EVENTS).doc(eventId);
 
@@ -974,7 +1090,6 @@ async function createPendingTickets(){
     throw new Error(err.message || "Could not save your reservation.");
   }
 
-  // The "primary" ticket is the first one — its reference is what buyers use
   var primary = createdTickets[0];
 
   return {
@@ -996,6 +1111,12 @@ async function createPendingTickets(){
    CONTINUE → RESERVE → SHOW PAYMENT STEP
    ══════════════════════════════════════════════════════════════ */
 async function goToPaymentStep(){
+  // Validate inline first
+  if (!validateGuestForm()){
+    showToast("Please fill in the highlighted fields.", "error", 2500);
+    return;
+  }
+
   var btn = $("continueBtn");
   var orig = btn.innerHTML;
   btn.disabled = true;
@@ -1006,6 +1127,13 @@ async function goToPaymentStep(){
   try {
     bundle = await createPendingTickets();
   } catch(err){
+    if (err.message === "__validation__"){
+      // already shown inline
+      btn.disabled = false;
+      btn.innerHTML = orig;
+      refreshIcons();
+      return;
+    }
     showToast(err.message || "Could not reserve your tickets.", "error", 4000);
     btn.disabled = false;
     btn.innerHTML = orig;
@@ -1015,7 +1143,6 @@ async function goToPaymentStep(){
 
   pendingTicket = bundle;
 
-  // Persist to sessionStorage for payment-success compatibility
   try {
     sessionStorage.setItem("novalink_pending_payment", JSON.stringify({
       eventId: eventId,
@@ -1030,7 +1157,6 @@ async function goToPaymentStep(){
     }));
   } catch(e){}
 
-  // Also persist each ticket to localStorage
   try {
     bundle.tickets.forEach(function(t){
       localStorage.setItem("novalink_ticket_" + t.ticketId, JSON.stringify({
@@ -1245,6 +1371,11 @@ document.addEventListener("DOMContentLoaded", function(){
   $("continueBtn").addEventListener("click", goToPaymentStep);
   $("copyRefBtn").addEventListener("click", copyRef);
 
+  // Email field — clear error on typing
+  $("guestEmailInput").addEventListener("input", function(){
+    clearFieldError("guestEmailInput", "emailError");
+  });
+
   document.addEventListener("keydown", function(e){
     if (e.key === "Escape" && $("buyModal").classList.contains("open")){
       closeBuyModal();
@@ -1267,4 +1398,4 @@ window.addEventListener("beforeunload", function(){
 })();
 </script>
 </body>
-</html>
+  </html>
