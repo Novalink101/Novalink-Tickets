@@ -1,0 +1,1531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#0a0f14" />
+<title>Payment Control · Novalink Admin</title>
+<script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<style>
+:root{
+  --cy:#00FFFF;--cy2:#00CCCC;--cy3:#009999;--cyf:#e6ffff;
+  --bg:#f6f8fb;--sf:#ffffff;--sf2:#f1f4f8;
+  --bd:#e4e9f0;--bd2:#d3dbe5;
+  --tx:#0a0f14;--tx2:#2b3644;--mut:#6b7787;
+  --rd:14px;--font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --dg:#dc2626;--dgf:#fef2f2;
+  --warn:#f59e0b;--warnf:#fffbeb;--warnbd:#fde68a;
+  --sv:#059669;--svf:#ecfdf5;--svbd:#a7f3d0;
+  --nv:#1e2f4d;--ink:#0a0f14;
+  --ease:cubic-bezier(0.25,0.8,0.25,1);
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html,body{-webkit-text-size-adjust:100%}
+body{font-family:var(--font);background:var(--bg);color:var(--tx);line-height:1.6;min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
+h1,h2,h3{line-height:1.15;font-weight:700}
+a{color:inherit;text-decoration:none}
+button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation}
+input,select,textarea{font-family:inherit;font-size:14px}
+
+/* HEADER */
+.site-header{background:var(--sf);border-bottom:1px solid var(--bd);padding:12px 0;position:sticky;top:0;z-index:40}
+.hdr{max-width:1480px;margin:0 auto;padding:0 20px;display:flex;align-items:center;gap:16px;justify-content:space-between;flex-wrap:wrap}
+.logo{display:inline-flex;align-items:center;gap:11px;flex-shrink:0;color:var(--nv)}
+.logo svg{width:26px;height:32px;display:block}
+.logo b{font-weight:800;font-size:1.15rem;letter-spacing:-.01em}
+.admin-tag{display:inline-flex;align-items:center;gap:6px;background:var(--ink);color:var(--cy);font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;padding:6px 11px;border-radius:99px;margin-left:8px}
+.admin-tag i{width:12px;height:12px}
+.hdr-actions{display:flex;align-items:center;gap:8px;flex-shrink:0;flex-wrap:wrap}
+.hdr-btn{display:inline-flex;align-items:center;gap:7px;padding:9px 14px;border-radius:99px;background:var(--sf2);border:1px solid var(--bd);color:var(--tx);font-size:12.5px;font-weight:800;transition:.15s;white-space:nowrap;text-decoration:none}
+.hdr-btn:hover{border-color:var(--cy);background:#fff;box-shadow:0 0 0 3px rgba(0,255,255,.14)}
+.hdr-btn i{width:14px;height:14px}
+
+/* MAIN */
+main{flex:1;max-width:1480px;margin:0 auto;width:100%;padding:22px 20px 80px}
+@media (max-width:560px){main{padding:14px 14px 60px}}
+
+/* ACCESS SCREENS */
+.access-screen{max-width:520px;margin:80px auto;background:var(--sf);border:1px solid var(--bd);border-radius:18px;padding:44px 32px;text-align:center;box-shadow:0 8px 24px rgba(15,23,42,.06)}
+.access-screen .ico{width:56px;height:56px;border-radius:16px;background:var(--dgf);display:flex;align-items:center;justify-content:center;margin:0 auto 16px;color:var(--dg)}
+.access-screen .ico i{width:28px;height:28px}
+.access-screen h2{font-size:1.3rem;font-weight:900;color:var(--nv);margin-bottom:8px}
+.access-screen p{font-size:13.5px;color:var(--mut);margin-bottom:22px;line-height:1.6}
+.access-screen .actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.access-screen.loading .ico{background:var(--cyf);color:var(--cy3)}
+.access-screen.loading .ico i{animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* STATS BAR */
+.stats-bar{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:22px}
+@media (max-width:1024px){.stats-bar{grid-template-columns:repeat(3,1fr)}}
+@media (max-width:640px){.stats-bar{grid-template-columns:repeat(2,1fr);gap:10px}}
+.stat-card{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:16px 18px;position:relative;overflow:hidden;box-shadow:0 4px 14px rgba(15,23,42,.04)}
+.stat-card::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--cy);border-radius:4px 0 0 4px}
+.stat-card.pending::before{background:var(--warn)}
+.stat-card.paid::before{background:var(--sv)}
+.stat-card.expired::before{background:var(--mut)}
+.stat-card.revenue::before{background:var(--cy3)}
+.stat-label{font-size:10.5px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--mut);margin-bottom:6px;display:flex;align-items:center;gap:6px}
+.stat-label i{width:13px;height:13px;color:var(--cy3)}
+.stat-value{font-size:1.6rem;font-weight:900;font-family:var(--mono);letter-spacing:-.02em;line-height:1.1;color:var(--tx);word-break:break-word}
+.stat-value.pending{color:var(--warn)}
+.stat-value.paid{color:var(--sv)}
+.stat-value.expired{color:var(--mut)}
+.stat-sub{font-size:11px;color:var(--mut);font-weight:600;margin-top:4px}
+
+/* CONTROLS BAR */
+.controls-bar{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:14px;margin-bottom:22px;display:flex;gap:10px;flex-wrap:wrap;align-items:center;box-shadow:0 4px 14px rgba(15,23,42,.04)}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:7px;padding:10px 16px;border-radius:10px;font-weight:800;font-size:13px;border:1px solid transparent;transition:.15s;white-space:nowrap;font-family:inherit;text-decoration:none;cursor:pointer;min-height:42px}
+.btn i{width:15px;height:15px;flex-shrink:0}
+.btn-accent{background:var(--cy);color:#04161c}
+.btn-accent:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 6px 18px rgba(0,255,255,.35)}
+.btn-ghost{background:var(--sf);color:var(--tx2);border-color:var(--bd2)}
+.btn-ghost:hover:not(:disabled){border-color:var(--cy);color:var(--cy3)}
+.btn-danger{background:var(--dgf);color:var(--dg);border-color:#fecaca}
+.btn-danger:hover:not(:disabled){background:var(--dg);color:#fff;border-color:var(--dg)}
+.btn-success{background:var(--svf);color:var(--sv);border-color:var(--svbd)}
+.btn-success:hover:not(:disabled){background:var(--sv);color:#fff;border-color:var(--sv)}
+.btn-sm{padding:7px 12px;font-size:12px;min-height:34px;border-radius:9px}
+.btn-sm i{width:13px;height:13px}
+.btn:disabled{opacity:.45;cursor:not-allowed;transform:none!important}
+
+/* FILTERS */
+.filters{background:var(--sf);border:1px solid var(--bd);border-radius:14px;padding:16px;margin-bottom:18px;box-shadow:0 4px 14px rgba(15,23,42,.04)}
+.filter-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px;border-bottom:1px solid var(--bd);padding-bottom:14px}
+.filter-tab{padding:8px 14px;border-radius:99px;font-size:12.5px;font-weight:800;color:var(--mut);background:var(--sf2);border:1px solid var(--bd);transition:.15s;display:inline-flex;align-items:center;gap:7px;font-family:inherit}
+.filter-tab:hover{border-color:var(--cy)}
+.filter-tab.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+.filter-tab .cnt{background:rgba(0,0,0,.08);padding:2px 7px;border-radius:99px;font-size:10px;font-weight:900;font-family:var(--mono)}
+.filter-tab.active .cnt{background:rgba(255,255,255,.2)}
+.filter-row{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:12px}
+@media (max-width:640px){.filter-row{grid-template-columns:1fr}}
+.filter-field{display:flex;flex-direction:column;gap:5px;min-width:0}
+.filter-field label{font-size:10px;font-weight:900;color:var(--tx2);text-transform:uppercase;letter-spacing:.06em}
+.filter-field input,.filter-field select{padding:10px 12px;background:var(--sf2);border:1px solid var(--bd2);border-radius:10px;color:var(--tx);font-size:13.5px;font-weight:600;min-width:0;width:100%}
+.filter-field input:focus,.filter-field select:focus{outline:none;border-color:var(--cy);background:#fff;box-shadow:0 0 0 3px rgba(0,255,255,.15)}
+.filter-field select{appearance:none;-webkit-appearance:none;padding-right:34px;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7787' stroke-width='3'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 12px center;background-size:12px;cursor:pointer}
+
+/* TICKET LIST */
+.ticket-list{display:flex;flex-direction:column;gap:10px}
+.ticket-row{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;transition:.15s;border-left:4px solid var(--bd2);display:grid;grid-template-columns:auto 1fr auto;gap:16px;align-items:center}
+@media (max-width:768px){.ticket-row{grid-template-columns:auto 1fr;gap:12px}}
+.ticket-row:hover{border-color:var(--cy);box-shadow:0 6px 20px rgba(6,182,212,.08)}
+.ticket-row.pending{border-left-color:var(--warn);background:linear-gradient(90deg,rgba(245,158,11,.04),transparent 15%)}
+.ticket-row.valid{border-left-color:var(--sv);background:linear-gradient(90deg,rgba(16,185,129,.04),transparent 15%)}
+.ticket-row.expired{border-left-color:var(--mut);opacity:.75}
+.ticket-row.cancelled{border-left-color:var(--dg);opacity:.75}
+
+/* TICKET TOGGLE */
+.toggle-btn{width:52px;height:30px;border-radius:99px;background:#cbd5e1;border:none;position:relative;cursor:pointer;transition:.25s;flex-shrink:0}
+.toggle-btn::after{content:'';position:absolute;top:3px;left:3px;width:24px;height:24px;border-radius:50%;background:#fff;transition:.25s;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.toggle-btn.on{background:var(--sv)}
+.toggle-btn.on::after{left:25px}
+.toggle-btn:disabled{opacity:.5;cursor:not-allowed}
+.toggle-btn:hover:not(:disabled){box-shadow:0 0 0 4px rgba(0,0,0,.06)}
+
+/* TICKET INFO */
+.ticket-info{min-width:0;display:flex;flex-direction:column;gap:4px}
+.ticket-ref{font-family:var(--mono);font-size:13px;font-weight:900;color:var(--cy3);letter-spacing:.02em;word-break:break-all}
+.ticket-guest{font-size:14.5px;font-weight:800;color:var(--tx);word-break:break-word}
+.ticket-meta{display:flex;gap:12px;flex-wrap:wrap;font-size:11.5px;color:var(--mut);font-weight:600}
+.ticket-meta span{display:inline-flex;align-items:center;gap:5px}
+.ticket-meta i{width:12px;height:12px}
+.ticket-meta strong{color:var(--tx2);font-weight:800}
+.ticket-badges{display:flex;gap:6px;flex-wrap:wrap;margin-top:2px}
+.ticket-badge{font-size:9.5px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;padding:3px 8px;border-radius:6px}
+.ticket-badge.pending{background:var(--warnf);color:#92400e;border:1px solid var(--warnbd)}
+.ticket-badge.paid{background:var(--svf);color:#065f46;border:1px solid var(--svbd)}
+.ticket-badge.expired{background:var(--sf2);color:var(--mut);border:1px solid var(--bd2)}
+.ticket-badge.cancelled{background:var(--dgf);color:#991b1b;border:1px solid #fecaca}
+.ticket-badge.tier{background:var(--cyf);color:var(--cy3);border:1px solid var(--cy)}
+
+/* TICKET ACTIONS */
+.ticket-actions{display:flex;gap:6px;flex-wrap:wrap;justify-content:flex-end;flex-shrink:0}
+@media (max-width:768px){.ticket-actions{grid-column:1/-1;justify-content:flex-start;padding-top:8px;border-top:1px dashed var(--bd)}}
+
+/* EMPTY STATE */
+.empty-list{text-align:center;padding:60px 20px;color:var(--mut);background:var(--sf);border:1px solid var(--bd);border-radius:14px}
+.empty-list i{width:44px;height:44px;color:var(--bd2);margin:0 auto 12px;display:block}
+.empty-list h3{font-size:15px;font-weight:800;color:var(--tx2);margin-bottom:4px}
+.empty-list p{font-size:13px;line-height:1.55;max-width:380px;margin:0 auto}
+
+/* LOADING */
+.loading-list{text-align:center;padding:60px 20px;color:var(--mut)}
+.loading-list i{width:32px;height:32px;color:var(--cy3);animation:spin 1s linear infinite;display:block;margin:0 auto 12px}
+
+/* MODAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(10,15,20,.6);backdrop-filter:blur(8px);display:none;align-items:flex-start;justify-content:center;z-index:100;padding:24px 20px;overflow-y:auto}
+.modal-overlay.open{display:flex}
+.modal{background:var(--sf);border:1px solid var(--bd);border-radius:18px;max-width:640px;width:100%;padding:28px 26px;position:relative;margin:auto;box-shadow:0 24px 60px rgba(10,15,20,.25)}
+.modal-close{position:absolute;top:14px;right:14px;background:var(--sf2);border:1px solid var(--bd);color:var(--tx2);padding:6px;border-radius:10px;display:flex;align-items:center;justify-content:center}
+.modal-close:hover{background:var(--dgf);color:var(--dg)}
+.modal-close i{width:15px;height:15px}
+.modal h3{font-size:1.25rem;margin-bottom:6px;color:var(--nv)}
+.modal .modal-sub{color:var(--mut);font-size:13.5px;margin-bottom:20px;line-height:1.5}
+.modal .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:20px}
+.modal .actions .btn{flex:1;min-width:120px}
+
+/* DRAFT MESSAGE BOX */
+.draft-box{background:var(--sf2);border:1px solid var(--bd);border-radius:12px;padding:16px;margin-top:14px;position:relative}
+.draft-label{font-size:10.5px;font-weight:900;color:var(--cy3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:8px;display:flex;align-items:center;gap:7px}
+.draft-label i{width:14px;height:14px}
+.draft-text{font-family:var(--mono);font-size:12.5px;line-height:1.7;color:var(--tx2);white-space:pre-wrap;word-break:break-word;background:#fff;border:1px solid var(--bd);border-radius:8px;padding:14px;max-height:340px;overflow-y:auto}
+.draft-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:12px}
+.draft-actions .btn{flex:1;min-width:140px}
+
+/* BULK PASTE */
+.bulk-textarea{width:100%;min-height:240px;padding:14px;background:#fff;border:1px solid var(--bd2);border-radius:10px;font-family:var(--mono);font-size:12.5px;line-height:1.6;resize:vertical;color:var(--tx)}
+.bulk-textarea:focus{outline:none;border-color:var(--cy);box-shadow:0 0 0 3px rgba(0,255,255,.15)}
+.bulk-results{margin-top:14px;padding:14px;background:var(--sf2);border-radius:10px;border:1px solid var(--bd);display:none}
+.bulk-results.show{display:block}
+.bulk-result-row{display:flex;justify-content:space-between;align-items:center;padding:6px 0;font-size:13px;border-bottom:1px dashed var(--bd)}
+.bulk-result-row:last-child{border-bottom:none}
+.bulk-result-row .lbl{font-weight:700;color:var(--tx2)}
+.bulk-result-row .val{font-family:var(--mono);font-weight:900}
+.bulk-result-row .val.ok{color:var(--sv)}
+.bulk-result-row .val.warn{color:var(--warn)}
+.bulk-result-row .val.err{color:var(--dg)}
+
+/* TOAST */
+#toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,18px);background:var(--ink);color:var(--cy);font-size:13px;font-weight:800;padding:13px 22px;border-radius:99px;box-shadow:0 14px 34px rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:.22s;z-index:200;max-width:90vw;text-align:center;display:flex;align-items:center;gap:9px;font-family:var(--font)}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#toast svg{width:15px;height:15px;flex-shrink:0}
+#toast.success{background:#065f46;color:#d1fae5}
+#toast.error{background:#991b1b;color:#fef2f2}
+
+::-webkit-scrollbar{width:10px;height:10px}
+::-webkit-scrollbar-thumb{background:#cbd5e1;border-radius:6px;border:2px solid var(--bg)}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="hdr">
+    <a href="index.html" class="logo">
+      <svg viewBox="0 0 60 74"><path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/><path fill="#00FFFF" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/></svg>
+      <b>NOVALINK</b>
+      <span class="admin-tag"><i data-lucide="shield-check"></i> Admin</span>
+    </a>
+    <div class="hdr-actions">
+      <a href="admin-event-review.html" class="hdr-btn"><i data-lucide="clipboard-check"></i><span>Event review</span></a>
+      <a href="admin-channels.html" class="hdr-btn"><i data-lucide="tv"></i><span>Channels</span></a>
+      <a href="index.html" class="hdr-btn"><i data-lucide="home"></i><span>Home</span></a>
+      <button class="hdr-btn" id="signOutBtn" type="button"><i data-lucide="log-out"></i><span>Sign out</span></button>
+    </div>
+  </div>
+</header>
+
+<main>
+
+  <!-- ACCESS GATE -->
+  <div id="accessGate">
+    <div class="access-screen loading" id="accessLoading">
+      <div class="ico"><i data-lucide="loader-2"></i></div>
+      <h2>Checking access…</h2>
+      <p>Verifying admin permissions.</p>
+    </div>
+
+    <div class="access-screen" id="accessDenied" style="display:none">
+      <div class="ico"><i data-lucide="shield-alert"></i></div>
+      <h2>Admin access only</h2>
+      <p>This page is restricted to Novalink administrators. Event creators cannot see this dashboard.</p>
+      <div class="actions">
+        <a href="index.html" class="btn btn-accent"><i data-lucide="home"></i> Back to home</a>
+      </div>
+    </div>
+
+    <div class="access-screen" id="accessSignedOut" style="display:none">
+      <div class="ico"><i data-lucide="lock"></i></div>
+      <h2>Sign in required</h2>
+      <p>Sign in with your admin account to access payment control.</p>
+      <div class="actions">
+        <a href="index.html#signin" class="btn btn-accent"><i data-lucide="log-in"></i> Sign in</a>
+      </div>
+    </div>
+  </div>
+
+  <!-- MAIN CONTENT -->
+  <div id="adminContent" style="display:none">
+
+    <!-- STATS -->
+    <div class="stats-bar">
+      <div class="stat-card pending">
+        <div class="stat-label"><i data-lucide="clock"></i> Pending</div>
+        <div class="stat-value pending" id="statPending">0</div>
+        <div class="stat-sub" id="statPendingSub">Awaiting payment</div>
+      </div>
+      <div class="stat-card paid">
+        <div class="stat-label"><i data-lucide="check-circle"></i> Paid</div>
+        <div class="stat-value paid" id="statPaid">0</div>
+        <div class="stat-sub" id="statPaidSub">Confirmed</div>
+      </div>
+      <div class="stat-card expired">
+        <div class="stat-label"><i data-lucide="x-circle"></i> Expired</div>
+        <div class="stat-value expired" id="statExpired">0</div>
+        <div class="stat-sub" id="statExpiredSub">Recycled seats</div>
+      </div>
+      <div class="stat-card revenue">
+        <div class="stat-label"><i data-lucide="trending-up"></i> Revenue</div>
+        <div class="stat-value" id="statRevenue">R0</div>
+        <div class="stat-sub" id="statRevenueSub">Confirmed only</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-label"><i data-lucide="armchair"></i> Seats</div>
+        <div class="stat-value" id="statSeats">0</div>
+        <div class="stat-sub" id="statSeatsSub">Available</div>
+      </div>
+    </div>
+
+    <!-- CONTROLS -->
+    <div class="controls-bar">
+      <button class="btn btn-accent" id="bulkPasteBtn" type="button">
+        <i data-lucide="clipboard-paste"></i> Bulk paste Yoco refs
+      </button>
+      <button class="btn btn-ghost" id="runSweepBtn" type="button">
+        <i data-lucide="refresh-cw"></i> Run expiry sweep
+      </button>
+      <button class="btn btn-ghost" id="exportCsvBtn" type="button">
+        <i data-lucide="download"></i> Export CSV
+      </button>
+      <button class="btn btn-ghost" id="refreshBtn" type="button" style="margin-left:auto;">
+        <i data-lucide="refresh-cw"></i> Refresh
+      </button>
+    </div>
+
+    <!-- FILTERS -->
+    <div class="filters">
+      <div class="filter-tabs" id="filterTabs">
+        <button class="filter-tab active" data-filter="all" type="button">
+          All <span class="cnt" id="cntAll">0</span>
+        </button>
+        <button class="filter-tab" data-filter="pending" type="button">
+          <i data-lucide="clock" style="width:13px;height:13px;"></i>
+          Pending <span class="cnt" id="cntPending">0</span>
+        </button>
+        <button class="filter-tab" data-filter="valid" type="button">
+          <i data-lucide="check-circle" style="width:13px;height:13px;"></i>
+          Paid <span class="cnt" id="cntValid">0</span>
+        </button>
+        <button class="filter-tab" data-filter="expired" type="button">
+          Expired <span class="cnt" id="cntExpired">0</span>
+        </button>
+        <button class="filter-tab" data-filter="cancelled" type="button">
+          Cancelled <span class="cnt" id="cntCancelled">0</span>
+        </button>
+      </div>
+      <div class="filter-row">
+        <div class="filter-field">
+          <label for="eventFilter">Event</label>
+          <select id="eventFilter"><option value="">All events</option></select>
+        </div>
+        <div class="filter-field">
+          <label for="searchInput">Search</label>
+          <input type="text" id="searchInput" placeholder="Reference, guest name, or seat…" autocomplete="off" spellcheck="false" />
+        </div>
+      </div>
+    </div>
+
+    <!-- TICKET LIST -->
+    <div id="ticketListContainer">
+      <div class="loading-list" id="loadingList">
+        <i data-lucide="loader-2"></i>
+        <p>Loading tickets…</p>
+      </div>
+      <div class="ticket-list" id="ticketList" style="display:none;"></div>
+      <div class="empty-list" id="emptyList" style="display:none;">
+        <i data-lucide="inbox"></i>
+        <h3>No tickets here</h3>
+        <p id="emptyListMsg">Nothing matches the current filter.</p>
+      </div>
+    </div>
+
+  </div>
+</main>
+
+<!-- BULK PASTE MODAL -->
+<div class="modal-overlay" id="bulkModal">
+  <div class="modal">
+    <button class="modal-close" id="bulkClose" type="button"><i data-lucide="x"></i></button>
+    <h3>Bulk paste Yoco references</h3>
+    <p class="modal-sub">
+      Paste one reference per line. The system will match each one to a pending ticket.
+      Refs look like <code style="font-family:var(--mono);background:var(--sf2);padding:2px 6px;border-radius:5px;">NL-A3F9-K27C</code>
+    </p>
+    <textarea class="bulk-textarea" id="bulkTextarea" placeholder="NL-A3F9-K27C&#10;NL-B2E1-M44Q&#10;NL-C7K2-P89X&#10;…"></textarea>
+    <div class="bulk-results" id="bulkResults"></div>
+    <div class="actions">
+      <button class="btn btn-ghost" id="bulkCancel" type="button">Cancel</button>
+      <button class="btn btn-accent" id="bulkProcess" type="button">
+        <i data-lucide="check"></i> Match & mark paid
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- DRAFTED MESSAGE MODAL -->
+<div class="modal-overlay" id="draftModal">
+  <div class="modal">
+    <button class="modal-close" id="draftClose" type="button"><i data-lucide="x"></i></button>
+    <h3 id="draftTitle">Ticket confirmed</h3>
+    <p class="modal-sub" id="draftSub">Send this message to the buyer via WhatsApp.</p>
+
+    <div class="draft-box">
+      <div class="draft-label"><i data-lucide="message-circle"></i> Drafted message</div>
+      <div class="draft-text" id="draftText"></div>
+    </div>
+
+    <div class="draft-actions">
+      <button class="btn btn-accent" id="copyDraftBtn" type="button">
+        <i data-lucide="copy"></i> Copy message
+      </button>
+      <a class="btn btn-success" id="whatsappDraftBtn" href="#" target="_blank" rel="noopener">
+        <i data-lucide="message-circle"></i> Open WhatsApp
+      </a>
+    </div>
+
+    <div class="actions">
+      <button class="btn btn-ghost" id="draftDoneBtn" type="button">Done</button>
+    </div>
+  </div>
+</div>
+
+<div id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+
+/* ══════════════════════════════════════════════════════════════
+   CONFIG — CHANGE THESE
+   ══════════════════════════════════════════════════════════════ */
+var ADMIN_EMAILS = [
+  "nylnathan340@gmail.com",
+  "customerservicesnovalink@gmail.com"
+];
+
+var PLATFORM_WHATSAPP = "27696835184";     // ← UPDATE THIS with your real number
+var PLATFORM_NAME = "Novalink";
+var BASE_URL = window.location.origin + window.location.pathname.replace(/admin-payments\.html.*$/, "");
+if (BASE_URL.indexOf("/Novalink-Tickets/") === -1 && window.location.hostname.indexOf("github.io") !== -1) {
+  BASE_URL = window.location.origin + "/Novalink-Tickets/";
+}
+
+/* Draft message templates — {placeholders} are replaced at render time */
+var DRAFT_TEMPLATES = {
+  confirmed: [
+    "Hi {guest},",
+    "",
+    "Your payment of R{amount} for {event} has been confirmed.",
+    "",
+    "🎟 Ticket: {ref}",
+    "📍 Seat: {seat}",
+    "",
+    "View your ticket here:",
+    "{ticketUrl}",
+    "",
+    "Please save that link — it's your entry pass.",
+    "",
+    "See you there!",
+    "— " + PLATFORM_NAME
+  ].join("\n"),
+
+  reminder: [
+    "Hi {guest},",
+    "",
+    "Your seat for {event} is reserved but payment hasn't been received yet.",
+    "",
+    "💳 Pay here: {yocoLink}",
+    "📝 Reference: {ref}",
+    "⏰ Expires: {expires}",
+    "",
+    "Once paid, your ticket will be confirmed within minutes.",
+    "",
+    "— " + PLATFORM_NAME
+  ].join("\n"),
+
+  expired: [
+    "Hi {guest},",
+    "",
+    "Your reservation for {event} has expired because we haven't received payment.",
+    "",
+    "Your seat has been released to other buyers.",
+    "",
+    "If you still want a ticket, visit:",
+    "{eventUrl}",
+    "",
+    "— " + PLATFORM_NAME
+  ].join("\n"),
+
+  refund: [
+    "Hi {guest},",
+    "",
+    "Your ticket for {event} has been cancelled and your refund of R{amount} has been processed.",
+    "",
+    "Refunds can take 3–5 business days to reflect in your bank account.",
+    "",
+    "— " + PLATFORM_NAME
+  ].join("\n")
+};
+
+/* ══════════════════════════════════════════════════════════════
+   FIREBASE
+   ══════════════════════════════════════════════════════════════ */
+var firebaseConfig = {
+  apiKey: "AIzaSyDSnns131jOlBXAqKo6qy7lTW4Rij-1oWU",
+  authDomain: "novalink-864cf.firebaseapp.com",
+  projectId: "novalink-864cf",
+  storageBucket: "novalink-864cf.firebasestorage.app",
+  messagingSenderId: "602780280140",
+  appId: "1:602780280140:web:5d9ff2351e5a7d5e66dbe9"
+};
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+var db = firebase.firestore();
+var auth = firebase.auth();
+var EVENTS = "events";
+
+/* ══════════════════════════════════════════════════════════════
+   UTILITIES
+   ══════════════════════════════════════════════════════════════ */
+var $ = function(id){ return document.getElementById(id); };
+var esc = function(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); };
+var refreshIcons = function(){ if (window.lucide) lucide.createIcons(); };
+var icon = function(n){ return '<i data-lucide="'+n+'"></i>'; };
+var fmtR = function(n){
+  var v = Math.round(Number(n||0));
+  return 'R' + v.toLocaleString('en-ZA');
+};
+var fmtRshort = function(n){
+  var v = Math.round(Number(n||0));
+  if (Math.abs(v) >= 1000000) return 'R' + (v/1000000).toFixed(1) + 'M';
+  if (Math.abs(v) >= 10000) return 'R' + (v/1000).toFixed(0) + 'k';
+  return 'R' + v.toLocaleString('en-ZA');
+};
+
+function toast(msg, type, ms){
+  type = type || 'info'; ms = ms || 3200;
+  var t = $('toast');
+  var ic = type === 'error' ? 'alert-circle' : (type === 'success' ? 'check-circle' : 'info');
+  t.className = type;
+  t.innerHTML = icon(ic) + '<span>' + esc(msg) + '</span>';
+  refreshIcons();
+  requestAnimationFrame(function(){ t.classList.add('show'); });
+  clearTimeout(toast._t);
+  toast._t = setTimeout(function(){ t.classList.remove('show'); }, ms);
+}
+
+function isAdmin(user){
+  if (!user || !user.email) return false;
+  var e = String(user.email).toLowerCase().trim();
+  return ADMIN_EMAILS.some(function(a){ return a.toLowerCase() === e; });
+}
+
+/* Build ticket reference using same format as routing-engine.js */
+function shortId(id){
+  var s = String(id == null ? '' : id).replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+  if (!s) return '';
+  return s.length <= 4 ? s : s.slice(-4);
+}
+function buildTicketRef(eventId, ticketId){
+  var e = shortId(eventId), t = shortId(ticketId);
+  if (!e || !t) return 'NL-XXXXXX';
+  return 'NL-' + e + '-' + t;
+}
+
+/* Format remaining time as "18h 32m" or "45m 12s" */
+function formatRemaining(ms){
+  if (ms < 0) return 'expired';
+  var s = Math.floor(ms / 1000);
+  var h = Math.floor(s / 3600);
+  var m = Math.floor((s % 3600) / 60);
+  if (h > 0) return h + 'h ' + m + 'm left';
+  var sec = s % 60;
+  if (m > 0) return m + 'm ' + sec + 's left';
+  return sec + 's left';
+}
+
+/* Pretty seat display */
+function prettySeat(raw){
+  if (!raw) return 'General admission';
+  var m1 = /^([A-Z])-T(\d+)-C(\d+)$/.exec(raw);
+  if (m1) return 'Table ' + m1[1] + m1[2] + ' · Seat ' + m1[3];
+  var m2 = /^([A-Z])-T(\d+)$/.exec(raw);
+  if (m2) return 'Table ' + m2[1] + m2[2];
+  var m3 = /^([A-Z0-9]+):([A-Z0-9\-]+)$/.exec(raw);
+  if (m3) return m3[1] + ' · Seat ' + m3[2];
+  var m4 = /^([A-Z])-([A-Z])-(\d+)$/.exec(raw);
+  if (m4) return 'Block ' + m4[1] + ' · Row ' + m4[2] + ' · Seat ' + m4[3];
+  return raw;
+}
+
+/* Extract just the NL-XXXX-YYYY part from a Yoco paste line */
+function extractRef(line){
+  var m = /NL-([A-Z0-9]{1,4})-([A-Z0-9]{1,4})/i.exec(String(line || ''));
+  if (!m) return null;
+  return 'NL-' + m[1].toUpperCase() + '-' + m[2].toUpperCase();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   STATE
+   ══════════════════════════════════════════════════════════════ */
+var currentUser = null;
+var isAdminUser = false;
+var allTickets = [];       // {ticket, event, ref, eventId, ticketId}
+var eventsById = {};
+var allEvents = [];
+var activeFilter = 'all';
+var activeEventFilter = '';
+var searchQuery = '';
+var ticketsUnsub = null;
+var refreshTimer = null;
+var totalSeatsAvailable = 0;
+var totalSeatsCapacity = 0;
+
+/* ══════════════════════════════════════════════════════════════
+   ACCESS GATE
+   ══════════════════════════════════════════════════════════════ */
+function checkAccess(){
+  var loading = $('accessLoading');
+  var denied = $('accessDenied');
+  var signedOut = $('accessSignedOut');
+  var content = $('adminContent');
+  var user = auth.currentUser;
+
+  if (!user){
+    loading.style.display = 'none';
+    denied.style.display = 'none';
+    signedOut.style.display = 'block';
+    content.style.display = 'none';
+    return false;
+  }
+  if (!isAdmin(user)){
+    loading.style.display = 'none';
+    denied.style.display = 'block';
+    signedOut.style.display = 'none';
+    content.style.display = 'none';
+    return false;
+  }
+  loading.style.display = 'none';
+  denied.style.display = 'none';
+  signedOut.style.display = 'none';
+  content.style.display = 'block';
+  return true;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   LOAD EVENTS
+   ══════════════════════════════════════════════════════════════ */
+function loadEvents(){
+  return db.collection(EVENTS).get().then(function(snap){
+    allEvents = [];
+    eventsById = {};
+    snap.forEach(function(doc){
+      var d = doc.data() || {};
+      d.id = doc.id;
+      allEvents.push(d);
+      eventsById[d.id] = d;
+    });
+    allEvents.sort(function(a, b){
+      return String(b.startDate || '').localeCompare(String(a.startDate || ''));
+    });
+    populateEventFilter();
+  }).catch(function(err){
+    console.error('[events]', err);
+  });
+}
+
+function populateEventFilter(){
+  var sel = $('eventFilter');
+  sel.innerHTML = '<option value="">All events</option>';
+  allEvents.forEach(function(ev){
+    var opt = document.createElement('option');
+    opt.value = ev.id;
+    var label = ev.eventName || 'Untitled event';
+    if (ev.startDate) label += ' · ' + ev.startDate;
+    opt.textContent = label;
+    sel.appendChild(opt);
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   LOAD TICKETS — across all events
+   ══════════════════════════════════════════════════════════════ */
+function loadTickets(){
+  // Use collectionGroup to get all tickets
+  return db.collectionGroup('tickets').get().then(function(snap){
+    allTickets = [];
+    snap.forEach(function(doc){
+      var t = doc.data() || {};
+      t.id = doc.id;
+      // Extract eventId from the doc ref path
+      var path = doc.ref.path; // events/{eventId}/tickets/{ticketId}
+      var parts = path.split('/');
+      var eventId = parts[1];
+      t._eventId = eventId;
+      t._event = eventsById[eventId] || null;
+      t._ref = buildTicketRef(eventId, t.ticketId || t.id);
+      allTickets.push(t);
+    });
+    // Sort: pending first (by urgency), then valid (newest), then expired
+    allTickets.sort(function(a, b){
+      var rank = { pending:0, valid:1, 'checked-in':2, 'checked_in':2, expired:3, cancelled:4 };
+      var ra = rank[a.status] !== undefined ? rank[a.status] : 5;
+      var rb = rank[b.status] !== undefined ? rank[b.status] : 5;
+      if (ra !== rb) return ra - rb;
+      if (a.status === 'pending'){
+        return (a.expiresAt || 0) - (b.expiresAt || 0);
+      }
+      var ta = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
+      var tb = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
+      return tb - ta;
+    });
+    // Count available seats across all events
+    computeSeats();
+    renderStats();
+    renderTicketList();
+  }).catch(function(err){
+    console.error('[tickets]', err);
+    toast('Could not load tickets: ' + err.message, 'error', 5000);
+  });
+}
+
+function computeSeats(){
+  var capacity = 0;
+  var taken = 0;
+  allEvents.forEach(function(ev){
+    var cap = 0;
+    var sections = ev.sections || [];
+    sections.forEach(function(sec){
+      if (sec.mode === 'rows' && sec.rows){
+        sec.rows.forEach(function(row){
+          cap += (row.seats || []).length;
+        });
+      }
+    });
+    if (!cap){
+      cap = parseInt(ev.totalAttendees, 10) || 0;
+    }
+    capacity += cap;
+  });
+  // Count pending + valid tickets (they hold seats)
+  var holding = allTickets.filter(function(t){
+    return t.status === 'pending' || t.status === 'valid' || t.status === 'checked-in' || t.status === 'checked_in';
+  }).length;
+  totalSeatsCapacity = capacity;
+  totalSeatsAvailable = Math.max(0, capacity - holding);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   RENDER STATS
+   ══════════════════════════════════════════════════════════════ */
+function renderStats(){
+  var pending = 0, valid = 0, expired = 0, cancelled = 0, revenue = 0;
+  allTickets.forEach(function(t){
+    if (t.status === 'pending') pending++;
+    else if (t.status === 'valid') { valid++; revenue += (Number(t.pricePaid) || 0); }
+    else if (t.status === 'checked-in' || t.status === 'checked_in') { valid++; revenue += (Number(t.pricePaid) || 0); }
+    else if (t.status === 'expired') expired++;
+    else if (t.status === 'cancelled') cancelled++;
+  });
+
+  $('statPending').textContent = pending;
+  $('statPendingSub').textContent = pending === 0 ? 'No pending payments' : (pending === 1 ? '1 awaiting payment' : pending + ' awaiting payment');
+
+  $('statPaid').textContent = valid;
+  $('statPaidSub').textContent = valid === 1 ? '1 confirmed' : valid + ' confirmed';
+
+  $('statExpired').textContent = expired;
+  $('statExpiredSub').textContent = expired === 0 ? 'None expired' : (expired === 1 ? '1 recycled' : expired + ' recycled');
+
+  $('statRevenue').textContent = fmtRshort(revenue);
+  $('statRevenueSub').textContent = 'Confirmed only';
+
+  $('statSeats').textContent = totalSeatsAvailable;
+  $('statSeatsSub').textContent = 'of ' + totalSeatsCapacity + ' total';
+
+  // Filter counts
+  $('cntAll').textContent = allTickets.length;
+  $('cntPending').textContent = pending;
+  $('cntValid').textContent = valid;
+  $('cntExpired').textContent = expired;
+  $('cntCancelled').textContent = cancelled;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   RENDER TICKET LIST
+   ══════════════════════════════════════════════════════════════ */
+function renderTicketList(){
+  var container = $('ticketList');
+  var emptyEl = $('emptyList');
+  var loadingEl = $('loadingList');
+
+  loadingEl.style.display = 'none';
+
+  // Apply filters
+  var filtered = allTickets.filter(function(t){
+    if (activeFilter !== 'all'){
+      if (activeFilter === 'valid' && !(t.status === 'valid' || t.status === 'checked-in' || t.status === 'checked_in')) return false;
+      else if (activeFilter !== 'valid' && t.status !== activeFilter) return false;
+    }
+    if (activeEventFilter && t._eventId !== activeEventFilter) return false;
+    if (searchQuery){
+      var q = searchQuery.toLowerCase();
+      var ref = (t._ref || '').toLowerCase();
+      var guest = String(t.guestName || '').toLowerCase();
+      var seat = String(t.seat || '').toLowerCase();
+      var email = String(t.buyerEmail || '').toLowerCase();
+      if (ref.indexOf(q) === -1 && guest.indexOf(q) === -1 && seat.indexOf(q) === -1 && email.indexOf(q) === -1) return false;
+    }
+    return true;
+  });
+
+  if (!filtered.length){
+    container.style.display = 'none';
+    emptyEl.style.display = 'block';
+    var msgs = {
+      all: 'No tickets yet. When buyers reserve seats, they\'ll appear here.',
+      pending: 'No pending payments. All caught up!',
+      valid: 'No paid tickets yet.',
+      expired: 'No expired tickets.',
+      cancelled: 'No cancelled tickets.'
+    };
+    $('emptyListMsg').textContent = msgs[activeFilter] || 'Nothing matches the current filter.';
+    refreshIcons();
+    return;
+  }
+
+  emptyEl.style.display = 'none';
+  container.style.display = 'flex';
+  container.innerHTML = '';
+
+  filtered.forEach(function(t){
+    container.appendChild(buildTicketRow(t));
+  });
+  refreshIcons();
+}
+
+function buildTicketRow(t){
+  var row = document.createElement('div');
+  var status = t.status || 'pending';
+  var statusClass = (status === 'checked-in' || status === 'checked_in') ? 'valid' : status;
+  row.className = 'ticket-row ' + statusClass;
+
+  var eventName = t._event ? (t._event.eventName || 'Untitled event') : 'Unknown event';
+  var tierName = (t._event && t._event.tierNames && t._event.tierNames[t.tier]) || t.tier || 'Standard';
+  var price = Number(t.pricePaid) || 0;
+  var seatDisplay = prettySeat(t.seat);
+
+  // Status badge
+  var badgeLabel = 'Pending';
+  var badgeClass = 'pending';
+  if (status === 'valid') { badgeLabel = 'Paid'; badgeClass = 'paid'; }
+  else if (status === 'checked-in' || status === 'checked_in') { badgeLabel = 'Checked in'; badgeClass = 'paid'; }
+  else if (status === 'expired') { badgeLabel = 'Expired'; badgeClass = 'expired'; }
+  else if (status === 'cancelled') { badgeLabel = 'Cancelled'; badgeClass = 'cancelled'; }
+
+  // Time remaining (for pending)
+  var timeHtml = '';
+  if (status === 'pending' && t.expiresAt){
+    var remaining = t.expiresAt - Date.now();
+    timeHtml = '<span>' + icon('clock') + ' <strong>' + esc(formatRemaining(remaining)) + '</strong></span>';
+  } else if (status === 'valid' && t.confirmedAt){
+    var d = t.confirmedAt.toDate ? t.confirmedAt.toDate() : new Date(t.confirmedAt);
+    var timeStr = d.toLocaleTimeString('en-ZA', { hour: '2-digit', minute: '2-digit' });
+    timeHtml = '<span>' + icon('check-circle') + ' Confirmed at ' + esc(timeStr) + '</span>';
+  } else if (status === 'expired' && t.expiredAt){
+    var d2 = t.expiredAt.toDate ? t.expiredAt.toDate() : new Date(t.expiredAt);
+    var hoursAgo = Math.round((Date.now() - d2.getTime()) / 3600000);
+    timeHtml = '<span>' + icon('x-circle') + ' Expired ' + hoursAgo + 'h ago · seat recycled</span>';
+  }
+
+  // Toggle
+  var toggleOn = (status === 'valid' || status === 'checked-in' || status === 'checked_in');
+  var toggleDisabled = (status === 'expired' || status === 'cancelled');
+
+  // Actions
+  var actionsHtml = '';
+  if (status === 'pending'){
+    actionsHtml =
+      '<button class="btn btn-success btn-sm" data-action="mark-paid" data-id="' + esc(t.id) + '" data-event="' + esc(t._eventId) + '">' +
+        icon('check') + ' Mark paid' +
+      '</button>' +
+      '<button class="btn btn-danger btn-sm" data-action="cancel" data-id="' + esc(t.id) + '" data-event="' + esc(t._eventId) + '">' +
+        icon('x') + ' Cancel' +
+      '</button>';
+  } else if (status === 'valid' || status === 'checked-in' || status === 'checked_in'){
+    actionsHtml =
+      '<button class="btn btn-ghost btn-sm" data-action="resend" data-id="' + esc(t.id) + '" data-event="' + esc(t._eventId) + '">' +
+        icon('message-circle') + ' Resend' +
+      '</button>' +
+      '<button class="btn btn-danger btn-sm" data-action="refund" data-id="' + esc(t.id) + '" data-event="' + esc(t._eventId) + '">' +
+        icon('rotate-ccw') + ' Refund' +
+      '</button>';
+  } else if (status === 'expired'){
+    actionsHtml =
+      '<button class="btn btn-ghost btn-sm" data-action="restore" data-id="' + esc(t.id) + '" data-event="' + esc(t._eventId) + '">' +
+        icon('rotate-ccw') + ' Restore' +
+      '</button>';
+  }
+
+  row.innerHTML =
+    '<button class="toggle-btn ' + (toggleOn ? 'on' : '') + '" ' +
+            'data-toggle="' + esc(t.id) + '" data-event="' + esc(t._eventId) + '" ' +
+            (toggleDisabled ? 'disabled' : '') +
+            ' aria-label="Toggle paid status"></button>' +
+    '<div class="ticket-info">' +
+      '<div class="ticket-ref">' + esc(t._ref) + '</div>' +
+      '<div class="ticket-guest">' + esc(t.guestName || 'Guest') + '</div>' +
+      '<div class="ticket-meta">' +
+        '<span>' + icon('calendar') + ' ' + esc(eventName) + '</span>' +
+        '<span>' + icon('tag') + ' ' + esc(tierName) + ' · ' + fmtR(price) + '</span>' +
+        '<span>' + icon('armchair') + ' ' + esc(seatDisplay) + '</span>' +
+        timeHtml +
+      '</div>' +
+      '<div class="ticket-badges">' +
+        '<span class="ticket-badge ' + badgeClass + '">' + esc(badgeLabel) + '</span>' +
+        '<span class="ticket-badge tier">' + esc(tierName) + '</span>' +
+      '</div>' +
+    '</div>' +
+    '<div class="ticket-actions">' + actionsHtml + '</div>';
+
+  return row;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ACTIONS
+   ══════════════════════════════════════════════════════════════ */
+
+// Toggle — top of the row
+function handleToggle(ticketId, eventId, currentStatus){
+  var t = allTickets.find(function(x){ return x.id === ticketId && x._eventId === eventId; });
+  if (!t) return;
+  if (t.status === 'pending'){
+    // Turning ON → confirm payment
+    confirmPaid(t);
+  } else if (t.status === 'valid'){
+    // Turning OFF → offer cancel/refund
+    offerRefund(t);
+  }
+}
+
+function confirmPaid(t){
+  var eventName = t._event ? (t._event.eventName || 'event') : 'event';
+  if (!confirm('Mark this ticket as PAID?\n\n' + t._ref + ' · ' + (t.guestName || 'Guest') + '\n' + eventName)) return;
+
+  var ref = db.collection(EVENTS).doc(t._eventId).collection('tickets').doc(t.id);
+  ref.update({
+    status: 'valid',
+    confirmedAt: firebase.firestore.FieldValue.serverTimestamp(),
+    confirmedBy: currentUser.uid
+  }).then(function(){
+    toast('Ticket confirmed.', 'success');
+    // Show drafted message
+    showDraft('confirmed', t);
+  }).catch(function(err){
+    console.error('[confirm]', err);
+    toast('Failed: ' + err.message, 'error', 5000);
+  });
+}
+
+function offerRefund(t){
+  var eventName = t._event ? (t._event.eventName || 'event') : 'event';
+  var msg = 'This ticket is VALID.\n\n' + t._ref + ' · ' + (t.guestName || 'Guest') + '\n' + eventName + '\n\n' +
+            'What do you want to do?';
+  var choice = prompt(msg + '\n\nType:\n  "refund" to refund & cancel\n  "cancel" to cancel without refund\n  "nothing" to leave as-is',
+                       'nothing');
+  if (!choice) return;
+  choice = choice.toLowerCase().trim();
+
+  if (choice === 'refund'){
+    updateTicketStatus(t, 'cancelled', 'refundedAt');
+    toast('Ticket refunded and cancelled.', 'success');
+  } else if (choice === 'cancel'){
+    updateTicketStatus(t, 'cancelled', 'cancelledAt');
+    toast('Ticket cancelled.', 'success');
+  }
+}
+
+function updateTicketStatus(t, newStatus, timestampField){
+  var ref = db.collection(EVENTS).doc(t._eventId).collection('tickets').doc(t.id);
+  var update = { status: newStatus };
+  if (timestampField) update[timestampField] = firebase.firestore.FieldValue.serverTimestamp();
+  update.updatedBy = currentUser.uid;
+  return ref.update(update);
+}
+
+function cancelTicket(t){
+  var eventName = t._event ? (t._event.eventName || 'event') : 'event';
+  if (!confirm('Cancel this pending ticket?\n\n' + t._ref + ' · ' + (t.guestName || 'Guest') + '\n' + eventName +
+               '\n\nThe seat will be released back to inventory.')) return;
+
+  var ref = db.collection(EVENTS).doc(t._eventId).collection('tickets').doc(t.id);
+  var eventRef = db.collection(EVENTS).doc(t._eventId);
+
+  db.runTransaction(function(tx){
+    return tx.get(eventRef).then(function(eventDoc){
+      if (!eventDoc.exists) throw new Error('Event no longer exists');
+      var evData = eventDoc.data() || {};
+      var takenSeats = Array.isArray(evData.takenSeats) ? evData.takenSeats.slice() : [];
+      var newSeats = takenSeats.filter(function(s){ return s !== t.seat; });
+      tx.update(eventRef, { takenSeats: newSeats });
+      tx.update(ref, {
+        status: 'cancelled',
+        cancelledAt: firebase.firestore.FieldValue.serverTimestamp(),
+        cancelledBy: currentUser.uid
+      });
+    });
+  }).then(function(){
+    toast('Ticket cancelled, seat released.', 'success');
+  }).catch(function(err){
+    console.error('[cancel]', err);
+    toast('Failed: ' + err.message, 'error', 5000);
+  });
+}
+
+function resendTicket(t){
+  showDraft('confirmed', t);
+}
+
+function restoreTicket(t){
+  if (!confirm('Restore this ticket to PENDING status?\n\n' + t._ref)) return;
+  var ref = db.collection(EVENTS).doc(t._eventId).collection('tickets').doc(t.id);
+  ref.update({
+    status: 'pending',
+    expiresAt: Date.now() + 24 * 60 * 60 * 1000,
+    restoredAt: firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function(){
+    toast('Ticket restored to pending. 24h hold renewed.', 'success');
+  }).catch(function(err){
+    toast('Failed: ' + err.message, 'error', 5000);
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   DRAFT MESSAGE
+   ══════════════════════════════════════════════════════════════ */
+function showDraft(templateKey, t){
+  var template = DRAFT_TEMPLATES[templateKey];
+  if (!template) return;
+
+  var eventName = t._event ? (t._event.eventName || 'Untitled event') : 'Unknown event';
+  var tierName = (t._event && t._event.tierNames && t._event.tierNames[t.tier]) || t.tier || 'Standard';
+  var price = Number(t.pricePaid) || 0;
+  var seatDisplay = prettySeat(t.seat);
+
+  var ticketUrl = BASE_URL + 'view-card.html?event=' + encodeURIComponent(t._eventId) +
+                  '&ticket=' + encodeURIComponent(t.id);
+  var eventUrl = BASE_URL + 'view-event.html?id=' + encodeURIComponent(t._eventId);
+
+  var yocoLink = '';
+  if (t._event && t._event.paymentLinks && t._event.paymentLinks[t.tier]){
+    yocoLink = t._event.paymentLinks[t.tier];
+  } else {
+    yocoLink = '(contact Novalink for payment link)';
+  }
+
+  var expires = t.expiresAt ? new Date(t.expiresAt).toLocaleString('en-ZA', {
+    day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit'
+  }) : '';
+
+  var body = template
+    .replace(/\{guest\}/g, t.guestName || 'Guest')
+    .replace(/\{amount\}/g, String(price))
+    .replace(/\{event\}/g, eventName)
+    .replace(/\{ref\}/g, t._ref)
+    .replace(/\{seat\}/g, seatDisplay)
+    .replace(/\{tier\}/g, tierName)
+    .replace(/\{ticketUrl\}/g, ticketUrl)
+    .replace(/\{eventUrl\}/g, eventUrl)
+    .replace(/\{yocoLink\}/g, yocoLink)
+    .replace(/\{expires\}/g, expires);
+
+  $('draftTitle').textContent = {
+    confirmed: 'Ticket confirmed — send this',
+    reminder: 'Payment reminder — send this',
+    expired: 'Ticket expired — send this',
+    refund: 'Refund processed — send this'
+  }[templateKey] || 'Drafted message';
+
+  $('draftSub').textContent = 'Copy the message and paste into WhatsApp, SMS, or email.';
+
+  $('draftText').textContent = body;
+
+  // WhatsApp button — only if we have a buyer phone number (rare) or fallback to platform
+  var waBtn = $('whatsappDraftBtn');
+  var buyerPhone = t.buyerPhone || '';
+  var targetPhone = buyerPhone ? buyerPhone.replace(/[^0-9]/g, '') : '';
+  var waUrl = targetPhone
+    ? 'https://wa.me/' + targetPhone + '?text=' + encodeURIComponent(body)
+    : 'https://wa.me/?text=' + encodeURIComponent(body);
+  waBtn.setAttribute('href', waUrl);
+
+  // Store current draft for copy button
+  $('copyDraftBtn').dataset.text = body;
+
+  $('draftModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  refreshIcons();
+}
+
+function closeDraft(){
+  $('draftModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+/* ══════════════════════════════════════════════════════════════
+   BULK PASTE
+   ══════════════════════════════════════════════════════════════ */
+function openBulkPaste(){
+  $('bulkTextarea').value = '';
+  $('bulkResults').classList.remove('show');
+  $('bulkResults').innerHTML = '';
+  $('bulkModal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+  refreshIcons();
+  setTimeout(function(){ $('bulkTextarea').focus(); }, 100);
+}
+
+function closeBulkPaste(){
+  $('bulkModal').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+function processBulkPaste(){
+  var raw = $('bulkTextarea').value || '';
+  var lines = raw.split(/\r?\n/).map(function(l){ return l.trim(); }).filter(function(l){ return l.length > 0; });
+
+  if (!lines.length){
+    toast('Nothing pasted.', 'error', 3000);
+    return;
+  }
+
+  var refs = [];
+  var unparseable = [];
+  lines.forEach(function(line){
+    var ref = extractRef(line);
+    if (ref) refs.push(ref);
+    else unparseable.push(line);
+  });
+
+  // Find matching pending tickets
+  var matched = [];
+  var alreadyPaid = [];
+  var notFound = [];
+
+  refs.forEach(function(ref){
+    var t = allTickets.find(function(x){ return x._ref === ref; });
+    if (!t){
+      notFound.push(ref);
+      return;
+    }
+    if (t.status === 'valid' || t.status === 'checked-in' || t.status === 'checked_in'){
+      alreadyPaid.push(ref);
+      return;
+    }
+    if (t.status !== 'pending'){
+      notFound.push(ref + ' (' + t.status + ')');
+      return;
+    }
+    matched.push(t);
+  });
+
+  // Show results
+  var resultsHtml =
+    '<div class="bulk-result-row">' +
+      '<span class="lbl">Pasted lines</span>' +
+      '<span class="val">' + lines.length + '</span>' +
+    '</div>' +
+    '<div class="bulk-result-row">' +
+      '<span class="lbl">Valid refs found</span>' +
+      '<span class="val ok">' + refs.length + '</span>' +
+    '</div>' +
+    '<div class="bulk-result-row">' +
+      '<span class="lbl">Matched to pending tickets</span>' +
+      '<span class="val ok">' + matched.length + '</span>' +
+    '</div>';
+
+  if (alreadyPaid.length){
+    resultsHtml +=
+      '<div class="bulk-result-row">' +
+        '<span class="lbl">Already paid (skipped)</span>' +
+        '<span class="val warn">' + alreadyPaid.length + '</span>' +
+      '</div>';
+  }
+  if (notFound.length){
+    resultsHtml +=
+      '<div class="bulk-result-row">' +
+        '<span class="lbl">Not found</span>' +
+        '<span class="val err">' + notFound.length + '</span>' +
+      '</div>';
+  }
+  if (unparseable.length){
+    resultsHtml +=
+      '<div class="bulk-result-row">' +
+        '<span class="lbl">Unparseable lines</span>' +
+        '<span class="val err">' + unparseable.length + '</span>' +
+      '</div>';
+  }
+
+  $('bulkResults').innerHTML = resultsHtml;
+  $('bulkResults').classList.add('show');
+
+  // If nothing matched, stop
+  if (!matched.length){
+    toast('No matches found.', 'error', 4000);
+    return;
+  }
+
+  // Update button text
+  var processBtn = $('bulkProcess');
+  processBtn.innerHTML = icon('check') + ' Confirm ' + matched.length + ' tickets as paid';
+  processBtn.dataset.count = matched.length;
+
+  // Store matches for the actual update
+  $('bulkModal').dataset.matchedIds = JSON.stringify(matched.map(function(t){
+    return { id: t.id, event: t._eventId };
+  }));
+
+  refreshIcons();
+  processBtn.onclick = function(){ executeBulkUpdate(matched); };
+}
+
+function executeBulkUpdate(matched){
+  var btn = $('bulkProcess');
+  btn.disabled = true;
+  var orig = btn.innerHTML;
+  btn.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(0,0,0,.2);border-top-color:#04161c;border-radius:50%;animation:spin .7s linear infinite;"></span> Updating…';
+
+  var batch = db.batch();
+  var now = firebase.firestore.FieldValue.serverTimestamp();
+
+  matched.forEach(function(t){
+    var ref = db.collection(EVENTS).doc(t._eventId).collection('tickets').doc(t.id);
+    batch.update(ref, {
+      status: 'valid',
+      confirmedAt: now,
+      confirmedBy: currentUser.uid,
+      confirmedVia: 'bulk_paste'
+    });
+  });
+
+  batch.commit().then(function(){
+    toast(matched.length + ' tickets confirmed as paid.', 'success', 4000);
+    closeBulkPaste();
+    // Optionally show draft for the first one
+    if (matched.length === 1){
+      setTimeout(function(){ showDraft('confirmed', matched[0]); }, 400);
+    }
+  }).catch(function(err){
+    console.error('[bulk update]', err);
+    toast('Bulk update failed: ' + err.message, 'error', 6000);
+  }).then(function(){
+    btn.disabled = false;
+    btn.innerHTML = orig;
+    refreshIcons();
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   EXPIRY SWEEP (runs client-side; also runs via Cloud Function)
+   ══════════════════════════════════════════════════════════════ */
+function runExpirySweep(){
+  var now = Date.now();
+  var expiredTickets = allTickets.filter(function(t){
+    return t.status === 'pending' && t.expiresAt && t.expiresAt < now;
+  });
+
+  if (!expiredTickets.length){
+    toast('No expired tickets to sweep.', 'info', 2500);
+    return Promise.resolve();
+  }
+
+  var btn = $('runSweepBtn');
+  btn.disabled = true;
+  var orig = btn.innerHTML;
+  btn.innerHTML = '<span style="display:inline-block;width:14px;height:14px;border:2px solid rgba(0,0,0,.2);border-top-color:#04161c;border-radius:50%;animation:spin .7s linear infinite;"></span> Sweeping…';
+
+  var promises = expiredTickets.map(function(t){
+    var eventRef = db.collection(EVENTS).doc(t._eventId);
+    var ticketRef = db.collection(EVENTS).doc(t._eventId).collection('tickets').doc(t.id);
+
+    return db.runTransaction(function(tx){
+      return tx.get(eventRef).then(function(eventDoc){
+        if (!eventDoc.exists) return;
+        var evData = eventDoc.data() || {};
+        var takenSeats = Array.isArray(evData.takenSeats) ? evData.takenSeats.slice() : [];
+        var newSeats = takenSeats.filter(function(s){ return s !== t.seat; });
+        tx.update(eventRef, { takenSeats: newSeats });
+        tx.update(ticketRef, {
+          status: 'expired',
+          expiredAt: firebase.firestore.FieldValue.serverTimestamp(),
+          autoSweptBy: 'admin_manual'
+        });
+      });
+    });
+  });
+
+  return Promise.all(promises).then(function(){
+    toast(expiredTickets.length + ' tickets expired, seats released.', 'success', 4000);
+  }).catch(function(err){
+    console.error('[sweep]', err);
+    toast('Sweep failed: ' + err.message, 'error', 5000);
+  }).then(function(){
+    btn.disabled = false;
+    btn.innerHTML = orig;
+    refreshIcons();
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   CSV EXPORT
+   ══════════════════════════════════════════════════════════════ */
+function exportCsv(){
+  if (!allTickets.length){
+    toast('No tickets to export.', 'error', 3000);
+    return;
+  }
+  var headers = ['Reference', 'Guest', 'Email', 'Event', 'Tier', 'Seat', 'Status', 'Price', 'Created', 'Expires', 'Confirmed'];
+  var rows = [headers.join(',')];
+
+  allTickets.forEach(function(t){
+    var eventName = t._event ? (t._event.eventName || '') : '';
+    var tierName = (t._event && t._event.tierNames && t._event.tierNames[t.tier]) || t.tier || '';
+    var createdAt = t.createdAt && t.createdAt.toDate ? t.createdAt.toDate().toISOString() : '';
+    var expiresAt = t.expiresAt ? new Date(t.expiresAt).toISOString() : '';
+    var confirmedAt = t.confirmedAt && t.confirmedAt.toDate ? t.confirmedAt.toDate().toISOString() : '';
+    var row = [
+      t._ref,
+      t.guestName || '',
+      t.buyerEmail || '',
+      eventName,
+      tierName,
+      t.seat || '',
+      t.status || '',
+      String(Number(t.pricePaid) || 0),
+      createdAt,
+      expiresAt,
+      confirmedAt
+    ].map(function(v){
+      var s = String(v == null ? '' : v);
+      if (/[",\n\r]/.test(s)) s = '"' + s.replace(/"/g, '""') + '"';
+      return s;
+    });
+    rows.push(row.join(','));
+  });
+
+  // BOM for Excel UTF-8
+  var csv = '\uFEFF' + rows.join('\r\n');
+  var blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+  var url = URL.createObjectURL(blob);
+  var a = document.createElement('a');
+  a.href = url;
+  a.download = 'novalink-tickets-' + new Date().toISOString().slice(0,10) + '.csv';
+  document.body.appendChild(a);
+  a.click();
+  setTimeout(function(){
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  }, 100);
+  toast('Exported ' + allTickets.length + ' tickets.', 'success', 2600);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   EVENT LISTENERS
+   ══════════════════════════════════════════════════════════════ */
+function attachListeners(){
+  // Real-time listener on tickets — refreshes on any change
+  if (ticketsUnsub) { try { ticketsUnsub(); } catch(e){} }
+  ticketsUnsub = db.collectionGroup('tickets').onSnapshot(function(snap){
+    allTickets = [];
+    snap.forEach(function(doc){
+      var t = doc.data() || {};
+      t.id = doc.id;
+      var path = doc.ref.path;
+      var parts = path.split('/');
+      var eventId = parts[1];
+      t._eventId = eventId;
+      t._event = eventsById[eventId] || null;
+      t._ref = buildTicketRef(eventId, t.ticketId || t.id);
+      allTickets.push(t);
+    });
+    allTickets.sort(function(a, b){
+      var rank = { pending:0, valid:1, 'checked-in':2, 'checked_in':2, expired:3, cancelled:4 };
+      var ra = rank[a.status] !== undefined ? rank[a.status] : 5;
+      var rb = rank[b.status] !== undefined ? rank[b.status] : 5;
+      if (ra !== rb) return ra - rb;
+      if (a.status === 'pending'){
+        return (a.expiresAt || 0) - (b.expiresAt || 0);
+      }
+      var ta = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
+      var tb = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
+      return tb - ta;
+    });
+    computeSeats();
+    renderStats();
+    renderTicketList();
+  }, function(err){
+    console.error('[tickets listener]', err);
+    toast('Could not sync tickets: ' + err.message, 'error', 5000);
+  });
+}
+
+function wireUi(){
+  // Sign out
+  $('signOutBtn').addEventListener('click', function(){
+    auth.signOut().then(function(){ toast('Signed out.', 'success'); });
+  });
+
+  // Filter tabs
+  document.querySelectorAll('.filter-tab').forEach(function(tab){
+    tab.addEventListener('click', function(){
+      activeFilter = tab.dataset.filter;
+      document.querySelectorAll('.filter-tab').forEach(function(t){
+        t.classList.toggle('active', t === tab);
+      });
+      renderTicketList();
+    });
+  });
+
+  // Event filter
+  $('eventFilter').addEventListener('change', function(){
+    activeEventFilter = this.value;
+    renderTicketList();
+  });
+
+  // Search
+  var searchTimer = null;
+  $('searchInput').addEventListener('input', function(){
+    clearTimeout(searchTimer);
+    var val = this.value.trim();
+    searchTimer = setTimeout(function(){
+      searchQuery = val;
+      renderTicketList();
+    }, 180);
+  });
+
+  // Controls
+  $('refreshBtn').addEventListener('click', function(){
+    toast('Refreshing…', 'info', 1200);
+    loadEvents().then(loadTickets);
+  });
+  $('runSweepBtn').addEventListener('click', runExpirySweep);
+  $('exportCsvBtn').addEventListener('click', exportCsv);
+  $('bulkPasteBtn').addEventListener('click', openBulkPaste);
+
+  // Bulk modal
+  $('bulkClose').addEventListener('click', closeBulkPaste);
+  $('bulkCancel').addEventListener('click', closeBulkPaste);
+  $('bulkModal').addEventListener('click', function(e){ if (e.target === this) closeBulkPaste(); });
+  $('bulkProcess').addEventListener('click', processBulkPaste);
+
+  // Draft modal
+  $('draftClose').addEventListener('click', closeDraft);
+  $('draftDoneBtn').addEventListener('click', closeDraft);
+  $('draftModal').addEventListener('click', function(e){ if (e.target === this) closeDraft(); });
+  $('copyDraftBtn').addEventListener('click', function(){
+    var text = this.dataset.text || $('draftText').textContent;
+    if (navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(text)
+        .then(function(){ toast('Message copied.', 'success', 2000); })
+        .catch(function(){ fallbackCopy(text); });
+    } else {
+      fallbackCopy(text);
+    }
+  });
+
+  // Ticket list clicks (delegated)
+  $('ticketList').addEventListener('click', function(e){
+    var toggle = e.target.closest('[data-toggle]');
+    if (toggle && !toggle.disabled){
+      handleToggle(toggle.dataset.toggle, toggle.dataset.event, null);
+      return;
+    }
+    var btn = e.target.closest('[data-action]');
+    if (!btn) return;
+    var action = btn.dataset.action;
+    var id = btn.dataset.id;
+    var eventId = btn.dataset.event;
+    var t = allTickets.find(function(x){ return x.id === id && x._eventId === eventId; });
+    if (!t) return;
+    if (action === 'mark-paid') confirmPaid(t);
+    else if (action === 'cancel') cancelTicket(t);
+    else if (action === 'resend') resendTicket(t);
+    else if (action === 'refund') offerRefund(t);
+    else if (action === 'restore') restoreTicket(t);
+  });
+
+  // Keyboard
+  document.addEventListener('keydown', function(e){
+    if (e.key === 'Escape'){
+      if ($('draftModal').classList.contains('open')) closeDraft();
+      else if ($('bulkModal').classList.contains('open')) closeBulkPaste();
+    }
+  });
+}
+
+function fallbackCopy(text){
+  var ta = document.createElement('textarea');
+  ta.value = text;
+  ta.style.position = 'fixed';
+  ta.style.left = '-9999px';
+  document.body.appendChild(ta);
+  ta.select();
+  try {
+    document.execCommand('copy');
+    toast('Message copied.', 'success', 2000);
+  } catch(e){
+    toast('Copy failed. Select manually.', 'error', 3000);
+  }
+  document.body.removeChild(ta);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   REFRESH TIMER — update time-remaining labels every 30s
+   ══════════════════════════════════════════════════════════════ */
+function startRefreshTimer(){
+  if (refreshTimer) clearInterval(refreshTimer);
+  refreshTimer = setInterval(function(){
+    // Re-render the ticket list to update time-remaining text
+    if (document.getElementById('adminContent').style.display !== 'none'){
+      renderTicketList();
+    }
+  }, 30000);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   BOOT
+   ══════════════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded', function(){
+  refreshIcons();
+
+  wireUi();
+
+  auth.onAuthStateChanged(function(user){
+    currentUser = user;
+    isAdminUser = isAdmin(user);
+
+    var ok = checkAccess();
+    if (ok){
+      loadEvents().then(function(){
+        attachListeners();
+        startRefreshTimer();
+      });
+    } else {
+      if (ticketsUnsub) { try { ticketsUnsub(); } catch(e){} ticketsUnsub = null; }
+      if (refreshTimer) { clearInterval(refreshTimer); refreshTimer = null; }
+    }
+    refreshIcons();
+  });
+
+  window.addEventListener('beforeunload', function(){
+    if (ticketsUnsub) { try { ticketsUnsub(); } catch(e){} }
+    if (refreshTimer) clearInterval(refreshTimer);
+  });
+});
+})();
+</script>
+</body>
+  </html>
