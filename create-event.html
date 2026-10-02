@@ -651,6 +651,7 @@ var state = {
   tierColors: Object.assign({}, TIER_DEFAULT_COLORS),
   tierPrices: { elite:0, silver:0, standard:0 },
   tierActive: { elite:true, silver:true, standard:true },
+  savedTierActive: null,
   tierPricesTouched: false,
   savedNames: null,
   savedColors: null,
@@ -666,7 +667,13 @@ function activeTierKeys(){
   return TIER_KEYS.slice();
 }
 function activeTierKeysFiltered(){
-  return activeTierKeys().filter(function(k){ return state.tierActive[k] !== false; });
+  var keys = activeTierKeys();
+  /* Basic has only one tier, always active */
+  if (state.plan === 'basic') return keys;
+  var filtered = keys.filter(function(k){ return state.tierActive[k] !== false; });
+  /* Safety: never return empty */
+  if (!filtered.length) return keys;
+  return filtered;
 }
 function blockLetter(idx){
   var n = idx, s = '';
@@ -714,8 +721,7 @@ function computeTierCounts(){
   var fallback = activeTierKeysFiltered()[activeTierKeysFiltered().length-1] || 'standard';
   state.blocks.forEach(function(b){
     var t = b.tier || fallback;
-    /* skip blocks assigned to an inactive tier */
-    if (state.tierActive[t] === false) return;
+    if (state.tierActive[t] === false && state.plan !== 'basic') return;
     counts[t] = (counts[t] || 0) + blockSeatCount(b);
   });
   return counts;
@@ -751,6 +757,7 @@ function applyPlan(){
     c.classList.toggle('selected', r && r.checked);
   });
 
+  /* Names — preserve across downgrades */
   if (!state.features.canRename){
     if (!state.savedNames){
       var changedN = TIER_KEYS.some(function(k){ return state.tierNames[k] !== TIER_DEFAULT_NAMES[k]; });
@@ -762,6 +769,7 @@ function applyPlan(){
     state.savedNames = null;
   }
 
+  /* Colours — preserve across downgrades */
   if (!state.features.canColor){
     if (!state.savedColors){
       var changedC = TIER_KEYS.some(function(k){ return state.tierColors[k] !== TIER_DEFAULT_COLORS[k]; });
@@ -773,11 +781,19 @@ function applyPlan(){
     state.savedColors = null;
   }
 
+  /* Tier active state — preserve across plan change */
   if (state.plan === 'basic'){
     state.tierNames.standard = 'Standard';
+    if (!state.savedTierActive){
+      state.savedTierActive = Object.assign({}, state.tierActive);
+    }
     state.tierActive = { elite:false, silver:false, standard:true };
+  } else if (state.savedTierActive){
+    /* restore what was on before going to Basic */
+    state.tierActive = Object.assign({ elite:true, silver:true, standard:true }, state.savedTierActive);
+    state.savedTierActive = null;
   } else {
-    /* if all three are off, reset to all on */
+    /* safety: never all off */
     if (state.tierActive.elite === false && state.tierActive.silver === false && state.tierActive.standard === false){
       state.tierActive = { elite:true, silver:true, standard:true };
     }
@@ -882,14 +898,17 @@ function renderTierList(){
 function renderTierColorGrid(){
   var grid = $('tierColorGrid');
   grid.innerHTML = '';
-  activeTierKeys().forEach(function(k){
-    var active = state.tierActive[k] !== false;
+  var keys = activeTierKeys();
+  keys.forEach(function(k){
+    /* skip tiers that are toggled off (except Basic, which is always shown) */
+    if (state.plan !== 'basic' && state.tierActive[k] === false) return;
+
     var item = document.createElement('div');
     item.className = 'tier-color-item';
     item.innerHTML =
       '<span class="tier-color-swatch" style="background:'+state.tierColors[k]+'"></span>' +
       '<label>'+esc(state.tierNames[k])+'</label>' +
-      '<input type="color" data-tier="'+k+'" value="'+state.tierColors[k]+'" '+(state.features.canColor && active ? '' : 'disabled')+' />';
+      '<input type="color" data-tier="'+k+'" value="'+state.tierColors[k]+'" '+(state.features.canColor ? '' : 'disabled')+' />';
     grid.appendChild(item);
   });
   grid.querySelectorAll('input[type=color]').forEach(function(inp){
@@ -1612,4 +1631,4 @@ document.addEventListener('DOMContentLoaded', function(){
 })();
 </script>
 </body>
-                </html>
+  </html>
