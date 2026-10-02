@@ -306,26 +306,46 @@ function formatDate(dateStr){
   } catch(e){ return dateStr; }
 }
 
+/* ── TIERS — semantic keys ── */
 var TIER_DEFAULTS = {
-  black:"#1a202c", gold:"#ecc94b", silver:"#cbd5e1",
-  cyan:"#00FFFF", tier5:"#a855f7", tier6:"#f472b6"
+  elite:    "#1a202c",
+  silver:   "#cbd5e1",
+  standard: "#00FFFF"
 };
 var TIER_DEFAULT_NAMES = {
-  black:"Elite", gold:"VIP", silver:"Silver",
-  cyan:"Standard", tier5:"Platinum", tier6:"Diamond"
+  elite:    "Elite",
+  silver:   "Silver",
+  standard: "Standard"
 };
 
 function getTierColour(parent, tierKey){
-  if (!tierKey) tierKey = "cyan";
+  if (!tierKey) tierKey = "standard";
   if (parent && parent.tierColours && parent.tierColours[tierKey]) return parent.tierColours[tierKey];
   return TIER_DEFAULTS[tierKey] || "#00FFFF";
 }
 function getTierName(parent, tierKey){
-  if (!tierKey) tierKey = "cyan";
+  if (!tierKey) tierKey = "standard";
   if (parent && parent.tierNames && parent.tierNames[tierKey]) return parent.tierNames[tierKey];
   return TIER_DEFAULT_NAMES[tierKey] || tierKey;
 }
 
+/* ── SEAT DISPLAY ── */
+function formatSeatDisplay(t){
+  if (!t) return "";
+  if (t.generalAdmission) return "General admission";
+  if (t.seatBlock || t.seatSection || t.seatTable || t.seatRow || t.seatNumber){
+    var parts = [];
+    if (t.seatBlock)   parts.push(t.seatBlock);
+    if (t.seatSection) parts.push(t.seatSection);
+    if (t.seatTable)   parts.push("Table " + t.seatTable);
+    if (t.seatRow)     parts.push("Row " + t.seatRow);
+    if (t.seatNumber)  parts.push("Seat " + t.seatNumber);
+    if (parts.length) return parts.join(" · ");
+  }
+  return t.seat || "";
+}
+
+/* ── COLOUR HELPERS ── */
 function hexToRgbObj(hex){
   var c = String(hex || "").replace("#","");
   if (c.length === 3) c = c[0]+c[0]+c[1]+c[1]+c[2]+c[2];
@@ -390,7 +410,7 @@ function applyPalette(el, hex){
   el.setAttribute("data-is-dark", p.isDark ? "1" : "0");
 }
 
-/* ─── AUTH UI ─── */
+/* ── AUTH UI ── */
 function applyAuth(user){
   currentUser = user;
   if (user){
@@ -427,12 +447,11 @@ function showContent(){
   refreshIcons();
 }
 
-/* ─── LOAD CARDS ─── */
+/* ── LOAD CARDS ── */
 async function loadCards(){
-  if (!currentUser) { showSignin(); return; }
+  if (!currentUser) { showSignin(); return []; }
 
   var eventsSnap = await db.collection("events").get();
-
   var parents = [];
   eventsSnap.forEach(function(doc){
     var d = doc.data() || {};
@@ -441,7 +460,6 @@ async function loadCards(){
     parents.push(d);
   });
 
-  // Query each event's tickets for this buyer
   var ticketPromises = parents.map(function(parent){
     return db.collection(parent._kind).doc(parent.id)
       .collection("tickets")
@@ -470,7 +488,7 @@ async function loadCards(){
   return flat;
 }
 
-/* ─── FILTER BAR ─── */
+/* ── FILTER BAR ── */
 function wireFilterBar(){
   document.querySelectorAll(".filter-chip").forEach(function(chip){
     chip.addEventListener("click", function(){
@@ -481,7 +499,7 @@ function wireFilterBar(){
   });
 }
 
-/* ─── RENDER ─── */
+/* ── RENDER ── */
 function renderAll(){
   var total = allCards.length;
   var valid = 0, cancelled = 0, pending = 0;
@@ -573,7 +591,7 @@ function renderGrid(which, list){
 
 function buildCard(card){
   var parent = card._parent || {};
-  var tierKey = card.tier || "cyan";
+  var tierKey = card.tier || "standard";
 
   var tierName = getTierName(parent, tierKey);
   var tierColour = getTierColour(parent, tierKey);
@@ -583,7 +601,6 @@ function buildCard(card){
 
   var status = String(card.status || "valid").toLowerCase();
 
-  // ── STATUS CLASS ──
   if (status === "cancelled") el.classList.add("cancelled");
   else if (status === "pending") el.classList.add("pending");
   else if (status === "checked-in" || status === "checked_in" || status === "used") el.classList.add("used");
@@ -594,7 +611,9 @@ function buildCard(card){
   var dateLabel = formatDate(parent.startDate);
   var venue = [parent.venueName, parent.city].filter(Boolean).join(", ");
 
-  // ── STATUS BADGE ──
+  /* Structured seat display */
+  var seatDisplay = formatSeatDisplay(card);
+
   var statusBadge = "VALID";
   var statusClass = "";
   if (status === "cancelled"){ statusBadge = "CANCELLED"; }
@@ -617,6 +636,8 @@ function buildCard(card){
       '<div class="tm-info">' +
         '<div class="tm-lbl">Guest</div>' +
         '<div class="tm-val">' + esc(card.guestName || card.buyerName || "Guest") + '</div>' +
+        (seatDisplay ? '<div class="tm-lbl" style="margin-top:8px;">Seat</div>' +
+                       '<div class="tm-val" style="font-family:var(--mono);font-size:12.5px;">' + esc(seatDisplay) + '</div>' : '') +
         (venue ? '<div class="tm-lbl" style="margin-top:8px;">Venue</div>' +
                  '<div class="tm-val" style="font-size:12px;font-weight:600;">' + esc(venue) + '</div>' : '') +
       '</div>' +
@@ -633,7 +654,7 @@ function buildCard(card){
   return el;
 }
 
-/* ─── BOOT ─── */
+/* ── BOOT ── */
 document.addEventListener("DOMContentLoaded", function(){
   $("year").textContent = new Date().getFullYear();
   refreshIcons();
@@ -670,4 +691,4 @@ document.addEventListener("DOMContentLoaded", function(){
 })();
 </script>
 </body>
-  </html>
+        </html>
