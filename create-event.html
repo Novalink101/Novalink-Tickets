@@ -9,7 +9,6 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="routing-engine.js"></script>
 <style>
 :root{
   --cy:#00FFFF;--cy2:#00CCCC;--cy3:#009999;--cyf:#e6ffff;
@@ -22,8 +21,6 @@
   --rd:14px;--ease:cubic-bezier(0.25,0.8,0.25,1);
   --font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
-  --tier-black:#1a202c;--tier-gold:#ecc94b;--tier-silver:#cbd5e1;
-  --tier-cyan:#00FFFF;--tier-tier5:#a855f7;--tier-tier6:#f472b6;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
 body{font-family:var(--font);background:var(--bg);color:var(--tx);line-height:1.6;min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
@@ -119,6 +116,7 @@ main{flex:1;padding:24px 0 64px}
 @media (max-width:640px){.tier-row{grid-template-columns:20px 1fr;grid-auto-rows:auto}.tier-row .tier-qty,.tier-row .curr,.tier-row .tier-rev{grid-column:2 / -1}}
 .tier-swatch{width:20px;height:20px;border-radius:6px;border:1px solid rgba(0,0,0,.15);flex-shrink:0}
 .tier-name{padding:8px 10px;font-size:13px;font-weight:800;background:#fff;border:1px solid var(--bd2);border-radius:8px;min-width:0;width:100%}
+.tier-name[readonly]{background:var(--sf2);color:var(--mut);cursor:not-allowed}
 .tier-qty{font-size:11px;font-weight:800;color:var(--cy3);background:var(--cyf);padding:5px 9px;border-radius:6px;text-align:center;white-space:nowrap}
 .curr{display:flex;align-items:stretch;width:100%}
 .curr-prefix{display:inline-flex;align-items:center;justify-content:center;padding:0 12px;background:var(--bg);border:1px solid var(--bd2);border-right:none;border-radius:10px 0 0 10px;font-weight:800;color:var(--cy3);font-size:14px}
@@ -131,51 +129,18 @@ main{flex:1;padding:24px 0 64px}
 .tier-color-item input[type=color]{width:44px;height:32px;padding:2px 4px;border-radius:8px;border:1px solid var(--bd2);background:#fff;cursor:pointer}
 .tier-color-item input[type=color]:disabled{opacity:.5;cursor:not-allowed}
 
-/* SEATING */
-.seating-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:12px;background:var(--bg);border:1px solid var(--bd2);border-radius:12px;margin-bottom:14px}
+.locked-note{display:flex;gap:10px;padding:11px 14px;background:var(--amf);border:1px solid #fde68a;border-radius:10px;margin-bottom:14px;font-size:12.5px;color:#92400e;line-height:1.55;font-weight:600}
+.locked-note i{width:15px;height:15px;flex-shrink:0;margin-top:2px}
+.locked-note strong{font-weight:900}
+
+/* ═══════════════════════════════════════════════════
+   SEATING EDITOR (Pass 2 styles — used once Step 4 lands)
+   ═══════════════════════════════════════════════════ */
+.seat-toolbar{display:flex;gap:8px;flex-wrap:wrap;align-items:center;padding:12px;background:var(--bg);border:1px solid var(--bd2);border-radius:12px;margin-bottom:14px}
 .mode-pill{padding:9px 16px;border-radius:99px;font-size:12.5px;font-weight:800;background:#fff;border:1.5px solid var(--bd2);color:var(--tx2);cursor:pointer;transition:.15s}
 .mode-pill.active{background:var(--ink);color:#fff;border-color:var(--ink)}
 .mode-pill:disabled{opacity:.4;cursor:not-allowed}
-.spacer{flex:1}
-.canvas-outer{position:relative;background:#fafbfc;border:1px solid var(--bd);border-radius:12px;overflow:auto;max-height:640px;padding:0}
-.canvas{position:relative;background-image:linear-gradient(rgba(0,255,255,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,255,.08) 1px,transparent 1px);background-size:50px 50px;user-select:none;-webkit-user-select:none;touch-action:none;min-width:100%;min-height:100%}
-.canvas.grabbing{cursor:grabbing}
-.canvas.grabbing *{cursor:grabbing!important}
-.stage{position:absolute;background:linear-gradient(135deg,#1e2f4d,#2a4365);color:#fff;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:800;letter-spacing:4px;text-transform:uppercase;border-radius:6px;box-shadow:0 4px 14px rgba(30,47,77,.3);cursor:grab;z-index:5;touch-action:none}
-.stage.selected{outline:3px solid var(--cy);outline-offset:3px;box-shadow:0 0 0 5px rgba(0,255,255,.2),0 4px 14px rgba(30,47,77,.4)}
-.block{position:absolute;background:#fff;border:2px solid var(--cy);border-radius:8px;padding:8px;box-shadow:0 4px 14px rgba(10,15,20,.08);cursor:grab;touch-action:none;transform-origin:center center;z-index:10;transition:box-shadow .15s;overflow:hidden}
-.block:hover{box-shadow:0 8px 20px rgba(0,255,255,.2)}
-.block.selected{outline:3px solid var(--cy);outline-offset:2px;box-shadow:0 0 0 5px rgba(0,255,255,.18),0 8px 20px rgba(10,15,20,.15);z-index:20}
-.block-header{font-size:10.5px;font-weight:900;color:var(--cy3);text-align:center;letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.block-stage-line{text-align:center;font-size:7.5px;font-weight:800;letter-spacing:2px;text-transform:uppercase;color:#fff;background:linear-gradient(135deg,#1e2f4d,#2a4365);padding:2px 6px;border-radius:3px;margin-bottom:5px}
-.block-sub{margin-bottom:5px;padding-bottom:5px;border-bottom:1px dashed var(--bd2)}
-.block-sub:last-child{border-bottom:none;margin-bottom:0;padding-bottom:0}
-.block-sub-label{font-size:8.5px;font-weight:900;color:var(--cy3);letter-spacing:.06em;text-transform:uppercase;margin-bottom:4px;display:flex;align-items:center;gap:5px}
-.block-sub-label::before{content:'';width:3px;height:9px;background:var(--cy);border-radius:2px}
-.block-rows{display:flex;flex-direction:column;gap:2px}
-.block-row{display:flex;gap:2px;align-items:center;min-width:max-content}
-.block-row-lbl{font-size:8px;font-weight:800;color:var(--mut);width:16px;text-align:right;text-transform:uppercase;flex-shrink:0}
-.seat-mini{width:12px;height:12px;border-radius:2px;flex-shrink:0}
-.seat-mini.black{background:var(--tier-black)}
-.seat-mini.gold{background:var(--tier-gold)}
-.seat-mini.silver{background:var(--tier-silver)}
-.seat-mini.cyan{background:var(--tier-cyan)}
-.seat-mini.tier5{background:var(--tier-tier5)}
-.seat-mini.tier6{background:var(--tier-tier6)}
-.block-tables{display:flex;flex-wrap:wrap;gap:4px;padding:2px;justify-content:center}
-.table-mini{width:28px;height:28px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:9px;font-weight:900;color:#fff;background:#cbd5e1;border:1.5px solid rgba(255,255,255,.4)}
-.table-mini.black{background:var(--tier-black)}
-.table-mini.gold{background:var(--tier-gold);color:#0a0f14}
-.table-mini.silver{background:var(--tier-silver);color:#0a0f14}
-.table-mini.cyan{background:var(--tier-cyan);color:#04161c}
-.table-mini.tier5{background:var(--tier-tier5)}
-.table-mini.tier6{background:var(--tier-tier6);color:#0a0f14}
-.block-handle{position:absolute;width:16px;height:16px;background:#fff;border:2px solid var(--cy);border-radius:50%;box-shadow:0 2px 6px rgba(0,0,0,.2);z-index:30;display:none;align-items:center;justify-content:center;padding:0}
-.block.selected .block-handle{display:flex}
-.block-handle i{width:8px;height:8px;stroke-width:3}
-.block-handle.rotate{top:-24px;left:50%;transform:translateX(-50%);cursor:grab}
-.block-handle.rotate:hover{background:var(--cy)}
-.block-handle.resize{bottom:-8px;right:-8px;cursor:nwse-resize;background:var(--cy)}
+.seat-spacer{flex:1}
 
 .block-tabs{display:flex;flex-wrap:wrap;gap:6px;padding:10px;background:var(--bg);border:1px solid var(--bd2);border-radius:12px;margin-bottom:14px;align-items:center}
 .block-tab{padding:8px 14px;border-radius:99px;font-size:12px;font-weight:800;color:var(--tx2);background:#fff;border:1.5px solid var(--bd2);cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:6px;font-family:inherit}
@@ -185,36 +150,59 @@ main{flex:1;padding:24px 0 64px}
 .block-tab.active .cnt{background:rgba(0,255,255,.2);color:var(--cy)}
 .block-tab-add{padding:8px 14px;border-radius:99px;font-size:12px;font-weight:800;color:var(--cy3);background:transparent;border:1.5px dashed var(--cy);cursor:pointer;font-family:inherit}
 .block-tab-add:hover{background:var(--cyf)}
+.block-tab-add:disabled{opacity:.4;cursor:not-allowed;border-style:solid;border-color:var(--bd2);color:var(--mut)}
 
 .block-editor{background:var(--bg);border:1px solid var(--bd2);border-radius:12px;padding:16px;margin-bottom:14px}
 .block-editor-h{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
 .block-editor-h h3{font-size:14px;color:var(--nv);font-weight:800}
-.sub-header{display:flex;justify-content:space-between;align-items:center;gap:10px;margin:16px 0 10px;padding-top:14px;border-top:1px dashed var(--bd2);flex-wrap:wrap}
-.sub-header h4{font-size:11.5px;font-weight:900;color:var(--cy3);text-transform:uppercase;letter-spacing:.08em;display:flex;align-items:center;gap:7px}
-.sub-header h4 i{width:14px;height:14px}
-.sub-list{display:flex;flex-direction:column;gap:8px}
-.sub-row{display:grid;grid-template-columns:minmax(120px,1.4fr) 90px 100px 40px;gap:8px;align-items:end;padding:10px 12px;background:#fff;border:1px solid var(--bd2);border-radius:10px;min-width:0}
-@media (max-width:640px){.sub-row{grid-template-columns:1fr 1fr}.sub-row .sub-cell:nth-child(1){grid-column:1 / -1}.sub-row .sub-remove{grid-column:2 / -1;justify-self:end}}
-.sub-cell{min-width:0;display:flex;flex-direction:column;gap:3px}
-.sub-label{font-size:9.5px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.06em}
-.sub-name,.sub-num{padding:8px 10px;font-size:13px;font-weight:700;background:var(--bg);border:1px solid var(--bd2);border-radius:8px;min-width:0;width:100%}
-.sub-name:focus,.sub-num:focus{outline:none;border-color:var(--cy);box-shadow:0 0 0 2px rgba(0,255,255,.15)}
-.sub-num{text-align:center}
-.sub-remove{width:34px;height:34px;border-radius:8px;background:var(--dgf);color:var(--dg);border:1px solid #fecaca;font-size:16px;font-weight:900;cursor:pointer;flex-shrink:0;padding:0}
-.sub-remove:hover:not(:disabled){background:var(--dg);color:#fff}
-.sub-remove:disabled{opacity:.35;cursor:not-allowed}
+.block-editor-actions{display:flex;gap:6px;flex-wrap:wrap}
 
-.fs-overlay{position:fixed;inset:0;background:#0a0f14;z-index:9999;display:none;flex-direction:column;padding:14px}
-.fs-overlay.open{display:flex}
-.fs-hdr{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:10px;color:#fff;flex-wrap:wrap}
-.fs-hdr h2{color:#fff;font-size:1rem;font-weight:800;letter-spacing:1px;text-transform:uppercase}
-.fs-hdr h2 span{color:var(--cy)}
-.fs-actions{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
-.fs-btn{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.2);color:#fff;padding:7px 12px;border-radius:8px;font-weight:700;font-size:11.5px;cursor:pointer;font-family:inherit}
-.fs-btn:hover{background:var(--cy);color:#04161c;border-color:var(--cy)}
-.fs-btn.active{background:var(--cy);color:#04161c;border-color:var(--cy)}
-.fs-btn.close:hover{background:var(--dg);color:#fff;border-color:var(--dg)}
-.fs-body{flex:1;min-height:0;overflow:auto;background:#f6f8fb;border-radius:10px;padding:16px}
+.shape-pills{display:flex;gap:6px;flex-wrap:wrap;margin-top:4px}
+.shape-pill{padding:9px 14px;border-radius:10px;font-size:12.5px;font-weight:800;background:#fff;border:1.5px solid var(--bd2);color:var(--tx2);cursor:pointer;transition:.15s;font-family:inherit;display:inline-flex;align-items:center;gap:7px}
+.shape-pill:hover:not(:disabled){border-color:var(--cy)}
+.shape-pill.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+.shape-pill:disabled{opacity:.4;cursor:not-allowed}
+.shape-pill i{width:14px;height:14px}
+
+.shape-config{margin-top:14px;padding-top:14px;border-top:1px dashed var(--bd2)}
+.total-chip{display:inline-flex;align-items:center;gap:6px;background:var(--cyf);color:var(--cy3);font-size:11.5px;font-weight:900;padding:6px 11px;border-radius:8px;margin-top:8px;font-family:var(--mono)}
+
+.seat-preview{background:#fafbfc;border:1px solid var(--bd);border-radius:12px;padding:22px 16px;overflow-x:auto;margin-top:14px}
+.seat-preview-inner{display:inline-block;min-width:max-content}
+.preview-block{background:#fff;border:1.5px solid var(--cy);border-radius:12px;padding:16px 18px 20px;margin-bottom:16px}
+.preview-block:last-child{margin-bottom:0}
+.preview-block-head{display:flex;justify-content:space-between;align-items:baseline;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.preview-block-title{font-size:14px;font-weight:900;color:var(--cy3);letter-spacing:.02em}
+.preview-block-meta{font-size:11.5px;font-weight:700;color:var(--mut)}
+.preview-stage{margin:0 auto 16px;background:linear-gradient(135deg,#0a0f14,#1a2129);color:#fff;font-size:10px;font-weight:900;letter-spacing:.24em;text-transform:uppercase;padding:8px 32px;border-radius:99px;text-align:center;width:max-content;box-shadow:0 6px 16px rgba(10,15,20,.18)}
+
+/* Row layout */
+.preview-rows{display:flex;flex-direction:column;gap:6px}
+.preview-row{display:flex;align-items:center;gap:8px}
+.preview-row-lbl{width:22px;font-family:var(--mono);font-size:11.5px;font-weight:900;color:var(--mut);text-align:right;flex-shrink:0}
+.preview-row-seats{display:flex;gap:4px;flex-wrap:nowrap}
+.preview-row-tier{margin-left:12px;font-size:10.5px;font-weight:900;color:var(--mut);letter-spacing:.06em;text-transform:uppercase;white-space:nowrap}
+
+.seat-dot{width:26px;height:26px;border-radius:6px;display:inline-flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:11px;font-weight:900;color:#fff;border:1px solid rgba(0,0,0,.15);flex-shrink:0}
+.seat-dot.light{color:#0a0f14}
+.seat-gap{width:14px;flex-shrink:0}
+
+/* Table layout */
+.preview-tables{display:flex;flex-wrap:wrap;gap:26px;justify-content:flex-start;padding:8px 0}
+.table-wrap{position:relative;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.table-shape{position:relative;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-weight:900;color:#fff;border:1px solid rgba(0,0,0,.15)}
+.table-shape.round{border-radius:50%}
+.table-shape.square{border-radius:6px}
+.table-shape.rectangular{border-radius:6px}
+.table-shape.light{color:#0a0f14}
+
+.chair-dot{position:absolute;width:18px;height:18px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-family:var(--mono);font-size:9.5px;font-weight:900;color:#fff;border:1px solid rgba(0,0,0,.15);transform:translate(-50%,-50%)}
+.chair-dot.light{color:#0a0f14}
+
+.placeholder-panel{display:flex;flex-direction:column;align-items:center;justify-content:center;padding:60px 24px;text-align:center;color:var(--mut)}
+.placeholder-panel i{width:44px;height:44px;color:var(--cy3);margin-bottom:14px;opacity:.5}
+.placeholder-panel h3{font-size:1.1rem;color:var(--nv);margin-bottom:8px}
+.placeholder-panel p{font-size:13.5px;max-width:400px;line-height:1.6}
 
 .ticket-wrap{perspective:1600px}
 .ticket{padding:22px;border-radius:18px;box-shadow:0 22px 44px -12px rgba(0,0,0,.22);display:flex;flex-direction:column;gap:14px;position:relative;overflow:hidden;border:1px solid rgba(0,0,0,.05);background:linear-gradient(135deg,var(--tkt-bg1,#e6ffff),var(--tkt-bg2,#b3ffff));color:var(--tkt-text,#0a0f14)}
@@ -308,14 +296,16 @@ main{flex:1;padding:24px 0 64px}
       <div class="progress-text"><span id="progLbl">Step 1 of 5 · Event Details</span><span id="progPct">20%</span></div>
     </div>
 
-    <!-- STEP 1 -->
+    <!-- ═══════════════ STEP 1 — EVENT DETAILS ═══════════════ -->
     <section class="panel active" data-panel="1">
       <div class="split">
         <div class="card">
           <div class="card-h"><h1>Event Details</h1><p>Who's hosting, where, when, and how much.</p></div>
+
           <div class="divider"><span>Organiser</span></div>
           <div class="fg"><label for="hostName">Host Name</label><input type="text" id="hostName" placeholder="e.g., John Doe" /></div>
           <div class="fg"><label for="hostEmail">Host Email</label><input type="email" id="hostEmail" placeholder="john@example.com" /></div>
+
           <div class="divider"><span>Venue</span></div>
           <div class="row2">
             <div class="fg"><label for="venueName">Venue Name</label><input type="text" id="venueName" placeholder="Boksburg Stadium" /></div>
@@ -327,6 +317,7 @@ main{flex:1;padding:24px 0 64px}
             </div>
           </div>
           <div class="fg"><label for="venueAddress">Full Address (optional)</label><input type="text" id="venueAddress" placeholder="Street, suburb" /></div>
+
           <div class="divider"><span>Date &amp; Type</span></div>
           <div class="row2">
             <div class="fg"><label for="eventType">Event Type</label>
@@ -355,23 +346,33 @@ main{flex:1;padding:24px 0 64px}
             </div>
             <div class="fg"><label for="startDate">Start Date</label><input type="date" id="startDate" /></div>
           </div>
+
           <div class="divider"><span>Event Name</span></div>
           <div class="fg"><label for="eventName">Event Name</label><input type="text" id="eventName" placeholder="Neon Nights Live" /></div>
           <div class="fg"><label for="eventDesc">Description (optional)</label><textarea id="eventDesc" placeholder="What to expect, dress code, age limits…" maxlength="600"></textarea></div>
+
           <div class="divider"><span>Cover Image</span></div>
           <div class="fg"><label for="coverUrl">Cover Image URL (optional)</label><input type="url" id="coverUrl" placeholder="https://…" /></div>
           <div class="fg"><label for="coverFile">Or upload (max 500 KB)</label><input type="file" id="coverFile" accept="image/*" /></div>
+
           <div class="step-nav">
             <button type="button" class="btn btn-ghost" disabled>← Previous</button>
             <button type="button" class="btn btn-accent" data-next="2">Next: Pricing Plan →</button>
           </div>
         </div>
+
         <div>
           <div class="card">
             <div style="font-size:10.5px;font-weight:900;color:var(--mut);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">Live Ticket Preview</div>
             <div class="ticket-wrap">
               <div class="ticket" id="ticketFront">
-                <div class="ticket-h"><div class="ticket-logo">NOVALINK</div><div class="ticket-badges"><span class="ticket-badge">PUBLIC</span><span class="ticket-badge" id="tierBadge">STANDARD</span></div></div>
+                <div class="ticket-h">
+                  <div class="ticket-logo">NOVALINK</div>
+                  <div class="ticket-badges">
+                    <span class="ticket-badge">PUBLIC</span>
+                    <span class="ticket-badge" id="tierBadge">STANDARD</span>
+                  </div>
+                </div>
                 <div class="ticket-body">
                   <div class="ticket-info">
                     <div class="ticket-title" id="tEventName">EVENT NAME</div>
@@ -382,7 +383,10 @@ main{flex:1;padding:24px 0 64px}
                   <div class="ticket-qr"></div>
                 </div>
                 <div class="ticket-loc"><i data-lucide="map-pin"></i> <span id="tLoc">VENUE</span></div>
-                <div class="ticket-barcode"><div class="barcode"></div><div class="barcode-num">0000 0000 0000 0000</div></div>
+                <div class="ticket-barcode">
+                  <div class="barcode"></div>
+                  <div class="barcode-num">0000 0000 0000 0000</div>
+                </div>
               </div>
             </div>
           </div>
@@ -390,77 +394,102 @@ main{flex:1;padding:24px 0 64px}
       </div>
     </section>
 
-    <!-- STEP 2 -->
+    <!-- ═══════════════ STEP 2 — PRICING PLAN ═══════════════ -->
     <section class="panel" data-panel="2">
       <div class="split">
         <div class="card">
           <div class="card-h"><h1>Pricing Plan</h1><p>Pick the plan that matches your scale.</p></div>
+
           <div class="plan-grid" id="planGrid">
             <label class="plan-card" data-plan="basic">
-              <input type="radio" name="plan" value="basic" data-fee="5" data-limit="100" />
-              <div class="plan-name">Basic</div><div class="plan-fee">5<small>% per ticket</small></div>
-              <div class="plan-desc">Up to 100 tickets · Fixed tiers · No seating plan</div>
+              <input type="radio" name="plan" value="basic" />
+              <div class="plan-name">Basic</div>
+              <div class="plan-fee">5<small>% per ticket</small></div>
+              <div class="plan-desc">Up to 100 tickets · 1 tier · No seating plan</div>
             </label>
             <label class="plan-card selected" data-plan="standard">
               <span class="plan-badge">Popular</span>
-              <input type="radio" name="plan" value="standard" data-fee="7" data-limit="500" checked />
-              <div class="plan-name">Standard</div><div class="plan-fee">7<small>% per ticket</small></div>
-              <div class="plan-desc">Up to 500 tickets · Tables &amp; rows · Editable tiers</div>
+              <input type="radio" name="plan" value="standard" checked />
+              <div class="plan-name">Standard</div>
+              <div class="plan-fee">7<small>% per ticket</small></div>
+              <div class="plan-desc">Up to 500 tickets · 3 tiers · Rows seating</div>
             </label>
             <label class="plan-card" data-plan="premium">
-              <input type="radio" name="plan" value="premium" data-fee="10" data-limit="2000" />
-              <div class="plan-name">Premium</div><div class="plan-fee">10<small>% per ticket</small></div>
-              <div class="plan-desc">Up to 2,000 tickets · Rows + tables · 6 tiers</div>
+              <input type="radio" name="plan" value="premium" />
+              <div class="plan-name">Premium</div>
+              <div class="plan-fee">10<small>% per ticket</small></div>
+              <div class="plan-desc">Up to 2,000 tickets · Tables &amp; rows · All shapes</div>
             </label>
             <label class="plan-card" data-plan="enterprise">
-              <input type="radio" name="plan" value="enterprise" data-fee="12" data-limit="999999" />
-              <div class="plan-name">Enterprise</div><div class="plan-fee">12<small>% per ticket</small></div>
+              <input type="radio" name="plan" value="enterprise" />
+              <div class="plan-name">Enterprise</div>
+              <div class="plan-fee">12<small>% per ticket</small></div>
               <div class="plan-desc">Unlimited · Everything unlocked</div>
             </label>
           </div>
+
           <div class="step-nav">
             <button type="button" class="btn btn-ghost" data-prev="1">← Back</button>
             <button type="button" class="btn btn-accent" data-next="3">Next: Tiers →</button>
           </div>
         </div>
+
         <div>
           <div class="card">
-            <div class="rev-head"><i data-lucide="badge-check"></i> Your Plan</div>
-            <div class="rev-row"><span>Plan</span><span class="rev-plan" id="planName">Standard · 7%</span></div>
-            <div class="rev-row"><span>Ticket limit</span><span id="planLimit">500</span></div>
-            <div class="rev-row"><span>Seating plan</span><span id="planSeating">Yes</span></div>
-            <div class="rev-row"><span>Max tiers</span><span id="planTiers">4</span></div>
+            <div class="rev-head" style="color:var(--cy3);"><i data-lucide="badge-check"></i> Your Plan</div>
+            <div class="rev-row" style="color:var(--tx2);border-color:var(--bd)"><span>Plan</span><span class="rev-plan" style="color:var(--cy3);" id="planName">Standard · 7%</span></div>
+            <div class="rev-row" style="color:var(--tx2);border-color:var(--bd)"><span>Tier limit</span><span id="planTierLimit">3</span></div>
+            <div class="rev-row" style="color:var(--tx2);border-color:var(--bd)"><span>Rename tiers</span><span id="planRename">Yes</span></div>
+            <div class="rev-row" style="color:var(--tx2);border-color:var(--bd)"><span>Edit colours</span><span id="planColors">Yes</span></div>
+            <div class="rev-row" style="color:var(--tx2);border-color:var(--bd)"><span>Seating plan</span><span id="planSeating">Rows only</span></div>
+            <div class="rev-row" style="color:var(--tx2);border-color:var(--bd)"><span>Table shapes</span><span id="planShapes">None</span></div>
+            <div class="rev-row" style="color:var(--tx2);border-color:var(--bd)"><span>Max blocks</span><span id="planBlocks">2</span></div>
           </div>
         </div>
       </div>
-    </section>
-
-    <!-- STEP 3 -->
+          </section>
+              <!-- ═══════════════ STEP 3 — TIERS ═══════════════ -->
     <section class="panel" data-panel="3">
       <div class="split">
         <div class="card">
-          <div class="card-h"><h1>Tier Names &amp; Prices</h1><p>Rename, price, and colour each tier.</p></div>
-          <div class="fg">
-            <label for="tierCount">Number of Tiers</label>
-            <select id="tierCount">
-              <option value="2">2 Tiers</option><option value="3">3 Tiers</option>
-              <option value="4" selected>4 Tiers</option><option value="5">5 Tiers</option><option value="6">6 Tiers</option>
-            </select>
-            <p class="hint" id="tierCountHint">Minimum 2 tiers.</p>
+          <div class="card-h"><h1>Your Tiers</h1><p>Three tiers: Elite, Silver, Standard.</p></div>
+
+          <div class="locked-note" id="basicTierNote" style="display:none;">
+            <i data-lucide="lock"></i>
+            <div><strong>Basic plan:</strong> one tier, locked to "Standard". Upgrade to Standard or higher for three tiers.</div>
           </div>
-          <div class="fg"><label>Customise each tier</label><div class="tier-list" id="tierList"></div></div>
+
+          <div class="fg">
+            <label>Customise each tier</label>
+            <div class="tier-list" id="tierList"></div>
+          </div>
+
           <div class="divider"><span>Tier Colours</span></div>
+
+          <div class="locked-note" id="basicColorNote" style="display:none;">
+            <i data-lucide="lock"></i>
+            <div><strong>Colours are locked on Basic.</strong> Upgrade to Standard or higher to customise.</div>
+          </div>
+
           <div class="tier-color-grid" id="tierColorGrid"></div>
+
           <div class="step-nav">
             <button type="button" class="btn btn-ghost" data-prev="2">← Back</button>
             <button type="button" class="btn btn-accent" data-next="4">Next: Seating Plan →</button>
           </div>
         </div>
+
         <div>
           <div class="card">
             <div style="font-size:10.5px;font-weight:900;color:var(--mut);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">Live Preview</div>
             <div class="ticket">
-              <div class="ticket-h"><div class="ticket-logo">NOVALINK</div><div class="ticket-badges"><span class="ticket-badge">PUBLIC</span><span class="ticket-badge" id="tierBadge2">STANDARD</span></div></div>
+              <div class="ticket-h">
+                <div class="ticket-logo">NOVALINK</div>
+                <div class="ticket-badges">
+                  <span class="ticket-badge">PUBLIC</span>
+                  <span class="ticket-badge" id="tierBadge2">STANDARD</span>
+                </div>
+              </div>
               <div class="ticket-body">
                 <div class="ticket-info">
                   <div class="ticket-title" id="tEventName2">EVENT NAME</div>
@@ -476,50 +505,35 @@ main{flex:1;padding:24px 0 64px}
       </div>
     </section>
 
-    <!-- STEP 4 -->
+    <!-- ═══════════════ STEP 4 — SEATING PLAN ═══════════════ -->
     <section class="panel" data-panel="4">
       <div class="split-wide">
         <div class="card">
-          <div class="card-h"><h1>Seating Plan &amp; Venue Layout</h1><p>Drag blocks. Rotate. Resize. Build subsections.</p></div>
+          <div class="card-h">
+            <h1>Seating Plan</h1>
+            <p>Build your venue with numbers. The preview updates live.</p>
+          </div>
 
-          <div class="seating-toolbar">
+          <div class="seat-toolbar">
             <button type="button" class="mode-pill active" data-mode="rows">Rows</button>
             <button type="button" class="mode-pill" data-mode="tables">Tables</button>
-            <span class="spacer"></span>
-            <label style="font-size:11.5px;font-weight:700;display:inline-flex;gap:6px;align-items:center;">
-              <input type="checkbox" id="snapToggle" checked /> Snap to grid
-            </label>
-            <button type="button" class="btn btn-ghost btn-sm" id="fitViewBtn">Fit View</button>
-            <button type="button" class="btn btn-accent btn-sm" id="openFsBtn"><i data-lucide="maximize-2"></i> Full Screen</button>
+            <span class="seat-spacer"></span>
+            <span id="seatingPlanBadge" style="font-size:11px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;">Rows mode</span>
           </div>
 
-          <div class="row3" style="margin-bottom:14px;">
-            <div class="fg" style="margin-bottom:0;"><label for="canvasW">Canvas Width (px)</label><input type="number" id="canvasW" min="400" max="4000" value="1200" /></div>
-            <div class="fg" style="margin-bottom:0;"><label for="canvasH">Canvas Height (px)</label><input type="number" id="canvasH" min="400" max="4000" value="800" /></div>
-            <div class="fg" style="margin-bottom:0;"><label for="gridSize">Grid Size (px)</label><input type="number" id="gridSize" min="10" max="200" value="50" /></div>
+          <div class="locked-note" id="basicSeatingNote" style="display:none;">
+            <i data-lucide="lock"></i>
+            <div><strong>Basic plan has no seating plan.</strong> Upgrade to Standard or higher to add rows or tables.</div>
           </div>
 
-          <div class="fg" style="margin-bottom:14px;">
-            <label for="stageName">Stage Name</label>
-            <input type="text" id="stageName" value="STAGE" maxlength="20" />
-          </div>
+          <div id="seatingEditor">
+            <div class="block-tabs" id="blockTabs"></div>
+            <div class="block-editor" id="blockEditor"></div>
 
-          <div class="divider"><span>Table Configuration <span id="tableModeNote" style="display:none;">(tables mode only)</span></span></div>
-          <div class="row3" id="tableConfigRow">
-            <div class="fg" style="margin-bottom:0;"><label for="tableShape">Table Shape</label>
-              <select id="tableShape"><option value="circular">Circular</option><option value="square">Square</option><option value="rectangular">Rectangular</option></select>
+            <div class="divider"><span>Live Preview</span></div>
+            <div class="seat-preview">
+              <div class="seat-preview-inner" id="seatPreview"></div>
             </div>
-            <div class="fg" style="margin-bottom:0;"><label for="chairsAround">Chairs per Table</label><input type="number" id="chairsAround" min="1" max="20" value="8" /></div>
-            <div class="fg" style="margin-bottom:0;"><label for="tableDiameter">Diameter (cm)</label><input type="number" id="tableDiameter" min="20" max="600" value="150" /></div>
-          </div>
-
-          <div class="divider"><span>Blocks</span></div>
-          <div class="block-tabs" id="blockTabs"></div>
-          <div class="block-editor" id="blockEditor"></div>
-
-          <div class="divider"><span>Canvas <span id="canvasWarn" style="display:none;color:#b45309;">— Over 26 rows total: the buyer page can't display more than 26 rows</span></span></div>
-          <div class="canvas-outer">
-            <div class="canvas" id="canvas"></div>
           </div>
 
           <div class="step-nav">
@@ -530,16 +544,18 @@ main{flex:1;padding:24px 0 64px}
       </div>
     </section>
 
-    <!-- STEP 5 -->
+    <!-- ═══════════════ STEP 5 — REVENUE ═══════════════ -->
     <section class="panel" data-panel="5">
       <div class="split">
         <div class="card">
           <div class="card-h"><h1>Live Revenue</h1><p>Real-time estimate based on plan, tiers and capacity.</p></div>
+
           <div class="stats">
             <div class="stat"><div class="lbl">Tickets</div><div class="val" id="revTickets">0</div></div>
             <div class="stat rev"><div class="lbl">Gross</div><div class="val" id="revGross">R0</div></div>
             <div class="stat fee"><div class="lbl">Fee</div><div class="val" id="revFee">R0</div></div>
           </div>
+
           <div class="rev-card">
             <div class="rev-head"><i data-lucide="trending-up"></i> Live Estimate</div>
             <div class="rev-row"><span>Plan</span><span class="rev-plan" id="revPlanName">Standard · 7%</span></div>
@@ -549,22 +565,32 @@ main{flex:1;padding:24px 0 64px}
             <div class="rev-row net"><span>Your Net</span><span class="rev-amt" id="revNet">R 0.00</span></div>
             <div class="rev-warn" id="revWarn"></div>
           </div>
+
           <div class="divider"><span>Per-Tier Breakdown</span></div>
           <div class="tier-list" id="tierBreakdown"></div>
+
           <div class="divider"><span>Publish</span></div>
           <button type="button" class="btn btn-accent btn-block" id="submitBtn" style="padding:14px;">
             <i data-lucide="shield-check"></i> Save &amp; Finalize Event
           </button>
           <p class="hint" style="text-align:center;margin-top:8px;">Once saved, your event appears in the admin review queue.</p>
+
           <div class="step-nav">
             <button type="button" class="btn btn-ghost" data-prev="4">← Back to Seating</button>
           </div>
         </div>
+
         <div>
           <div class="card">
             <div style="font-size:10.5px;font-weight:900;color:var(--mut);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">Live Preview</div>
             <div class="ticket">
-              <div class="ticket-h"><div class="ticket-logo">NOVALINK</div><div class="ticket-badges"><span class="ticket-badge">PUBLIC</span><span class="ticket-badge" id="tierBadge3">STANDARD</span></div></div>
+              <div class="ticket-h">
+                <div class="ticket-logo">NOVALINK</div>
+                <div class="ticket-badges">
+                  <span class="ticket-badge">PUBLIC</span>
+                  <span class="ticket-badge" id="tierBadge3">STANDARD</span>
+                </div>
+              </div>
               <div class="ticket-body">
                 <div class="ticket-info">
                   <div class="ticket-title" id="tEventName3">EVENT NAME</div>
@@ -581,29 +607,11 @@ main{flex:1;padding:24px 0 64px}
     </section>
 
   </div>
-</main>
-
-<!-- FULLSCREEN -->
-<div class="fs-overlay" id="fsOverlay">
-  <div class="fs-hdr">
-    <h2>Full Venue Layout · <span id="fsStageName">STAGE</span></h2>
-    <div class="fs-actions">
-      <button type="button" class="fs-btn active" id="fsToggleGrid">Grid</button>
-      <label style="font-size:11.5px;font-weight:700;display:inline-flex;gap:6px;align-items:center;color:#fff;">
-        <input type="checkbox" id="fsSnap" checked /> Snap
-      </label>
-      <button type="button" class="fs-btn close" id="fsClose">✕ Close</button>
-    </div>
-  </div>
-  <div class="fs-body">
-    <div class="canvas" id="fsCanvas"></div>
-  </div>
-</div>
-
-<!-- AUTH -->
+            </main>
+            <!-- ═══════════════ AUTH MODAL ═══════════════ -->
 <div class="modal-wrap" id="authModal">
   <div class="modal">
-    <button class="modal-close" id="authClose"><i data-lucide="x"></i></button>
+    <button class="modal-close" id="authClose" type="button"><i data-lucide="x"></i></button>
     <h3 id="authTitle">Welcome back</h3>
     <p class="sub" id="authSub">Sign in to save events.</p>
     <div class="tabs">
@@ -647,12 +655,20 @@ var EVENTS = "events";
    ═══════════════════════════════════════════════════ */
 var $ = function(id){ return document.getElementById(id); };
 var $$ = function(s){ return Array.from(document.querySelectorAll(s)); };
-var esc = function(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
+var esc = function(s){
+  return String(s==null?'':s)
+    .replace(/&/g,'&amp;')
+    .replace(/</g,'&lt;')
+    .replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;');
+};
 var refreshIcons = function(){ if (window.lucide) lucide.createIcons(); };
 var icon = function(n){ return '<i data-lucide="'+n+'"></i>'; };
 var fmtR = function(n){ return 'R' + Math.round(Number(n||0)).toLocaleString('en-ZA'); };
 var fmtR2 = function(n){ return 'R ' + Number(n||0).toFixed(2); };
-var uid = function(){ return 'x' + Math.random().toString(36).slice(2,9) + Date.now().toString(36).slice(-4); };
+var uid = function(){
+  return 'x' + Math.random().toString(36).slice(2,9) + Date.now().toString(36).slice(-4);
+};
 
 function toast(msg, type, ms){
   type = type || 'info'; ms = ms || 3000;
@@ -666,209 +682,412 @@ function toast(msg, type, ms){
   toast._t = setTimeout(function(){ t.classList.remove('show'); }, ms);
 }
 
+function cap(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
+
 /* ═══════════════════════════════════════════════════
-   ROUTING ENGINE
+   TIERS — 3 fixed, semantic keys
    ═══════════════════════════════════════════════════ */
-var RE = window.NovalinkRoutingEngine || {};
-var TIER_KEYS = (RE.TIER_KEYS || ["black","gold","silver","cyan","tier5","tier6"]).slice();
-var TIER_DEFAULTS = Object.assign({ black:"#1a202c", gold:"#ecc94b", silver:"#cbd5e1", cyan:"#00FFFF", tier5:"#a855f7", tier6:"#f472b6" }, RE.TIER_DEFAULTS || {});
-var TIER_DEFAULT_NAMES = Object.assign({ black:"Elite", gold:"VIP", silver:"Silver", cyan:"Standard", tier5:"Platinum", tier6:"Diamond" }, RE.TIER_DEFAULT_NAMES || {});
-var MAX_TIERS = RE.MAX_TIERS || 6;
-var MAX_ROWS_PER_EVENT = 26; // view-event.html reader limit (single-letter rows)
+var TIER_KEYS = ["elite", "silver", "standard"];
+
+var TIER_DEFAULT_NAMES = {
+  elite:    "Elite",
+  silver:   "Silver",
+  standard: "Standard"
+};
+
+var TIER_DEFAULT_COLORS = {
+  elite:    "#1a202c",
+  silver:   "#cbd5e1",
+  standard: "#00FFFF"
+};
+
+/* ═══════════════════════════════════════════════════
+   PLAN FEATURES
+   ═══════════════════════════════════════════════════ */
+var PLANS = {
+  basic: {
+    fee: 5, limit: 100,
+    tierLimit: 1,
+    canRename: false, canColor: false,
+    seating: false, tables: false, shapes: [],
+    maxBlocks: 0
+  },
+  standard: {
+    fee: 7, limit: 500,
+    tierLimit: 3,
+    canRename: true, canColor: true,
+    seating: true, tables: false, shapes: [],
+    maxBlocks: 2
+  },
+  premium: {
+    fee: 10, limit: 2000,
+    tierLimit: 3,
+    canRename: true, canColor: true,
+    seating: true, tables: true, shapes: ['round','square','rectangular'],
+    maxBlocks: 10
+  },
+  enterprise: {
+    fee: 12, limit: 999999,
+    tierLimit: 3,
+    canRename: true, canColor: true,
+    seating: true, tables: true, shapes: ['round','square','rectangular'],
+    maxBlocks: 999999
+  }
+};
+
+/* ═══════════════════════════════════════════════════
+   SHAPE CONSTRAINTS
+   ═══════════════════════════════════════════════════ */
+var SHAPE_LIMITS = {
+  round: {
+    chairsMin: 2, chairsMax: 12, chairsDefault: 8,
+    diameterMin: 60, diameterMax: 240, diameterDefault: 150
+  },
+  square: {
+    chairsPerSideMin: 1, chairsPerSideMax: 2, chairsPerSideDefault: 2,
+    sideMin: 60, sideMax: 200, sideDefault: 100
+  },
+  rectangular: {
+    longMin: 2, longMax: 5, longDefault: 4,
+    shortMin: 0, shortMax: 1, shortDefault: 1,
+    lengthMin: 120, lengthMax: 400, lengthDefault: 240,
+    widthMin: 60, widthMax: 150, widthDefault: 90
+  }
+};
 
 /* ═══════════════════════════════════════════════════
    STATE
    ═══════════════════════════════════════════════════ */
-var PLANS = {
-  basic:      { fee:5,  limit:100,    seating:false, rows:false, tables:false, editColors:false, editNames:false, maxTiers:4 },
-  standard:   { fee:7,  limit:500,    seating:true,  rows:false, tables:true,  editColors:true,  editNames:true,  maxTiers:4 },
-  premium:    { fee:10, limit:2000,   seating:true,  rows:true,  tables:true,  editColors:true,  editNames:true,  maxTiers:6 },
-  enterprise: { fee:12, limit:999999, seating:true,  rows:true,  tables:true,  editColors:true,  editNames:true,  maxTiers:6 }
-};
-
 var state = {
   user: null,
   step: 1,
   plan: 'standard',
   features: PLANS.standard,
-  tierCount: 4,
-  tierColors: Object.assign({}, TIER_DEFAULTS),
-  tierNames: Object.assign({}, TIER_DEFAULT_NAMES),
-  tierPrices: { black:0, gold:0, silver:0, cyan:0, tier5:0, tier6:0 },
+
+  /* tiers */
+  tierNames:  Object.assign({}, TIER_DEFAULT_NAMES),
+  tierColors: Object.assign({}, TIER_DEFAULT_COLORS),
+  tierPrices: { elite: 0, silver: 0, standard: 0 },
   tierPricesTouched: false,
-  savedColors: null,
   savedNames: null,
+  savedColors: null,
+
+  /* seating */
   seatingMode: 'rows',
-  snap: true,
-  canvas: { width: 1200, height: 800, grid: 50 },
-  stage: { x: 500, y: 60, w: 200, h: 60, name: 'STAGE' },
-  tableConfig: { shape:'circular', chairs:8, diameter:150 },
   blocks: [],
   selectedBlock: null,
+
+  /* meta */
   coverImage: '',
   venue: { name:'', city:'', address:'' }
 };
 
-function makeBlock(idx){
-  return {
-    id: uid(),
-    name: 'Block ' + String.fromCharCode(65 + idx),
-    x: 80 + idx * 260,
-    y: 320,
-    w: 220,
-    h: 220,
-    rotation: 0,
-    tier: null,
-    mode: state.seatingMode,
-    subsections: [{ id: uid(), name: 'Main', rows: 4, seatsPerRow: 6, tier: null }],
-    tableRows: [{ count: 4 }]
-  };
-}
-function getBlock(id){ return state.blocks.find(function(b){ return b.id === id; }); }
-function rowLetter(i){
-  var n = i, s = '';
-  do { s = String.fromCharCode(65 + (n%26)) + s; n = Math.floor(n/26) - 1; } while (n >= 0);
-  return s;
+function activeTierKeys(){
+  if (state.plan === 'basic') return ['standard'];
+  return TIER_KEYS.slice();
 }
 
 /* ═══════════════════════════════════════════════════
-   PLAN & TIERS
+   BLOCK MODEL
    ═══════════════════════════════════════════════════ */
-function cap(s){ return s.charAt(0).toUpperCase()+s.slice(1); }
-function getActiveTiers(){ return TIER_KEYS.slice(0, state.tierCount); }
+function blockLetter(idx){
+  var n = idx, s = '';
+  do { s = String.fromCharCode(65 + (n % 26)) + s; n = Math.floor(n / 26) - 1; } while (n >= 0);
+  return s;
+}
+function rowLabel(i){ return blockLetter(i); }
+function seatKey(blockName, rowOrTable, chairNum){
+  return blockName + '-' + rowOrTable + '-' + String(chairNum).padStart(2,'0');
+}
 
+function makeBlock(idx){
+  return {
+    id: uid(),
+    name: 'Block ' + blockLetter(idx),
+    level: 'Ground Floor',
+    mode: 'rows',
+    tierOverride: null,
+    /* rows mode */
+    subsections: [
+      { id: uid(), name: 'Main', rows: 4, seatsPerRow: 6, tier: null }
+    ],
+    /* tables mode */
+    tableShape: 'round',
+    tableCount: 4,
+    roundChairs: SHAPE_LIMITS.round.chairsDefault,
+    roundDiameter: SHAPE_LIMITS.round.diameterDefault,
+    squareChairsPerSide: SHAPE_LIMITS.square.chairsPerSideDefault,
+    squareSide: SHAPE_LIMITS.square.sideDefault,
+    rectLong: SHAPE_LIMITS.rectangular.longDefault,
+    rectShort: SHAPE_LIMITS.rectangular.shortDefault,
+    rectLength: SHAPE_LIMITS.rectangular.lengthDefault,
+    rectWidth: SHAPE_LIMITS.rectangular.widthDefault
+  };
+}
+function getBlock(id){
+  return state.blocks.find(function(b){ return b.id === id; });
+}
+
+/* chairs per table for the given shape (used everywhere) */
+function chairsPerTable(block){
+  if (!block) return 0;
+  if (block.tableShape === 'round') return block.roundChairs;
+  if (block.tableShape === 'square') return block.squareChairsPerSide * 4;
+  if (block.tableShape === 'rectangular'){
+    return (block.rectLong * 2) + (block.rectShort * 2);
+  }
+  return 0;
+}
+
+/* seats in a block */
+function blockSeatCount(block){
+  if (!block) return 0;
+  if (block.mode === 'rows'){
+    return block.subsections.reduce(function(s, sub){
+      return s + (sub.rows * sub.seatsPerRow);
+    }, 0);
+  }
+  return block.tableCount * chairsPerTable(block);
+}
+
+/* tier distribution — Pass 3 wires the real UI, this stub is used for revenue */
+function computeTierCounts(){
+  var counts = {};
+  activeTierKeys().forEach(function(k){ counts[k] = 0; });
+  if (!state.features.seating || !state.blocks.length){
+    return counts;
+  }
+
+  var fallback = activeTierKeys()[activeTierKeys().length - 1] || 'standard';
+
+  state.blocks.forEach(function(b){
+    var t = b.tierOverride || fallback;
+
+    if (b.mode === 'rows'){
+      b.subsections.forEach(function(sub){
+        var tt = b.tierOverride || sub.tier || fallback;
+        counts[tt] = (counts[tt] || 0) + (sub.rows * sub.seatsPerRow);
+      });
+    } else {
+      counts[t] = (counts[t] || 0) + (b.tableCount * chairsPerTable(b));
+    }
+  });
+
+  return counts;
+}
+  /* ═══════════════════════════════════════════════════
+   PLAN RENDERING
+   ═══════════════════════════════════════════════════ */
 function applyPlan(){
   state.features = PLANS[state.plan];
+
   $$('.plan-card').forEach(function(c){
     var r = c.querySelector('input');
     c.classList.toggle('selected', r && r.checked);
   });
-  // Bug fix: preserve custom tier names across plan downgrades
-  if (!state.features.editNames){
+
+  /* tier names — preserve across downgrades */
+  if (!state.features.canRename){
     if (!state.savedNames){
-      var custom = TIER_KEYS.some(function(k){ return state.tierNames[k] !== TIER_DEFAULT_NAMES[k]; });
-      if (custom) state.savedNames = Object.assign({}, state.tierNames);
+      var changedN = TIER_KEYS.some(function(k){
+        return state.tierNames[k] !== TIER_DEFAULT_NAMES[k];
+      });
+      if (changedN) state.savedNames = Object.assign({}, state.tierNames);
     }
     TIER_KEYS.forEach(function(k){ state.tierNames[k] = TIER_DEFAULT_NAMES[k]; });
   } else if (state.savedNames){
-    TIER_KEYS.forEach(function(k){ if (state.savedNames[k]) state.tierNames[k] = state.savedNames[k]; });
+    TIER_KEYS.forEach(function(k){
+      if (state.savedNames[k]) state.tierNames[k] = state.savedNames[k];
+    });
     state.savedNames = null;
   }
-  // Bug fix: preserve custom tier colours across plan downgrades
-  if (!state.features.editColors){
+
+  /* tier colours — preserve across downgrades */
+  if (!state.features.canColor){
     if (!state.savedColors){
-      var customC = TIER_KEYS.some(function(k){ return state.tierColors[k] !== TIER_DEFAULTS[k]; });
-      if (customC) state.savedColors = Object.assign({}, state.tierColors);
+      var changedC = TIER_KEYS.some(function(k){
+        return state.tierColors[k] !== TIER_DEFAULT_COLORS[k];
+      });
+      if (changedC) state.savedColors = Object.assign({}, state.tierColors);
     }
-    TIER_KEYS.forEach(function(k){ state.tierColors[k] = TIER_DEFAULTS[k]; });
+    TIER_KEYS.forEach(function(k){ state.tierColors[k] = TIER_DEFAULT_COLORS[k]; });
   } else if (state.savedColors){
-    TIER_KEYS.forEach(function(k){ if (state.savedColors[k]) state.tierColors[k] = state.savedColors[k]; });
+    TIER_KEYS.forEach(function(k){
+      if (state.savedColors[k]) state.tierColors[k] = state.savedColors[k];
+    });
     state.savedColors = null;
   }
-  if (state.features.maxTiers < state.tierCount){
-    state.tierCount = state.features.maxTiers;
-    $('tierCount').value = String(state.tierCount);
+
+  /* Basic locks the single tier name */
+  if (state.plan === 'basic'){
+    state.tierNames.standard = 'Standard';
   }
-  $('tierCount').disabled = state.plan === 'basic';
-  $('basePriceGroup').style.display = state.plan === 'basic' ? 'none' : '';
-  $('planName').textContent = cap(state.plan) + ' · ' + state.features.fee + '%';
-  $('planLimit').textContent = state.features.limit >= 999999 ? 'Unlimited' : state.features.limit;
-  $('planSeating').textContent = state.features.seating ? 'Yes' : 'No';
-  $('planTiers').textContent = state.features.maxTiers;
+
+  /* Base price — hidden on Basic */
+  $('basePriceGroup').style.display = (state.plan === 'basic') ? 'none' : '';
+
+  /* Right panel summary */
+  $('planName').textContent  = cap(state.plan) + ' · ' + state.features.fee + '%';
+  $('planTierLimit').textContent = state.features.tierLimit;
+  $('planRename').textContent    = state.features.canRename ? 'Yes' : 'No';
+  $('planColors').textContent    = state.features.canColor ? 'Yes' : 'No';
+
+  var seatLabel = !state.features.seating ? 'None'
+    : state.features.tables ? 'Rows & tables'
+    : 'Rows only';
+  $('planSeating').textContent = seatLabel;
+
+  var shapeLabel = state.features.shapes.length
+    ? state.features.shapes.map(cap).join(', ')
+    : 'None';
+  $('planShapes').textContent = shapeLabel;
+
+  $('planBlocks').textContent = state.features.maxBlocks >= 999999
+    ? 'Unlimited'
+    : state.features.maxBlocks;
+
+  /* Locked notes on Step 3 */
+  $('basicTierNote').style.display  = (state.plan === 'basic') ? 'flex' : 'none';
+  $('basicColorNote').style.display = (state.plan === 'basic') ? 'flex' : 'none';
+
+  /* Step 4 gating */
+  $('basicSeatingNote').style.display = (!state.features.seating) ? 'flex' : 'none';
+  $('seatingEditor').style.display    = (!state.features.seating) ? 'none' : 'block';
+
   renderTierList();
   renderTierColorGrid();
-  renderSeatingPanel();
+  renderSeatingEditor();
   renderRevenue();
 }
 
+/* ═══════════════════════════════════════════════════
+   TIER LIST
+   ═══════════════════════════════════════════════════ */
 function renderTierList(){
   var list = $('tierList');
   list.innerHTML = '';
-  getActiveTiers().forEach(function(k){
+  activeTierKeys().forEach(function(k){
     var row = document.createElement('div');
     row.className = 'tier-row';
+    var readonly = state.features.canRename ? '' : 'readonly';
     row.innerHTML =
       '<span class="tier-swatch" style="background:'+state.tierColors[k]+'"></span>' +
-      '<input type="text" class="tier-name" data-tier="'+k+'" value="'+esc(state.tierNames[k])+'" maxlength="20" '+(state.features.editNames?'':'readonly')+' />' +
+      '<input type="text" class="tier-name" data-tier="'+k+'" value="'+esc(state.tierNames[k])+'" maxlength="20" '+readonly+' />' +
       '<span class="tier-qty" data-qty="'+k+'">0 seats</span>' +
-      '<div class="curr"><span class="curr-prefix">R</span><input type="number" class="tier-price" data-tier="'+k+'" min="0" step="0.01" value="'+(state.tierPrices[k]||0)+'" /></div>' +
+      '<div class="curr"><span class="curr-prefix">R</span>' +
+        '<input type="number" class="tier-price" data-tier="'+k+'" min="0" step="0.01" value="'+(state.tierPrices[k]||0)+'" />' +
+      '</div>' +
       '<span class="tier-rev" data-rev="'+k+'">R 0.00</span>';
     list.appendChild(row);
   });
+
   list.querySelectorAll('.tier-name').forEach(function(inp){
     inp.addEventListener('input', function(){
-      if (!state.features.editNames){ this.value = TIER_DEFAULT_NAMES[this.dataset.tier]; return; }
-      state.tierNames[this.dataset.tier] = this.value.trim() || TIER_DEFAULT_NAMES[this.dataset.tier];
+      if (!state.features.canRename){
+        this.value = TIER_DEFAULT_NAMES[this.dataset.tier];
+        return;
+      }
+      state.tierNames[this.dataset.tier] =
+        this.value.trim() || TIER_DEFAULT_NAMES[this.dataset.tier];
       renderTierColorGrid();
       updateTicketBadges();
-      renderBlockEditor();
+      renderSeatingEditor();
     });
   });
+
   list.querySelectorAll('.tier-price').forEach(function(inp){
     inp.addEventListener('input', function(){
       state.tierPricesTouched = true;
       var v = parseFloat(this.value);
-      state.tierPrices[this.dataset.tier] = (isNaN(v)||v<0) ? 0 : Math.round(v*100)/100;
+      state.tierPrices[this.dataset.tier] =
+        (isNaN(v) || v < 0) ? 0 : Math.round(v * 100) / 100;
       renderRevenue();
     });
   });
-  var hint = $('tierCountHint');
-  if (hint){
-    var parts = ['Minimum 2 tiers.'];
-    if (state.features.maxTiers < MAX_TIERS) parts.push('Your plan allows up to '+state.features.maxTiers+' tiers.');
-    hint.textContent = parts.join(' ');
-  }
-  $$('#tierCount option').forEach(function(o){
-    o.disabled = parseInt(o.value,10) > state.features.maxTiers;
-  });
 }
 
+/* ═══════════════════════════════════════════════════
+   TIER COLOURS
+   ═══════════════════════════════════════════════════ */
 function renderTierColorGrid(){
   var grid = $('tierColorGrid');
   grid.innerHTML = '';
-  getActiveTiers().forEach(function(k){
+  activeTierKeys().forEach(function(k){
     var item = document.createElement('div');
     item.className = 'tier-color-item';
     item.innerHTML =
       '<span class="tier-color-swatch" style="background:'+state.tierColors[k]+'"></span>' +
       '<label>'+esc(state.tierNames[k])+'</label>' +
-      '<input type="color" data-tier="'+k+'" value="'+state.tierColors[k]+'" '+(state.features.editColors?'':'disabled')+' />';
+      '<input type="color" data-tier="'+k+'" value="'+state.tierColors[k]+'" '+
+        (state.features.canColor ? '' : 'disabled')+' />';
     grid.appendChild(item);
   });
+
   grid.querySelectorAll('input[type=color]').forEach(function(inp){
     inp.addEventListener('input', function(){
-      if (!state.features.editColors) return;
+      if (!state.features.canColor) return;
       state.tierColors[this.dataset.tier] = this.value;
-      applyTierCssVars();
       renderTierList();
-      renderCanvas();
+      renderSeatingEditor();
       updateTicketColors();
     });
   });
-  applyTierCssVars();
+
   updateTicketColors();
 }
 
-function applyTierCssVars(){
-  var root = document.documentElement;
-  TIER_KEYS.forEach(function(k){ root.style.setProperty('--tier-'+k, state.tierColors[k]); });
+/* ═══════════════════════════════════════════════════
+   TICKET PREVIEW COLOURS
+   ═══════════════════════════════════════════════════ */
+function hexToRgb(h){
+  h = String(h||'').replace('#','');
+  if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
+  if (h.length !== 6) return null;
+  return {
+    r: parseInt(h.slice(0,2),16),
+    g: parseInt(h.slice(2,4),16),
+    b: parseInt(h.slice(4,6),16)
+  };
 }
+function mix(a, b, t){
+  var ca = hexToRgb(a), cb = hexToRgb(b);
+  if (!ca || !cb) return a;
+  return '#' + ['r','g','b'].map(function(ch){
+    return Math.round(ca[ch] + (cb[ch]-ca[ch]) * t).toString(16).padStart(2,'0');
+  }).join('');
+}
+function relLum(h){
+  var c = hexToRgb(h); if (!c) return 0.5;
+  var arr = [c.r, c.g, c.b].map(function(v){
+    v /= 255;
+    return v <= 0.03928 ? v/12.92 : Math.pow((v + 0.055)/1.055, 2.4);
+  });
+  return 0.2126*arr[0] + 0.7152*arr[1] + 0.0722*arr[2];
+}
+function isLight(hex){ return relLum(hex) > 0.55; }
 
 function updateTicketBadges(){
-  var last = getActiveTiers()[getActiveTiers().length-1] || 'cyan';
-  var label = (state.tierNames[last]||'Standard').toUpperCase();
-  ['tierBadge','tierBadge2','tierBadge3'].forEach(function(id){ if ($(id)) $(id).textContent = label; });
+  var keys = activeTierKeys();
+  var top = keys[0] || 'standard';
+  var label = (state.tierNames[top] || 'Standard').toUpperCase();
+  ['tierBadge','tierBadge2','tierBadge3'].forEach(function(id){
+    if ($(id)) $(id).textContent = label;
+  });
   updateTicketColors();
 }
+
 function updateTicketColors(){
-  var last = getActiveTiers()[getActiveTiers().length-1] || 'cyan';
-  var hex = state.tierColors[last];
+  var keys = activeTierKeys();
+  var top = keys[0] || 'standard';
+  var hex = state.tierColors[top];
   var lum = relLum(hex);
   var bg1, bg2, text, muted;
+
   if (lum < 0.35){
     bg1 = mix(hex, '#ffffff', 0.06);
     bg2 = mix(hex, '#000000', 0.45);
-    text = '#ffffff'; muted = 'rgba(255,255,255,0.65)';
+    text = '#ffffff';
+    muted = 'rgba(255,255,255,0.65)';
   } else {
     bg1 = mix(hex, '#ffffff', 0.92);
     bg2 = mix(hex, '#ffffff', 0.4);
@@ -876,7 +1095,8 @@ function updateTicketColors(){
     text = c2lum > 0.5 ? '#0a0f14' : '#ffffff';
     muted = text === '#ffffff' ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)';
   }
-  ['ticketFront','ticketBack'].forEach(function(id){
+
+  ['ticketFront'].forEach(function(id){
     var el = $(id); if (!el) return;
     el.style.setProperty('--tkt-bg1', bg1);
     el.style.setProperty('--tkt-bg2', bg2);
@@ -885,33 +1105,17 @@ function updateTicketColors(){
     el.style.setProperty('--tkt-logo', lum < 0.35 ? '#00FFFF' : '#1e2f4d');
   });
 }
-function hexToRgb(h){
-  h = String(h||'').replace('#','');
-  if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
-  if (h.length !== 6) return null;
-  return { r:parseInt(h.slice(0,2),16), g:parseInt(h.slice(2,4),16), b:parseInt(h.slice(4,6),16) };
-}
-function mix(a, b, t){
-  var ca = hexToRgb(a), cb = hexToRgb(b);
-  if (!ca || !cb) return a;
-  return '#' + ['r','g','b'].map(function(ch){
-    return Math.round(ca[ch] + (cb[ch]-ca[ch])*t).toString(16).padStart(2,'0');
-  }).join('');
-}
-function relLum(h){
-  var c = hexToRgb(h); if (!c) return 0.5;
-  var arr = [c.r,c.g,c.b].map(function(v){ v/=255; return v<=0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055, 2.4); });
-  return 0.2126*arr[0] + 0.7152*arr[1] + 0.0722*arr[2];
-}
 
 /* ═══════════════════════════════════════════════════
    STEP NAV
    ═══════════════════════════════════════════════════ */
 var STEP_NAMES = {1:'Event Details',2:'Pricing Plan',3:'Tiers',4:'Seating Plan',5:'Revenue'};
 function goToStep(n){
-  if (n<1 || n>5) return;
+  if (n < 1 || n > 5) return;
   state.step = n;
-  $$('.panel').forEach(function(p){ p.classList.toggle('active', parseInt(p.dataset.panel) === n); });
+  $$('.panel').forEach(function(p){
+    p.classList.toggle('active', parseInt(p.dataset.panel) === n);
+  });
   $$('.step').forEach(function(t){
     var s = parseInt(t.dataset.step);
     t.classList.toggle('active', s === n);
@@ -922,92 +1126,85 @@ function goToStep(n){
   $('progLbl').textContent = 'Step ' + n + ' of 5 · ' + STEP_NAMES[n];
   $('progPct').textContent = pct + '%';
   window.scrollTo({ top:0, behavior:'smooth' });
-  if (n === 4) renderSeatingPanel();
+  if (n === 4) renderSeatingEditor();
   if (n === 5) renderRevenue();
 }
 
 /* ═══════════════════════════════════════════════════
-   SEATING PANEL
+   SEATING EDITOR — block tabs
    ═══════════════════════════════════════════════════ */
-function totalFlattenedRows(){
-  if (state.seatingMode === 'rows'){
-    var n = 0;
-    state.blocks.forEach(function(b){
-      b.subsections.forEach(function(s){ n += s.rows; });
-    });
-    return n;
-  } else {
-    var t = 0;
-    state.blocks.forEach(function(b){
-      t += b.tableRows.reduce(function(a,r){ return a+r.count; }, 0);
-    });
-    return t;
+function ensureBlocks(){
+  if (!state.blocks.length){
+    var b = makeBlock(0);
+    b.mode = state.seatingMode;
+    state.blocks.push(b);
+    state.selectedBlock = b.id;
   }
 }
 
-function renderSeatingPanel(){
-  if (!state.features.seating){
-    $('blockTabs').innerHTML = '<div style="font-size:12px;color:var(--mut);font-style:italic;">Seating plans are not available on the Basic plan.</div>';
-    $('blockEditor').innerHTML = '';
-    $('canvas').style.display = 'none';
-    $('canvasWarn').style.display = 'none';
-    return;
-  }
-  $('canvas').style.display = '';
-  $('tableModeNote').style.display = state.seatingMode === 'tables' ? '' : 'none';
+function renderSeatingEditor(){
+  if (!state.features.seating){ return; }
+  ensureBlocks();
+  renderModePills();
+  renderBlockTabs();
+  renderBlockEditor();
+  renderSeatPreview();
+}
+
+function renderModePills(){
   $$('.mode-pill').forEach(function(p){
     var mode = p.dataset.mode;
     p.classList.toggle('active', mode === state.seatingMode);
-    if (mode === 'tables' && !state.features.tables) p.disabled = true;
-    else if (mode === 'rows' && state.plan === 'standard') p.disabled = false;
-    else p.disabled = false;
+    p.disabled = (mode === 'tables' && !state.features.tables);
   });
-  renderBlockTabs();
-  renderBlockEditor();
-  renderCanvas();
-  // Row limit warning
-  var total = totalFlattenedRows();
-  $('canvasWarn').style.display = total > MAX_ROWS_PER_EVENT ? '' : 'none';
+  $('seatingPlanBadge').textContent =
+    state.seatingMode === 'tables' ? 'Tables mode' : 'Rows mode';
 }
 
 function renderBlockTabs(){
   var tabs = $('blockTabs');
   tabs.innerHTML = '';
-  if (!state.blocks.length){
-    state.blocks.push(makeBlock(0));
-    state.selectedBlock = state.blocks[0].id;
-  }
+
   state.blocks.forEach(function(b){
     var tab = document.createElement('button');
     tab.type = 'button';
     tab.className = 'block-tab' + (b.id === state.selectedBlock ? ' active' : '');
-    var count = b.mode === 'tables'
-      ? b.tableRows.reduce(function(s,r){ return s+r.count; }, 0) + 't'
-      : b.subsections.reduce(function(s,sub){ return s + sub.rows; }, 0) + 'r';
-    tab.innerHTML = esc(b.name) + ' <span class="cnt">' + count + '</span>';
+    var cnt = blockSeatCount(b);
+    tab.innerHTML = esc(b.name) + ' <span class="cnt">' + cnt + '</span>';
     tab.addEventListener('click', function(){
       state.selectedBlock = b.id;
       renderBlockTabs();
       renderBlockEditor();
-      renderCanvas();
     });
     tabs.appendChild(tab);
   });
+
+  var canAdd = state.blocks.length < state.features.maxBlocks;
   var add = document.createElement('button');
   add.type = 'button';
   add.className = 'block-tab-add';
   add.textContent = '+ Add block';
+  add.disabled = !canAdd;
+  if (!canAdd){
+    var max = state.features.maxBlocks;
+    add.title = max >= 999999 ? '' : 'Your plan allows up to ' + max + ' block' + (max === 1 ? '' : 's');
+  }
   add.addEventListener('click', function(){
+    if (!canAdd) return;
     var b = makeBlock(state.blocks.length);
+    b.mode = state.seatingMode;
     state.blocks.push(b);
     state.selectedBlock = b.id;
     renderBlockTabs();
     renderBlockEditor();
-    renderCanvas();
+    renderSeatPreview();
   });
   tabs.appendChild(add);
 }
 
+/* ═══════════════════════════════════════════════════
+   SEATING EDITOR — block editor (the input form)
+   ═══════════════════════════════════════════════════ */
 function renderBlockEditor(){
   var editor = $('blockEditor');
   var b = getBlock(state.selectedBlock);
@@ -1015,364 +1212,624 @@ function renderBlockEditor(){
 
   var html = '<div class="block-editor-h">' +
     '<h3>' + esc(b.name) + '</h3>' +
-    '<button type="button" class="btn btn-danger btn-sm" id="deleteBlockBtn">' + icon('trash-2') + ' Delete</button>' +
-    '</div>';
-
-  html += '<div class="row2">' +
-    '<div class="fg" style="margin-bottom:0;"><label>Block name</label><input type="text" id="blockName" value="' + esc(b.name) + '" /></div>' +
-    '<div class="fg" style="margin-bottom:0;"><label>Tier override</label><select id="blockTier">' +
-      '<option value="">— Use row distribution —</option>' +
-      getActiveTiers().map(function(k){ return '<option value="'+k+'"'+(b.tier===k?' selected':'')+'>'+esc(state.tierNames[k])+'</option>'; }).join('') +
-    '</select></div>' +
+    '<div class="block-editor-actions">' +
+      '<button type="button" class="btn btn-ghost btn-sm" id="dupBlockBtn">' + icon('copy') + ' Duplicate</button>' +
+      '<button type="button" class="btn btn-danger btn-sm" id="delBlockBtn">' + icon('trash-2') + ' Delete</button>' +
+    '</div>' +
   '</div>';
 
-  if (state.seatingMode === 'rows'){
-    html += '<div class="sub-header"><h4>' + icon('layers') + ' Subsections</h4>' +
-      '<button type="button" class="btn btn-ghost btn-sm" id="addSubBtn">+ Add subsection</button></div>';
+  /* name + level */
+  html += '<div class="row2">' +
+    '<div class="fg" style="margin-bottom:0;">' +
+      '<label>Block name</label>' +
+      '<input type="text" id="blockNameInput" value="' + esc(b.name) + '" maxlength="30" />' +
+    '</div>' +
+    '<div class="fg" style="margin-bottom:0;">' +
+      '<label>Level</label>' +
+      '<select id="blockLevelInput">' +
+        ['Ground Floor','First Floor','Second Floor','Balcony','VIP Floor','Back Area']
+          .map(function(l){
+            return '<option value="'+l+'"'+(b.level===l?' selected':'')+'>'+l+'</option>';
+          }).join('') +
+      '</select>' +
+    '</div>' +
+  '</div>';
+
+  /* tier override */
+  html += '<div class="fg" style="margin-top:14px;">' +
+    '<label>Tier override (optional)</label>' +
+    '<select id="blockTierInput">' +
+      '<option value="">— Distribute by default —</option>' +
+      getActiveTierOptionsHtml(b.tierOverride) +
+    '</select>' +
+  '</div>';
+
+  /* shape picker — tables mode only */
+  if (state.seatingMode === 'tables'){
+    html += '<div class="fg">' +
+      '<label>Table shape</label>' +
+      '<div class="shape-pills">' +
+        shapePillHtml('round', 'circle', 'Round', b) +
+        shapePillHtml('square', 'square', 'Square', b) +
+        shapePillHtml('rectangular', 'rectangle-horizontal', 'Rectangular', b) +
+      '</div>' +
+    '</div>';
+
+    /* tables count (shared) */
+    html += '<div class="row2">' +
+      '<div class="fg" style="margin-bottom:0;">' +
+        '<label>Number of tables</label>' +
+        '<input type="number" id="tableCountInput" min="1" max="10" value="' + b.tableCount + '" />' +
+        '<p class="hint">1 to 10 tables per block.</p>' +
+      '</div>' +
+    '</div>';
+
+    /* shape-specific fields */
+    if (b.tableShape === 'round'){
+      html += '<div class="row2" style="margin-top:14px;">' +
+        '<div class="fg" style="margin-bottom:0;">' +
+          '<label>Diameter (cm)</label>' +
+          '<input type="number" id="roundDiameterInput" min="' + SHAPE_LIMITS.round.diameterMin + '" max="' + SHAPE_LIMITS.round.diameterMax + '" value="' + b.roundDiameter + '" />' +
+        '</div>' +
+        '<div class="fg" style="margin-bottom:0;">' +
+          '<label>Chairs around</label>' +
+          '<input type="number" id="roundChairsInput" min="' + SHAPE_LIMITS.round.chairsMin + '" max="' + SHAPE_LIMITS.round.chairsMax + '" value="' + b.roundChairs + '" />' +
+          '<p class="hint">' + SHAPE_LIMITS.round.chairsMin + '–' + SHAPE_LIMITS.round.chairsMax + ' chairs per table.</p>' +
+        '</div>' +
+      '</div>';
+    } else if (b.tableShape === 'square'){
+      html += '<div class="row2" style="margin-top:14px;">' +
+        '<div class="fg" style="margin-bottom:0;">' +
+          '<label>Side length (cm)</label>' +
+          '<input type="number" id="squareSideInput" min="' + SHAPE_LIMITS.square.sideMin + '" max="' + SHAPE_LIMITS.square.sideMax + '" value="' + b.squareSide + '" />' +
+        '</div>' +
+        '<div class="fg" style="margin-bottom:0;">' +
+          '<label>Chairs per side</label>' +
+          '<input type="number" id="squareChairsInput" min="' + SHAPE_LIMITS.square.chairsPerSideMin + '" max="' + SHAPE_LIMITS.square.chairsPerSideMax + '" value="' + b.squareChairsPerSide + '" />' +
+          '<p class="hint">Max 2 per side → 4 or 8 chairs total.</p>' +
+        '</div>' +
+      '</div>';
+    } else if (b.tableShape === 'rectangular'){
+      html += '<div class="row2" style="margin-top:14px;">' +
+        '<div class="fg" style="margin-bottom:0;">' +
+          '<label>Length (cm)</label>' +
+          '<input type="number" id="rectLengthInput" min="' + SHAPE_LIMITS.rectangular.lengthMin + '" max="' + SHAPE_LIMITS.rectangular.lengthMax + '" value="' + b.rectLength + '" />' +
+        '</div>' +
+        '<div class="fg" style="margin-bottom:0;">' +
+          '<label>Width (cm)</label>' +
+          '<input type="number" id="rectWidthInput" min="' + SHAPE_LIMITS.rectangular.widthMin + '" max="' + SHAPE_LIMITS.rectangular.widthMax + '" value="' + b.rectWidth + '" />' +
+        '</div>' +
+      '</div>';
+      html += '<div class="row2" style="margin-top:14px;">' +
+        '<div class="fg" style="margin-bottom:0;">' +
+          '<label>Chairs long side</label>' +
+          '<input type="number" id="rectLongInput" min="' + SHAPE_LIMITS.rectangular.longMin + '" max="' + SHAPE_LIMITS.rectangular.longMax + '" value="' + b.rectLong + '" />' +
+          '<p class="hint">' + SHAPE_LIMITS.rectangular.longMin + '–' + SHAPE_LIMITS.rectangular.longMax + ' per long side.</p>' +
+        '</div>' +
+        '<div class="fg" style="margin-bottom:0;">' +
+          '<label>Chairs short side</label>' +
+          '<input type="number" id="rectShortInput" min="' + SHAPE_LIMITS.rectangular.shortMin + '" max="' + SHAPE_LIMITS.rectangular.shortMax + '" value="' + b.rectShort + '" />' +
+          '<p class="hint">0 or 1 per short side.</p>' +
+        '</div>' +
+      '</div>';
+    }
+
+    var total = b.tableCount * chairsPerTable(b);
+    html += '<div class="total-chip">' + icon('users') + ' ' +
+      b.tableCount + ' tables × ' + chairsPerTable(b) + ' chairs = ' + total + ' seats</div>';
+
+  } else {
+    /* rows mode — subsections */
+    html += '<div class="divider"><span>Subsections</span></div>';
     html += '<div class="sub-list">';
     b.subsections.forEach(function(sub, i){
-      html += '<div class="sub-row" data-si="'+i+'">' +
-        '<div class="sub-cell"><span class="sub-label">Name</span><input type="text" class="sub-name" data-si="'+i+'" value="'+esc(sub.name)+'" maxlength="20" /></div>' +
-        '<div class="sub-cell"><span class="sub-label">Rows</span><input type="number" class="sub-num" data-si="'+i+'" data-k="rows" min="1" max="26" value="'+sub.rows+'" /></div>' +
-        '<div class="sub-cell"><span class="sub-label">Seats / row</span><input type="number" class="sub-num" data-si="'+i+'" data-k="seatsPerRow" min="1" max="20" value="'+sub.seatsPerRow+'" /></div>' +
+      var subHtml = '<div class="sub-row" data-si="'+i+'">' +
+        '<div class="sub-cell">' +
+          '<span class="sub-label">Name</span>' +
+          '<input type="text" class="sub-name" data-si="'+i+'" value="'+esc(sub.name)+'" maxlength="20" />' +
+        '</div>' +
+        '<div class="sub-cell">' +
+          '<span class="sub-label">Rows</span>' +
+          '<input type="number" class="sub-num" data-si="'+i+'" data-k="rows" min="1" max="26" value="'+sub.rows+'" />' +
+        '</div>' +
+        '<div class="sub-cell">' +
+          '<span class="sub-label">Seats / row</span>' +
+          '<input type="number" class="sub-num" data-si="'+i+'" data-k="seatsPerRow" min="1" max="20" value="'+sub.seatsPerRow+'" />' +
+        '</div>' +
         '<button type="button" class="sub-remove" data-si="'+i+'" '+(b.subsections.length<=1?'disabled':'')+'>×</button>' +
       '</div>';
+      html += subHtml;
     });
     html += '</div>';
-  } else {
-    html += '<div class="sub-header"><h4>' + icon('grid') + ' Table rows</h4>' +
-      '<button type="button" class="btn btn-ghost btn-sm" id="addTableRowBtn">+ Add table row</button></div>';
-    html += '<div class="sub-list">';
-    b.tableRows.forEach(function(r, i){
-      html += '<div class="sub-row" data-tri="'+i+'">' +
-        '<div class="sub-cell"><span class="sub-label">Row</span><input type="text" class="sub-name" value="Row '+rowLetter(i)+'" readonly style="background:var(--sf2);" /></div>' +
-        '<div class="sub-cell"><span class="sub-label">Tables</span><input type="number" class="sub-num" data-tri="'+i+'" min="1" max="50" value="'+r.count+'" /></div>' +
-        '<div class="sub-cell"></div>' +
-        '<button type="button" class="sub-remove" data-tri="'+i+'" '+(b.tableRows.length<=1?'disabled':'')+'>×</button>' +
-      '</div>';
-    });
-    html += '</div>';
+    html += '<div style="margin-top:12px;">' +
+      '<button type="button" class="btn btn-ghost btn-sm" id="addSubBtn">+ Add subsection</button>' +
+    '</div>';
+
+    var totalRows = b.subsections.reduce(function(s,sub){ return s + (sub.rows * sub.seatsPerRow); }, 0);
+    html += '<div class="total-chip">' + icon('users') + ' ' + totalRows + ' seats in this block</div>';
   }
 
   editor.innerHTML = html;
   refreshIcons();
 
-  $('blockName').addEventListener('input', function(){ b.name = this.value; renderBlockTabs(); renderCanvas(); });
-  $('blockTier').addEventListener('change', function(){ b.tier = this.value || null; renderCanvas(); renderRevenue(); });
-  $('deleteBlockBtn').addEventListener('click', function(){
-    if (state.blocks.length <= 1){ toast('At least one block is required.', 'error'); return; }
+  /* wire up */
+  $('blockNameInput').addEventListener('input', function(){
+    b.name = this.value || 'Block';
+    renderBlockTabs();
+    renderSeatPreview();
+  });
+  $('blockLevelInput').addEventListener('change', function(){
+    b.level = this.value;
+    renderSeatPreview();
+  });
+  $('blockTierInput').addEventListener('change', function(){
+    b.tierOverride = this.value || null;
+    renderSeatPreview();
+    renderRevenue();
+  });
+
+  var del = $('delBlockBtn');
+  if (del) del.addEventListener('click', function(){
+    if (state.blocks.length <= 1){
+      toast('At least one block is required.', 'error');
+      return;
+    }
     if (!confirm('Delete "' + b.name + '"?')) return;
     state.blocks = state.blocks.filter(function(x){ return x.id !== b.id; });
     state.selectedBlock = state.blocks[0].id;
-    renderBlockTabs(); renderBlockEditor(); renderCanvas(); renderRevenue();
+    renderBlockTabs();
+    renderBlockEditor();
+    renderSeatPreview();
+    renderRevenue();
   });
 
-  var addSub = $('addSubBtn');
-  if (addSub) addSub.addEventListener('click', function(){
-    b.subsections.push({ id: uid(), name: 'Subsection ' + (b.subsections.length+1), rows: 3, seatsPerRow: 6, tier: null });
-    renderBlockEditor(); renderCanvas(); renderRevenue();
-  });
-  var addTR = $('addTableRowBtn');
-  if (addTR) addTR.addEventListener('click', function(){
-    b.tableRows.push({ count: 4 });
-    renderBlockEditor(); renderCanvas(); renderRevenue();
+  var dup = $('dupBlockBtn');
+  if (dup) dup.addEventListener('click', function(){
+    if (state.blocks.length >= state.features.maxBlocks){
+      toast('Your plan allows up to ' + state.features.maxBlocks + ' blocks.', 'error');
+      return;
+    }
+    var copy = JSON.parse(JSON.stringify(b));
+    copy.id = uid();
+    copy.name = 'Block ' + blockLetter(state.blocks.length);
+    state.blocks.push(copy);
+    state.selectedBlock = copy.id;
+    renderBlockTabs();
+    renderBlockEditor();
+    renderSeatPreview();
+    renderRevenue();
   });
 
+  /* tables mode wiring */
+  var tc = $('tableCountInput');
+  if (tc) tc.addEventListener('input', function(){
+    var v = parseInt(this.value, 10) || 1;
+    v = Math.max(1, Math.min(10, v));
+    b.tableCount = v;
+    this.value = v;
+    refreshTotals(b);
+    renderBlockTabs();
+    renderSeatPreview();
+    renderRevenue();
+  });
+
+  wireShapeInputs(b);
+
+  /* rows mode wiring */
   editor.querySelectorAll('.sub-name[data-si]').forEach(function(inp){
     inp.addEventListener('input', function(){
-      b.subsections[parseInt(this.dataset.si)].name = this.value;
-      renderCanvas();
+      var si = parseInt(this.dataset.si, 10);
+      b.subsections[si].name = this.value || 'Section';
+      renderSeatPreview();
     });
   });
   editor.querySelectorAll('.sub-num[data-si]').forEach(function(inp){
     inp.addEventListener('input', function(){
-      var si = parseInt(this.dataset.si);
-      var k = this.dataset.k;
-      var max = k === 'rows' ? 26 : 20;
-      var v = Math.max(1, Math.min(max, parseInt(this.value)||1));
+      var si = parseInt(this.dataset.si, 10);
+      var k  = this.dataset.k;
+      var max = (k === 'rows') ? 26 : 20;
+      var v = Math.max(1, Math.min(max, parseInt(this.value, 10) || 1));
       b.subsections[si][k] = v;
-      renderBlockTabs(); renderCanvas(); renderRevenue(); renderSeatingPanel();
+      this.value = v;
+      refreshTotals(b);
+      renderBlockTabs();
+      renderSeatPreview();
+      renderRevenue();
     });
   });
   editor.querySelectorAll('.sub-remove[data-si]').forEach(function(btn){
     btn.addEventListener('click', function(){
+      var si = parseInt(this.dataset.si, 10);
       if (b.subsections.length <= 1) return;
-      b.subsections.splice(parseInt(this.dataset.si), 1);
-      renderBlockEditor(); renderCanvas(); renderRevenue();
+      b.subsections.splice(si, 1);
+      renderBlockEditor();
+      renderSeatPreview();
+      renderRevenue();
     });
   });
-  editor.querySelectorAll('.sub-num[data-tri]').forEach(function(inp){
-    inp.addEventListener('input', function(){
-      var ti = parseInt(this.dataset.tri);
-      var v = Math.max(1, Math.min(50, parseInt(this.value)||1));
-      b.tableRows[ti].count = v;
-      renderBlockTabs(); renderCanvas(); renderRevenue(); renderSeatingPanel();
+  var addSub = $('addSubBtn');
+  if (addSub) addSub.addEventListener('click', function(){
+    b.subsections.push({
+      id: uid(),
+      name: 'Section ' + (b.subsections.length + 1),
+      rows: 4,
+      seatsPerRow: 6,
+      tier: null
     });
-  });
-  editor.querySelectorAll('.sub-remove[data-tri]').forEach(function(btn){
-    btn.addEventListener('click', function(){
-      if (b.tableRows.length <= 1) return;
-      b.tableRows.splice(parseInt(this.dataset.tri), 1);
-      renderBlockEditor(); renderCanvas(); renderRevenue();
-    });
+    renderBlockEditor();
+    renderSeatPreview();
+    renderRevenue();
   });
 }
 
-/* ═══════════════════════════════════════════════════
-   CANVAS
-   ═══════════════════════════════════════════════════ */
-function renderCanvas(){
-  var canvas = $('canvas');
-  if (!canvas) return;
-  canvas.style.width = state.canvas.width + 'px';
-  canvas.style.height = state.canvas.height + 'px';
-  canvas.style.backgroundSize = state.canvas.grid + 'px ' + state.canvas.grid + 'px';
-  canvas.innerHTML = '';
-
-  var stageEl = document.createElement('div');
-  stageEl.className = 'stage' + (state.selectedBlock === '__stage__' ? ' selected' : '');
-  stageEl.style.left = state.stage.x + 'px';
-  stageEl.style.top = state.stage.y + 'px';
-  stageEl.style.width = state.stage.w + 'px';
-  stageEl.style.height = state.stage.h + 'px';
-  stageEl.textContent = state.stage.name;
-  stageEl.addEventListener('pointerdown', function(e){ startDrag(e, 'stage', null); });
-  canvas.appendChild(stageEl);
-  $('fsStageName').textContent = state.stage.name;
-
-  state.blocks.forEach(function(b){ canvas.appendChild(buildBlockEl(b)); });
+function getActiveTierOptionsHtml(selected){
+  return activeTierKeys().map(function(k){
+    return '<option value="'+k+'"'+(selected===k?' selected':'')+'>'+esc(state.tierNames[k])+'</option>';
+  }).join('');
 }
 
-function buildBlockEl(b){
-  var el = document.createElement('div');
-  el.className = 'block' + (b.id === state.selectedBlock ? ' selected' : '');
-  el.style.left = b.x + 'px';
-  el.style.top = b.y + 'px';
-  el.style.width = b.w + 'px';
-  el.style.height = b.h + 'px';
-  if (b.rotation) el.style.transform = 'rotate(' + b.rotation + 'deg)';
+function shapePillHtml(shape, iconName, label, block){
+  var available = state.features.shapes.indexOf(shape) !== -1;
+  var active = block.tableShape === shape;
+  return '<button type="button" class="shape-pill'+(active?' active':'')+'" data-shape="'+shape+'" '+(available?'':'disabled')+'>' +
+    icon(iconName) + ' ' + label +
+  '</button>';
+}
 
-  var html = '<div class="block-header">' + esc(b.name) + '</div>';
-
-  if (state.seatingMode === 'rows'){
-    var active = getActiveTiers();
-    var last = active[active.length-1] || 'cyan';
-    var rowCursor = 0;
-    b.subsections.forEach(function(sub){
-      html += '<div class="block-sub">';
-      html += '<div class="block-sub-label">' + esc(sub.name) + '</div>';
-      html += '<div class="block-rows">';
-      for (var r = 0; r < sub.rows; r++){
-        var tierKey = b.tier || sub.tier || last;
-        html += '<div class="block-row"><span class="block-row-lbl">' + rowLetter(rowCursor) + '</span>';
-        var toShow = Math.min(sub.seatsPerRow, 14);
-        for (var s = 0; s < toShow; s++){
-          html += '<span class="seat-mini ' + tierKey + '"></span>';
-        }
-        if (sub.seatsPerRow > 14) html += '<span style="font-size:7px;color:var(--mut);font-weight:800;margin-left:2px;">+' + (sub.seatsPerRow - 14) + '</span>';
-        html += '</div>';
-        rowCursor++;
-      }
-      html += '</div></div>';
+function wireShapeInputs(b){
+  $$('.shape-pill').forEach(function(p){
+    p.addEventListener('click', function(){
+      if (this.disabled) return;
+      b.tableShape = this.dataset.shape;
+      renderBlockEditor();
+      renderSeatPreview();
     });
+  });
+
+  var re = $('roundDiameterInput');
+  if (re) re.addEventListener('input', function(){
+    var v = parseInt(this.value,10) || SHAPE_LIMITS.round.diameterDefault;
+    v = Math.max(SHAPE_LIMITS.round.diameterMin, Math.min(SHAPE_LIMITS.round.diameterMax, v));
+    b.roundDiameter = v; this.value = v; renderSeatPreview();
+  });
+  var rc = $('roundChairsInput');
+  if (rc) rc.addEventListener('input', function(){
+    var v = parseInt(this.value,10) || SHAPE_LIMITS.round.chairsDefault;
+    v = Math.max(SHAPE_LIMITS.round.chairsMin, Math.min(SHAPE_LIMITS.round.chairsMax, v));
+    b.roundChairs = v; this.value = v;
+    refreshTotals(b); renderBlockTabs(); renderSeatPreview(); renderRevenue();
+  });
+  var ss = $('squareSideInput');
+  if (ss) ss.addEventListener('input', function(){
+    var v = parseInt(this.value,10) || SHAPE_LIMITS.square.sideDefault;
+    v = Math.max(SHAPE_LIMITS.square.sideMin, Math.min(SHAPE_LIMITS.square.sideMax, v));
+    b.squareSide = v; this.value = v; renderSeatPreview();
+  });
+  var sc = $('squareChairsInput');
+  if (sc) sc.addEventListener('input', function(){
+    var v = parseInt(this.value,10) || SHAPE_LIMITS.square.chairsPerSideDefault;
+    v = Math.max(SHAPE_LIMITS.square.chairsPerSideMin, Math.min(SHAPE_LIMITS.square.chairsPerSideMax, v));
+    b.squareChairsPerSide = v; this.value = v;
+    refreshTotals(b); renderBlockTabs(); renderSeatPreview(); renderRevenue();
+  });
+  var rl = $('rectLengthInput');
+  if (rl) rl.addEventListener('input', function(){
+    var v = parseInt(this.value,10) || SHAPE_LIMITS.rectangular.lengthDefault;
+    v = Math.max(SHAPE_LIMITS.rectangular.lengthMin, Math.min(SHAPE_LIMITS.rectangular.lengthMax, v));
+    b.rectLength = v; this.value = v; renderSeatPreview();
+  });
+  var rw = $('rectWidthInput');
+  if (rw) rw.addEventListener('input', function(){
+    var v = parseInt(this.value,10) || SHAPE_LIMITS.rectangular.widthDefault;
+    v = Math.max(SHAPE_LIMITS.rectangular.widthMin, Math.min(SHAPE_LIMITS.rectangular.widthMax, v));
+    b.rectWidth = v; this.value = v; renderSeatPreview();
+  });
+  var rlo = $('rectLongInput');
+  if (rlo) rlo.addEventListener('input', function(){
+    var v = parseInt(this.value,10) || SHAPE_LIMITS.rectangular.longDefault;
+    v = Math.max(SHAPE_LIMITS.rectangular.longMin, Math.min(SHAPE_LIMITS.rectangular.longMax, v));
+    b.rectLong = v; this.value = v;
+    refreshTotals(b); renderBlockTabs(); renderSeatPreview(); renderRevenue();
+  });
+  var rsh = $('rectShortInput');
+  if (rsh) rsh.addEventListener('input', function(){
+    var v = parseInt(this.value,10);
+    if (isNaN(v)) v = SHAPE_LIMITS.rectangular.shortDefault;
+    v = Math.max(SHAPE_LIMITS.rectangular.shortMin, Math.min(SHAPE_LIMITS.rectangular.shortMax, v));
+    b.rectShort = v; this.value = v;
+    refreshTotals(b); renderBlockTabs(); renderSeatPreview(); renderRevenue();
+  });
+}
+
+function refreshTotals(b){
+  var chip = document.querySelector('#blockEditor .total-chip');
+  if (!chip) return;
+  if (b.mode === 'rows'){
+    var total = b.subsections.reduce(function(s,sub){ return s + (sub.rows * sub.seatsPerRow); }, 0);
+    chip.innerHTML = icon('users') + ' ' + total + ' seats in this block';
   } else {
-    var activeT = getActiveTiers();
-    var lastT = activeT[activeT.length-1] || 'cyan';
-    var tier = b.tier || lastT;
-    html += '<div class="block-tables">';
-    var n = 0;
-    b.tableRows.forEach(function(r){
-      for (var i = 0; i < r.count; i++){
-        n++;
-        html += '<div class="table-mini ' + tier + '">' + n + '</div>';
-      }
-    });
-    html += '</div>';
+    chip.innerHTML = icon('users') + ' ' + b.tableCount + ' tables × ' + chairsPerTable(b) + ' chairs = ' +
+      (b.tableCount * chairsPerTable(b)) + ' seats';
   }
+  refreshIcons();
+}
 
-  html += '<div class="block-handle rotate" data-act="rotate">' + icon('rotate-cw') + '</div>';
-  html += '<div class="block-handle resize" data-act="resize">' + icon('arrow-down-right') + '</div>';
+/* ═══════════════════════════════════════════════════
+   SEATING EDITOR — live preview
+   ═══════════════════════════════════════════════════ */
+function renderSeatPreview(){
+  if (!state.features.seating) return;
+  var wrap = $('seatPreview');
+  if (!wrap) return;
+  wrap.innerHTML = '';
 
-  el.innerHTML = html;
+  state.blocks.forEach(function(b){
+    var blockEl = document.createElement('div');
+    blockEl.className = 'preview-block';
 
-  el.addEventListener('pointerdown', function(e){
-    if (e.target.closest('.block-handle')){
-      var h = e.target.closest('.block-handle');
-      if (h.classList.contains('rotate')) startRotate(e, b);
-      else startResize(e, b);
-      return;
+    var total = blockSeatCount(b);
+    var meta = b.mode === 'rows'
+      ? b.subsections.reduce(function(s,sub){ return s + sub.rows; }, 0) + ' rows · ' + total + ' seats'
+      : b.tableCount + ' tables · ' + total + ' seats';
+
+    var head = document.createElement('div');
+    head.className = 'preview-block-head';
+    head.innerHTML =
+      '<div class="preview-block-title">' + esc(b.name) + ' · ' + esc(b.level) + '</div>' +
+      '<div class="preview-block-meta">' + meta + '</div>';
+    blockEl.appendChild(head);
+
+    var stage = document.createElement('div');
+    stage.className = 'preview-stage';
+    stage.textContent = 'STAGE';
+    blockEl.appendChild(stage);
+
+    if (b.mode === 'rows'){
+      blockEl.appendChild(buildRowsPreview(b));
+    } else {
+      blockEl.appendChild(buildTablesPreview(b));
     }
-    startDrag(e, 'block', b);
+
+    wrap.appendChild(blockEl);
+  });
+}
+
+function tierForSub(b, sub){
+  var keys = activeTierKeys();
+  var fallback = keys[keys.length - 1] || 'standard';
+  return b.tierOverride || sub.tier || fallback;
+}
+
+function buildRowsPreview(b){
+  var wrap = document.createElement('div');
+  wrap.className = 'preview-rows';
+  var rowIdx = 0;
+
+  b.subsections.forEach(function(sub){
+    var tierKey = tierForSub(b, sub);
+    var color = state.tierColors[tierKey];
+    var light = isLight(color);
+
+    for (var r = 0; r < sub.rows; r++){
+      var rowEl = document.createElement('div');
+      rowEl.className = 'preview-row';
+
+      var lbl = document.createElement('span');
+      lbl.className = 'preview-row-lbl';
+      lbl.textContent = rowLabel(rowIdx);
+      rowEl.appendChild(lbl);
+
+      var seats = document.createElement('div');
+      seats.className = 'preview-row-seats';
+      for (var s = 1; s <= sub.seatsPerRow; s++){
+        var dot = document.createElement('span');
+        dot.className = 'seat-dot' + (light ? ' light' : '');
+        dot.style.background = color;
+        dot.textContent = s;
+        seats.appendChild(dot);
+      }
+      rowEl.appendChild(seats);
+
+      var tlbl = document.createElement('span');
+      tlbl.className = 'preview-row-tier';
+      tlbl.textContent = state.tierNames[tierKey] || tierKey;
+      rowEl.appendChild(tlbl);
+
+      wrap.appendChild(rowEl);
+      rowIdx++;
+    }
   });
 
-  return el;
+  return wrap;
 }
 
-/* ═══════════════════════════════════════════════════
-   DRAG / ROTATE / RESIZE
-   ═══════════════════════════════════════════════════ */
-function snapVal(v){
-  if (!state.snap) return Math.round(v);
-  var g = state.canvas.grid;
-  return Math.round(v / g) * g;
-}
+function buildTablesPreview(b){
+  var wrap = document.createElement('div');
+  wrap.className = 'preview-tables';
 
-function startDrag(e, type, b){
-  e.preventDefault();
-  var startX = e.clientX, startY = e.clientY;
-  var orig = type === 'stage'
-    ? { x: state.stage.x, y: state.stage.y }
-    : { x: b.x, y: b.y };
+  var tierKey = b.tierOverride || activeTierKeys()[activeTierKeys().length-1] || 'standard';
+  var color = state.tierColors[tierKey];
+  var light = isLight(color);
 
-  if (type === 'block' && b){
-    state.selectedBlock = b.id;
-  } else if (type === 'stage'){
-    state.selectedBlock = '__stage__';
-  }
-
-  function move(ev){
-    var dx = ev.clientX - startX;
-    var dy = ev.clientY - startY;
-    var nx = snapVal(orig.x + dx);
-    var ny = snapVal(orig.y + dy);
-    if (type === 'stage'){
-      state.stage.x = Math.max(0, Math.min(state.canvas.width - state.stage.w, nx));
-      state.stage.y = Math.max(0, Math.min(state.canvas.height - state.stage.h, ny));
-      var sEl = document.querySelector('.stage');
-      if (sEl){ sEl.style.left = state.stage.x + 'px'; sEl.style.top = state.stage.y + 'px'; }
-    } else {
-      b.x = Math.max(0, Math.min(state.canvas.width - 40, nx));
-      b.y = Math.max(0, Math.min(state.canvas.height - 40, ny));
-      var bEl = document.querySelector('.block.selected');
-      if (bEl){ bEl.style.left = b.x + 'px'; bEl.style.top = b.y + 'px'; }
+  if (b.tableShape === 'round'){
+    for (var i = 1; i <= b.tableCount; i++){
+      wrap.appendChild(roundTableEl(i, b, color, light));
+    }
+  } else if (b.tableShape === 'square'){
+    for (var i2 = 1; i2 <= b.tableCount; i2++){
+      wrap.appendChild(squareTableEl(i2, b, color, light));
+    }
+  } else if (b.tableShape === 'rectangular'){
+    for (var i3 = 1; i3 <= b.tableCount; i3++){
+      wrap.appendChild(rectTableEl(i3, b, color, light));
     }
   }
-  function end(){
-    document.removeEventListener('pointermove', move);
-    document.removeEventListener('pointerup', end);
-    renderCanvas();
-  }
-  document.addEventListener('pointermove', move);
-  document.addEventListener('pointerup', end);
+
+  return wrap;
 }
 
-function startRotate(e, b){
-  e.preventDefault();
-  e.stopPropagation();
-  var canvas = document.querySelector('.block.selected') || $('canvas');
-  var rect = canvas.getBoundingClientRect();
-  var cx = rect.left + rect.width/2;
-  var cy = rect.top + rect.height/2;
-
-  function move(ev){
-    var ang = Math.atan2(ev.clientY - cy, ev.clientX - cx) * 180 / Math.PI + 90;
-    if (ev.shiftKey) ang = Math.round(ang / 15) * 15;
-    while (ang > 180) ang -= 360;
-    while (ang < -180) ang += 360;
-    b.rotation = Math.round(ang);
-    var el = document.querySelector('.block.selected');
-    if (el) el.style.transform = 'rotate(' + b.rotation + 'deg)';
-  }
-  function end(){
-    document.removeEventListener('pointermove', move);
-    document.removeEventListener('pointerup', end);
-  }
-  document.addEventListener('pointermove', move);
-  document.addEventListener('pointerup', end);
+/* map cm → px for preview. 150cm ≈ 110px diameter */
+function cmToPx(cm, basis){
+  basis = basis || 110;
+  var ref = 150;
+  return Math.max(40, Math.round(cm * basis / ref));
 }
 
-function startResize(e, b){
-  e.preventDefault();
-  e.stopPropagation();
-  var startX = e.clientX, startY = e.clientY;
-  var origW = b.w, origH = b.h;
-  function move(ev){
-    var nw = Math.max(100, snapVal(origW + (ev.clientX - startX)));
-    var nh = Math.max(100, snapVal(origH + (ev.clientY - startY)));
-    b.w = nw; b.h = nh;
-    var el = document.querySelector('.block.selected');
-    if (el){ el.style.width = nw + 'px'; el.style.height = nh + 'px'; }
+function roundTableEl(idx, b, color, light){
+  var size = cmToPx(b.roundDiameter);
+  var wrapEl = document.createElement('div');
+  wrapEl.className = 'table-wrap';
+  wrapEl.style.width  = (size + 40) + 'px';
+  wrapEl.style.height = (size + 40) + 'px';
+
+  var table = document.createElement('div');
+  table.className = 'table-shape round' + (light ? ' light' : '');
+  table.style.width  = size + 'px';
+  table.style.height = size + 'px';
+  table.style.background = color;
+  table.textContent = idx;
+  table.style.fontSize = Math.max(12, Math.round(size / 4)) + 'px';
+  wrapEl.appendChild(table);
+
+  var n = b.roundChairs;
+  var radius = (size / 2) + 11;
+  for (var c = 1; c <= n; c++){
+    var angle = (-Math.PI / 2) + (2 * Math.PI * (c - 1) / n); /* start at 12 o'clock, clockwise */
+    var cx = Math.cos(angle) * radius;
+    var cy = Math.sin(angle) * radius;
+    var chair = document.createElement('span');
+    chair.className = 'chair-dot' + (light ? ' light' : '');
+    chair.style.background = color;
+    chair.style.left = (size/2 + cx) + 'px';
+    chair.style.top  = (size/2 + cy) + 'px';
+    chair.textContent = c;
+    wrapEl.appendChild(chair);
   }
-  function end(){
-    document.removeEventListener('pointermove', move);
-    document.removeEventListener('pointerup', end);
+  return wrapEl;
+}
+
+function squareTableEl(idx, b, color, light){
+  var side = cmToPx(b.squareSide, 90);
+  var wrapEl = document.createElement('div');
+  wrapEl.className = 'table-wrap';
+  wrapEl.style.width  = (side + 40) + 'px';
+  wrapEl.style.height = (side + 40) + 'px';
+
+  var table = document.createElement('div');
+  table.className = 'table-shape square' + (light ? ' light' : '');
+  table.style.width  = side + 'px';
+  table.style.height = side + 'px';
+  table.style.background = color;
+  table.textContent = idx;
+  table.style.fontSize = Math.max(12, Math.round(side / 4)) + 'px';
+  wrapEl.appendChild(table);
+
+  var perSide = b.squareChairsPerSide;
+  /* chair numbering: top → right → bottom → left, clockwise from top-left area */
+  var chairNum = 0;
+  var offset = 11;
+  /* top side, left to right */
+  for (var i = 0; i < perSide; i++){
+    chairNum++;
+    var x = side * (i + 1) / (perSide + 1);
+    wrapEl.appendChild(chairEl(chairNum, x, -offset, color, light));
   }
-  document.addEventListener('pointermove', move);
-  document.addEventListener('pointerup', end);
+  /* right side, top to bottom */
+  for (var j = 0; j < perSide; j++){
+    chairNum++;
+    var y = side * (j + 1) / (perSide + 1);
+    wrapEl.appendChild(chairEl(chairNum, side + offset, y, color, light));
+  }
+  /* bottom side, right to left */
+  for (var k = 0; k < perSide; k++){
+    chairNum++;
+    var x2 = side - side * (k + 1) / (perSide + 1);
+    wrapEl.appendChild(chairEl(chairNum, x2, side + offset, color, light));
+  }
+  /* left side, bottom to top */
+  for (var l = 0; l < perSide; l++){
+    chairNum++;
+    var y2 = side - side * (l + 1) / (perSide + 1);
+    wrapEl.appendChild(chairEl(chairNum, -offset, y2, color, light));
+  }
+  return wrapEl;
 }
 
-/* ═══════════════════════════════════════════════════
-   FULLSCREEN (renders a mirrored canvas)
-   ═══════════════════════════════════════════════════ */
-function openFullscreen(){
-  $('fsOverlay').classList.add('open');
-  document.body.style.overflow = 'hidden';
-  renderFsCanvas();
-}
-function renderFsCanvas(){
-  var src = $('canvas');
-  var dst = $('fsCanvas');
-  if (!src || !dst) return;
-  dst.style.width = state.canvas.width + 'px';
-  dst.style.height = state.canvas.height + 'px';
-  dst.style.backgroundSize = state.canvas.grid + 'px ' + state.canvas.grid + 'px';
-  dst.innerHTML = '';
+function rectTableEl(idx, b, color, light){
+  var w = cmToPx(b.rectLength, 200);
+  var h = cmToPx(b.rectWidth, 60);
+  var wrapEl = document.createElement('div');
+  wrapEl.className = 'table-wrap';
+  wrapEl.style.width  = (w + 40) + 'px';
+  wrapEl.style.height = (h + 40) + 'px';
 
-  var stageEl = document.createElement('div');
-  stageEl.className = 'stage';
-  stageEl.style.left = state.stage.x + 'px';
-  stageEl.style.top = state.stage.y + 'px';
-  stageEl.style.width = state.stage.w + 'px';
-  stageEl.style.height = state.stage.h + 'px';
-  stageEl.textContent = state.stage.name;
-  stageEl.addEventListener('pointerdown', function(e){ startDrag(e, 'stage', null); });
-  dst.appendChild(stageEl);
+  var table = document.createElement('div');
+  table.className = 'table-shape rectangular' + (light ? ' light' : '');
+  table.style.width  = w + 'px';
+  table.style.height = h + 'px';
+  table.style.background = color;
+  table.textContent = idx;
+  table.style.fontSize = Math.max(12, Math.round(h / 3)) + 'px';
+  wrapEl.appendChild(table);
 
-  state.blocks.forEach(function(b){ dst.appendChild(buildBlockEl(b)); });
+  var offset = 11;
+  var longN = b.rectLong;
+  var shortN = b.rectShort;
+
+  /* top long side, left to right */
+  var n = 1;
+  for (var i = 0; i < longN; i++){
+    var x = w * (i + 1) / (longN + 1);
+    wrapEl.appendChild(chairEl(n++, x, -offset, color, light));
+  }
+  /* right short side, top to bottom */
+  for (var j = 0; j < shortN; j++){
+    var y = h * (j + 1) / (shortN + 1);
+    wrapEl.appendChild(chairEl(n++, w + offset, y, color, light));
+  }
+  /* bottom long side, right to left */
+  for (var k = 0; k < longN; k++){
+    var x2 = w - w * (k + 1) / (longN + 1);
+    wrapEl.appendChild(chairEl(n++, x2, h + offset, color, light));
+  }
+  /* left short side, bottom to top */
+  for (var l = 0; l < shortN; l++){
+    var y2 = h - h * (l + 1) / (shortN + 1);
+    wrapEl.appendChild(chairEl(n++, -offset, y2, color, light));
+  }
+  return wrapEl;
 }
-function closeFullscreen(){
-  $('fsOverlay').classList.remove('open');
-  document.body.style.overflow = '';
-  renderCanvas();
+
+function chairEl(num, x, y, color, light){
+  var chair = document.createElement('span');
+  chair.className = 'chair-dot' + (light ? ' light' : '');
+  chair.style.background = color;
+  chair.style.left = x + 'px';
+  chair.style.top  = y + 'px';
+  chair.textContent = num;
+  return chair;
 }
 
 /* ═══════════════════════════════════════════════════
    REVENUE
    ═══════════════════════════════════════════════════ */
-function computeTierCounts(){
-  var counts = {};
-  getActiveTiers().forEach(function(k){ counts[k] = 0; });
-  if (!state.features.seating) return counts;
-  var lastTier = getActiveTiers()[getActiveTiers().length-1] || 'cyan';
-  state.blocks.forEach(function(b){
-    if (state.seatingMode === 'rows'){
-      b.subsections.forEach(function(sub){
-        var t = b.tier || sub.tier || lastTier;
-        counts[t] = (counts[t] || 0) + (sub.rows * sub.seatsPerRow);
-      });
-    } else {
-      var tierT = b.tier || lastTier;
-      var total = b.tableRows.reduce(function(s,r){ return s+r.count; }, 0);
-      counts[tierT] = (counts[tierT] || 0) + (total * state.tableConfig.chairs);
-    }
-  });
-  return counts;
-}
-
 function renderRevenue(){
   var counts = computeTierCounts();
-  var active = getActiveTiers();
+  var keys = activeTierKeys();
   var total = 0, gross = 0;
-  active.forEach(function(k){
+
+  keys.forEach(function(k){
     var q = counts[k] || 0;
-    total += q;
     var p = state.tierPrices[k] || 0;
+    total += q;
     gross += q * p;
+
     var qEl = document.querySelector('[data-qty="'+k+'"]');
     if (qEl) qEl.textContent = q + ' seat' + (q === 1 ? '' : 's');
     var rEl = document.querySelector('[data-rev="'+k+'"]');
     if (rEl) rEl.textContent = 'R ' + (q * p).toFixed(2);
   });
+
   var fee = gross * (state.features.fee / 100);
   var net = gross - fee;
 
@@ -1380,7 +1837,8 @@ function renderRevenue(){
   $('revGross').textContent = fmtR(gross);
   $('revFee').textContent = fmtR(fee);
   $('revPlanName').textContent = cap(state.plan) + ' · ' + state.features.fee + '%';
-  $('revTotal').textContent = total + ' / ' + (state.features.limit >= 999999 ? 'unlimited' : state.features.limit);
+  $('revTotal').textContent = total + ' / ' +
+    (state.features.limit >= 999999 ? 'unlimited' : state.features.limit);
   $('revGross2').textContent = fmtR2(gross);
   $('revFeePct').textContent = state.features.fee + '%';
   $('revFee2').textContent = '− ' + fmtR2(fee);
@@ -1388,13 +1846,16 @@ function renderRevenue(){
 
   var warn = $('revWarn');
   if (total > state.features.limit && state.features.limit < 999999){
-    warn.textContent = 'Capacity (' + total + ') exceeds the ' + cap(state.plan) + ' limit of ' + state.features.limit + '.';
+    warn.textContent = 'Capacity (' + total + ') exceeds the ' + cap(state.plan) +
+      ' limit of ' + state.features.limit + '.';
     warn.classList.add('show');
-  } else warn.classList.remove('show');
+  } else {
+    warn.classList.remove('show');
+  }
 
   var bd = $('tierBreakdown');
   bd.innerHTML = '';
-  active.forEach(function(k){
+  keys.forEach(function(k){
     var q = counts[k] || 0;
     var p = state.tierPrices[k] || 0;
     var row = document.createElement('div');
@@ -1407,142 +1868,136 @@ function renderRevenue(){
       '<span class="tier-rev">R '+(q * p).toFixed(2)+'</span>';
     bd.appendChild(row);
   });
+
   updateTicketBadges();
   updatePreviewFields();
 }
 
 function updatePreviewFields(){
-  var name = ($('eventName') && $('eventName').value) || 'EVENT NAME';
+  var name  = ($('eventName') && $('eventName').value) || 'EVENT NAME';
   var venue = ($('venueName') && $('venueName').value) || 'VENUE';
-  var city = ($('venueCity') && $('venueCity').value) || '';
-  var date = ($('startDate') && $('startDate').value) || 'DATE';
+  var city  = ($('venueCity') && $('venueCity').value) || '';
+  var date  = ($('startDate') && $('startDate').value) || 'DATE';
   var dv = date + ' · ' + venue + (city ? ', ' + city : '');
-  ['tEventName','tEventName2','tEventName3'].forEach(function(id){ if ($(id)) $(id).textContent = name; });
-  ['tDateVenue','tDateVenue2','tDateVenue3'].forEach(function(id){ if ($(id)) $(id).textContent = dv; });
-  ['tLoc'].forEach(function(id){ if ($(id)) $(id).textContent = venue + (city ? ', ' + city : ''); });
+  ['tEventName','tEventName2','tEventName3'].forEach(function(id){
+    if ($(id)) $(id).textContent = name;
+  });
+  ['tDateVenue','tDateVenue2','tDateVenue3'].forEach(function(id){
+    if ($(id)) $(id).textContent = dv;
+  });
+  if ($('tLoc')) $('tLoc').textContent = venue + (city ? ', ' + city : '');
 }
 
 /* ═══════════════════════════════════════════════════
-   BUILD PAYLOAD
+   PAYLOAD
    ═══════════════════════════════════════════════════ */
 function buildSections(){
-  var lastTier = getActiveTiers()[getActiveTiers().length-1] || 'cyan';
+  var keys = activeTierKeys();
+  var fallback = keys[keys.length - 1] || 'standard';
+
   return state.blocks.map(function(b){
     var sec = {
+      id: b.id,
       name: b.name,
-      x: b.x, y: b.y, rotation: b.rotation, scale: 1,
-      tierOverride: b.tier,
-      width: b.w, height: b.h
+      level: b.level,
+      mode: b.mode,
+      tierOverride: b.tierOverride
     };
-    if (state.seatingMode === 'rows'){
-      var flat = [], subs = [], rowCursor = 0;
+
+    if (b.mode === 'rows'){
+      var flatRows = [], subsOut = [], rowCursor = 0;
       b.subsections.forEach(function(sub){
-        var subRows = [];
-        var t = b.tier || sub.tier || lastTier;
+        var tierKey = b.tierOverride || sub.tier || fallback;
+        var subRowsOut = [];
         for (var r = 0; r < sub.rows; r++){
+          var rowLbl = rowLabel(rowCursor);
           var seats = [];
-          for (var s = 1; s <= sub.seatsPerRow; s++) seats.push({ seat: s, tier: t });
-          var rowObj = { row: rowLetter(rowCursor), seats: seats };
-          subRows.push(rowObj);
-          flat.push({ row: rowLetter(rowCursor), seats: seats });
+          for (var s = 1; s <= sub.seatsPerRow; s++){
+            seats.push({
+              seat: s,
+              id: seatKey(b.name, rowLbl, s),
+              tier: tierKey
+            });
+          }
+          var rowObj = { row: rowLbl, seats: seats };
+          subRowsOut.push(rowObj);
+          flatRows.push(rowObj);
           rowCursor++;
         }
-        subs.push({ name: sub.name, rows: subRows });
+        subsOut.push({ name: sub.name, rows: subRowsOut });
       });
-      sec.mode = 'rows';
-      sec.rowCount = flat.length;
-      sec.rows = flat;
-      sec.subsections = subs;
+      sec.rows = flatRows;
+      sec.rowCount = flatRows.length;
+      sec.subsections = subsOut;
+
     } else {
-      var tables = [], n = 0, cfg = state.tableConfig;
-      b.tableRows.forEach(function(r, ri){
-        for (var t = 0; t < r.count; t++){
-          n++;
-          tables.push({
-            table: n, row: rowLetter(ri), rowIndex: ri,
-            shape: cfg.shape, widthCm: cfg.diameter, lengthCm: cfg.diameter,
-            chairs: cfg.chairs, tier: b.tier || lastTier
+      var tablesOut = [];
+      var tierKey2 = b.tierOverride || fallback;
+      var cpt = chairsPerTable(b);
+
+      for (var t = 1; t <= b.tableCount; t++){
+        var tableLabel = 'T' + String(t).padStart(2,'0');
+        var chairs = [];
+        for (var c = 1; c <= cpt; c++){
+          chairs.push({
+            chair: c,
+            id: seatKey(b.name, tableLabel, c),
+            tier: tierKey2
           });
         }
-      });
-      sec.mode = 'tables';
-      sec.tableCount = n;
-      sec.tableShape = cfg.shape;
-      sec.tableWidthCm = cfg.diameter;
-      sec.chairsPerTable = cfg.chairs;
-      sec.tables = tables;
-      sec.tableRows = b.tableRows.map(function(r){ return r.count; });
+        tablesOut.push({
+          table: t,
+          label: tableLabel,
+          shape: b.tableShape,
+          chairs: chairs,
+          tier: tierKey2,
+          diameterCm: b.tableShape === 'round' ? b.roundDiameter : undefined,
+          sideCm: b.tableShape === 'square' ? b.squareSide : undefined,
+          lengthCm: b.tableShape === 'rectangular' ? b.rectLength : undefined,
+          widthCm: b.tableShape === 'rectangular' ? b.rectWidth : undefined
+        });
+      }
+      sec.tables = tablesOut;
+      sec.tableCount = tablesOut.length;
+      sec.chairsPerTable = cpt;
+      sec.tableShape = b.tableShape;
     }
+
     return sec;
   });
 }
 
-/**
- * Flatten blocks/subsections into the shape view-event.html expects.
- * Capped at MAX_ROWS_PER_EVENT (26) rows — the buyer page uses single-letter rows.
- */
-function buildFlattenedSeatingPlan(){
-  if (!state.features.seating) return { enabled: false };
-  var active = getActiveTiers();
-  var lastTier = active[active.length-1] || 'cyan';
-  var rowTiers = {};
-  var seatTiers = {};
-  var maxCols = 4;
-  var rowCursor = 0;
-
-  if (state.seatingMode === 'rows'){
-    state.blocks.forEach(function(b){
-      b.subsections.forEach(function(sub){
-        var t = b.tier || sub.tier || lastTier;
-        for (var r = 0; r < sub.rows; r++){
-          if (rowCursor >= MAX_ROWS_PER_EVENT) return;
-          var rl = rowLetter(rowCursor);
-          rowTiers[rl] = t;
-          if (sub.seatsPerRow > maxCols) maxCols = sub.seatsPerRow;
-          rowCursor++;
-        }
-      });
-    });
-  } else {
-    state.blocks.forEach(function(b){
-      var t = b.tier || lastTier;
-      var tables = b.tableRows.reduce(function(s,r){ return s+r.count; }, 0);
-      for (var i = 0; i < tables; i++){
-        if (rowCursor >= MAX_ROWS_PER_EVENT) return;
-        var rl2 = rowLetter(rowCursor);
-        rowTiers[rl2] = t;
-        if (state.tableConfig.chairs > maxCols) maxCols = state.tableConfig.chairs;
-        rowCursor++;
-      }
-    });
+function buildSeatingPlan(){
+  if (!state.features.seating){
+    return { enabled: false, version: 2 };
   }
-
-  if (maxCols < 4) maxCols = 4;
-  if (maxCols > 20) maxCols = 20;
-
   return {
     enabled: true,
-    rows: rowCursor,
-    cols: maxCols,
-    mode: 'row',
-    aisle: false,
-    aisleAfter: Math.floor(maxCols / 2),
-    rowTiers: rowTiers,
-    seatTiers: seatTiers
+    version: 2,
+    mode: state.seatingMode,
+    blockCount: state.blocks.length,
+    totalSeats: state.blocks.reduce(function(s,b){ return s + blockSeatCount(b); }, 0)
   };
 }
 
 function buildPayload(){
+  var keys = activeTierKeys();
+  var tierNames = {}, tierColours = {}, tierPrices = {};
+  keys.forEach(function(k){
+    tierNames[k]   = state.tierNames[k];
+    tierColours[k] = state.tierColors[k];
+    tierPrices[k]  = state.tierPrices[k] || 0;
+  });
+
+  var cost = parseFloat($('cost').value) || 0;
   var counts = computeTierCounts();
-  var active = getActiveTiers();
-  var gross = 0, total = 0;
-  active.forEach(function(k){
+  var gross = 0, totalTickets = 0;
+  keys.forEach(function(k){
     var q = counts[k] || 0;
-    var p = state.tierPrices[k] || 0;
-    total += q; gross += q * p;
+    totalTickets += q;
+    gross += q * (state.tierPrices[k] || 0);
   });
   var fee = gross * (state.features.fee / 100);
-  var cost = parseFloat($('cost').value) || 0;
 
   return {
     eventName: $('eventName').value.trim() || 'Untitled Event',
@@ -1559,24 +2014,24 @@ function buildPayload(){
     costFormatted: cost <= 0 ? 'Free' : 'R ' + cost.toFixed(2),
     coverImage: state.coverImage,
     heroImage: state.coverImage,
-    tierColor: active[active.length-1] || 'cyan',
-    canvasWidth: state.canvas.width,
-    canvasHeight: state.canvas.height,
-    gridSize: state.canvas.grid,
-    stage: { x: state.stage.x, y: state.stage.y, width: state.stage.w, height: state.stage.h, name: state.stage.name },
-    activeTierCount: state.tierCount,
-    tierColours: Object.assign({}, state.tierColors),
-    tierNames: Object.assign({}, state.tierNames),
-    tierPrices: Object.assign({}, state.tierPrices),
+    tierColor: state.tierColors[keys[0]] || '#00FFFF',
+    activeTierCount: keys.length,
+    tierNames: tierNames,
+    tierColours: tierColours,
+    tierPrices: tierPrices,
     plan: { id: state.plan, fee: state.features.fee, limit: state.features.limit },
-    seatingMode: state.seatingMode,
-    tableConfig: state.seatingMode === 'tables'
-      ? Object.assign({}, state.tableConfig, { chairsPerTable: state.tableConfig.chairs })
-      : null,
-    sections: buildSections(),
-    seatingPlan: buildFlattenedSeatingPlan(),
-    totalAttendees: total,
-    revenue: { gross: gross, fee: fee, net: gross - fee, planFeePct: state.features.fee, planId: state.plan, totalTickets: total },
+    seatingMode: state.features.seating ? state.seatingMode : null,
+    seatingPlan: buildSeatingPlan(),
+    sections: state.features.seating ? buildSections() : [],
+    totalAttendees: totalTickets,
+    revenue: {
+      gross: gross,
+      fee: fee,
+      net: gross - fee,
+      planFeePct: state.features.fee,
+      planId: state.plan,
+      totalTickets: totalTickets
+    },
     source: 'user',
     status: 'pending_review'
   };
@@ -1592,6 +2047,7 @@ function saveEvent(){
     openAuth();
     return;
   }
+
   var missing = [];
   if (!$('hostName').value.trim()) missing.push('Host name');
   if (!$('hostEmail').value.trim()) missing.push('Host email');
@@ -1600,22 +2056,17 @@ function saveEvent(){
   if (!$('eventName').value.trim()) missing.push('Event name');
   if (!$('venueName').value.trim()) missing.push('Venue name');
   if (!$('venueCity').value) missing.push('City');
+
   if (missing.length){
     toast('Please fill in: ' + missing.join(', '), 'error', 5000);
-    if (missing.indexOf('Host name') >= 0 || missing.indexOf('Event name') >= 0) goToStep(1);
-    return;
-  }
-
-  // Row-limit guard
-  if (state.features.seating && totalFlattenedRows() > MAX_ROWS_PER_EVENT){
-    toast('Too many rows: ' + totalFlattenedRows() + ' (max ' + MAX_ROWS_PER_EVENT + '). Reduce your blocks or subsections.', 'error', 6000);
-    goToStep(4);
+    goToStep(1);
     return;
   }
 
   state.venue.name = $('venueName').value.trim();
   state.venue.city = $('venueCity').value;
-  state.venue.address = $('venueAddress').value.trim() || (state.venue.name + ', ' + state.venue.city);
+  state.venue.address = $('venueAddress').value.trim() ||
+    (state.venue.name + ', ' + state.venue.city);
 
   var payload = buildPayload();
   payload.ownerUid = user.uid;
@@ -1664,7 +2115,9 @@ function closeAuth(){
   document.body.style.overflow = '';
 }
 function syncAuthTabs(){
-  $$('.tab').forEach(function(t){ t.classList.toggle('active', t.dataset.mode === authMode); });
+  $$('.tab').forEach(function(t){
+    t.classList.toggle('active', t.dataset.mode === authMode);
+  });
   if (authMode === 'signup'){
     $('authTitle').textContent = 'Create account';
     $('authSub').textContent = 'Join Novalink to publish events.';
@@ -1684,131 +2137,118 @@ function syncAuthTabs(){
 document.addEventListener('DOMContentLoaded', function(){
   refreshIcons();
 
-  var d = new Date(); d.setDate(d.getDate()+1);
+  var d = new Date();
+  d.setDate(d.getDate() + 1);
   $('startDate').value = d.toISOString().slice(0,10);
 
-  $$('.step').forEach(function(t){ t.addEventListener('click', function(){ goToStep(parseInt(this.dataset.step)); }); });
-  $$('[data-next]').forEach(function(b){ b.addEventListener('click', function(){ goToStep(parseInt(this.dataset.next)); }); });
-  $$('[data-prev]').forEach(function(b){ b.addEventListener('click', function(){ goToStep(parseInt(this.dataset.prev)); }); });
+  $$('.step').forEach(function(t){
+    t.addEventListener('click', function(){ goToStep(parseInt(this.dataset.step, 10)); });
+  });
+  $$('[data-next]').forEach(function(b){
+    b.addEventListener('click', function(){ goToStep(parseInt(this.dataset.next, 10)); });
+  });
+  $$('[data-prev]').forEach(function(b){
+    b.addEventListener('click', function(){ goToStep(parseInt(this.dataset.prev, 10)); });
+  });
 
   $$('input[name="plan"]').forEach(function(r){
-    r.addEventListener('change', function(){ state.plan = this.value; applyPlan(); });
+    r.addEventListener('change', function(){
+      state.plan = this.value;
+      applyPlan();
+    });
   });
 
-  $('eventType').addEventListener('change', function(){
-    var opt = this.options[this.selectedIndex];
-    var min = parseFloat(opt.dataset.min) || 0;
-    var max = parseFloat(opt.dataset.max) || 0;
-    var hint = $('typeHint');
-    if (!this.value){ hint.textContent = 'Choose a type to see a recommended price.'; hint.className = 'hint rec'; return; }
-    if (min === 0 && max === 0){ hint.textContent = 'Recommended: Free (R0).'; }
-    else hint.textContent = 'Recommended: R' + min.toFixed(2) + ' – R' + max.toFixed(2) + ' per ticket.';
-    var mid = (min + max) / 2;
-    if (mid > 0){
-      if (state.tierPricesTouched){
-        if (confirm('You have custom tier prices set.\n\nReplace them with recommended prices for this event type?')){
-          state.tierPricesTouched = false;
-          applyRecommended(mid);
-          $('cost').value = mid.toFixed(2);
-        }
-      } else {
-        applyRecommended(mid);
-        $('cost').value = mid.toFixed(2);
-      }
-    }
-  });
-  function applyRecommended(base){
-    var mult = { black:4, gold:2.5, silver:1.5, cyan:1, tier5:6, tier6:8 };
-    getActiveTiers().forEach(function(k){ state.tierPrices[k] = Math.round(base*(mult[k]||1)*100)/100; });
-    renderTierList();
-    renderRevenue();
-  }
-
-  $('tierCount').addEventListener('change', function(){
-    var v = parseInt(this.value, 10);
-    if (v > state.features.maxTiers){ v = state.features.maxTiers; this.value = String(v); toast('Your plan allows up to ' + v + ' tiers.', 'error'); }
-    state.tierCount = v;
-    renderTierList(); renderTierColorGrid(); renderRevenue(); renderCanvas();
-  });
-
+  /* seating mode pills */
   $$('.mode-pill').forEach(function(p){
     p.addEventListener('click', function(){
       if (this.disabled) return;
       state.seatingMode = this.dataset.mode;
       state.blocks.forEach(function(b){ b.mode = state.seatingMode; });
-      renderSeatingPanel();
+      renderSeatingEditor();
+      renderRevenue();
     });
   });
 
-  ['canvasW','canvasH','gridSize'].forEach(function(id){
-    $(id).addEventListener('change', function(){
-      state.canvas.width = Math.max(400, Math.min(4000, parseInt($('canvasW').value)||1200));
-      state.canvas.height = Math.max(400, Math.min(4000, parseInt($('canvasH').value)||800));
-      state.canvas.grid = Math.max(10, Math.min(200, parseInt($('gridSize').value)||50));
-      $('canvasW').value = state.canvas.width;
-      $('canvasH').value = state.canvas.height;
-      $('gridSize').value = state.canvas.grid;
-      renderCanvas();
-    });
-  });
-  $('stageName').addEventListener('input', function(){
-    state.stage.name = this.value || 'STAGE';
-    renderCanvas();
-  });
-  $('snapToggle').addEventListener('change', function(){ state.snap = this.checked; $('fsSnap').checked = this.checked; });
-  $('tableShape').addEventListener('change', function(){ state.tableConfig.shape = this.value; renderCanvas(); });
-  $('chairsAround').addEventListener('input', function(){ state.tableConfig.chairs = Math.max(1, Math.min(20, parseInt(this.value)||8)); renderCanvas(); renderRevenue(); });
-  $('tableDiameter').addEventListener('input', function(){ state.tableConfig.diameter = Math.max(20, Math.min(600, parseInt(this.value)||150)); });
+  /* event type → recommend prices */
+  $('eventType').addEventListener('change', function(){
+    var opt = this.options[this.selectedIndex];
+    var min = parseFloat(opt.dataset.min) || 0;
+    var max = parseFloat(opt.dataset.max) || 0;
+    var hint = $('typeHint');
 
-  $('fitViewBtn').addEventListener('click', function(){
-    var n = state.blocks.length;
-    var pad = 40;
-    var usable = state.canvas.width - pad*2;
-    var colW = Math.min(280, usable / Math.max(1,n));
-    state.blocks.forEach(function(b, i){
-      b.w = 220;
-      b.h = 220;
-      b.x = pad + i * colW + colW/2 - 110;
-      b.y = 340;
-      b.rotation = 0;
-    });
-    renderCanvas();
-    toast('View fitted.', 'success', 1500);
+    if (!this.value){
+      hint.textContent = 'Choose a type to see a recommended price.';
+      hint.className = 'hint rec';
+      return;
+    }
+    if (min === 0 && max === 0){
+      hint.textContent = 'Recommended: Free (R0).';
+    } else {
+      hint.textContent = 'Recommended: R' + min.toFixed(2) + ' – R' + max.toFixed(2) + ' per ticket.';
+    }
+
+    var mid = (min + max) / 2;
+    if (mid <= 0) return;
+
+    function applyRecommended(base){
+      var mult = { elite: 4, silver: 1.5, standard: 1 };
+      activeTierKeys().forEach(function(k){
+        state.tierPrices[k] = Math.round(base * (mult[k] || 1) * 100) / 100;
+      });
+      renderTierList();
+      renderRevenue();
+    }
+
+    if (state.tierPricesTouched){
+      if (confirm('You have custom tier prices set.\n\nReplace them with recommended prices for this event type?')){
+        state.tierPricesTouched = false;
+        applyRecommended(mid);
+        $('cost').value = mid.toFixed(2);
+      }
+    } else {
+      applyRecommended(mid);
+      $('cost').value = mid.toFixed(2);
+    }
   });
 
-  $('openFsBtn').addEventListener('click', openFullscreen);
-  $('fsClose').addEventListener('click', closeFullscreen);
-  $('fsToggleGrid').addEventListener('click', function(){
-    this.classList.toggle('active');
-    var c = $('fsCanvas');
-    var on = this.classList.contains('active');
-    c.style.backgroundImage = on
-      ? 'linear-gradient(rgba(0,255,255,.08) 1px,transparent 1px),linear-gradient(90deg,rgba(0,255,255,.08) 1px,transparent 1px)'
-      : 'none';
-  });
-  $('fsSnap').addEventListener('change', function(){ state.snap = this.checked; $('snapToggle').checked = this.checked; });
-
+  /* preview updates */
   ['eventName','startDate','venueName','venueCity'].forEach(function(id){
-    var evt = id === 'venueCity' ? 'change' : 'input';
+    var evt = (id === 'venueCity') ? 'change' : 'input';
     $(id).addEventListener(evt, updatePreviewFields);
   });
 
-  $('coverUrl').addEventListener('input', function(){ state.coverImage = this.value.trim(); });
+  /* cover image */
+  $('coverUrl').addEventListener('input', function(){
+    state.coverImage = this.value.trim();
+  });
   $('coverFile').addEventListener('change', function(){
     var f = this.files && this.files[0];
     if (!f) return;
     if (!/^image\//.test(f.type)){ toast('Use an image file.', 'error'); return; }
     if (f.size > 500*1024){ toast('Image must be under 500 KB.', 'error'); return; }
     var reader = new FileReader();
-    reader.onload = function(e){ state.coverImage = e.target.result; $('coverUrl').value = ''; toast('Cover loaded.', 'success'); };
+    reader.onload = function(e){
+      state.coverImage = e.target.result;
+      $('coverUrl').value = '';
+      toast('Cover loaded.', 'success');
+    };
     reader.readAsDataURL(f);
   });
 
+  /* save */
   $('submitBtn').addEventListener('click', saveEvent);
 
+  /* auth */
   $('authClose').addEventListener('click', closeAuth);
-  $('authModal').addEventListener('click', function(e){ if (e.target === this) closeAuth(); });
-  $$('.tab').forEach(function(t){ t.addEventListener('click', function(){ authMode = this.dataset.mode; syncAuthTabs(); }); });
+  $('authModal').addEventListener('click', function(e){
+    if (e.target === this) closeAuth();
+  });
+  $$('.tab').forEach(function(t){
+    t.addEventListener('click', function(){
+      authMode = this.dataset.mode;
+      syncAuthTabs();
+    });
+  });
   $('googleBtn').addEventListener('click', function(){
     auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
       .then(function(){ toast('Signed in.', 'success'); closeAuth(); })
@@ -1816,21 +2256,32 @@ document.addEventListener('DOMContentLoaded', function(){
   });
   $('authForm').addEventListener('submit', function(e){
     e.preventDefault();
-    var email = $('authEmail').value.trim(), pw = $('authPassword').value, name = $('authName').value.trim();
+    var email = $('authEmail').value.trim();
+    var pw    = $('authPassword').value;
+    var name  = $('authName').value.trim();
     if (!email || !pw){ toast('Fill in all fields.', 'error'); return; }
-    if (authMode === 'signup' && pw.length < 6){ toast('Password must be 6+ characters.', 'error'); return; }
+    if (authMode === 'signup' && pw.length < 6){
+      toast('Password must be 6+ characters.', 'error');
+      return;
+    }
     var btn = $('authSubmit');
     btn.disabled = true;
-    var p = authMode === 'signup'
-      ? auth.createUserWithEmailAndPassword(email, pw).then(function(c){ if (name) return c.user.updateProfile({ displayName: name }).then(function(){ return c; }); return c; })
+    var p = (authMode === 'signup')
+      ? auth.createUserWithEmailAndPassword(email, pw).then(function(c){
+          if (name) return c.user.updateProfile({ displayName: name }).then(function(){ return c; });
+          return c;
+        })
       : auth.signInWithEmailAndPassword(email, pw);
     p.then(function(){ toast('Signed in.', 'success'); closeAuth(); })
      .catch(function(err){ toast(err.message || 'Auth failed', 'error'); })
      .then(function(){ btn.disabled = false; });
   });
 
-  applyTierCssVars();
+  /* initial paint */
   applyPlan();
+  renderTierList();
+  renderTierColorGrid();
+  renderSeatingEditor();
   renderRevenue();
   updateTicketBadges();
   updatePreviewFields();
@@ -1843,4 +2294,4 @@ document.addEventListener('DOMContentLoaded', function(){
 })();
 </script>
 </body>
-            </html>
+</html>
