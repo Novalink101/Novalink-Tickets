@@ -30,24 +30,26 @@
 
   /* -------- Seat codes --------
      Canonical format: <BLOCK>-<ROW>-<SEAT>
-       BLOCK: single A–Z letter
-       ROW:   single A–Z letter
-       SEAT:  positive integer
-     Examples: "A-A-1", "C-B-12"
+       BLOCK: 1–2 A–Z letters (A..Z, AA..ZZ) — supports 52+ rows
+       ROW:   1–2 A–Z letters (A..Z, AA..ZZ)
+       SEAT:  positive integer 1–9999
+     Examples: "A-A-1", "C-B-12", "AA-AB-5"
      Anything else returns "" (never throw). */
 
   function buildSeatCode(block, row, seat) {
     var b = String(block == null ? "" : block).trim().toUpperCase();
     var r = String(row == null ? "" : row).trim().toUpperCase();
     var s = parseInt(seat, 10);
-    if (!/^[A-Z]$/.test(b)) return "";
-    if (!/^[A-Z]$/.test(r)) return "";
+    if (!/^[A-Z]{1,2}$/.test(b)) return "";
+    if (!/^[A-Z]{1,2}$/.test(r)) return "";
     if (!isFinite(s) || s < 1 || s > 9999) return "";
     return b + "-" + r + "-" + s;
   }
 
   function parseSeatCode(code) {
-    var m = /^([A-Z])-([A-Z])-(\d{1,4})$/.exec(String(code == null ? "" : code).trim().toUpperCase());
+    var m = /^([A-Z]{1,2})-([A-Z]{1,2})-(\d{1,4})$/.exec(
+      String(code == null ? "" : code).trim().toUpperCase()
+    );
     if (!m) return null;
     return { block: m[1], row: m[2], seat: parseInt(m[3], 10) };
   }
@@ -108,7 +110,7 @@
   }
 
   global.NovalinkRoutingEngine = {
-    version: "1.0.0",
+    version: "1.0.1",
     TIER_KEYS: TIER_KEYS,
     TIER_DEFAULTS: TIER_DEFAULTS,
     TIER_DEFAULT_NAMES: TIER_DEFAULT_NAMES,
