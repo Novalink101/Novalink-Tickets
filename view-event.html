@@ -495,6 +495,9 @@ var PENDING_TTL_MS = 24 * 60 * 60 * 1000;
 var MAX_QTY = 5;
 var WHATSAPP_NUMBER = "27696835184";
 
+/* ═══════════ DEBUG FLAG — set to false to hide alerts ═══════════ */
+var DEBUG_MODE = true;
+
 var currentUser = null;
 var eventData = null;
 var eventId = null;
@@ -565,7 +568,6 @@ function getTierPrice(key){
   return isNaN(v) ? 0 : v;
 }
 
-/* ═══ PAYMENT LINK — auto-prepend https:// if missing ═══ */
 function getPaymentLink(key, quantity){
   if (!eventData || !eventData.paymentLinks) return "";
   var pl = eventData.paymentLinks[key];
@@ -1243,9 +1245,15 @@ function validateGuestForm(){
   return ok;
 }
 
+/* ═══════════ CREATE TICKETS — with visible errors ═══════════ */
 async function createPendingTickets(){
+  console.log('[reserve] createPendingTickets started');
+
   if (!currentUser) throw new Error("Sign in required");
-  if (!validateGuestForm()) throw new Error("__validation__");
+  if (!validateGuestForm()){
+    console.log('[reserve] validation failed');
+    throw new Error("__validation__");
+  }
 
   if (seatingEnabled && assignment && !assignment.ga){
     for (var i = 0; i < assignment.seats.length; i++){
@@ -1263,6 +1271,8 @@ async function createPendingTickets(){
   var buyerUid = currentUser.uid;
   var groupId = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   var paymentLink = getPaymentLink(selectedTier, qty) || "";
+
+  console.log('[reserve] eventId=' + eventId + ' tier=' + selectedTier + ' qty=' + qty + ' price=' + price + ' link=' + paymentLink);
 
   var createdTickets = [];
   var batch = db.batch();
@@ -1308,6 +1318,7 @@ async function createPendingTickets(){
       source: "web"
     };
 
+    console.log('[reserve] ticket ' + (g + 1) + '/' + qty + ' → ' + ticketId);
     batch.set(eventRef.collection("tickets").doc(ticketId), ticketData);
 
     createdTickets.push({
@@ -1318,10 +1329,16 @@ async function createPendingTickets(){
     });
   }
 
-  try { await batch.commit(); }
-  catch(err){
-    console.error("createPendingTickets failed:", err);
-    throw new Error(err.message || "Could not save your reservation.");
+  console.log('[reserve] committing batch of ' + createdTickets.length);
+  try {
+    await batch.commit();
+    console.log('[reserve] batch committed successfully');
+  } catch(err){
+    console.error('[reserve] BATCH FAILED');
+    console.error('[reserve] code:', err.code);
+    console.error('[reserve] message:', err.message);
+    console.error('[reserve] full error:', err);
+    throw new Error((err.code || 'error') + ': ' + (err.message || 'Could not save your reservation.'));
   }
 
   var primary = createdTickets[0];
@@ -1351,6 +1368,7 @@ function buildTicketRef(eId, tId, rand){
   return "NL-" + short4(eId) + "-" + short4(tId) + "-" + (rand || rand4());
 }
 
+/* ═══════════ GO TO PAYMENT — with 30s timeout and alerts ═══════════ */
 async function goToPaymentStep(){
   if (!validateGuestForm()){
     showToast("Please fill in the highlighted fields.", "error", 2500);
@@ -1363,14 +1381,33 @@ async function goToPaymentStep(){
   btn.innerHTML = '<i data-lucide="loader-2"></i> Reserving…';
   refreshIcons();
 
+  /* 30-second hard timeout — no more stuck button */
+  var timedOut = false;
+  var timeoutId = setTimeout(function(){
+    timedOut = true;
+    console.error('[reserve] HARD TIMEOUT after 30 seconds');
+    if (DEBUG_MODE){
+      alert('Reserve timed out after 30s.\n\nThis usually means a Firestore permission or network issue.\n\nCheck the browser console for details.');
+    }
+    btn.disabled = false;
+    btn.innerHTML = orig;
+    refreshIcons();
+  }, 30000);
+
   var bundle;
-  try { bundle = await createPendingTickets(); }
-  catch(err){
+  try {
+    bundle = await createPendingTickets();
+  } catch(err){
+    clearTimeout(timeoutId);
+    console.error('[reserve] error caught:', err);
     if (err.message === "__validation__"){
       btn.disabled = false;
       btn.innerHTML = orig;
       refreshIcons();
       return;
+    }
+    if (DEBUG_MODE){
+      alert('Reserve failed:\n\n' + (err.message || JSON.stringify(err)));
     }
     showToast(err.message || "Could not reserve your tickets.", "error", 4000);
     btn.disabled = false;
@@ -1378,6 +1415,8 @@ async function goToPaymentStep(){
     refreshIcons();
     return;
   }
+  clearTimeout(timeoutId);
+  if (timedOut) return;
 
   pendingTicket = bundle;
 
@@ -1601,4 +1640,4 @@ window.addEventListener("beforeunload", function(){
 })();
 </script>
 </body>
-        </html>
+  </html>
