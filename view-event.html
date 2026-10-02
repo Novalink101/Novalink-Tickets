@@ -504,6 +504,10 @@ var guestNames = [""];
 var pendingTicket = null;
 var countdownTimer = null;
 
+/* ═══════════ LOCKED-IN VALUES — set when modal opens, used everywhere ═══════════ */
+var lockedPrice = null;      /* price per ticket, locked at modal open */
+var lockedLink = "";         /* payment link, locked at modal open */
+
 var seatingEnabled = false;
 var gaEnabled = false;
 var blocks = [];
@@ -565,9 +569,6 @@ function getTierPrice(key){
   return isNaN(v) ? 0 : v;
 }
 
-/* ══════════════════════════════════════════════════════════════
-   getPaymentLink — bulletproof. Never throws.
-   ══════════════════════════════════════════════════════════════ */
 function getPaymentLink(key, quantity){
   try {
     if (!eventData || !eventData.paymentLinks) return "";
@@ -1097,8 +1098,13 @@ function openBuyModal(){
     return;
   }
 
-  var price = getTierPrice(selectedTier);
-  var total = price * qty;
+  /* ═══════════ LOCK THE PRICE AND LINK AT THIS MOMENT ═══════════ */
+  lockedPrice = getTierPrice(selectedTier);
+  lockedLink  = getPaymentLink(selectedTier, qty) || "";
+
+  console.log('[buyModal] locked price=' + lockedPrice + ' link=' + lockedLink + ' tier=' + selectedTier + ' qty=' + qty);
+
+  var total = lockedPrice * qty;
   $("modalAmount").textContent = total > 0 ? formatMoney(total) : "Free";
 
   var lead = firstNameOf(currentUser) || "";
@@ -1251,7 +1257,7 @@ function validateGuestForm(){
 }
 
 /* ══════════════════════════════════════════════════════════════
-   createPendingTickets — writes tickets to Firestore
+   createPendingTickets — uses lockedPrice and lockedLink
    ══════════════════════════════════════════════════════════════ */
 async function createPendingTickets(){
   if (!currentUser) throw new Error("Sign in required");
@@ -1266,13 +1272,18 @@ async function createPendingTickets(){
   }
 
   var buyerEmail = ($("guestEmailInput").value || "").trim();
-  var price = getTierPrice(selectedTier);
+
+  /* ═══ USE THE LOCKED-IN VALUES, NOT A FRESH LOOKUP ═══ */
+  var price = (typeof lockedPrice === "number") ? lockedPrice : getTierPrice(selectedTier);
+  var paymentLink = lockedLink || getPaymentLink(selectedTier, qty) || "";
+
   var totalAmount = price * qty;
   var nowMs = Date.now();
   var expiresAtMs = nowMs + PENDING_TTL_MS;
   var buyerUid = currentUser.uid;
   var groupId = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
-  var paymentLink = getPaymentLink(selectedTier, qty) || "";
+
+  console.log('[reserve] creating ' + qty + ' ticket(s) at R' + price + ' each. Total R' + totalAmount + '. Link: ' + paymentLink);
 
   var createdTickets = [];
   var batch = db.batch();
@@ -1343,7 +1354,8 @@ async function createPendingTickets(){
     amount: totalAmount, tier: selectedTier,
     tierName: getTierName(selectedTier), expiresAtMs: expiresAtMs,
     guestNames: guestNames.slice(0, qty), guestEmail: buyerEmail,
-    seats: seatingEnabled && assignment && !assignment.ga ? assignment.seats.slice(0, qty) : []
+    seats: seatingEnabled && assignment && !assignment.ga ? assignment.seats.slice(0, qty) : [],
+    paymentLink: paymentLink
   };
 }
 
@@ -1362,11 +1374,6 @@ function buildTicketRef(eId, tId, rand){
   return "NL-" + short4(eId) + "-" + short4(tId) + "-" + (rand || rand4());
 }
 
-/* ══════════════════════════════════════════════════════════════
-   goToPaymentStep — CRITICAL FIX
-   Advances the modal FIRST, then renders the payment info.
-   If rendering fails, the buyer still sees step 2.
-   ══════════════════════════════════════════════════════════════ */
 async function goToPaymentStep(){
   if (!validateGuestForm()){
     showToast("Please fill in the highlighted fields.", "error", 2500);
@@ -1416,11 +1423,11 @@ async function goToPaymentStep(){
     });
   } catch(e){}
 
-  /* ══ ADVANCE THE MODAL FIRST ══ */
+  /* ═══ ADVANCE MODAL FIRST ═══ */
   $("step1").style.display = "none";
   $("step2").style.display = "block";
 
-  /* ══ THEN render payment details, protected ══ */
+  /* ═══ THEN render, protected ═══ */
   try {
     renderPaymentStep(bundle);
   } catch(renderErr){
@@ -1428,7 +1435,7 @@ async function goToPaymentStep(){
     try {
       $("refValue").textContent = bundle.reference || "—";
       $("refInline").textContent = bundle.reference || "—";
-      $("amountToPay").textContent = formatMoney(bundle.amount || 0);
+      $("amountToPay").textContent = bundle.amount > 0 ? formatMoney(bundle.amount) : "Free";
     } catch(e2){}
   }
 
@@ -1441,14 +1448,15 @@ async function goToPaymentStep(){
 function renderPaymentStep(bundle){
   $("refValue").textContent = bundle.reference || "—";
   $("refInline").textContent = bundle.reference || "—";
-  $("amountToPay").textContent = bundle.amount > 0 ? formatMoney(bundle.amount) : "Free";
 
-  var link = "";
-  try {
-    link = getPaymentLink(bundle.tier, bundle.qty);
-  } catch(e){
-    console.error('[renderPaymentStep] getPaymentLink failed:', e);
-  }
+  /* ═══ Use bundle.amount which is price * qty from createPendingTickets ═══ */
+  var amount = (typeof bundle.amount === "number") ? bundle.amount : 0;
+  $("amountToPay").textContent = amount > 0 ? formatMoney(amount) : "Free";
+
+  /* ═══ Use the payment link that was locked in ═══ */
+  var link = bundle.paymentLink || getPaymentLink(bundle.tier, bundle.qty) || "";
+
+  console.log('[paymentStep] amount=' + amount + ' link=' + link);
 
   var yocoBtn = $("yocoBtn");
   var waBtn = $("whatsappBtn");
@@ -1648,4 +1656,4 @@ window.addEventListener("beforeunload", function(){
 })();
 </script>
 </body>
-  </html>
+                </html>
