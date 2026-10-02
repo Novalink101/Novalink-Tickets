@@ -3,327 +3,145 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-<meta name="theme-color" content="#f6f8fb" />
+<meta name="theme-color" content="#0a0f14" />
 <title>Scanner · Novalink</title>
 <script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
-<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://unpkg.com/html5-qrcode@2.3.8/html5-qrcode.min.js"></script>
 <style>
 :root{
   --cy:#00FFFF;--cy2:#00CCCC;--cy3:#009999;--cyf:#e6ffff;
-  --bg:#f6f8fb;--sf:#ffffff;--sf2:#f1f4f8;
-  --bd:#e4e9f0;--bd2:#d3dbe5;
-  --tx:#0a0f14;--tx2:#2b3644;--mut:#6b7787;
-  --rd:14px;--font:'Inter',system-ui,-apple-system,sans-serif;
-  --dg:#dc2626;--dgf:#fef2f2;--sv:#059669;--svf:#ecfdf5;--nv:#1e2f4d;
+  --bg:#0a0f14;--sf:#111827;--sf2:#1a2129;
+  --bd:#1f2937;--bd2:#374151;
+  --tx:#ffffff;--tx2:#cbd5e1;--mut:#94a3b8;
+  --rd:14px;--font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --dg:#dc2626;--dgf:#7f1d1d;--sv:#059669;--svf:#064e3b;--am:#f59e0b;--amf:#78350f;
   --ease:cubic-bezier(0.25,0.8,0.25,1);
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html,body{-webkit-text-size-adjust:100%}
-body{font-family:var(--font);background:var(--bg);color:var(--tx);line-height:1.6;min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased;overflow-x:hidden}
-.container{max-width:900px;margin:0 auto;padding:0 20px;width:100%}
-h1,h2,h3{line-height:1.15;font-weight:700}
-a{color:inherit;text-decoration:none}
+html,body{height:100%;overflow:hidden;-webkit-text-size-adjust:100%}
+body{font-family:var(--font);background:var(--bg);color:var(--tx);line-height:1.5;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
 button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation}
-.logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none;margin-left:12px}
-.logo .mark{width:34px;height:42px;flex-shrink:0}
-.logo .wm{font-weight:800;font-size:1.1rem;color:var(--nv)}
+a{color:inherit;text-decoration:none}
 
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:12px;font-weight:600;font-size:14px;border:1px solid transparent;cursor:pointer;transition:all 0.2s var(--ease);white-space:nowrap;font-family:inherit;text-decoration:none}
-.btn svg,.btn i{width:17px;height:17px}
-.btn-accent{background:linear-gradient(135deg,var(--cy),var(--cy2));color:#04161c}
-.btn-accent:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,255,255,0.35)}
-.btn-ghost{background:transparent;color:var(--tx2);border:1px solid var(--bd2)}
-.btn-ghost:hover{background:var(--sf2);border-color:var(--cy);color:var(--cy3)}
-.btn-danger{background:var(--dg);color:#fff}
-.btn-danger:hover{background:#b91c1c;transform:translateY(-2px)}
-.btn-block{width:100%}
-.btn-lg{padding:15px 26px;font-size:15px}
-.btn:disabled{opacity:0.55;cursor:not-allowed;transform:none!important}
+.header{background:#000;border-bottom:1px solid var(--bd);padding:12px 16px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-shrink:0}
+.header .logo{display:inline-flex;align-items:center;gap:9px;color:var(--cy);font-weight:900;letter-spacing:.15em;font-size:12px;text-transform:uppercase}
+.header .logo i{width:16px;height:16px}
+.header .ev-select{flex:1;max-width:280px;padding:7px 11px;background:var(--sf2);border:1px solid var(--bd);border-radius:8px;color:var(--tx);font-size:12px;font-family:inherit}
+.header .ev-select:focus{outline:none;border-color:var(--cy)}
 
-.site-header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,0.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--bd);padding:12px 0}
-.header-inner{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.hdr-actions{display:flex;gap:8px;align-items:center;position:relative}
-.user-btn{display:none;align-items:center;gap:8px;padding:5px 12px 5px 5px;background:var(--sf2);border:1px solid var(--bd);border-radius:99px;font-family:inherit;color:var(--tx)}
-.user-btn .av{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--cy),var(--cy2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;color:#04161c}
-.user-btn .nm{font-size:13px;font-weight:600}
-.user-btn .badge{background:#fef3c7;color:#92400e;font-size:10px;font-weight:800;padding:2px 8px;border-radius:99px}
-.dd{position:absolute;top:calc(100% + 8px);right:0;background:var(--sf);border:1px solid var(--bd);border-radius:14px;box-shadow:0 20px 60px rgba(10,15,20,0.15);min-width:220px;padding:8px;display:none;z-index:60}
-.dd.open{display:block}
-.dd-item{display:flex;align-items:center;gap:10px;padding:11px 14px;border-radius:9px;font-size:13.5px;font-weight:500;color:var(--tx2);border:none;background:transparent;width:100%;font-family:inherit;text-align:left}
-.dd-item:hover{background:var(--sf2);color:var(--tx)}
-.dd-item i{width:16px;height:16px;color:var(--mut)}
+.stage{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;position:relative;overflow:hidden;padding:16px;gap:14px}
+#reader{width:100%;max-width:420px;aspect-ratio:1;border-radius:18px;overflow:hidden;position:relative;background:#000;box-shadow:0 20px 60px rgba(0,255,255,0.15)}
+#reader video{width:100%!important;height:100%!important;object-fit:cover;display:block}
+#reader__scan_region{background:transparent!important}
+#reader__scan_region img{display:none!important}
+#reader__dashboard,#reader__dashboard_section,#reader__header_message{display:none!important}
 
-.page{flex:1;padding:24px 0 40px}
-.ls{text-align:center;padding:80px 20px;color:var(--mut)}
-.ls i{width:32px;height:32px;margin:0 auto 12px;color:var(--cy3);animation:sp 1.2s linear infinite;display:block}
-@keyframes sp{to{transform:rotate(360deg)}}
-.es{text-align:center;padding:60px 24px;max-width:480px;margin:0 auto}
-.es .ic{width:64px;height:64px;border-radius:50%;background:var(--dgf);display:flex;align-items:center;justify-content:center;margin:0 auto 18px;color:var(--dg)}
-.es .ic i{width:28px;height:28px}
-.es h2{margin-bottom:8px;color:var(--tx)}
-.es p{color:var(--mut);margin-bottom:22px}
-.es .actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+.scan-overlay{position:absolute;inset:0;pointer-events:none;display:flex;align-items:center;justify-content:center;z-index:10}
+.scan-frame{width:64%;aspect-ratio:1;border:3px solid var(--cy);border-radius:16px;box-shadow:0 0 0 9999px rgba(0,0,0,0.55),0 0 30px rgba(0,255,255,0.5);position:relative}
+.scan-frame::before,.scan-frame::after{content:'';position:absolute;width:26px;height:26px;border:4px solid var(--cy);border-radius:0}
+.scan-frame::before{top:-3px;left:-3px;border-right:none;border-bottom:none}
+.scan-frame::after{bottom:-3px;right:-3px;border-left:none;border-top:none}
+.scan-line{position:absolute;left:12%;right:12%;height:2px;background:linear-gradient(90deg,transparent,var(--cy),transparent);animation:scanLine 2s ease-in-out infinite;top:20%;box-shadow:0 0 14px var(--cy)}
+@keyframes scanLine{0%,100%{top:20%}50%{top:80%}}
 
-.page-head{text-align:center;margin-bottom:20px}
-.page-head .eyebrow{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--cy3);background:var(--cyf);border:1px solid var(--cy);padding:5px 12px;border-radius:99px;margin-bottom:12px}
-.page-head .eyebrow i{width:13px;height:13px}
-.page-head h1{font-size:clamp(1.4rem,3vw,1.8rem);color:var(--nv);margin-bottom:4px}
-.page-head p{color:var(--mut);font-size:13.5px}
+.status-bar{padding:10px 16px;text-align:center;font-size:13px;font-weight:700;background:var(--sf2);border:1px solid var(--bd);border-radius:12px;color:var(--cy);max-width:420px;width:100%}
+.status-bar.hint{color:var(--mut);font-weight:500;font-size:12px}
 
-.picker{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rd);padding:20px;margin-bottom:20px;box-shadow:0 4px 16px rgba(10,15,20,0.04)}
-.picker-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:8px;flex-wrap:wrap}
-.picker label{display:block;font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--cy3)}
-.sound-controls{display:inline-flex;gap:6px;align-items:center}
-.sound-toggle{display:inline-flex;align-items:center;gap:6px;padding:6px 12px;border-radius:99px;border:1px solid var(--bd2);background:var(--sf2);color:var(--tx2);font-size:11.5px;font-weight:800;font-family:inherit;cursor:pointer;transition:all 0.15s ease}
-.sound-toggle:hover{border-color:var(--cy);color:var(--cy3)}
-.sound-toggle i{width:13px;height:13px}
-.sound-toggle.muted{background:var(--dgf);border-color:#fecaca;color:var(--dg)}
-.sound-test{display:inline-flex;align-items:center;justify-content:center;width:30px;height:30px;padding:0;border-radius:50%;border:1px solid var(--cy);background:var(--cyf);color:var(--cy3);font-family:inherit;cursor:pointer;transition:all 0.15s ease}
-.sound-test:hover{background:var(--cy);color:#04161c}
-.sound-test i{width:14px;height:14px}
-.picker select{width:100%;padding:14px 16px;background:var(--bg);border:1px solid var(--bd2);border-radius:10px;color:var(--tx);font-size:15px;font-family:inherit;appearance:none;padding-right:44px;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='14' height='14' viewBox='0 0 24 24' fill='none' stroke='%23009999' stroke-width='3'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;background-size:14px;cursor:pointer}
-.picker select:focus{outline:none;border-color:var(--cy);box-shadow:0 0 0 3px rgba(0,255,255,0.15);background-color:#fff}
-.picker .meta{margin-top:10px;font-size:12px;color:var(--mut);text-align:center}
-.picker .kind-hint{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:800;padding:3px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:0.06em}
-.picker .kind-hint.event{background:var(--cyf);color:var(--cy3)}
-.picker .kind-hint.trip{background:#f3e8ff;color:#6b21a8}
+.result-overlay{position:fixed;inset:0;z-index:100;display:none;align-items:center;justify-content:center;padding:24px;text-align:center;animation:fadeIn .25s ease}
+.result-overlay.open{display:flex}
+.result-overlay.valid{background:linear-gradient(135deg,rgba(5,150,105,0.98),rgba(6,78,59,0.98))}
+.result-overlay.used{background:linear-gradient(135deg,rgba(245,158,11,0.98),rgba(120,53,15,0.98))}
+.result-overlay.cancelled{background:linear-gradient(135deg,rgba(220,38,38,0.98),rgba(127,29,29,0.98))}
+.result-overlay.pending{background:linear-gradient(135deg,rgba(245,158,11,0.98),rgba(120,53,15,0.98))}
+.result-overlay.invalid{background:linear-gradient(135deg,rgba(220,38,38,0.98),rgba(127,29,29,0.98))}
+.result-overlay.error{background:linear-gradient(135deg,rgba(220,38,38,0.98),rgba(127,29,29,0.98))}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.result-inner{max-width:460px;width:100%;color:#fff;display:flex;flex-direction:column;align-items:center;gap:14px}
+.result-icon{width:96px;height:96px;border-radius:50%;background:rgba(255,255,255,0.18);display:flex;align-items:center;justify-content:center;backdrop-filter:blur(8px);border:3px solid rgba(255,255,255,0.4)}
+.result-icon i{width:52px;height:52px;stroke-width:2.5}
+.result-title{font-size:28px;font-weight:900;letter-spacing:-0.02em;text-transform:uppercase;letter-spacing:0.04em;text-shadow:0 2px 12px rgba(0,0,0,0.3)}
+.result-subtitle{font-size:14px;color:rgba(255,255,255,0.85);font-weight:600;line-height:1.5}
+.result-info{background:rgba(0,0,0,0.28);border:1px solid rgba(255,255,255,0.22);border-radius:14px;padding:16px;width:100%;display:flex;flex-direction:column;gap:8px;backdrop-filter:blur(8px);text-align:left}
+.result-row{display:flex;justify-content:space-between;gap:12px;font-size:13.5px;padding:4px 0;border-bottom:1px solid rgba(255,255,255,0.1)}
+.result-row:last-child{border-bottom:none}
+.result-row .lbl{color:rgba(255,255,255,0.7);font-weight:700;text-transform:uppercase;font-size:10.5px;letter-spacing:.06em;flex-shrink:0;padding-top:2px}
+.result-row .val{color:#fff;font-weight:800;text-align:right;word-break:break-word;min-width:0}
+.result-row .val.mono{font-family:var(--mono);font-size:12.5px;letter-spacing:.02em}
+.result-actions{display:flex;flex-direction:column;gap:10px;width:100%;margin-top:6px}
+.result-btn{padding:15px 22px;border-radius:14px;background:#fff;color:#0a0f14;font-size:15px;font-weight:900;border:none;transition:transform .15s ease;text-transform:uppercase;letter-spacing:.04em;font-family:inherit;cursor:pointer;display:inline-flex;align-items:center;justify-content:center;gap:8px}
+.result-btn:hover{transform:translateY(-2px)}
+.result-btn i{width:17px;height:17px}
+.result-btn.ghost{background:rgba(255,255,255,0.18);color:#fff;border:1.5px solid rgba(255,255,255,0.4)}
 
-.scanner-wrap{background:#0a0f14;border-radius:var(--rd);overflow:hidden;position:relative;margin:0 auto 24px;box-shadow:0 20px 60px rgba(10,15,20,0.25);max-width:760px;width:100%;border:6px solid #0a0f14}
-#reader{width:100%;background:#0a0f14;min-height:480px}
-#reader video{border-radius:calc(var(--rd) - 6px);width:100% !important;height:auto !important;display:block}
-@media (min-width:640px){#reader{min-height:560px}}
-.scanner-hint{position:absolute;bottom:14px;left:50%;transform:translateX(-50%);background:rgba(0,0,0,0.75);color:#fff;font-size:12px;font-weight:700;padding:8px 16px;border-radius:99px;backdrop-filter:blur(8px);pointer-events:none;white-space:nowrap;border:1px solid rgba(255,255,255,0.15)}
-.scanner-hint i{width:12px;height:12px;vertical-align:-2px;margin-right:4px;color:var(--cy)}
+.paused-overlay{position:fixed;inset:0;z-index:90;background:rgba(10,15,20,0.94);display:none;align-items:center;justify-content:center;padding:24px;text-align:center}
+.paused-overlay.open{display:flex}
+.paused-inner{max-width:400px;color:#fff;display:flex;flex-direction:column;align-items:center;gap:14px}
+.paused-icon{width:72px;height:72px;border-radius:50%;background:rgba(255,255,255,0.12);display:flex;align-items:center;justify-content:center}
+.paused-icon i{width:36px;height:36px;color:var(--cy)}
+.paused-title{font-size:20px;font-weight:900;text-transform:uppercase;letter-spacing:.06em}
+.paused-msg{font-size:13.5px;color:rgba(255,255,255,0.75);line-height:1.55}
 
-.search-panel{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rd);padding:20px;margin-bottom:20px;box-shadow:0 4px 16px rgba(10,15,20,0.04)}
-.search-panel .label{font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--cy3);margin-bottom:8px;display:flex;align-items:center;gap:8px}
-.search-panel .label i{width:13px;height:13px}
-.search-panel .row{display:flex;gap:10px;flex-wrap:wrap;align-items:stretch}
-.search-panel .input-wrap{flex:1;min-width:220px;position:relative;display:flex;align-items:center}
-.search-panel .input-wrap > i{position:absolute;left:14px;width:16px;height:16px;color:var(--mut);pointer-events:none}
-.search-panel input[type="text"]{flex:1;width:100%;padding:14px 16px 14px 42px;background:var(--bg);border:1px solid var(--bd2);border-radius:10px;color:var(--tx);font-size:14px;font-family:inherit}
-.search-panel input[type="text"]:focus{outline:none;border-color:var(--cy);box-shadow:0 0 0 3px rgba(0,255,255,0.15);background:#fff}
-.search-panel .clear-btn{position:absolute;right:10px;background:var(--sf2);border:1px solid var(--bd);color:var(--mut);width:26px;height:26px;border-radius:50%;display:none;align-items:center;justify-content:center;cursor:pointer}
-.search-panel .clear-btn.show{display:inline-flex}
-.search-panel .clear-btn:hover{background:var(--dgf);color:var(--dg);border-color:#fecaca}
-.search-panel .clear-btn i{width:14px;height:14px}
-.search-panel .hint{margin-top:8px;font-size:11px;color:var(--mut);font-style:italic}
-
-.search-results{margin-top:14px;display:flex;flex-direction:column;gap:8px;max-height:420px;overflow-y:auto}
-.search-results .sr-empty{color:var(--mut);font-size:12.5px;font-style:italic;text-align:center;padding:16px 8px;border:1px dashed var(--bd2);border-radius:10px;background:var(--bg)}
-.search-results .sr-item{display:flex;align-items:center;gap:12px;padding:12px 14px;background:var(--bg);border:1px solid var(--bd);border-radius:10px;cursor:pointer;transition:all 0.15s ease;text-align:left;width:100%;font-family:inherit;color:var(--tx)}
-.search-results .sr-item:hover{border-color:var(--cy);background:#fff;transform:translateX(3px);box-shadow:0 4px 12px rgba(0,255,255,0.12)}
-.search-results .sr-icon{width:36px;height:36px;border-radius:50%;background:linear-gradient(135deg,var(--cy),var(--cy2));color:#04161c;display:flex;align-items:center;justify-content:center;font-weight:900;font-size:13px;flex-shrink:0;letter-spacing:-0.5px}
-.search-results .sr-body{flex:1;min-width:0}
-.search-results .sr-name{font-size:13.5px;font-weight:800;color:var(--tx);word-break:break-word}
-.search-results .sr-meta{font-size:11.5px;color:var(--mut);margin-top:2px;font-family:ui-monospace,monospace;word-break:break-all}
-.search-results .sr-badge{font-size:9.5px;font-weight:900;padding:3px 8px;border-radius:5px;text-transform:uppercase;letter-spacing:0.4px;flex-shrink:0}
-.search-results .sr-badge.valid{background:#ecfdf5;color:#065f46;border:1px solid #a7f3d0}
-.search-results .sr-badge.used{background:#fffbeb;color:#92400e;border:1px solid #fde68a}
-.search-results .sr-badge.cancelled{background:#fef2f2;color:#991b1b;border:1px solid #fecaca}
-
-.recent{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rd);padding:20px;box-shadow:0 4px 16px rgba(10,15,20,0.04)}
-.recent .label{font-size:11px;font-weight:800;letter-spacing:0.08em;text-transform:uppercase;color:var(--cy3);margin-bottom:12px;display:flex;justify-content:space-between;align-items:center}
-.recent .label .count{background:var(--cyf);color:var(--cy3);padding:2px 10px;border-radius:99px;font-size:10px;border:1px solid var(--cy)}
-.recent-list{display:flex;flex-direction:column;gap:8px;max-height:360px;overflow-y:auto}
-.recent-item{display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:10px;background:var(--bg);border:1px solid var(--bd)}
-.recent-item.valid{border-left:4px solid #10b981}
-.recent-item.used{border-left:4px solid #f59e0b}
-.recent-item.cancelled{border-left:4px solid #dc2626}
-.recent-item.invalid{border-left:4px solid #6b7787}
-.recent-item .ri-icon{width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0}
-.recent-item.valid .ri-icon{background:rgba(16,185,129,0.15);color:#10b981}
-.recent-item.used .ri-icon{background:rgba(245,158,11,0.15);color:#f59e0b}
-.recent-item.cancelled .ri-icon{background:rgba(220,38,38,0.15);color:#dc2626}
-.recent-item.invalid .ri-icon{background:rgba(107,119,135,0.15);color:#6b7787}
-.recent-item .ri-icon i{width:16px;height:16px}
-.recent-item .ri-body{flex:1;min-width:0}
-.recent-item .ri-name{font-size:13.5px;font-weight:700;color:var(--tx);word-break:break-word}
-.recent-item .ri-meta{font-size:11px;color:var(--mut);margin-top:2px;font-family:ui-monospace,monospace;word-break:break-all}
-.recent-empty{text-align:center;color:var(--mut);font-size:12.5px;padding:20px 10px;font-style:italic}
-
-.result-overlay{position:fixed;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:40px 20px;z-index:9999;-webkit-user-select:none;user-select:none}
-.result-overlay.show{display:flex;animation:flashIn 0.15s ease}
-@keyframes flashIn{from{opacity:0}to{opacity:1}}
-.result-overlay.valid{background:linear-gradient(135deg,#059669,#10b981);color:#fff}
-.result-overlay.used{background:linear-gradient(135deg,#b45309,#f59e0b);color:#fff}
-.result-overlay.cancelled{background:linear-gradient(135deg,#991b1b,#dc2626);color:#fff}
-.result-overlay.invalid{background:linear-gradient(135deg,#334155,#475569);color:#fff}
-.result-overlay .icon{width:120px;height:120px;border-radius:50%;background:rgba(255,255,255,0.2);display:flex;align-items:center;justify-content:center;margin-bottom:24px;border:4px solid rgba(255,255,255,0.4)}
-.result-overlay .icon i{width:64px;height:64px}
-.result-overlay .title{font-size:clamp(2rem,8vw,4rem);font-weight:900;letter-spacing:-1px;line-height:1;margin-bottom:12px;text-transform:uppercase}
-.result-overlay .guest{font-size:clamp(1rem,3vw,1.4rem);font-weight:800;margin-bottom:8px;opacity:0.95;word-break:break-word;max-width:90%}
-.result-overlay .seat{font-size:clamp(0.9rem,2.4vw,1.1rem);font-weight:700;opacity:0.85;font-family:ui-monospace,monospace;letter-spacing:1px}
-.result-overlay .msg{margin-top:20px;font-size:clamp(0.85rem,2vw,1rem);opacity:0.9;max-width:520px;line-height:1.5}
-.result-overlay .progress{position:absolute;bottom:0;left:0;right:0;height:6px;background:rgba(255,255,255,0.25)}
-.result-overlay .progress-fill{height:100%;background:rgba(255,255,255,0.85);border-radius:99px;animation:countdown 2.5s linear forwards}
-@keyframes countdown{from{width:100%}to{width:0%}}
-
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120%);background:#0a0f14;color:#fff;padding:12px 18px;border-radius:12px;font-size:13.5px;z-index:10000;transition:transform 0.4s var(--ease),opacity 0.3s ease;display:flex;align-items:center;gap:10px;pointer-events:none;opacity:0;max-width:calc(100vw - 40px);border:1px solid rgba(255,255,255,0.1)}
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120%);background:#000;color:#fff;padding:12px 18px;border-radius:12px;font-size:13.5px;z-index:200;transition:transform .3s var(--ease),opacity .3s ease;display:flex;align-items:center;gap:10px;pointer-events:none;opacity:0;max-width:calc(100vw - 40px);border:1px solid var(--bd)}
 .toast.show{transform:translateX(-50%) translateY(0);opacity:1}
-.toast.success{background:#065f46}
-.toast.error{background:#991b1b}
-
-.footer{background:#fff;color:var(--mut);padding:24px 0 20px;margin-top:auto;font-size:12px;border-top:1px solid var(--bd)}
-.footer-links{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;padding-bottom:14px;margin-bottom:12px;border-bottom:1px solid var(--bd)}
-.footer-links a{color:var(--mut);font-size:12px;transition:color 0.2s ease}
-.footer-links a:hover{color:var(--cy3)}
-.fb{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px}
-
-@media (max-width:520px){
-  .search-panel .row{flex-direction:column}
-  #reader{min-height:360px}
-}
+.toast.success{background:#065f46;border-color:#10b981}
+.toast.error{background:#991b1b;border-color:#dc2626}
+.toast i{width:16px;height:16px;flex-shrink:0}
 </style>
 </head>
 <body>
 
-<header class="site-header">
-  <div class="container header-inner">
-    <a href="index.html" class="logo">
-      <svg class="mark" viewBox="0 0 60 74"><path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/><path fill="#00FFFF" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/></svg>
-      <span class="wm">NOVALINK</span>
-    </a>
-    <div class="hdr-actions">
-      <a href="index.html" class="btn btn-ghost" style="font-size:13px;padding:8px 12px;"><i data-lucide="arrow-left"></i> Home</a>
-      <button id="userMenuBtn" class="user-btn">
-        <span class="av" id="userAvatar">?</span>
-        <span class="nm" id="userName">User</span>
-        <span class="badge" id="adminBadge" style="display:none">Admin</span>
-      </button>
-      <div class="dd" id="userDropdown">
-        <button class="dd-item" id="ddSignOut"><i data-lucide="log-out"></i> Sign out</button>
-        <button class="dd-item" id="ddCreateEvent"><i data-lucide="plus-circle"></i> Create an event</button>
-        <button class="dd-item" id="ddCreateTrip"><i data-lucide="map"></i> Create a trip</button>
-      </div>
-    </div>
-  </div>
+<header class="header">
+  <span class="logo"><i data-lucide="scan-line"></i> Scanner</span>
+  <select class="ev-select" id="eventSelect">
+    <option value="">Loading events…</option>
+  </select>
 </header>
 
-<main class="page">
-  <div class="container">
-
-    <div id="loadingState" class="ls">
-      <i data-lucide="loader-2"></i>
-      <p>Loading scanner…</p>
-    </div>
-
-    <div id="errorState" class="es" style="display:none">
-      <div class="ic"><i data-lucide="alert-circle" id="errorIcon"></i></div>
-      <h2 id="errorTitle">Not available</h2>
-      <p id="errorMsg">Something went wrong.</p>
-      <div class="actions" id="errorActions">
-        <a href="index.html" class="btn btn-accent"><i data-lucide="arrow-left"></i> Back to home</a>
-      </div>
-    </div>
-
-    <div id="signinState" class="es" style="display:none">
-      <div class="ic"><i data-lucide="lock"></i></div>
-      <h2>Sign in required</h2>
-      <p>You need to sign in as a host to use the scanner.</p>
-      <div class="actions">
-        <a href="index.html#signin" class="btn btn-accent"><i data-lucide="log-in"></i> Sign in</a>
-        <a href="index.html" class="btn btn-ghost"><i data-lucide="arrow-left"></i> Home</a>
-      </div>
-    </div>
-
-    <div id="scannerContent" style="display:none">
-
-      <div class="page-head">
-        <span class="eyebrow"><i data-lucide="camera"></i> Door scanner</span>
-        <h1>Scan tickets at the door</h1>
-        <p>Point the camera at a guest's QR code, or search tickets by name below.</p>
-      </div>
-
-      <div class="picker">
-        <div class="picker-head">
-          <label for="eventSelect">Event or Trip</label>
-          <div class="sound-controls">
-            <button type="button" class="sound-test" id="soundTestBtn" title="Test sound">
-              <i data-lucide="volume-1"></i>
-            </button>
-            <button type="button" class="sound-toggle" id="soundToggle" title="Toggle scan sounds">
-              <i data-lucide="volume-2"></i><span>Sound on</span>
-            </button>
-          </div>
-        </div>
-        <select id="eventSelect">
-          <option value="">Loading your events and trips…</option>
-        </select>
-        <div class="meta" id="eventMeta"></div>
-      </div>
-
-      <div class="scanner-wrap" id="scannerWrap" style="display:none">
-        <div id="reader"></div>
-        <div class="scanner-hint">
-          <i data-lucide="scan-line"></i> Align the QR inside the frame
-        </div>
-      </div>
-
-      <div class="search-panel">
-        <div class="label"><i data-lucide="user-search"></i> Search tickets by name</div>
-        <div class="row">
-          <div class="input-wrap">
-            <i data-lucide="search"></i>
-            <input type="text" id="searchNameInput" placeholder="Start typing a guest name…" autocomplete="off" spellcheck="false" />
-            <button type="button" class="clear-btn" id="searchClearBtn" title="Clear"><i data-lucide="x"></i></button>
-          </div>
-          <button class="btn btn-accent" id="searchNameBtn">
-            <i data-lucide="search-check"></i> Search
-          </button>
-        </div>
-        <div class="hint">Type at least 1 character. Matches every ticket in this event or trip whose guest name, email, seat or reference contains your search.</div>
-        <div class="search-results" id="searchResults">
-          <div class="sr-empty">Type a name to see matching tickets</div>
-        </div>
-      </div>
-
-      <div class="recent">
-        <div class="label">
-          <span>Recent scans</span>
-          <span class="count" id="recentCount">0</span>
-        </div>
-        <div class="recent-list" id="recentList">
-          <div class="recent-empty">No scans yet this session</div>
-        </div>
-      </div>
-
+<div class="stage">
+  <div id="reader"></div>
+  <div class="scan-overlay">
+    <div class="scan-frame">
+      <div class="scan-line"></div>
     </div>
   </div>
-</main>
+  <div class="status-bar" id="statusBar">Starting camera…</div>
+  <div class="status-bar hint" id="hintBar">Point the camera at a Novalink QR code</div>
+</div>
 
-<footer class="footer">
-  <div class="container">
-    <div class="footer-links">
-      <a href="terms.html">Terms &amp; Conditions</a>
-      <a href="privacy.html">Privacy Policy</a>
-      <a href="popia.html">POPIA Notice</a>
-    </div>
-    <div class="fb">
-      <span>&copy; <span id="year"></span> Novalink. All rights reserved.</span>
-      <span>Johannesburg, South Africa</span>
-    </div>
+<div class="paused-overlay" id="pausedOverlay">
+  <div class="paused-inner">
+    <div class="paused-icon"><i data-lucide="pause-circle"></i></div>
+    <div class="paused-title">Scanner paused</div>
+    <div class="paused-msg" id="pausedMsg">Sign in and pick an event to start scanning.</div>
   </div>
-</footer>
+</div>
 
 <div class="result-overlay" id="resultOverlay">
-  <div class="icon" id="resultIcon"><i data-lucide="check"></i></div>
-  <div class="title" id="resultTitle">VALID</div>
-  <div class="guest" id="resultGuest"></div>
-  <div class="seat" id="resultSeat"></div>
-  <div class="msg" id="resultMsg"></div>
-  <div class="progress"><div class="progress-fill" id="resultProgress"></div></div>
+  <div class="result-inner">
+    <div class="result-icon" id="resultIcon"><i data-lucide="check"></i></div>
+    <div class="result-title" id="resultTitle">Valid</div>
+    <div class="result-subtitle" id="resultSubtitle"></div>
+    <div class="result-info" id="resultInfo"></div>
+    <div class="result-actions">
+      <button class="result-btn" id="scanNextBtn"><i data-lucide="scan-line"></i> Scan next</button>
+      <button class="result-btn ghost" id="closeResultBtn" style="display:none"><i data-lucide="x"></i> Close</button>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
-<script src="routing-engine.js"></script>
+
 <script>
 (function(){
 'use strict';
 
+/* ══════════════════════════════════════════════════════════════
+   FIREBASE
+   ══════════════════════════════════════════════════════════════ */
 var firebaseConfig = {
   apiKey: "AIzaSyDSnns131jOlBXAqKo6qy7lTW4Rij-1oWU",
   authDomain: "novalink-864cf.firebaseapp.com",
@@ -335,815 +153,463 @@ var firebaseConfig = {
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
 var db = firebase.firestore();
 var auth = firebase.auth();
-var ADMINS = ["nylnathan340@gmail.com"];
-
-var currentUser = null;
-var isAdmin = false;
-var myEvents = [];          // combined list, each tagged with _kind = "events" | "trips"
-var eventId = null;
-var eventData = null;
-var currentKind = "events"; // "events" or "trips" for the currently selected parent
-var sessionScans = [];
-var allEventTickets = [];
-var searchDebounce = null;
-
-var html5QrCode = null;
-var scannerRunning = false;
-var scanning = false;
-var scannerCooldown = null;
+var EVENTS = "events";
+var ADMINS = [
+  "nylnathan340@gmail.com",
+  "customerservicesnovalink@gmail.com"
+];
 
 /* ══════════════════════════════════════════════════════════════
-   AUDIO ENGINE
+   STATE
    ══════════════════════════════════════════════════════════════ */
-var audioCtx = null;
-var audioUnlocked = false;
-var soundEnabled = true;
-try {
-  if (localStorage.getItem("novalink_scanner_sound") === "off") soundEnabled = false;
-} catch(e){}
+var currentUser = null;
+var isAdmin = false;
+var myEvents = [];
+var currentEventId = null;
+var html5Qr = null;
+var isScanning = false;
+var lastScanAt = 0;
+var scanCooldownMs = 2500;
+var scannerReady = false;
 
-function getAudioCtx(){
-  try {
-    if (!audioCtx) {
-      var AC = window.AudioContext || window.webkitAudioContext;
-      if (!AC) { return null; }
-      audioCtx = new AC();
-    }
-    if (audioCtx.state === "suspended") {
-      audioCtx.resume().then(function(){ audioUnlocked = true; }).catch(function(){});
-    } else {
-      audioUnlocked = true;
-    }
-  } catch(e){ return null; }
-  return audioCtx;
-}
-function tryUnlockAudio(){ var ctx = getAudioCtx(); if (ctx && ctx.state === "running") audioUnlocked = true; }
-
-function beep(freq, delay, duration, volume, wave){
-  var ctx = getAudioCtx();
-  if (!ctx) return;
-  try {
-    var t = ctx.currentTime + (delay || 0);
-    var osc = ctx.createOscillator();
-    var gain = ctx.createGain();
-    osc.type = wave || "sine";
-    osc.frequency.setValueAtTime(freq, t);
-    gain.gain.setValueAtTime(0.0001, t);
-    gain.gain.linearRampToValueAtTime(volume || 0.5, t + 0.008);
-    gain.gain.linearRampToValueAtTime(0.0001, t + duration);
-    osc.connect(gain);
-    gain.connect(ctx.destination);
-    osc.start(t);
-    osc.stop(t + duration + 0.03);
-  } catch(e){}
-}
-
-function playScanSound(type){
-  if (!soundEnabled) return;
-  if (!audioUnlocked) tryUnlockAudio();
-  if (type === "valid") { beep(880, 0.00, 0.12, 0.6, "sine"); beep(1320, 0.12, 0.22, 0.6, "sine"); }
-  else if (type === "used") { beep(180, 0.00, 0.22, 0.7, "square"); beep(180, 0.30, 0.22, 0.7, "square"); beep(180, 0.60, 0.22, 0.7, "square"); }
-  else if (type === "cancelled") { beep(500, 0.00, 0.18, 0.55, "sine"); beep(320, 0.20, 0.28, 0.55, "sine"); }
-  else { beep(220, 0.00, 0.45, 0.6, "square"); }
-}
-
-function updateSoundToggle(){
-  var btn = $("soundToggle");
-  if (!btn) return;
-  if (soundEnabled) {
-    btn.classList.remove("muted");
-    btn.innerHTML = '<i data-lucide="volume-2"></i><span>Sound on</span>';
-  } else {
-    btn.classList.add("muted");
-    btn.innerHTML = '<i data-lucide="volume-x"></i><span>Sound off</span>';
-  }
-  refreshIcons();
-}
-function toggleSound(){
-  soundEnabled = !soundEnabled;
-  try { localStorage.setItem("novalink_scanner_sound", soundEnabled ? "on" : "off"); } catch(e){}
-  updateSoundToggle();
-  if (soundEnabled) { tryUnlockAudio(); setTimeout(function(){ playScanSound("valid"); }, 50); }
-  showToast(soundEnabled ? "Sound on" : "Sound off", "success", 1500);
-}
-function testSound(){
-  tryUnlockAudio();
-  if (!soundEnabled) { showToast("Turn sound on first.", "error", 2000); return; }
-  setTimeout(function(){ playScanSound("valid"); }, 50);
-}
-/* ── END AUDIO ───────────────────────────────────────────── */
-
-var RE = window.NovalinkRoutingEngine || {};
-
+/* ══════════════════════════════════════════════════════════════
+   HELPERS
+   ══════════════════════════════════════════════════════════════ */
 function $(id){ return document.getElementById(id); }
 function refreshIcons(){ if(window.lucide) lucide.createIcons(); }
 function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
 
-function initialsFrom(name,email){
-  if(name && name.trim()){ var p = name.trim().split(/\s+/); if(p.length>=2) return (p[0][0]+p[1][0]).toUpperCase(); return p[0].slice(0,2).toUpperCase(); }
-  if(email) return email.slice(0,2).toUpperCase();
-  return "??";
-}
-
-function showToast(msg,type,ms){
+function showToast(msg, type, ms){
   type = type || "info"; ms = ms || 3000;
   var t = $("toast");
-  t.className = "toast " + type;
   var ic = type === "error" ? "alert-circle" : (type === "success" ? "check-circle" : "info");
-  t.innerHTML = '<i data-lucide="'+ic+'"></i><span>'+esc(msg)+'</span>';
+  t.className = "toast " + type;
+  t.innerHTML = '<i data-lucide="' + ic + '"></i><span>' + esc(msg) + '</span>';
   refreshIcons();
   requestAnimationFrame(function(){ t.classList.add("show"); });
   clearTimeout(showToast._t);
   showToast._t = setTimeout(function(){ t.classList.remove("show"); }, ms);
 }
 
-function buildRef(evId, tId){
-  if (typeof RE.buildTicketRef === "function") return RE.buildTicketRef(evId, tId);
-  function sh(x){
-    var t = String(x||"").replace(/[^A-Za-z0-9]/g,"").toUpperCase();
-    return t.length <= 4 ? t : t.slice(-4);
-  }
-  var e = sh(evId), t = sh(tId);
-  if (!e || !t) return "NL-XXXXXX";
-  return "NL-" + e + "-" + t;
+function formatMoney(v){
+  if (typeof v !== "number") v = parseFloat(v) || 0;
+  if (v <= 0) return "Free";
+  return "R " + v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
 }
 
-/* ── Pretty seat display ── */
-function prettySeat(raw){
-  if (!raw) return "General admission";
-  var m1 = /^([A-Z])-T(\d+)-C(\d+)$/.exec(raw);
-  if (m1) return "Table " + m1[1] + m1[2] + " · Seat " + m1[3];
-  var m2 = /^([A-Z])-T(\d+)$/.exec(raw);
-  if (m2) return "Table " + m2[1] + m2[2];
-  var m3 = /^([A-Z0-9]+):([A-Z0-9\-]+)$/.exec(raw);
-  if (m3) return m3[1] + " · Seat " + m3[2];
-  return raw;
+function short4(s){
+  var t = String(s || "").replace(/[^A-Za-z0-9]/g, "").toUpperCase();
+  if (t.length <= 4) return t.padStart(4, "0");
+  return t.slice(-4);
+}
+function buildTicketRef(eId, tId, rand){
+  var r = rand || "XXXX";
+  return "NL-" + short4(eId) + "-" + short4(tId) + "-" + r;
 }
 
-/* ── Parent display helpers ── */
-function parentTitle(parent){
-  if (!parent) return "Untitled";
-  if (parent._kind === "trips") return parent.tripName || parent.serviceName || parent.name || "Untitled Trip";
-  return parent.eventName || "Untitled Event";
-}
-function parentDateLine(parent){
-  if (!parent) return "";
-  if (parent._kind === "trips") {
-    var dep = parent.departureDate || parent.serviceDate || parent.startDate || "";
-    var ret = parent.returnDate || parent.endDate || "";
-    if (!dep && !ret) return "Dates TBA";
-    if (dep && !ret) return dep;
-    if (!dep && ret) return ret;
-    if (dep === ret) return dep;
-    return dep + " → " + ret;
-  }
-  return parent.startDate || "";
-}
-function parentCity(parent){
-  if (!parent) return "";
-  return parent.city || parent.venueAddress || parent.destination || "";
-}
-
+/* ══════════════════════════════════════════════════════════════
+   AUTH
+   ══════════════════════════════════════════════════════════════ */
 function applyAuth(user){
   currentUser = user;
-  isAdmin = !!(user && ADMINS.map(function(e){return e.toLowerCase();}).indexOf(String(user.email).toLowerCase()) !== -1);
-  if (user){
-    var display = user.displayName || user.email.split("@")[0];
-    $("userMenuBtn").style.display = "inline-flex";
-    $("userName").textContent = display;
-    $("userAvatar").textContent = initialsFrom(user.displayName, user.email);
-    $("adminBadge").style.display = isAdmin ? "inline-block" : "none";
-  } else {
-    $("userMenuBtn").style.display = "none";
-    $("adminBadge").style.display = "none";
-  }
+  isAdmin = !!(user && ADMINS.map(function(e){ return e.toLowerCase(); }).indexOf(String(user.email || "").toLowerCase()) !== -1);
 }
 
-function showError(title, msg, icon){
-  $("loadingState").style.display = "none";
-  $("scannerContent").style.display = "none";
-  $("signinState").style.display = "none";
-  $("errorState").style.display = "block";
-  $("errorTitle").textContent = title;
-  $("errorMsg").textContent = msg;
-  $("errorIcon").setAttribute("data-lucide", icon || "alert-circle");
-  refreshIcons();
-}
-function showSignin(){
-  $("loadingState").style.display = "none";
-  $("scannerContent").style.display = "none";
-  $("errorState").style.display = "none";
-  $("signinState").style.display = "block";
-  refreshIcons();
-}
-function showScanner(){
-  $("loadingState").style.display = "none";
-  $("errorState").style.display = "none";
-  $("signinState").style.display = "none";
-  $("scannerContent").style.display = "block";
-  refreshIcons();
-}
-
-/* ============================================================
-   Load my events + trips
-   ------------------------------------------------------------
-   Queries both collections in parallel. Each result is tagged
-   with _kind so downstream code knows where to read/write
-   the ticket subcollection.
-   ============================================================ */
+/* ══════════════════════════════════════════════════════════════
+   LOAD EVENTS (only events owned by this scanner, or all if admin)
+   ══════════════════════════════════════════════════════════════ */
 function loadMyEvents(){
-  var evQ = db.collection("events");
-  var trQ = db.collection("trips");
-  if (!isAdmin) {
-    evQ = evQ.where("ownerUid", "==", currentUser.uid);
-    trQ = trQ.where("ownerUid", "==", currentUser.uid);
+  var q = db.collection(EVENTS).where("status", "==", "live");
+  if (!isAdmin){
+    q = q.where("ownerUid", "==", currentUser.uid);
   }
-  return Promise.all([evQ.get(), trQ.get()]).then(function(rs){
+  return q.get().then(function(snap){
     myEvents = [];
-
-    rs[0].forEach(function(doc){
+    snap.forEach(function(doc){
       var d = doc.data() || {};
       d.id = doc.id;
-      d._kind = "events";
       myEvents.push(d);
     });
-    rs[1].forEach(function(doc){
-      var d = doc.data() || {};
-      d.id = doc.id;
-      d._kind = "trips";
-      myEvents.push(d);
-    });
-
-    /* Sort by date descending, most recent first */
     myEvents.sort(function(a, b){
-      return String(parentDateLine(b) || "").localeCompare(String(parentDateLine(a) || ""));
+      return String(b.startDate || "").localeCompare(String(a.startDate || ""));
     });
-
-    populateEventDropdown();
+    return myEvents;
   });
 }
 
-function populateEventDropdown(){
+function populateEventSelect(){
   var sel = $("eventSelect");
   sel.innerHTML = "";
-
-  if (!myEvents.length) {
+  if (!myEvents.length){
     var opt = document.createElement("option");
     opt.value = "";
-    opt.textContent = "No events or trips found";
+    opt.textContent = "No live events";
     sel.appendChild(opt);
     sel.disabled = true;
-    $("eventMeta").textContent = "You don't have any events or trips to scan for yet.";
-    showScanner();
     return;
   }
-
-  var placeholder = document.createElement("option");
-  placeholder.value = "";
-  placeholder.textContent = "— Select an event or trip to scan —";
-  sel.appendChild(placeholder);
-
-  /* Build grouped dropdown — Events first, then Trips */
-  var eventsOnly = myEvents.filter(function(e){ return e._kind === "events"; });
-  var tripsOnly  = myEvents.filter(function(e){ return e._kind === "trips"; });
-
-  if (eventsOnly.length) {
-    var evGroup = document.createElement("optgroup");
-    evGroup.label = "Events";
-    eventsOnly.forEach(function(ev){
-      var opt = document.createElement("option");
-      opt.value = ev._kind + "::" + ev.id;
-      var bits = [ev.eventName || "Untitled Event"];
-      if (ev.city) bits.push(ev.city);
-      if (ev.startDate) bits.push(ev.startDate);
-      opt.textContent = bits.join(" · ");
-      evGroup.appendChild(opt);
-    });
-    sel.appendChild(evGroup);
-  }
-
-  if (tripsOnly.length) {
-    var trGroup = document.createElement("optgroup");
-    trGroup.label = "Trips";
-    tripsOnly.forEach(function(tr){
-      var opt = document.createElement("option");
-      opt.value = tr._kind + "::" + tr.id;
-      var name = tr.tripName || tr.serviceName || tr.name || "Untitled Trip";
-      var bits = [name];
-      if (tr.destination || tr.city) bits.push(tr.destination || tr.city);
-      if (tr.departureDate || tr.startDate || tr.serviceDate) bits.push(tr.departureDate || tr.startDate || tr.serviceDate);
-      opt.textContent = bits.join(" · ");
-      trGroup.appendChild(opt);
-    });
-    sel.appendChild(trGroup);
-  }
-
-  showScanner();
-
-  /* Pre-select from ?event= and ?collection= */
-  var preId = getParam("event");
-  var preCol = getParam("collection");
-  if (preId) {
-    var wanted = (preCol === "trips" ? "trips" : "events") + "::" + preId;
-    var found = Array.prototype.find.call(sel.options, function(o){ return o.value === wanted; });
-    if (found) {
-      sel.value = wanted;
-      sel.dispatchEvent(new Event("change"));
-    }
-  }
+  myEvents.forEach(function(ev, i){
+    var opt = document.createElement("option");
+    opt.value = ev.id;
+    var label = ev.eventName || "Untitled";
+    if (ev.startDate) label += " · " + ev.startDate;
+    opt.textContent = label;
+    if (i === 0) opt.selected = true;
+    sel.appendChild(opt);
+  });
+  sel.disabled = false;
+  currentEventId = myEvents[0].id;
 }
 
-function getParam(n){
-  try { return new URLSearchParams(window.location.search).get(n); }
-  catch(e){ return null; }
-}
-
-/* ============================================================
-   Select event / trip
-   ============================================================ */
-function selectEvent(value){
-  if (!value) {
-    stopScanner();
-    $("scannerWrap").style.display = "none";
-    $("eventMeta").innerHTML = "";
-    eventId = null;
-    eventData = null;
-    currentKind = "events";
-    allEventTickets = [];
-    clearSearchResults();
-    return;
-  }
-
-  /* value is "events::abc123" or "trips::xyz789" */
-  var parts = value.split("::");
-  currentKind = parts[0] === "trips" ? "trips" : "events";
-  eventId = parts[1];
-
-  eventData = myEvents.find(function(e){ return e.id === eventId && e._kind === currentKind; }) || null;
-
-  if (eventData) {
-    var tierCount = eventData.activeTierCount || (eventData.tiers ? eventData.tiers.length : 0) || 4;
-    var seatLine;
-
-    if (currentKind === "trips") {
-      var totalSeats = 0;
-      (eventData.vehicles || []).forEach(function(v){
-        totalSeats += (parseInt(v.rows, 10) || 0) * (parseInt(v.seatsPerRow, 10) || 0);
-      });
-      seatLine = totalSeats > 0 ? (totalSeats + " seats") : "No seat data";
-    } else {
-      var planId = (eventData.plan && eventData.plan.id) || "";
-      var seats = eventData.totalAttendees || 0;
-      seatLine = (planId === "basic" || !eventData.sections || !eventData.sections.length)
-        ? "General admission"
-        : (seats ? seats + " seats" : "No seat data");
-    }
-
-    var kindBadge = currentKind === "trips"
-      ? '<span class="kind-hint trip">Trip</span>'
-      : '<span class="kind-hint event">Event</span>';
-
-    $("eventMeta").innerHTML = kindBadge + " · " + esc(seatLine) + " · " + tierCount + " tier" + (tierCount === 1 ? "" : "s");
-  }
-
-  clearSearchResults();
-  startScanner();
-  loadEventTickets();
-}
-
-/* ============================================================
-   Load all tickets for the currently selected parent
-   ============================================================ */
-function loadEventTickets(){
-  allEventTickets = [];
-  if (!eventId) return;
-  db.collection(currentKind).doc(eventId).collection("tickets").get()
-    .then(function(snap){
-      snap.forEach(function(doc){
-        var t = doc.data() || {};
-        t.id = doc.id;
-        allEventTickets.push(t);
-      });
-      var q = ($("searchNameInput").value || "").trim();
-      if (q) runNameSearch();
-    })
-    .catch(function(err){
-      console.error("Load tickets error:", err);
-    });
-}
-
-/* ============================================================
-   Camera scanner
-   ============================================================ */
-function startScanner(){
-  if (!window.Html5Qrcode) {
-    showToast("QR library failed to load. Use search by name below.", "error", 5000);
-    $("scannerWrap").style.display = "none";
-    return;
-  }
-
-  $("scannerWrap").style.display = "block";
+/* ══════════════════════════════════════════════════════════════
+   PAUSED OVERLAY   ══════════════════════════════════════════════════════════════ */
+function showPaused(msg){
+  $("pausedMsg").textContent = msg;
+  $("pausedOverlay").classList.add("open");
   refreshIcons();
+}
+function hidePaused(){
+  $("pausedOverlay").classList.remove("open");
+}
 
-  if (html5QrCode && scannerRunning) return;
+/* ══════════════════════════════════════════════════════════════
+   RESULT OVERLAY
+   ══════════════════════════════════════════════════════════════ */
+function showResult(kind, title, subtitle, info, opts){
+  opts = opts || {};
+  var overlay = $("resultOverlay");
+  overlay.className = "result-overlay open " + kind;
+  $("resultTitle").textContent = title;
+  $("resultSubtitle").textContent = subtitle || "";
 
-  html5QrCode = new window.Html5Qrcode("reader");
-
-  var config = {
-    fps: 12,
-    qrbox: function(vw, vh) {
-      var m = Math.min(vw, vh);
-      var s = Math.max(220, Math.floor(m * 0.75));
-      return { width: s, height: s };
-    },
-    aspectRatio: 1.0
+  var iconMap = {
+    valid: "check-circle",
+    used: "alert-triangle",
+    cancelled: "x-circle",
+    pending: "clock",
+    invalid: "x-circle",
+    error: "alert-circle"
   };
+  var iconName = iconMap[kind] || "info";
+  $("resultIcon").innerHTML = '<i data-lucide="' + iconName + '"></i>';
 
-  html5QrCode.start(
+  var infoEl = $("resultInfo");
+  infoEl.innerHTML = "";
+  if (info && info.length){
+    info.forEach(function(row){
+      var div = document.createElement("div");
+      div.className = "result-row";
+      div.innerHTML = '<span class="lbl">' + esc(row.lbl) + '</span>' +
+                      '<span class="val' + (row.mono ? ' mono' : '') + '">' + esc(row.val) + '</span>';
+      infoEl.appendChild(div);
+    });
+    infoEl.style.display = "flex";
+  } else {
+    infoEl.style.display = "none";
+  }
+
+  $("closeResultBtn").style.display = opts.showClose ? "inline-flex" : "none";
+  refreshIcons();
+}
+function hideResult(){
+  $("resultOverlay").classList.remove("open");
+}
+
+/* ══════════════════════════════════════════════════════════════
+   SCANNER
+   ══════════════════════════════════════════════════════════════ */
+function startScanner(){
+  if (scannerReady) return;
+  if (!currentEventId){
+    showPaused("No event selected. Create or select a live event to start scanning.");
+    return;
+  }
+  hidePaused();
+
+  $("statusBar").textContent = "Starting camera…";
+
+  if (!window.Html5Qrcode){
+    $("statusBar").textContent = "Scanner library failed to load.";
+    showPaused("Could not load the scanner library. Refresh the page.");
+    return;
+  }
+
+  html5Qr = new Html5Qrcode("reader", { verbose: false });
+
+  html5Qr.start(
     { facingMode: "environment" },
-    config,
-    onQrScan,
-    function(err) { /* silent per-frame errors */ }
-  )
-  .then(function(){ scannerRunning = true; })
-  .catch(function(err){
-    console.error("Camera start error:", err);
-    $("scannerWrap").style.display = "none";
-    showToast("Could not start camera: " + (err.message || err.name || err) + " — use search by name below.", "error", 6000);
+    {
+      fps: 12,
+      qrbox: function(w, h){
+        var m = Math.min(w, h);
+        var size = Math.floor(m * 0.7);
+        return { width: size, height: size };
+      },
+      aspectRatio: 1.0
+    },
+    onScanSuccess,
+    onScanError
+  ).then(function(){
+    scannerReady = true;
+    isScanning = true;
+    $("statusBar").textContent = "Scanning…";
+    $("hintBar").textContent = "Point the camera at a Novalink QR code";
+  }).catch(function(err){
+    console.error("Scanner start failed:", err);
+    $("statusBar").textContent = "Camera access denied.";
+    showPaused("Could not access the camera. Check browser permissions and reload.");
   });
 }
 
 function stopScanner(){
-  if (html5QrCode && scannerRunning) {
-    html5QrCode.stop().then(function(){
-      try { html5QrCode.clear(); } catch(e){}
-      scannerRunning = false;
-    }).catch(function(){ scannerRunning = false; });
+  if (html5Qr && isScanning){
+    html5Qr.stop().then(function(){
+      isScanning = false;
+      scannerReady = false;
+    }).catch(function(err){ console.warn("Stop failed:", err); });
   }
 }
 
-function onQrScan(decodedText){
-  if (scanning) return;
-  scanning = true;
+function onScanError(err){
+  // ignore — fires constantly when no QR in view
+}
+
+async function onScanSuccess(decodedText){
+  var now = Date.now();
+  if (now - lastScanAt < scanCooldownMs) return;
+  lastScanAt = now;
+
+  // Pause scan immediately to avoid double reads
+  if (html5Qr && isScanning){
+    try { html5Qr.pause(true); } catch(e){}
+  }
+
+  await handleScannedCode(decodedText);
+}
+
+async function handleScannedCode(text){
+  var ref = String(text || "").trim();
+
+  if (!ref || ref.indexOf("NL-") !== 0){
+    showResult("invalid", "Invalid code", "This QR doesn't belong to a Novalink ticket.", [], { showClose: true });
+    return;
+  }
+
+  $("statusBar").textContent = "Verifying…";
 
   try {
-    if (html5QrCode && scannerRunning) html5QrCode.pause(true);
-  } catch(e){}
+    // Try exact match on paymentRef
+    var snap = await db.collection(EVENTS).doc(currentEventId)
+      .collection("tickets")
+      .where("paymentRef", "==", ref)
+      .limit(1)
+      .get();
 
-  var parsed = null;
-  if (typeof RE.parseQrPayload === "function") {
-    parsed = RE.parseQrPayload(decodedText);
-  }
-  if (!parsed) {
-    try {
-      var obj = JSON.parse(decodedText);
-      if (obj && obj.v === 1 && obj.e && obj.t) {
-        parsed = { eventId: obj.e, ticketId: obj.t };
+    var ticketDoc = null;
+    var ticket = null;
+    if (!snap.empty){
+      ticketDoc = snap.docs[0];
+      ticket = ticketDoc.data() || {};
+      ticket.id = ticketDoc.id;
+    }
+
+    // Fallback: if not found in this event, try all events (admin only)
+    if (!ticketDoc && isAdmin){
+      // Scan the events collection for a match
+      var allEvents = await db.collection(EVENTS).get();
+      for (var i = 0; i < allEvents.docs.length; i++){
+        var evId = allEvents.docs[i].id;
+        var s2 = await db.collection(EVENTS).doc(evId)
+          .collection("tickets")
+          .where("paymentRef", "==", ref)
+          .limit(1)
+          .get();
+        if (!s2.empty){
+          ticketDoc = s2.docs[0];
+          ticket = ticketDoc.data() || {};
+          ticket.id = ticketDoc.id;
+          ticket.eventId = evId;
+          break;
+        }
       }
-    } catch(e){}
-  }
+    }
 
-  if (!parsed) {
-    flashResult("invalid", "UNRECOGNISED", "", "", "The scanned code isn't a valid Novalink ticket.");
-    return;
-  }
+    if (!ticketDoc){
+      showResult("invalid", "Ticket not found", "No ticket matches this reference in the selected event.",
+        [{ lbl: "Reference", val: ref, mono: true }],
+        { showClose: true });
+      $("statusBar").textContent = "Scanning…";
+      return;
+    }
 
-  if (parsed.eventId !== eventId) {
-    flashResult("invalid", "WRONG EVENT", "", "", "This ticket is for a different event or trip.");
-    return;
-  }
+    var evId = ticket.eventId || currentEventId;
+    var evSnap = await db.collection(EVENTS).doc(evId).get();
+    var ev = evSnap.exists ? (evSnap.data() || {}) : {};
 
-  verifyTicketById(parsed.ticketId);
-}
+    // ══════════════════════════════════════════════════════
+    // GUARD: only these statuses can be scanned
+    // ══════════════════════════════════════════════════════
+    var status = String(ticket.status || "").toLowerCase();
 
-/* ============================================================
-   Search by name
-   ============================================================ */
-function clearSearchResults(){
-  var box = $("searchResults");
-  if (!box) return;
-  box.innerHTML = '<div class="sr-empty">Type a name to see matching tickets</div>';
-}
+    // REJECT PENDING
+    if (status === "pending"){
+      showResult("pending", "Not yet paid",
+        "This ticket is still pending payment. Do not let them in until payment is confirmed.",
+        [
+          { lbl: "Guest", val: ticket.guestName || "Guest" },
+          { lbl: "Tier", val: (ev.tierNames && ev.tierNames[ticket.tier]) || ticket.tier },
+          { lbl: "Reference", val: ref, mono: true },
+          { lbl: "Amount", val: formatMoney(ticket.pricePaid || 0) }
+        ],
+        { showClose: true });
+      $("statusBar").textContent = "Scanning…";
+      return;
+    }
 
-function updateSearchClearBtn(){
-  var input = $("searchNameInput");
-  var btn = $("searchClearBtn");
-  if (!input || !btn) return;
-  btn.classList.toggle("show", !!input.value.trim());
-}
+    // REJECT EXPIRED
+    if (status === "expired"){
+      showResult("cancelled", "Ticket expired",
+        "This reservation expired before payment. Do not let them in.",
+        [
+          { lbl: "Guest", val: ticket.guestName || "Guest" },
+          { lbl: "Reference", val: ref, mono: true }
+        ],
+        { showClose: true });
+      $("statusBar").textContent = "Scanning…";
+      return;
+    }
 
-function runNameSearch(){
-  if (!eventId) {
-    $("searchResults").innerHTML = '<div class="sr-empty">Select an event or trip first to search its tickets</div>';
-    return;
-  }
-  var q = ($("searchNameInput").value || "").trim().toLowerCase();
-  if (!q) { clearSearchResults(); return; }
+    // REJECT CANCELLED
+    if (status === "cancelled"){
+      showResult("cancelled", "Ticket cancelled",
+        "This ticket was cancelled. Do not let them in.",
+        [
+          { lbl: "Guest", val: ticket.guestName || "Guest" },
+          { lbl: "Tier", val: (ev.tierNames && ev.tierNames[ticket.tier]) || ticket.tier },
+          { lbl: "Reference", val: ref, mono: true }
+        ],
+        { showClose: true });
+      $("statusBar").textContent = "Scanning…";
+      return;
+    }
 
-  var matches = allEventTickets.filter(function(t){
-    var name  = String(t.guestName || "").toLowerCase();
-    var email = String(t.buyerEmail || "").toLowerCase();
-    var seat  = String(t.seat || "").toLowerCase();
-    var ref   = buildRef(eventId, t.ticketId || t.id).toLowerCase();
-    return name.indexOf(q) !== -1 || email.indexOf(q) !== -1 || seat.indexOf(q) !== -1 || ref.indexOf(q) !== -1;
-  });
+    // ALREADY CHECKED IN
+    if (status === "checked-in" || status === "checked_in" || status === "used"){
+      var checkedAt = ticket.checkedInAt && ticket.checkedInAt.toDate
+        ? ticket.checkedInAt.toDate().toLocaleString("en-ZA")
+        : "earlier";
+      showResult("used", "Already checked in",
+        "This ticket was already scanned at " + checkedAt + ".",
+        [
+          { lbl: "Guest", val: ticket.guestName || "Guest" },
+          { lbl: "Tier", val: (ev.tierNames && ev.tierNames[ticket.tier]) || ticket.tier },
+          { lbl: "Reference", val: ref, mono: true }
+        ],
+        { showClose: true });
+      $("statusBar").textContent = "Scanning…";
+      return;
+    }
 
-  var order = { "valid": 0, "checked-in": 1, "checked_in": 1, "used": 1, "cancelled": 2 };
-  matches.sort(function(a, b){
-    var oa = order[a.status] === undefined ? 3 : order[a.status];
-    var ob = order[b.status] === undefined ? 3 : order[b.status];
-    if (oa !== ob) return oa - ob;
-    return String(a.guestName || "").localeCompare(String(b.guestName || ""));
-  });
-
-  renderSearchResults(matches, q);
-}
-
-function renderSearchResults(list, q){
-  var box = $("searchResults");
-  if (!box) return;
-
-  if (!list.length) {
-    box.innerHTML = '<div class="sr-empty">No tickets found matching "' + esc(q) + '"</div>';
-    return;
-  }
-
-  box.innerHTML = "";
-  list.forEach(function(t){
-    var status = t.status || "valid";
-    var badgeLabel = "VALID";
-    var badgeClass = "valid";
-    if (status === "cancelled") { badgeLabel = "CANCELLED"; badgeClass = "cancelled"; }
-    else if (status === "checked-in" || status === "checked_in" || status === "used") { badgeLabel = "USED"; badgeClass = "used"; }
-
-    var tierLabel = (eventData && eventData.tierNames && eventData.tierNames[t.tier]) || t.tier || "";
-    var seatLabel = t.seat ? " · " + prettySeat(t.seat) : " · General admission";
-    var refLabel  = buildRef(eventId, t.ticketId || t.id);
-
-    var item = document.createElement("button");
-    item.type = "button";
-    item.className = "sr-item";
-    item.innerHTML =
-      '<div class="sr-icon">' + esc(initialsFrom(t.guestName, "")) + '</div>' +
-      '<div class="sr-body">' +
-        '<div class="sr-name">' + esc(t.guestName || "Guest") + '</div>' +
-        '<div class="sr-meta">' + esc(refLabel) + ' · ' + esc(tierLabel) + esc(seatLabel) + '</div>' +
-      '</div>' +
-      '<div class="sr-badge ' + badgeClass + '">' + badgeLabel + '</div>';
-
-    item.addEventListener("click", function(){ verifyTicketById(t.id); });
-    box.appendChild(item);
-  });
-
-  refreshIcons();
-}
-
-/* ============================================================
-   Verify ticket (transaction)
-   ============================================================ */
-function verifyTicketById(ticketId){
-  if (!eventId || !ticketId) { flashResult("invalid", "INVALID", "", "", "Missing data."); return; }
-
-  var ticketRef = db.collection(currentKind).doc(eventId).collection("tickets").doc(ticketId);
-
-  db.runTransaction(function(transaction){
-    return transaction.get(ticketRef).then(function(snap){
-      if (!snap.exists) {
-        return { result: "invalid", reason: "not-found" };
-      }
-      var data = snap.data() || {};
-
-      if (data.status === "cancelled") {
-        return { result: "cancelled", ticket: data };
-      }
-      if (data.status === "checked-in" || data.status === "checked_in") {
-        return { result: "used", ticket: data };
-      }
-      if (data.status !== "valid") {
-        return { result: "invalid", reason: "bad-status", ticket: data };
-      }
-
-      transaction.update(ticketRef, {
+    // ══════════════════════════════════════════════════════
+    // VALID TICKET — CHECK THEM IN
+    // ══════════════════════════════════════════════════════
+    var nowTs = firebase.firestore.FieldValue.serverTimestamp();
+    await db.collection(EVENTS).doc(evId)
+      .collection("tickets").doc(ticket.id)
+      .update({
         status: "checked-in",
-        checkedInAt: firebase.firestore.FieldValue.serverTimestamp()
+        checkedInAt: nowTs,
+        checkedInBy: currentUser ? currentUser.uid : null,
+        checkedInByEmail: currentUser ? (currentUser.email || "") : "",
+        scannerUid: currentUser ? currentUser.uid : null
       });
-      return { result: "valid", ticket: data };
-    });
-  })
-  .then(function(res){
-    var t = res.ticket || {};
-    var guest    = t.guestName || "Guest";
-    var seatRaw  = t.seat || "";
-    var seatDisp = prettySeat(seatRaw);
-    var tierName = (eventData && eventData.tierNames && eventData.tierNames[t.tier]) || t.tier || "";
-    var seatLine = seatRaw ? (tierName ? tierName + " · " + seatDisp : seatDisp) : (tierName ? tierName + " · General admission" : "General admission");
 
-    /* Update cached ticket in memory so name search reflects new status */
-    for (var i = 0; i < allEventTickets.length; i++) {
-      if (allEventTickets[i].id === ticketId) {
-        if (res.result === "valid") allEventTickets[i].status = "checked-in";
-        break;
-      }
-    }
+    showResult("valid", "Valid ticket",
+      "Let them in.",
+      [
+        { lbl: "Guest", val: ticket.guestName || "Guest" },
+        { lbl: "Tier", val: (ev.tierNames && ev.tierNames[ticket.tier]) || ticket.tier },
+        { lbl: "Quantity", val: String(ticket.quantity || 1) },
+        { lbl: "Reference", val: ref, mono: true }
+      ],
+      { showClose: false });
 
-    if (res.result === "valid") {
-      flashResult("valid", "ADMIT", guest, seatLine, "Ticket marked as checked-in.");
-      logScan("valid", guest, seatDisp, tierName);
-    } else if (res.result === "used") {
-      var when = t.checkedInAt && t.checkedInAt.toDate ? t.checkedInAt.toDate().toLocaleString("en-ZA") : "";
-      flashResult("used", "ALREADY USED", guest, seatLine, "This ticket was already scanned" + (when ? " at " + when : "") + ".");
-      logScan("used", guest, seatDisp, tierName);
-    } else if (res.result === "cancelled") {
-      flashResult("cancelled", "CANCELLED", guest, seatLine, "This ticket was cancelled by the buyer.");
-      logScan("cancelled", guest, seatDisp, tierName);
-    } else {
-      flashResult("invalid", "INVALID", guest || "", "", "This ticket cannot be used.");
-      logScan("invalid", guest || "Unknown", seatDisp, tierName);
-    }
-  })
-  .catch(function(err){
-    console.error("Verify transaction error:", err);
-    flashResult("invalid", "ERROR", "", "", err.message || "Verification failed.");
-  });
-}
-
-/* ── VIBRATION ── */
-function buzz(pattern){
-  try {
-    if (navigator && typeof navigator.vibrate === "function") {
-      navigator.vibrate(pattern);
-    }
-  } catch(e){}
-}
-
-function flashResult(type, title, guest, seat, msg){
-  var ov = $("resultOverlay");
-  ov.className = "result-overlay show " + type;
-
-  playScanSound(type);
-
-  if (type === "used")           buzz([300, 120, 300, 120, 300]);
-  else if (type === "valid")     buzz([80, 40, 80]);
-  else if (type === "cancelled") buzz([400, 150, 400]);
-  else                           buzz([500]);
-
-  $("resultTitle").textContent = title;
-  $("resultGuest").textContent = guest || "";
-  $("resultSeat").textContent  = seat || "";
-  $("resultMsg").textContent   = msg || "";
-
-  var iconName = type === "valid" ? "check-circle"
-               : type === "used" ? "alert-triangle"
-               : type === "cancelled" ? "x-circle"
-               : "help-circle";
-  $("resultIcon").innerHTML = '<i data-lucide="' + iconName + '"></i>';
-  refreshIcons();
-
-  var p = $("resultProgress");
-  if (p) { p.style.animation = "none"; void p.offsetWidth; p.style.animation = ""; }
-
-  clearTimeout(scannerCooldown);
-  scannerCooldown = setTimeout(function(){
-    ov.classList.remove("show");
-    scanning = false;
-    try {
-      if (html5QrCode && scannerRunning) html5QrCode.resume();
-    } catch(e){
-      stopScanner();
-      setTimeout(startScanner, 200);
-    }
-  }, 2500);
-}
-
-function logScan(type, guest, seat, tier){
-  sessionScans.unshift({
-    type: type,
-    guest: guest,
-    seat: seat,
-    tier: tier,
-    kind: currentKind,
-    time: new Date().toLocaleTimeString("en-ZA", { hour: "2-digit", minute: "2-digit", second: "2-digit" })
-  });
-  if (sessionScans.length > 50) sessionScans.length = 50;
-  renderRecent();
-}
-
-function renderRecent(){
-  var list = $("recentList");
-  var count = $("recentCount");
-  count.textContent = sessionScans.length;
-
-  if (!sessionScans.length) {
-    list.innerHTML = '<div class="recent-empty">No scans yet this session</div>';
-    return;
+    $("statusBar").textContent = "Checked in ✓";
+  } catch(err){
+    console.error("handleScannedCode error:", err);
+    showResult("error", "Verification failed", err.message || "Could not verify this ticket. Try again.",
+      [{ lbl: "Reference", val: ref, mono: true }],
+      { showClose: true });
+    $("statusBar").textContent = "Scanning…";
   }
-
-  list.innerHTML = "";
-  sessionScans.forEach(function(s){
-    var item = document.createElement("div");
-    item.className = "recent-item " + s.type;
-
-    var iconName = s.type === "valid" ? "check-circle"
-                 : s.type === "used" ? "alert-triangle"
-                 : s.type === "cancelled" ? "x-circle"
-                 : "help-circle";
-
-    var metaParts = [];
-    if (s.tier) metaParts.push(s.tier);
-    if (s.seat) metaParts.push(s.seat);
-    metaParts.push(s.time);
-    var meta = metaParts.join(" · ");
-
-    item.innerHTML =
-      '<div class="ri-icon"><i data-lucide="' + iconName + '"></i></div>' +
-      '<div class="ri-body">' +
-        '<div class="ri-name">' + esc(s.guest) + '</div>' +
-        '<div class="ri-meta">' + esc(meta) + '</div>' +
-      '</div>';
-    list.appendChild(item);
-  });
-  refreshIcons();
 }
 
-/* ============================================================
-   Boot
-   ============================================================ */
+/* ══════════════════════════════════════════════════════════════
+   RESUME / NEXT SCAN
+   ══════════════════════════════════════════════════════════════ */
+function resumeScanning(){
+  hideResult();
+  if (html5Qr && isScanning){
+    try { html5Qr.resume(); } catch(e){}
+  } else {
+    startScanner();
+  }
+  $("statusBar").textContent = "Scanning…";
+  $("hintBar").textContent = "Point the camera at a Novalink QR code";
+}
+
+/* ══════════════════════════════════════════════════════════════
+   BOOT
+   ══════════════════════════════════════════════════════════════ */
 document.addEventListener("DOMContentLoaded", function(){
-  $("year").textContent = new Date().getFullYear();
   refreshIcons();
 
-  getAudioCtx();
-  ["pointerdown", "touchstart", "mousedown", "keydown", "click"].forEach(function(evt){
-    document.addEventListener(evt, tryUnlockAudio, { passive: true, capture: true });
-    window.addEventListener(evt, tryUnlockAudio, { passive: true, capture: true });
-  });
-
-  updateSoundToggle();
-
-  $("soundToggle").addEventListener("click", toggleSound);
-  $("soundTestBtn").addEventListener("click", testSound);
-
-  $("userMenuBtn").addEventListener("click", function(e){
-    e.stopPropagation();
-    $("userDropdown").classList.toggle("open");
-  });
-  document.addEventListener("click", function(){ $("userDropdown").classList.remove("open"); });
-  $("ddSignOut").addEventListener("click", function(){ auth.signOut().then(function(){ showToast("Signed out","success"); }); });
-  $("ddCreateEvent").addEventListener("click", function(){ window.location.href = "create-event.html"; });
-  $("ddCreateTrip").addEventListener("click",  function(){ window.location.href = "create-trip.html";  });
+  $("scanNextBtn").addEventListener("click", resumeScanning);
+  $("closeResultBtn").addEventListener("click", resumeScanning);
 
   $("eventSelect").addEventListener("change", function(){
-    selectEvent(this.value);
+    currentEventId = this.value;
+    if (!currentEventId){ showPaused("No event selected."); return; }
+    hidePaused();
+    if (html5Qr && isScanning){
+      stopScanner();
+      setTimeout(startScanner, 400);
+    }
+    showToast("Event changed", "success", 1500);
   });
 
-  var searchInput = $("searchNameInput");
-  var searchBtn   = $("searchNameBtn");
-  var searchClear = $("searchClearBtn");
-
-  if (searchBtn) {
-    searchBtn.addEventListener("click", function(){
-      if (!eventId) { showToast("Select an event or trip first.", "error"); return; }
-      runNameSearch();
-    });
-  }
-  if (searchInput) {
-    searchInput.addEventListener("input", function(){
-      updateSearchClearBtn();
-      clearTimeout(searchDebounce);
-      searchDebounce = setTimeout(runNameSearch, 180);
-    });
-    searchInput.addEventListener("keydown", function(e){
-      if (e.key === "Enter") { e.preventDefault(); runNameSearch(); }
-      if (e.key === "Escape") { searchInput.value = ""; updateSearchClearBtn(); clearSearchResults(); }
-    });
-  }
-  if (searchClear) {
-    searchClear.addEventListener("click", function(){
-      if (searchInput) searchInput.value = "";
-      updateSearchClearBtn();
-      clearSearchResults();
-      if (searchInput) searchInput.focus();
-    });
-  }
+  showPaused("Signing in…");
+  refreshIcons();
 
   auth.onAuthStateChanged(function(user){
     applyAuth(user);
-    if (!user) {
-      showSignin();
+
+    if (!user){
+      showPaused("Sign in to use the scanner. Open the home page and sign in, then come back.");
       return;
     }
-    loadMyEvents()
-      .catch(function(err){
-        console.error("Load events/trips error:", err);
-        showError("Could not load", err.message || "Try again.", "alert-circle");
-      });
-  });
 
-  window.addEventListener("beforeunload", function(){
-    try { if (html5QrCode) html5QrCode.stop(); } catch(e){}
+    loadMyEvents().then(function(){
+      populateEventSelect();
+      if (!myEvents.length){
+        showPaused("You don't have any live events yet. Events must be approved before scanning.");
+        return;
+      }
+      hidePaused();
+      startScanner();
+    }).catch(function(err){
+      console.error("loadMyEvents error:", err);
+      showPaused("Could not load your events: " + (err.message || "unknown error"));
+    });
   });
+});
+
+window.addEventListener("beforeunload", function(){
+  if (html5Qr && isScanning){
+    try { html5Qr.stop(); } catch(e){}
+  }
 });
 })();
 </script>
 </body>
-  </html>
+</html>
