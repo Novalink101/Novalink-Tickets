@@ -111,16 +111,28 @@ main{flex:1;padding:24px 0 64px}
 .plan-desc{font-size:10.5px;color:var(--mut);line-height:1.4;margin-top:4px}
 
 .tier-list{display:flex;flex-direction:column;gap:8px}
-.tier-row{display:grid;grid-template-columns:20px minmax(80px,1.2fr) 80px minmax(110px,1fr) 90px;gap:10px;align-items:center;padding:10px 12px;background:var(--bg);border:1px solid var(--bd2);border-radius:10px;min-width:0}
-@media (max-width:640px){.tier-row{grid-template-columns:20px 1fr;grid-auto-rows:auto}.tier-row .tier-qty,.tier-row .curr,.tier-row .tier-rev{grid-column:2 / -1}}
+.tier-row{display:grid;grid-template-columns:20px minmax(80px,1.2fr) 80px minmax(110px,1fr) auto;gap:10px;align-items:center;padding:10px 12px;background:var(--bg);border:1px solid var(--bd2);border-radius:10px;min-width:0;transition:opacity .15s}
+@media (max-width:700px){.tier-row{grid-template-columns:20px 1fr}.tier-row .tier-qty,.tier-row .curr,.tier-row .tier-rev-wrap{grid-column:2 / -1}}
 .tier-swatch{width:20px;height:20px;border-radius:6px;border:1px solid rgba(0,0,0,.15);flex-shrink:0}
 .tier-name{padding:8px 10px;font-size:13px;font-weight:800;background:#fff;border:1px solid var(--bd2);border-radius:8px;min-width:0;width:100%}
 .tier-name[readonly]{background:var(--sf2);color:var(--mut);cursor:not-allowed}
+.tier-name:disabled{background:var(--sf2);color:var(--mut);cursor:not-allowed}
 .tier-qty{font-size:11px;font-weight:800;color:var(--cy3);background:var(--cyf);padding:5px 9px;border-radius:6px;text-align:center;white-space:nowrap}
 .curr{display:flex;align-items:stretch;width:100%}
 .curr-prefix{display:inline-flex;align-items:center;justify-content:center;padding:0 12px;background:var(--bg);border:1px solid var(--bd2);border-right:none;border-radius:10px 0 0 10px;font-weight:800;color:var(--cy3);font-size:14px}
 .curr input{border-top-left-radius:0!important;border-bottom-left-radius:0!important;padding:8px 10px;font-weight:800}
+.curr input:disabled{background:var(--sf2);color:var(--mut);cursor:not-allowed}
 .tier-rev{font-size:12.5px;font-weight:800;color:var(--tx2);text-align:right;font-family:var(--mono);white-space:nowrap}
+.tier-rev-wrap{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-shrink:0}
+.tier-toggle{position:relative;display:inline-flex;align-items:center;cursor:pointer;flex-shrink:0}
+.tier-toggle input{position:absolute;opacity:0;pointer-events:none}
+.tier-toggle-track{width:38px;height:22px;border-radius:99px;background:var(--bd2);transition:.2s;position:relative;display:inline-block}
+.tier-toggle-track::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:.2s}
+.tier-toggle input:checked + .tier-toggle-track{background:var(--cy2)}
+.tier-toggle input:checked + .tier-toggle-track::after{left:18px}
+.tier-toggle input:disabled + .tier-toggle-track{opacity:.4;cursor:not-allowed}
+.tier-row.off{opacity:.55}
+
 .tier-color-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
 .tier-color-item{display:flex;align-items:center;gap:10px;padding:9px 11px;background:var(--bg);border:1px solid var(--bd2);border-radius:10px}
 .tier-color-swatch{width:20px;height:20px;border-radius:6px;flex-shrink:0}
@@ -132,7 +144,6 @@ main{flex:1;padding:24px 0 64px}
 .locked-note i{width:15px;height:15px;flex-shrink:0;margin-top:2px}
 .locked-note strong{font-weight:900}
 
-/* Upload box */
 .upload-box{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:34px 20px;border:2px dashed var(--bd2);border-radius:14px;background:var(--bg);cursor:pointer;transition:.15s;text-align:center;min-height:170px}
 .upload-box:hover{border-color:var(--cy);background:var(--cyf)}
 .upload-box.has-image{padding:0;border-style:solid;border-color:var(--cy);background:#fff;min-height:0}
@@ -146,7 +157,6 @@ main{flex:1;padding:24px 0 64px}
 .upload-remove:hover{background:var(--dg)}
 .upload-remove i{width:13px;height:13px}
 
-/* Preset grid */
 .preset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
 .preset-card{position:relative;padding:16px 14px;background:var(--sf);border:2px solid var(--bd2);border-radius:12px;cursor:pointer;transition:.15s;text-align:left;font-family:inherit;display:flex;flex-direction:column;gap:6px;min-height:110px}
 .preset-card:hover{border-color:var(--cy);background:var(--cyf);transform:translateY(-2px)}
@@ -157,7 +167,6 @@ main{flex:1;padding:24px 0 64px}
 .preset-name{font-size:13px;font-weight:800;color:var(--nv);line-height:1.2}
 .preset-desc{font-size:11px;color:var(--mut);line-height:1.4;font-weight:500}
 
-/* Block editor */
 .block-tabs{display:flex;flex-wrap:wrap;gap:6px;padding:10px;background:var(--bg);border:1px solid var(--bd2);border-radius:12px;margin-bottom:14px;align-items:center}
 .block-tab{padding:8px 14px;border-radius:99px;font-size:12px;font-weight:800;color:var(--tx2);background:#fff;border:1.5px solid var(--bd2);cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:6px;font-family:inherit}
 .block-tab:hover{border-color:var(--cy)}
@@ -409,7 +418,7 @@ main{flex:1;padding:24px 0 64px}
     <section class="panel" data-panel="3">
       <div class="split">
         <div class="card">
-          <div class="card-h"><h1>Your Tiers</h1><p>Three tiers: Elite, Silver, Standard.</p></div>
+          <div class="card-h"><h1>Your Tiers</h1><p>Toggle off the tiers you don't need. At least one must stay on.</p></div>
           <div class="locked-note" id="basicTierNote" style="display:none;">
             <i data-lucide="lock"></i>
             <div><strong>Basic plan:</strong> one tier, locked to "Standard". Upgrade to Standard or higher for three tiers.</div>
@@ -446,7 +455,7 @@ main{flex:1;padding:24px 0 64px}
       </div>
     </section>
 
-    <!-- STEP 4 — SEATING LOGIC -->
+    <!-- STEP 4 -->
     <section class="panel" data-panel="4">
       <div class="split-wide">
         <div class="card">
@@ -622,7 +631,6 @@ var PLANS = {
   enterprise: { fee:12, limit:999999, tierLimit:3, canRename:true,  canColor:true,  seating:true  }
 };
 
-/* Preset definitions */
 var PRESETS = [
   { id:'rows-simple',    name:'Simple rows',      desc:'One grid of rows and seats',            fields:['rows','seatsPerRow'] },
   { id:'rows-sections',  name:'Rows with sections', desc:'Split rows into sections with an aisle', fields:['sections','rows','seatsPerRow'] },
@@ -642,6 +650,7 @@ var state = {
   tierNames:  Object.assign({}, TIER_DEFAULT_NAMES),
   tierColors: Object.assign({}, TIER_DEFAULT_COLORS),
   tierPrices: { elite:0, silver:0, standard:0 },
+  tierActive: { elite:true, silver:true, standard:true },
   tierPricesTouched: false,
   savedNames: null,
   savedColors: null,
@@ -655,6 +664,9 @@ var state = {
 function activeTierKeys(){
   if (state.plan === 'basic') return ['standard'];
   return TIER_KEYS.slice();
+}
+function activeTierKeysFiltered(){
+  return activeTierKeys().filter(function(k){ return state.tierActive[k] !== false; });
 }
 function blockLetter(idx){
   var n = idx, s = '';
@@ -697,17 +709,18 @@ function blockSeatCount(b){
 
 function computeTierCounts(){
   var counts = {};
-  activeTierKeys().forEach(function(k){ counts[k] = 0; });
+  activeTierKeysFiltered().forEach(function(k){ counts[k] = 0; });
   if (!state.features.seating || !state.blocks.length) return counts;
-  var fallback = activeTierKeys()[activeTierKeys().length-1] || 'standard';
+  var fallback = activeTierKeysFiltered()[activeTierKeysFiltered().length-1] || 'standard';
   state.blocks.forEach(function(b){
     var t = b.tier || fallback;
+    /* skip blocks assigned to an inactive tier */
+    if (state.tierActive[t] === false) return;
     counts[t] = (counts[t] || 0) + blockSeatCount(b);
   });
   return counts;
 }
 
-/* Colour helpers */
 function hexToRgb(h){
   h = String(h||'').replace('#','');
   if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
@@ -760,7 +773,15 @@ function applyPlan(){
     state.savedColors = null;
   }
 
-  if (state.plan === 'basic') state.tierNames.standard = 'Standard';
+  if (state.plan === 'basic'){
+    state.tierNames.standard = 'Standard';
+    state.tierActive = { elite:false, silver:false, standard:true };
+  } else {
+    /* if all three are off, reset to all on */
+    if (state.tierActive.elite === false && state.tierActive.silver === false && state.tierActive.standard === false){
+      state.tierActive = { elite:true, silver:true, standard:true };
+    }
+  }
 
   $('basePriceGroup').style.display = (state.plan === 'basic') ? 'none' : '';
   $('planName').textContent = cap(state.plan) + ' · ' + state.features.fee + '%';
@@ -785,16 +806,36 @@ function applyPlan(){
 function renderTierList(){
   var list = $('tierList');
   list.innerHTML = '';
-  activeTierKeys().forEach(function(k){
+  var keys = activeTierKeys();
+  var canToggle = (state.plan !== 'basic');
+
+  keys.forEach(function(k){
+    var active = state.tierActive[k] !== false;
     var row = document.createElement('div');
-    row.className = 'tier-row';
+    row.className = 'tier-row' + (active ? '' : ' off');
     var readonly = state.features.canRename ? '' : 'readonly';
+
+    var toggleHtml = '';
+    if (canToggle){
+      var activeCount = keys.filter(function(x){ return state.tierActive[x] !== false; }).length;
+      var wouldLeaveNone = active && activeCount <= 1;
+      var title = wouldLeaveNone ? 'At least one tier must stay on' : 'Toggle tier';
+      toggleHtml =
+        '<label class="tier-toggle" title="' + title + '">' +
+          '<input type="checkbox" data-tier-toggle="' + k + '"' + (active ? ' checked' : '') + (wouldLeaveNone ? ' disabled' : '') + ' />' +
+          '<span class="tier-toggle-track"></span>' +
+        '</label>';
+    }
+
     row.innerHTML =
       '<span class="tier-swatch" style="background:'+state.tierColors[k]+'"></span>' +
-      '<input type="text" class="tier-name" data-tier="'+k+'" value="'+esc(state.tierNames[k])+'" maxlength="20" '+readonly+' />' +
+      '<input type="text" class="tier-name" data-tier="'+k+'" value="'+esc(state.tierNames[k])+'" maxlength="20" '+readonly+(active?'':' disabled')+' />' +
       '<span class="tier-qty" data-qty="'+k+'">0 seats</span>' +
-      '<div class="curr"><span class="curr-prefix">R</span><input type="number" class="tier-price" data-tier="'+k+'" min="0" step="0.01" value="'+(state.tierPrices[k]||0)+'" /></div>' +
-      '<span class="tier-rev" data-rev="'+k+'">R 0.00</span>';
+      '<div class="curr"><span class="curr-prefix">R</span><input type="number" class="tier-price" data-tier="'+k+'" min="0" step="0.01" value="'+(state.tierPrices[k]||0)+'"'+(active?'':' disabled')+' /></div>' +
+      '<div class="tier-rev-wrap">' +
+        '<span class="tier-rev" data-rev="'+k+'">R 0.00</span>' +
+        toggleHtml +
+      '</div>';
     list.appendChild(row);
   });
 
@@ -815,18 +856,40 @@ function renderTierList(){
       renderRevenue();
     });
   });
+  list.querySelectorAll('[data-tier-toggle]').forEach(function(inp){
+    inp.addEventListener('change', function(){
+      var k = this.dataset.tierToggle;
+      var keys2 = activeTierKeys();
+      var wouldBeActive = keys2.filter(function(x){
+        if (x === k) return inp.checked;
+        return state.tierActive[x] !== false;
+      }).length;
+      if (wouldBeActive < 1){
+        this.checked = true;
+        toast('You must keep at least one tier active.', 'error');
+        return;
+      }
+      state.tierActive[k] = this.checked;
+      renderTierList();
+      renderTierColorGrid();
+      renderBlockEditor();
+      renderSummary();
+      renderRevenue();
+    });
+  });
 }
 
 function renderTierColorGrid(){
   var grid = $('tierColorGrid');
   grid.innerHTML = '';
   activeTierKeys().forEach(function(k){
+    var active = state.tierActive[k] !== false;
     var item = document.createElement('div');
     item.className = 'tier-color-item';
     item.innerHTML =
       '<span class="tier-color-swatch" style="background:'+state.tierColors[k]+'"></span>' +
       '<label>'+esc(state.tierNames[k])+'</label>' +
-      '<input type="color" data-tier="'+k+'" value="'+state.tierColors[k]+'" '+(state.features.canColor?'':'disabled')+' />';
+      '<input type="color" data-tier="'+k+'" value="'+state.tierColors[k]+'" '+(state.features.canColor && active ? '' : 'disabled')+' />';
     grid.appendChild(item);
   });
   grid.querySelectorAll('input[type=color]').forEach(function(inp){
@@ -841,7 +904,7 @@ function renderTierColorGrid(){
 }
 
 function updateTicketBadges(){
-  var keys = activeTierKeys();
+  var keys = activeTierKeysFiltered();
   var top = keys[0] || 'standard';
   var label = (state.tierNames[top] || 'Standard').toUpperCase();
   ['tierBadge','tierBadge2','tierBadge3'].forEach(function(id){ if ($(id)) $(id).textContent = label; });
@@ -849,7 +912,7 @@ function updateTicketBadges(){
 }
 
 function updateTicketColors(){
-  var keys = activeTierKeys();
+  var keys = activeTierKeysFiltered();
   var top = keys[0] || 'standard';
   var hex = state.tierColors[top];
   var lum = relLum(hex);
@@ -962,7 +1025,7 @@ function renderPresetGrid(){
 function presetIcon(id){
   if (id.indexOf('tables') === 0) return 'circle';
   if (id === 'general-admission') return 'users';
-  if (id === 'rows-aisle') return 'columns';
+  if (id === 'rows-aisle') return 'columns-3';
   if (id === 'rows-sections') return 'layers';
   if (id === 'multi-blocks') return 'grid-2x2';
   return 'rows-3';
@@ -1002,7 +1065,7 @@ function renderBlockTabs(){
 }
 
 function tierOptionsHtml(selected){
-  return activeTierKeys().map(function(k){
+  return activeTierKeysFiltered().map(function(k){
     return '<option value="'+k+'"'+(selected===k?' selected':'')+'>'+esc(state.tierNames[k])+'</option>';
   }).join('');
 }
@@ -1057,7 +1120,6 @@ function renderBlockEditor(){
     renderRevenue();
   });
 
-  /* Field wiring */
   editor.querySelectorAll('[data-field]').forEach(function(inp){
     inp.addEventListener('input', function(){
       var k = this.dataset.field;
@@ -1145,7 +1207,7 @@ function renderSummary(){
     var detail = describeBlock(b);
     var seats = blockSeatCount(b);
     total += seats;
-    var tierName = b.tier ? state.tierNames[b.tier] : (state.tierNames[activeTierKeys()[activeTierKeys().length-1]] || 'Standard');
+    var tierName = b.tier ? state.tierNames[b.tier] : (state.tierNames[activeTierKeysFiltered()[activeTierKeysFiltered().length-1]] || 'Standard');
 
     var row = document.createElement('div');
     row.className = 'summary-row';
@@ -1183,7 +1245,7 @@ function describeBlock(b){
 /* REVENUE */
 function renderRevenue(){
   var counts = computeTierCounts();
-  var keys = activeTierKeys();
+  var keys = activeTierKeysFiltered();
   var total = 0, gross = 0;
 
   keys.forEach(function(k){
@@ -1256,7 +1318,7 @@ function buildBlocksPayload(){
       name: b.name,
       preset: b.preset,
       presetName: p ? p.name : '',
-      tier: b.tier || (activeTierKeys()[activeTierKeys().length-1] || 'standard'),
+      tier: b.tier || (activeTierKeysFiltered()[activeTierKeysFiltered().length-1] || 'standard'),
       seats: blockSeatCount(b)
     };
     if (b.preset === 'general-admission'){
@@ -1282,11 +1344,12 @@ function buildBlocksPayload(){
 
 function buildPayload(){
   var keys = activeTierKeys();
-  var tierNames = {}, tierColours = {}, tierPrices = {};
+  var tierNames = {}, tierColours = {}, tierPrices = {}, tierActiveOut = {};
   keys.forEach(function(k){
     tierNames[k] = state.tierNames[k];
     tierColours[k] = state.tierColors[k];
     tierPrices[k] = state.tierPrices[k] || 0;
+    tierActiveOut[k] = state.tierActive[k] !== false;
   });
 
   var cost = parseFloat($('cost').value) || 0;
@@ -1319,6 +1382,7 @@ function buildPayload(){
     tierNames: tierNames,
     tierColours: tierColours,
     tierPrices: tierPrices,
+    tierActive: tierActiveOut,
     plan: { id: state.plan, fee: state.features.fee, limit: state.features.limit },
     seatingPlanImage: state.features.seating ? (state.planImage || '') : '',
     blocks: state.features.seating ? buildBlocksPayload() : [],
@@ -1447,7 +1511,7 @@ document.addEventListener('DOMContentLoaded', function(){
     if (mid <= 0) return;
     function applyRecommended(base){
       var mult = { elite: 4, silver: 1.5, standard: 1 };
-      activeTierKeys().forEach(function(k){ state.tierPrices[k] = Math.round(base*(mult[k]||1)*100)/100; });
+      activeTierKeysFiltered().forEach(function(k){ state.tierPrices[k] = Math.round(base*(mult[k]||1)*100)/100; });
       renderTierList();
       renderRevenue();
     }
@@ -1479,7 +1543,6 @@ document.addEventListener('DOMContentLoaded', function(){
     reader.readAsDataURL(f);
   });
 
-  /* Plan image */
   $('planImageInput').addEventListener('change', function(){
     var f = this.files && this.files[0];
     if (!f) return;
@@ -1549,4 +1612,4 @@ document.addEventListener('DOMContentLoaded', function(){
 })();
 </script>
 </body>
-  </html>
+            </html>
