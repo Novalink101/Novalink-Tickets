@@ -501,12 +501,22 @@ var eventId = null;
 var selectedTier = null;
 var qty = 1;
 var guestNames = [""];
-var pendingTicket = null;
-var countdownTimer = null;
 
-/* ═══════════ LOCKED-IN VALUES — set when modal opens, used everywhere ═══════════ */
-var lockedPrice = null;      /* price per ticket, locked at modal open */
-var lockedLink = "";         /* payment link, locked at modal open */
+/* ═══════════════════════════════════════════════════════════════
+   pendingOrder — the single source of truth once a ticket exists.
+   Reset when the buyer changes tier or quantity while no modal is open.
+   ═══════════════════════════════════════════════════════════════ */
+var pendingOrder = null;
+/* Shape: {
+    tier: "elite",
+    qty: 1,
+    price: 60,
+    link: "https://...",
+    seats: ["A-A-03"],
+    bundle: { reference, ticketId, amount, ... }   // set after write
+  } */
+
+var countdownTimer = null;
 
 var seatingEnabled = false;
 var gaEnabled = false;
@@ -563,10 +573,32 @@ function getTierColor(key){
   if (eventData && eventData.tierColours && eventData.tierColours[key]) return eventData.tierColours[key];
   return TIER_FB_COLORS[key] || "#00FFFF";
 }
+
+/* ═══ PRICE READING — very defensive, tries multiple paths ═══ */
 function getTierPrice(key){
-  if (!eventData || !eventData.tierPrices) return 0;
-  var v = parseFloat(eventData.tierPrices[key]);
-  return isNaN(v) ? 0 : v;
+  if (!key) return 0;
+  if (!eventData){
+    console.warn('[getTierPrice] eventData not loaded yet');
+    return 0;
+  }
+  var v = null;
+
+  /* Path 1: tierPrices object */
+  if (eventData.tierPrices && typeof eventData.tierPrices === "object"){
+    v = eventData.tierPrices[key];
+  }
+
+  /* Path 2: numeric coercion */
+  var n = parseFloat(v);
+  if (!isNaN(n) && n > 0) return Math.round(n * 100) / 100;
+
+  /* Path 3: fallback to legacy cost field */
+  var c = parseFloat(eventData.cost);
+  if (!isNaN(c) && c > 0) return Math.round(c * 100) / 100;
+
+  /* Path 4: no price */
+  console.warn('[getTierPrice] no price found for tier "' + key + '". tierPrices=' + JSON.stringify(eventData.tierPrices));
+  return 0;
 }
 
 function getPaymentLink(key, quantity){
@@ -917,6 +949,11 @@ function renderTiers(){
 }
 
 function selectTier(tierKey, silent){
+  /* If tier changed and no modal is open, clear the pending order */
+  if (selectedTier && selectedTier !== tierKey && !$("buyModal").classList.contains("open")){
+    console.log('[selectTier] tier changed — clearing pending order');
+    pendingOrder = null;
+  }
   selectedTier = tierKey;
   document.querySelectorAll(".tier-opt").forEach(function(el){
     el.classList.toggle("selected", el.dataset.tier === tierKey);
@@ -1083,6 +1120,11 @@ function renderAssignmentSummary(){
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   OPEN BUY MODAL
+   If a pendingOrder.bundle exists, jump to step 2 with it.
+   Otherwise create a new pendingOrder.
+   ═══════════════════════════════════════════════════════════════ */
 function openBuyModal(){
   if (!currentUser){
     showToast("Please sign in to reserve tickets.", "error", 3500);
@@ -1098,13 +1140,38 @@ function openBuyModal(){
     return;
   }
 
-  /* ═══════════ LOCK THE PRICE AND LINK AT THIS MOMENT ═══════════ */
-  lockedPrice = getTierPrice(selectedTier);
-  lockedLink  = getPaymentLink(selectedTier, qty) || "";
+  /* If we already have a created ticket, restore step 2 */
+  if (pendingOrder && pendingOrder.bundle && pendingOrder.bundle.ticketId){
+    console.log('[buyModal] restoring step 2 for existing ticket', pendingOrder.bundle.ticketId);
+    $("step1").style.display = "none";
+    $("step2").style.display = "block";
+    try {
+      renderPaymentStep(pendingOrder.bundle);
+    } catch(e){
+      console.error('[buyModal] renderPaymentStep failed on restore:', e);
+    }
+    $("buyModal").classList.add("open");
+    document.body.style.overflow = "hidden";
+    refreshIcons();
+    return;
+  }
 
-  console.log('[buyModal] locked price=' + lockedPrice + ' link=' + lockedLink + ' tier=' + selectedTier + ' qty=' + qty);
+  /* Otherwise, create a fresh pendingOrder with locked-in values */
+  var price = getTierPrice(selectedTier);
+  var link = getPaymentLink(selectedTier, qty) || "";
 
-  var total = lockedPrice * qty;
+  pendingOrder = {
+    tier: selectedTier,
+    qty: qty,
+    price: price,
+    link: link,
+    seats: (seatingEnabled && assignment && !assignment.ga) ? assignment.seats.slice(0, qty) : [],
+    bundle: null
+  };
+
+  console.log('[buyModal] new order — tier=' + selectedTier + ' qty=' + qty + ' price=' + price + ' link=' + link);
+
+  var total = price * qty;
   $("modalAmount").textContent = total > 0 ? formatMoney(total) : "Free";
 
   var lead = firstNameOf(currentUser) || "";
@@ -1256,12 +1323,17 @@ function validateGuestForm(){
   return ok;
 }
 
-/* ══════════════════════════════════════════════════════════════
-   createPendingTickets — uses lockedPrice and lockedLink
-   ══════════════════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════
+   CREATE PENDING TICKETS
+   Uses pendingOrder.price and pendingOrder.link — never re-reads.
+   ═══════════════════════════════════════════════════════════════ */
 async function createPendingTickets(){
   if (!currentUser) throw new Error("Sign in required");
   if (!validateGuestForm()) throw new Error("__validation__");
+
+  if (!pendingOrder){
+    throw new Error("No pending order — please try again from the Reserve button.");
+  }
 
   if (seatingEnabled && assignment && !assignment.ga){
     for (var i = 0; i < assignment.seats.length; i++){
@@ -1272,24 +1344,27 @@ async function createPendingTickets(){
   }
 
   var buyerEmail = ($("guestEmailInput").value || "").trim();
+  var price = pendingOrder.price;
+  var paymentLink = pendingOrder.link || "";
+  var orderQty = pendingOrder.qty;
+  var totalAmount = price * orderQty;
 
-  /* ═══ USE THE LOCKED-IN VALUES, NOT A FRESH LOOKUP ═══ */
-  var price = (typeof lockedPrice === "number") ? lockedPrice : getTierPrice(selectedTier);
-  var paymentLink = lockedLink || getPaymentLink(selectedTier, qty) || "";
+  console.log('[reserve] creating ' + orderQty + ' ticket(s) at R' + price + ' each. Total R' + totalAmount + '. Link: ' + paymentLink);
 
-  var totalAmount = price * qty;
+  if (price <= 0 && totalAmount <= 0){
+    console.warn('[reserve] WARNING: price is 0 or undefined. Check eventData.tierPrices.');
+  }
+
   var nowMs = Date.now();
   var expiresAtMs = nowMs + PENDING_TTL_MS;
   var buyerUid = currentUser.uid;
   var groupId = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 
-  console.log('[reserve] creating ' + qty + ' ticket(s) at R' + price + ' each. Total R' + totalAmount + '. Link: ' + paymentLink);
-
   var createdTickets = [];
   var batch = db.batch();
   var eventRef = db.collection(EVENTS).doc(eventId);
 
-  for (var g = 0; g < qty; g++){
+  for (var g = 0; g < orderQty; g++){
     var guestName = (guestNames[g] || "").trim();
     var ticketId = eventRef.collection("tickets").doc().id;
     var rand = rand4();
@@ -1307,9 +1382,9 @@ async function createPendingTickets(){
       guestName: guestName,
       guestIndex: g,
       groupId: groupId,
-      groupSize: qty,
-      tier: selectedTier,
-      tierName: getTierName(selectedTier),
+      groupSize: orderQty,
+      tier: pendingOrder.tier,
+      tierName: getTierName(pendingOrder.tier),
       seat: seatId,
       seatBlock: assignment && !isGA ? assignment.blockName : "",
       seatSection: assignment && !isGA ? assignment.sectionLabel : "",
@@ -1333,7 +1408,7 @@ async function createPendingTickets(){
 
     createdTickets.push({
       ticketId: ticketId, reference: reference, rand: rand,
-      tier: selectedTier, tierName: getTierName(selectedTier),
+      tier: pendingOrder.tier, tierName: getTierName(pendingOrder.tier),
       guestName: guestName, guestIndex: g, seat: seatId,
       amount: price, expiresAtMs: expiresAtMs
     });
@@ -1349,12 +1424,19 @@ async function createPendingTickets(){
   var primary = createdTickets[0];
 
   return {
-    groupId: groupId, qty: qty, tickets: createdTickets,
-    reference: primary.reference, ticketId: primary.ticketId,
-    amount: totalAmount, tier: selectedTier,
-    tierName: getTierName(selectedTier), expiresAtMs: expiresAtMs,
-    guestNames: guestNames.slice(0, qty), guestEmail: buyerEmail,
-    seats: seatingEnabled && assignment && !assignment.ga ? assignment.seats.slice(0, qty) : [],
+    groupId: groupId,
+    qty: orderQty,
+    tickets: createdTickets,
+    reference: primary.reference,
+    ticketId: primary.ticketId,
+    amount: totalAmount,
+    price: price,
+    tier: pendingOrder.tier,
+    tierName: getTierName(pendingOrder.tier),
+    expiresAtMs: expiresAtMs,
+    guestNames: guestNames.slice(0, orderQty),
+    guestEmail: buyerEmail,
+    seats: (seatingEnabled && assignment && !assignment.ga) ? assignment.seats.slice(0, orderQty) : [],
     paymentLink: paymentLink
   };
 }
@@ -1403,7 +1485,10 @@ async function goToPaymentStep(){
     return;
   }
 
-  pendingTicket = bundle;
+  /* Save the bundle into the pending order */
+  if (pendingOrder){
+    pendingOrder.bundle = bundle;
+  }
 
   try {
     sessionStorage.setItem("novalink_pending_payment", JSON.stringify({
@@ -1423,11 +1508,11 @@ async function goToPaymentStep(){
     });
   } catch(e){}
 
-  /* ═══ ADVANCE MODAL FIRST ═══ */
+  /* ═══ Advance the modal FIRST ═══ */
   $("step1").style.display = "none";
   $("step2").style.display = "block";
 
-  /* ═══ THEN render, protected ═══ */
+  /* ═══ Then render payment details, protected ═══ */
   try {
     renderPaymentStep(bundle);
   } catch(renderErr){
@@ -1435,7 +1520,7 @@ async function goToPaymentStep(){
     try {
       $("refValue").textContent = bundle.reference || "—";
       $("refInline").textContent = bundle.reference || "—";
-      $("amountToPay").textContent = bundle.amount > 0 ? formatMoney(bundle.amount) : "Free";
+      $("amountToPay").textContent = formatMoney(bundle.amount || 0);
     } catch(e2){}
   }
 
@@ -1449,14 +1534,18 @@ function renderPaymentStep(bundle){
   $("refValue").textContent = bundle.reference || "—";
   $("refInline").textContent = bundle.reference || "—";
 
-  /* ═══ Use bundle.amount which is price * qty from createPendingTickets ═══ */
-  var amount = (typeof bundle.amount === "number") ? bundle.amount : 0;
+  /* ═══ Amount — recompute from price × qty if bundle.amount is missing/0 ═══ */
+  var amount = (typeof bundle.amount === "number" && bundle.amount > 0) ? bundle.amount : 0;
+  if (amount <= 0 && bundle.price > 0 && bundle.qty > 0){
+    amount = bundle.price * bundle.qty;
+    console.log('[paymentStep] recomputed amount=' + amount + ' from price=' + bundle.price + ' × qty=' + bundle.qty);
+  }
   $("amountToPay").textContent = amount > 0 ? formatMoney(amount) : "Free";
 
-  /* ═══ Use the payment link that was locked in ═══ */
-  var link = bundle.paymentLink || getPaymentLink(bundle.tier, bundle.qty) || "";
+  console.log('[paymentStep] bundle.amount=' + bundle.amount + ' computed amount=' + amount);
 
-  console.log('[paymentStep] amount=' + amount + ' link=' + link);
+  /* ═══ Link — use bundle.paymentLink, fallback to lookup ═══ */
+  var link = bundle.paymentLink || getPaymentLink(bundle.tier, bundle.qty) || "";
 
   var yocoBtn = $("yocoBtn");
   var waBtn = $("whatsappBtn");
@@ -1544,8 +1633,8 @@ function startCountdown(expiresAtMs){
 }
 
 function copyRef(){
-  if (!pendingTicket) return;
-  var text = pendingTicket.reference;
+  if (!pendingOrder || !pendingOrder.bundle) return;
+  var text = pendingOrder.bundle.reference;
   var btn = $("copyRefBtn");
   var done = function(){
     btn.classList.add("copied");
@@ -1611,11 +1700,21 @@ document.addEventListener("DOMContentLoaded", function(){
   showLoading();
 
   $("qtyMinus").addEventListener("click", function(){
-    if (qty > 1){ qty--; updateQtyUI(); recomputeAssignment(); }
+    if (qty > 1){
+      qty--;
+      if (pendingOrder && !$("buyModal").classList.contains("open")) pendingOrder = null;
+      updateQtyUI();
+      recomputeAssignment();
+    }
   });
   $("qtyPlus").addEventListener("click", function(){
     var max = maxQtyForTier(selectedTier);
-    if (qty < max){ qty++; updateQtyUI(); recomputeAssignment(); }
+    if (qty < max){
+      qty++;
+      if (pendingOrder && !$("buyModal").classList.contains("open")) pendingOrder = null;
+      updateQtyUI();
+      recomputeAssignment();
+    }
   });
 
   $("reassignBtn").addEventListener("click", function(){
