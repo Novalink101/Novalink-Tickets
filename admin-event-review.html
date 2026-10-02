@@ -1,0 +1,1060 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#0a0f14" />
+<title>Event Review · Novalink Admin</title>
+<script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<style>
+:root{
+  --cy:#00FFFF;--cy2:#00CCCC;--cy3:#009999;--cyf:#e6ffff;
+  --bg:#f6f8fb;--sf:#ffffff;--sf2:#f1f4f8;
+  --bd:#e4e9f0;--bd2:#d3dbe5;
+  --tx:#0a0f14;--tx2:#2b3644;--mut:#6b7787;
+  --rd:14px;--font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --dg:#dc2626;--dgf:#fef2f2;--sv:#059669;--svf:#ecfdf5;--nv:#1e2f4d;
+  --am:#f59e0b;--amf:#fffbeb;
+  --ease:cubic-bezier(0.25,0.8,0.25,1);
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+body{font-family:var(--font);background:var(--bg);color:var(--tx);line-height:1.6;min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
+.container{max-width:1280px;margin:0 auto;padding:0 24px;width:100%}
+h1,h2,h3{line-height:1.15;font-weight:700}
+a{color:inherit;text-decoration:none}
+button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation}
+input,select,textarea{font-family:inherit;font-size:14px}
+
+.logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none;margin-left:12px}
+.logo .mark{width:34px;height:42px;flex-shrink:0}
+.logo .wm{font-weight:800;font-size:1.1rem;color:var(--nv)}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 18px;border-radius:12px;font-weight:600;font-size:14px;border:1px solid transparent;cursor:pointer;transition:all 0.2s var(--ease);white-space:nowrap;font-family:inherit;text-decoration:none}
+.btn svg,.btn i{width:16px;height:16px}
+.btn-accent{background:linear-gradient(135deg,var(--cy),var(--cy2));color:#04161c}
+.btn-accent:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,255,255,0.35)}
+.btn-ghost{background:transparent;color:var(--tx2);border:1px solid var(--bd2)}
+.btn-ghost:hover{background:var(--sf2);border-color:var(--cy);color:var(--cy3)}
+.btn-success{background:var(--sv);color:#fff}
+.btn-success:hover:not(:disabled){background:#047857;transform:translateY(-2px);box-shadow:0 8px 20px rgba(5,150,105,0.3)}
+.btn-danger{background:var(--dg);color:#fff}
+.btn-danger:hover:not(:disabled){background:#b91c1c}
+.btn-sm{padding:8px 12px;font-size:13px}
+.btn-lg{padding:14px 24px;font-size:15px}
+.btn-block{width:100%}
+.btn:disabled{opacity:0.55;cursor:not-allowed;transform:none!important}
+
+.site-header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,0.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--bd);padding:12px 0}
+.header-inner{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+.hdr-actions{display:flex;gap:8px;align-items:center;position:relative;flex-wrap:wrap}
+.admin-badge{background:#fef3c7;color:#92400e;font-size:10.5px;font-weight:900;padding:4px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:0.06em}
+.user-btn{display:inline-flex;align-items:center;gap:8px;padding:5px 12px 5px 5px;background:var(--sf2);border:1px solid var(--bd);border-radius:99px;font-family:inherit}
+.user-btn .av{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--cy),var(--cy2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;color:#04161c;flex-shrink:0}
+.user-btn .nm{font-size:13px;font-weight:600;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+
+.page{flex:1;padding:32px 0 64px}
+.ls{text-align:center;padding:80px 20px;color:var(--mut)}
+.ls i{width:32px;height:32px;margin:0 auto 12px;color:var(--cy3);animation:sp 1.2s linear infinite;display:block}
+@keyframes sp{to{transform:rotate(360deg)}}
+.es{text-align:center;padding:60px 24px;max-width:520px;margin:0 auto}
+.es .ic{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px}
+.es .ic.danger{background:var(--dgf);color:var(--dg)}
+.es .ic.warn{background:var(--amf);color:var(--am)}
+.es .ic i{width:28px;height:28px}
+.es h2{margin-bottom:8px}
+.es p{color:var(--mut);margin-bottom:22px;font-size:14.5px;line-height:1.6}
+.es .actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+
+.page-head{margin-bottom:24px}
+.page-head .eyebrow{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--cy3);background:var(--cyf);border:1px solid var(--cy);padding:5px 12px;border-radius:99px;margin-bottom:12px}
+.page-head .eyebrow i{width:13px;height:13px}
+.page-head h1{font-size:clamp(1.6rem,3.4vw,2.2rem);color:var(--nv);margin-bottom:6px}
+.page-head p{color:var(--mut);font-size:14px}
+
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px}
+.stat{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rd);padding:16px 18px;position:relative;overflow:hidden;box-shadow:0 4px 16px rgba(10,15,20,0.04)}
+.stat::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--am)}
+.stat.live::before{background:var(--sv)}
+.stat.rejected::before{background:var(--dg)}
+.stat .lbl{font-size:10.5px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:var(--mut)}
+.stat .val{font-size:24px;font-weight:900;color:var(--nv);font-family:var(--mono);letter-spacing:-0.5px}
+.stat.live .val{color:var(--sv)}
+.stat.rejected .val{color:var(--dg)}
+
+.filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;align-items:center}
+.filter-chip{padding:7px 14px;border-radius:99px;font-size:12.5px;font-weight:700;background:var(--sf);border:1px solid var(--bd);color:var(--tx2);transition:all 0.15s var(--ease);display:inline-flex;align-items:center;gap:6px;font-family:inherit;cursor:pointer}
+.filter-chip:hover{border-color:var(--cy);color:var(--cy3)}
+.filter-chip.active{background:#0a0f14;color:#fff;border-color:#0a0f14}
+.filter-chip .fc-count{font-size:10px;font-weight:900;background:rgba(0,0,0,0.08);padding:1px 7px;border-radius:99px;margin-left:2px}
+.filter-chip.active .fc-count{background:rgba(255,255,255,0.2)}
+
+.review-list{display:flex;flex-direction:column;gap:16px}
+.review-card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rd);overflow:hidden;box-shadow:0 4px 16px rgba(10,15,20,0.04);transition:box-shadow 0.2s var(--ease)}
+.review-card:hover{box-shadow:0 8px 28px rgba(10,15,20,0.08)}
+.review-card.expanded{box-shadow:0 12px 40px rgba(10,15,20,0.12)}
+
+.rc-head{display:flex;gap:16px;padding:18px 20px;cursor:pointer;align-items:flex-start;flex-wrap:wrap}
+.rc-thumb{width:96px;height:72px;border-radius:10px;flex-shrink:0;background:linear-gradient(135deg,#0a0f14,#1f2937);background-size:cover;background-position:center;overflow:hidden;position:relative}
+.rc-thumb.empty::after{content:'No cover';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#6b7787;font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
+.rc-body{flex:1;min-width:0}
+.rc-title-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
+.rc-title{font-size:16px;font-weight:800;color:var(--tx);letter-spacing:-0.01em;word-break:break-word}
+.rc-badge{font-size:10px;font-weight:900;padding:3px 9px;border-radius:6px;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
+.rc-badge.pending_review{background:var(--amf);color:#92400e;border:1px solid #fde68a}
+.rc-badge.live{background:var(--svf);color:#065f46;border:1px solid #a7f3d0}
+.rc-badge.rejected{background:var(--dgf);color:#991b1b;border:1px solid #fecaca}
+.rc-meta{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--mut);font-weight:500}
+.rc-meta span{display:inline-flex;align-items:center;gap:5px}
+.rc-meta i{width:13px;height:13px;flex-shrink:0}
+.rc-actions{display:flex;gap:8px;align-items:center;flex-shrink:0;flex-wrap:wrap}
+.rc-expand-icon{width:36px;height:36px;border-radius:50%;background:var(--sf2);border:1px solid var(--bd);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:transform 0.3s var(--ease)}
+.review-card.expanded .rc-expand-icon{transform:rotate(180deg)}
+.rc-expand-icon i{width:16px;height:16px;color:var(--tx2)}
+
+.rc-details{padding:0 20px 20px;border-top:1px dashed var(--bd);background:var(--sf2);display:none}
+.review-card.expanded .rc-details{display:block}
+.rc-details-inner{padding-top:18px}
+.rc-section{margin-bottom:22px}
+.rc-section:last-child{margin-bottom:0}
+.rc-section-head{font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--cy3);margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.rc-section-head i{width:14px;height:14px}
+
+.rc-desc{font-size:13.5px;color:var(--tx2);line-height:1.6;background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;white-space:pre-wrap;word-break:break-word}
+
+.kv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.kv{background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:10px 12px}
+.kv .k{font-size:10px;font-weight:800;color:var(--mut);letter-spacing:.05em;text-transform:uppercase;margin-bottom:2px}
+.kv .v{font-size:13px;font-weight:700;color:var(--tx);word-break:break-word}
+
+.tier-table{width:100%;border-collapse:collapse;background:var(--sf);border:1px solid var(--bd);border-radius:10px;overflow:hidden;font-size:13px}
+.tier-table th{background:var(--sf2);padding:10px 12px;text-align:left;font-size:10px;font-weight:900;text-transform:uppercase;letter-spacing:.06em;color:var(--mut);border-bottom:1px solid var(--bd);white-space:nowrap}
+.tier-table td{padding:10px 12px;border-bottom:1px solid var(--bd);vertical-align:middle}
+.tier-table tr:last-child td{border-bottom:none}
+.tier-table .sw{display:inline-block;width:12px;height:12px;border-radius:4px;margin-right:8px;vertical-align:-1px;border:1px solid rgba(0,0,0,0.12)}
+.tier-table .price{font-family:var(--mono);font-weight:800;color:var(--cy3);white-space:nowrap}
+.tier-table .yoco-input{width:100%;padding:8px 10px;background:var(--sf);border:1px solid var(--bd2);border-radius:8px;font-size:12.5px;font-family:var(--mono);color:var(--tx);min-width:200px}
+.tier-table .yoco-input:focus{outline:none;border-color:var(--cy);box-shadow:0 0 0 3px rgba(0,255,255,0.15)}
+.tier-table .yoco-input.ok{border-color:#a7f3d0;background:var(--svf)}
+.tier-table tr.inactive{opacity:.4}
+.tier-table tr.inactive td{color:var(--mut)}
+
+.rc-footer{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;padding-top:14px;border-top:1px dashed var(--bd);margin-top:14px}
+.rc-footer .btn{min-width:140px}
+
+.link-note{font-size:11.5px;color:var(--mut);margin-top:8px;line-height:1.5}
+.link-note code{background:var(--sf);border:1px solid var(--bd);border-radius:5px;padding:1px 6px;font-family:var(--mono);font-size:11px;color:var(--cy3)}
+
+.reject-panel{display:none;background:var(--dgf);border:1px solid #fecaca;border-radius:10px;padding:14px;margin-top:12px}
+.reject-panel.show{display:block}
+.reject-panel label{display:block;font-size:11px;font-weight:900;color:#991b1b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.reject-panel textarea{width:100%;min-height:70px;padding:10px 12px;border:1px solid #fecaca;border-radius:8px;font-size:13px;font-family:inherit;background:#fff;resize:vertical}
+.reject-panel textarea:focus{outline:none;border-color:var(--dg);box-shadow:0 0 0 3px rgba(220,38,38,0.15)}
+.reject-panel .rp-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:10px;flex-wrap:wrap}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120%);background:#0a0f14;color:#fff;padding:12px 18px;border-radius:12px;font-size:13.5px;z-index:200;transition:transform 0.4s var(--ease),opacity 0.3s ease;display:flex;align-items:center;gap:10px;pointer-events:none;opacity:0;max-width:calc(100vw - 40px)}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.success{background:#065f46}
+.toast.error{background:#991b1b}
+.toast i{width:16px;height:16px;flex-shrink:0}
+
+.footer{background:#0a0f14;color:#c9d2dd;padding:28px 0 20px;margin-top:auto;font-size:13px}
+.fb{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;color:#6b7787;font-size:12px}
+
+.spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;display:inline-block;flex-shrink:0}
+
+@media (max-width:640px){
+  .rc-actions{width:100%;justify-content:flex-start}
+  .rc-footer{justify-content:stretch}
+  .rc-footer .btn{flex:1 1 100%}
+  .tier-table .yoco-input{min-width:0}
+}
+</style>
+</head>
+<body>
+
+<header class="site-header">
+  <div class="container header-inner">
+    <a href="index.html" class="logo">
+      <svg class="mark" viewBox="0 0 60 74"><path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/><path fill="#00FFFF" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/></svg>
+      <span class="wm">NOVALINK</span>
+    </a>
+    <div class="hdr-actions">
+      <span class="admin-badge">Admin</span>
+      <button class="user-btn" id="userChip" style="display:none;">
+        <span class="av" id="userAvatar">?</span>
+        <span class="nm" id="userName">Admin</span>
+      </button>
+      <a href="dashboard.html" class="btn btn-ghost btn-sm"><i data-lucide="layout-dashboard"></i> Dashboard</a>
+      <a href="admin-payments.html" class="btn btn-ghost btn-sm"><i data-lucide="credit-card"></i> Payments</a>
+    </div>
+  </div>
+</header>
+
+<main class="page">
+  <div class="container">
+
+    <div id="loadingState" class="ls">
+      <i data-lucide="loader-2"></i>
+      <p>Loading pending events…</p>
+    </div>
+
+    <div id="signinState" class="es" style="display:none">
+      <div class="ic warn"><i data-lucide="lock"></i></div>
+      <h2>Sign in required</h2>
+      <p>Only Novalink admins can review events.</p>
+      <div class="actions">
+        <a href="index.html#signin" class="btn btn-accent"><i data-lucide="log-in"></i> Sign in</a>
+      </div>
+    </div>
+
+    <div id="notAdminState" class="es" style="display:none">
+      <div class="ic danger"><i data-lucide="shield-x"></i></div>
+      <h2>Admin access only</h2>
+      <p>Your account doesn't have permission to review events. If you think this is a mistake, contact <a href="mailto:customerservicesnovalink@gmail.com" style="color:var(--cy3);font-weight:800;">customerservicesnovalink@gmail.com</a>.</p>
+      <div class="actions">
+        <a href="index.html" class="btn btn-accent"><i data-lucide="arrow-left"></i> Back to home</a>
+      </div>
+    </div>
+
+    <div id="errorState" class="es" style="display:none">
+      <div class="ic danger"><i data-lucide="alert-circle"></i></div>
+      <h2>Could not load</h2>
+      <p id="errorMsg">Something went wrong.</p>
+      <div class="actions">
+        <button class="btn btn-accent" id="retryBtn"><i data-lucide="refresh-cw"></i> Try again</button>
+        <a href="index.html" class="btn btn-ghost"><i data-lucide="arrow-left"></i> Home</a>
+      </div>
+    </div>
+
+    <div id="content" style="display:none">
+
+      <div class="page-head">
+        <span class="eyebrow"><i data-lucide="clipboard-check"></i> Event Review</span>
+        <h1>Pending events</h1>
+        <p>Review what creators have submitted. Attach Yoco links per tier, then approve.</p>
+      </div>
+
+      <div class="stats">
+        <div class="stat">
+          <span class="lbl">Pending Review</span>
+          <span class="val" id="statPending">0</span>
+        </div>
+        <div class="stat live">
+          <span class="lbl">Live</span>
+          <span class="val" id="statLive">0</span>
+        </div>
+        <div class="stat rejected">
+          <span class="lbl">Rejected</span>
+          <span class="val" id="statRejected">0</span>
+        </div>
+      </div>
+
+      <div class="filter-bar" id="filterBar">
+        <button class="filter-chip active" data-filter="pending_review"><i data-lucide="clock"></i> Pending <span class="fc-count" id="countPending">0</span></button>
+        <button class="filter-chip" data-filter="live"><i data-lucide="check-circle"></i> Live <span class="fc-count" id="countLive">0</span></button>
+        <button class="filter-chip" data-filter="rejected"><i data-lucide="x-circle"></i> Rejected <span class="fc-count" id="countRejected">0</span></button>
+        <button class="filter-chip" data-filter="all"><i data-lucide="layers"></i> All <span class="fc-count" id="countAll">0</span></button>
+      </div>
+
+      <div id="emptyState" class="es" style="display:none">
+        <div class="ic warn"><i data-lucide="inbox"></i></div>
+        <h2 id="emptyTitle">Nothing to review</h2>
+        <p id="emptyMsg">No pending events right now. Check back later.</p>
+      </div>
+
+      <div class="review-list" id="reviewList"></div>
+
+    </div>
+
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="container">
+    <div class="fb">
+      <span>&copy; <span id="year"></span> Novalink. All rights reserved.</span>
+      <span>Johannesburg, South Africa</span>
+    </div>
+  </div>
+</footer>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+
+var firebaseConfig = {
+  apiKey: "AIzaSyDSnns131jOlBXAqKo6qy7lTW4Rij-1oWU",
+  authDomain: "novalink-864cf.firebaseapp.com",
+  projectId: "novalink-864cf",
+  storageBucket: "novalink-864cf.firebasestorage.app",
+  messagingSenderId: "602780280140",
+  appId: "1:602780280140:web:5d9ff2351e5a7d5e66dbe9"
+};
+if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
+var db = firebase.firestore();
+var auth = firebase.auth();
+var EVENTS = "events";
+
+/* ══════════════════════════════════════════════════════════════
+   ADMIN EMAILS — must match dashboard.html
+   ══════════════════════════════════════════════════════════════ */
+var ADMINS = [
+  "nylnathan340@gmail.com",
+  "customerservicesnovalink@gmail.com"
+];
+
+/* ══════════════════════════════════════════════════════════════
+   TIER DEFAULTS
+   ══════════════════════════════════════════════════════════════ */
+var TIER_KEYS = ["black","gold","silver","cyan","tier5","tier6"];
+var TIER_COLOR_DEFAULTS = { black:"#1a202c", gold:"#ecc94b", silver:"#cbd5e1", cyan:"#00FFFF", tier5:"#a855f7", tier6:"#f472b6" };
+var TIER_NAME_DEFAULTS = { black:"Elite", gold:"VIP", silver:"Silver", cyan:"Standard", tier5:"Platinum", tier6:"Diamond" };
+
+/* ══════════════════════════════════════════════════════════════
+   STATE
+   ══════════════════════════════════════════════════════════════ */
+var currentUser = null;
+var isAdmin = false;
+var allEvents = [];
+var activeFilter = "pending_review";
+var unsubscribe = null;
+var openEventIds = {}; // tracks which cards are expanded
+
+/* ══════════════════════════════════════════════════════════════
+   HELPERS
+   ══════════════════════════════════════════════════════════════ */
+function $(id){ return document.getElementById(id); }
+function refreshIcons(){ if(window.lucide) lucide.createIcons(); }
+function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
+
+function showToast(msg, type, ms){
+  type = type || "info"; ms = ms || 3200;
+  var t = $("toast");
+  var ic = type === "error" ? "alert-circle" : (type === "success" ? "check-circle" : "info");
+  t.className = "toast " + type;
+  t.innerHTML = '<i data-lucide="' + ic + '"></i><span>' + esc(msg) + '</span>';
+  refreshIcons();
+  requestAnimationFrame(function(){ t.classList.add("show"); });
+  clearTimeout(showToast._t);
+  showToast._t = setTimeout(function(){ t.classList.remove("show"); }, ms);
+}
+
+function initialsFrom(name, email){
+  if (name && name.trim()){
+    var p = name.trim().split(/\s+/);
+    if (p.length >= 2) return (p[0][0] + p[1][0]).toUpperCase();
+    return p[0].slice(0, 2).toUpperCase();
+  }
+  if (email) return email.slice(0, 2).toUpperCase();
+  return "??";
+}
+
+function formatMoney(v){
+  if (typeof v !== "number") v = parseFloat(v) || 0;
+  if (v <= 0) return "Free";
+  return "R " + v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+}
+
+function formatDate(dateStr, timeStr){
+  if (!dateStr) return "Date TBA";
+  try {
+    var d = new Date(dateStr + "T" + (timeStr || "00:00"));
+    if (isNaN(d.getTime())) return dateStr;
+    var opts = { day: "numeric", month: "short", year: "numeric" };
+    var out = d.toLocaleDateString("en-ZA", opts);
+    if (timeStr) out += " · " + timeStr;
+    return out;
+  } catch(e){ return dateStr; }
+}
+
+function formatTimestamp(ts){
+  if (!ts) return "—";
+  try {
+    var d = ts.toDate ? ts.toDate() : new Date(ts);
+    if (isNaN(d.getTime())) return "—";
+    var now = Date.now();
+    var diff = now - d.getTime();
+    var mins = Math.floor(diff / 60000);
+    var hours = Math.floor(diff / 3600000);
+    var days = Math.floor(diff / 86400000);
+    if (mins < 1) return "just now";
+    if (mins < 60) return mins + " min ago";
+    if (hours < 24) return hours + "h ago";
+    if (days < 7) return days + "d ago";
+    return d.toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric" });
+  } catch(e){ return "—"; }
+}
+
+function getTierName(ev, tierKey){
+  if (ev && ev.tierNames && ev.tierNames[tierKey]) return ev.tierNames[tierKey];
+  return TIER_NAME_DEFAULTS[tierKey] || tierKey;
+}
+function getTierColor(ev, tierKey){
+  if (ev && ev.tierColours && ev.tierColours[tierKey]) return ev.tierColours[tierKey];
+  return TIER_COLOR_DEFAULTS[tierKey] || "#00FFFF";
+}
+function getTierPrice(ev, tierKey){
+  if (!ev || !ev.tierPrices) return 0;
+  var v = parseFloat(ev.tierPrices[tierKey]);
+  return isNaN(v) ? 0 : v;
+}
+function getActiveTiers(ev){
+  var count = parseInt(ev && ev.activeTierCount, 10) || 4;
+  if (count < 2) count = 2;
+  if (count > 6) count = 6;
+  return TIER_KEYS.slice(0, count);
+}
+
+/* ══════════════════════════════════════════════════════════════
+   STATE VIEWS
+   ══════════════════════════════════════════════════════════════ */
+function showLoading(){
+  $("loadingState").style.display = "block";
+  $("signinState").style.display = "none";
+  $("notAdminState").style.display = "none";
+  $("errorState").style.display = "none";
+  $("content").style.display = "none";
+}
+function showSignin(){
+  $("loadingState").style.display = "none";
+  $("signinState").style.display = "block";
+  $("notAdminState").style.display = "none";
+  $("errorState").style.display = "none";
+  $("content").style.display = "none";
+  refreshIcons();
+}
+function showNotAdmin(){
+  $("loadingState").style.display = "none";
+  $("signinState").style.display = "none";
+  $("notAdminState").style.display = "block";
+  $("errorState").style.display = "none";
+  $("content").style.display = "none";
+  refreshIcons();
+}
+function showError(msg){
+  $("loadingState").style.display = "none";
+  $("signinState").style.display = "none";
+  $("notAdminState").style.display = "none";
+  $("errorState").style.display = "block";
+  $("content").style.display = "none";
+  if (msg) $("errorMsg").textContent = msg;
+  refreshIcons();
+}
+function showContent(){
+  $("loadingState").style.display = "none";
+  $("signinState").style.display = "none";
+  $("notAdminState").style.display = "none";
+  $("errorState").style.display = "none";
+  $("content").style.display = "block";
+}
+
+/* ══════════════════════════════════════════════════════════════
+   LOAD EVENTS
+   ══════════════════════════════════════════════════════════════ */
+function attachEventsListener(){
+  if (unsubscribe){ try { unsubscribe(); } catch(e){} }
+
+  showLoading();
+
+  unsubscribe = db.collection(EVENTS)
+    .orderBy("createdAt", "desc")
+    .limit(500)
+    .onSnapshot(function(snap){
+      allEvents = [];
+      snap.forEach(function(doc){
+        var d = doc.data() || {};
+        d.id = doc.id;
+        var status = String(d.status || "").toLowerCase();
+        // Treat missing status as "pending_review" for events created before this feature
+        if (!status) status = "pending_review";
+        d.status = status;
+        allEvents.push(d);
+      });
+      // Sort: pending first by createdAt asc (oldest first = most urgent), then live, then rejected
+      allEvents.sort(function(a, b){
+        var order = { pending_review: 0, pending: 0, live: 1, rejected: 2 };
+        var oa = order[a.status] != null ? order[a.status] : 3;
+        var ob = order[b.status] != null ? order[b.status] : 3;
+        if (oa !== ob) return oa - ob;
+        var ta = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
+        var tb = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
+        return ta - tb;
+      });
+      renderStats();
+      renderList();
+      showContent();
+    }, function(err){
+      console.error("Events load error:", err);
+      showError(err.message || "Could not load events. Check Firestore rules.");
+    });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   STATS
+   ══════════════════════════════════════════════════════════════ */
+function renderStats(){
+  var counts = { pending_review: 0, live: 0, rejected: 0, other: 0 };
+  allEvents.forEach(function(ev){
+    if (ev.status === "pending_review" || ev.status === "pending") counts.pending_review++;
+    else if (ev.status === "live") counts.live++;
+    else if (ev.status === "rejected") counts.rejected++;
+    else counts.other++;
+  });
+  $("statPending").textContent = counts.pending_review;
+  $("statLive").textContent = counts.live;
+  $("statRejected").textContent = counts.rejected;
+
+  $("countPending").textContent = counts.pending_review;
+  $("countLive").textContent = counts.live;
+  $("countRejected").textContent = counts.rejected;
+  $("countAll").textContent = allEvents.length;
+}
+
+/* ══════════════════════════════════════════════════════════════
+   RENDER LIST
+   ══════════════════════════════════════════════════════════════ */
+function renderList(){
+  var list = $("reviewList");
+  var empty = $("emptyState");
+
+  var filtered = allEvents.filter(function(ev){
+    if (activeFilter === "all") return true;
+    if (activeFilter === "pending_review") return ev.status === "pending_review" || ev.status === "pending";
+    return ev.status === activeFilter;
+  });
+
+  if (!filtered.length){
+    list.innerHTML = "";
+    empty.style.display = "block";
+    var titles = {
+      pending_review: { t: "Nothing to review", m: "No pending events right now. Check back later." },
+      live: { t: "No live events", m: "Events you approve will appear here." },
+      rejected: { t: "No rejected events", m: "Rejected events will appear here." },
+      all: { t: "No events yet", m: "Once creators submit events, they'll show up here." }
+    };
+    var t = titles[activeFilter] || titles.all;
+    $("emptyTitle").textContent = t.t;
+    $("emptyMsg").textContent = t.m;
+    refreshIcons();
+    return;
+  }
+
+  empty.style.display = "none";
+  list.innerHTML = "";
+  filtered.forEach(function(ev){
+    list.appendChild(buildCard(ev));
+  });
+  refreshIcons();
+}
+
+function buildCard(ev){
+  var card = document.createElement("div");
+  card.className = "review-card" + (openEventIds[ev.id] ? " expanded" : "");
+  card.dataset.eventId = ev.id;
+
+  var cover = ev.heroImage || ev.coverImage || "";
+  var thumbStyle = cover
+    ? "background-image:url('" + esc(cover) + "');background-size:cover;background-position:center;"
+    : "";
+  var thumbCls = "rc-thumb" + (cover ? "" : " empty");
+
+  var statusLabels = {
+    pending_review: "Pending review",
+    pending: "Pending review",
+    live: "Live",
+    rejected: "Rejected"
+  };
+  var statusLabel = statusLabels[ev.status] || ev.status;
+
+  var venueText = [ev.venueName, ev.city].filter(Boolean).join(", ") || "Venue TBA";
+  var dateText = formatDate(ev.startDate, ev.startTime);
+
+  var actionsHTML = "";
+  if (ev.status === "pending_review" || ev.status === "pending"){
+    actionsHTML =
+      '<button class="btn btn-success btn-sm approve-btn" data-id="' + esc(ev.id) + '"><i data-lucide="check"></i> Approve</button>' +
+      '<button class="btn btn-ghost btn-sm toggle-btn"><i data-lucide="chevron-down"></i></button>';
+  } else {
+    actionsHTML =
+      '<button class="btn btn-ghost btn-sm toggle-btn"><i data-lucide="chevron-down"></i></button>';
+  }
+
+  card.innerHTML =
+    '<div class="rc-head">' +
+      '<div class="' + thumbCls + '" style="' + thumbStyle + '"></div>' +
+      '<div class="rc-body">' +
+        '<div class="rc-title-row">' +
+          '<span class="rc-title">' + esc(ev.eventName || "Untitled Event") + '</span>' +
+          '<span class="rc-badge ' + esc(ev.status) + '">' + esc(statusLabel) + '</span>' +
+        '</div>' +
+        '<div class="rc-meta">' +
+          '<span><i data-lucide="calendar"></i> ' + esc(dateText) + '</span>' +
+          '<span><i data-lucide="map-pin"></i> ' + esc(venueText) + '</span>' +
+          '<span><i data-lucide="user"></i> ' + esc(ev.hostName || ev.ownerName || "—") + '</span>' +
+          '<span><i data-lucide="clock"></i> ' + esc(formatTimestamp(ev.createdAt)) + '</span>' +
+        '</div>' +
+      '</div>' +
+      '<div class="rc-actions">' + actionsHTML + '</div>' +
+    '</div>' +
+    '<div class="rc-details"><div class="rc-details-inner">' +
+      buildDetailsHTML(ev) +
+    '</div></div>';
+
+  // Toggle expand
+  card.querySelector(".rc-head").addEventListener("click", function(e){
+    if (e.target.closest("button")) return;
+    toggleCard(ev.id);
+  });
+  var toggleBtn = card.querySelector(".toggle-btn");
+  if (toggleBtn){
+    toggleBtn.addEventListener("click", function(e){
+      e.stopPropagation();
+      toggleCard(ev.id);
+    });
+  }
+
+  // Approve
+  var approveBtn = card.querySelector(".approve-btn");
+  if (approveBtn){
+    approveBtn.addEventListener("click", function(e){
+      e.stopPropagation();
+      if (!openEventIds[ev.id]){
+        openEventIds[ev.id] = true;
+        toggleCard(ev.id);
+      }
+      setTimeout(function(){
+        var el = card.querySelector(".rc-footer .approve-final-btn");
+        if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
+      }, 300);
+    });
+  }
+
+  // Wire detail interactions
+  wireDetailInteractions(card, ev);
+
+  return card;
+}
+
+function toggleCard(id){
+  openEventIds[id] = !openEventIds[id];
+  var card = document.querySelector('.review-card[data-event-id="' + id + '"]');
+  if (card){
+    card.classList.toggle("expanded", openEventIds[id]);
+    refreshIcons();
+  }
+}
+
+function buildDetailsHTML(ev){
+  var tiers = getActiveTiers(ev);
+  var paymentLinks = ev.paymentLinks || {};
+
+  // Event description
+  var descHTML = "";
+  if (ev.eventDescription && ev.eventDescription.trim()){
+    descHTML =
+      '<div class="rc-section">' +
+        '<div class="rc-section-head"><i data-lucide="file-text"></i> Description</div>' +
+        '<div class="rc-desc">' + esc(ev.eventDescription) + '</div>' +
+      '</div>';
+  }
+
+  // Key details
+  var kvHTML = "";
+  var kvs = [];
+  if (ev.hostName) kvs.push({ k: "Host", v: ev.hostName });
+  if (ev.hostEmail) kvs.push({ k: "Host email", v: ev.hostEmail });
+  if (ev.ownerEmail && ev.ownerEmail !== ev.hostEmail) kvs.push({ k: "Owner email", v: ev.ownerEmail });
+  if (ev.eventType) kvs.push({ k: "Type", v: ev.eventType.charAt(0).toUpperCase() + ev.eventType.slice(1) });
+  if (ev.cost !== undefined) kvs.push({ k: "Base price", v: formatMoney(ev.cost) });
+  if (ev.ageRestriction && ev.ageRestriction !== "all") kvs.push({ k: "Age limit", v: ev.ageRestriction + "+" });
+  if (ev.refundPolicy) kvs.push({ k: "Refunds", v: ev.refundPolicy });
+  if (ev.venueName) kvs.push({ k: "Venue", v: ev.venueName });
+  if (ev.venueAddress) kvs.push({ k: "Address", v: ev.venueAddress });
+  if (ev.city) kvs.push({ k: "City", v: ev.city });
+  if (ev.startDate) kvs.push({ k: "Date", v: ev.startDate });
+  if (ev.startTime) kvs.push({ k: "Time", v: ev.startTime });
+  if (ev.plan && ev.plan.id) kvs.push({ k: "Plan", v: ev.plan.id + " · " + ev.plan.fee + "%" });
+
+  if (kvs.length){
+    kvHTML =
+      '<div class="rc-section">' +
+        '<div class="rc-section-head"><i data-lucide="info"></i> Event details</div>' +
+        '<div class="kv-grid">' +
+          kvs.map(function(kv){
+            return '<div class="kv"><div class="k">' + esc(kv.k) + '</div><div class="v">' + esc(kv.v) + '</div></div>';
+          }).join('') +
+        '</div>' +
+      '</div>';
+  }
+
+  // Tiers + Yoco links
+  var tierRows = tiers.map(function(k){
+    var name = getTierName(ev, k);
+    var color = getTierColor(ev, k);
+    var price = getTierPrice(ev, k);
+    var existing = (paymentLinks[k] || "").trim();
+    var inputCls = "yoco-input" + (existing ? " ok" : "");
+    return '<tr data-tier="' + esc(k) + '">' +
+      '<td><span class="sw" style="background:' + esc(color) + '"></span>' + esc(name) + '</td>' +
+      '<td class="price">' + formatMoney(price) + '</td>' +
+      '<td>' +
+        '<input type="url" class="' + inputCls + '" data-yoco-tier="' + esc(k) + '" ' +
+          'placeholder="https://yoco.co.za/pay/..." value="' + esc(existing) + '" />' +
+      '</td>' +
+    '</tr>';
+  }).join('');
+
+  var tierHTML =
+    '<div class="rc-section">' +
+      '<div class="rc-section-head"><i data-lucide="tag"></i> Tiers &amp; Yoco links</div>' +
+      '<table class="tier-table">' +
+        '<thead><tr>' +
+          '<th>Tier</th>' +
+          '<th>Price</th>' +
+          '<th>Yoco Payment Link</th>' +
+        '</tr></thead>' +
+        '<tbody>' + tierRows + '</tbody>' +
+      '</table>' +
+      '<p class="link-note">' +
+        'Create payment links in the <strong>Yoco app → Sell → Payment Links</strong>. ' +
+        'Set the amount to match each tier price. Buyers pay on the link you paste here.' +
+      '</p>' +
+    '</div>';
+
+  // Footer actions
+  var footerHTML = '<div class="rc-footer">';
+
+  if (ev.status === "pending_review" || ev.status === "pending"){
+    footerHTML +=
+      '<a href="view-event.html?id=' + encodeURIComponent(ev.id) + '" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">' +
+        '<i data-lucide="external-link"></i> Preview' +
+      '</a>' +
+      '<button class="btn btn-danger btn-sm reject-btn" data-id="' + esc(ev.id) + '">' +
+        '<i data-lucide="x"></i> Reject' +
+      '</button>' +
+      '<button class="btn btn-success approve-final-btn" data-id="' + esc(ev.id) + '">' +
+        '<i data-lucide="check-circle"></i> Approve &amp; go live' +
+      '</button>';
+  } else if (ev.status === "live"){
+    footerHTML +=
+      '<a href="view-event.html?id=' + encodeURIComponent(ev.id) + '" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">' +
+        '<i data-lucide="external-link"></i> Open public page' +
+      '</a>' +
+      '<button class="btn btn-ghost btn-sm save-links-btn" data-id="' + esc(ev.id) + '">' +
+        '<i data-lucide="save"></i> Save Yoco links' +
+      '</button>';
+  } else if (ev.status === "rejected"){
+    footerHTML +=
+      '<button class="btn btn-ghost btn-sm restore-btn" data-id="' + esc(ev.id) + '">' +
+        '<i data-lucide="rotate-ccw"></i> Restore to review' +
+      '</button>';
+  }
+
+  footerHTML += '</div>';
+
+  // Reject panel (hidden by default)
+  var rejectPanelHTML =
+    '<div class="reject-panel" data-reject-panel="' + esc(ev.id) + '">' +
+      '<label>Reason for rejection (optional)</label>' +
+      '<textarea placeholder="Why is this event being rejected? The creator will see this."></textarea>' +
+      '<div class="rp-actions">' +
+        '<button class="btn btn-ghost btn-sm cancel-reject-btn">Cancel</button>' +
+        '<button class="btn btn-danger btn-sm confirm-reject-btn" data-id="' + esc(ev.id) + '">Confirm reject</button>' +
+      '</div>' +
+    '</div>';
+
+  return descHTML + kvHTML + tierHTML + footerHTML + rejectPanelHTML;
+}
+
+function wireDetailInteractions(card, ev){
+  // Approve
+  var approveFinal = card.querySelector(".approve-final-btn");
+  if (approveFinal){
+    approveFinal.addEventListener("click", function(){
+      approveEvent(ev.id, card);
+    });
+  }
+
+  // Save links (live events)
+  var saveLinks = card.querySelector(".save-links-btn");
+  if (saveLinks){
+    saveLinks.addEventListener("click", function(){
+      saveYocoLinks(ev.id, card);
+    });
+  }
+
+  // Reject
+  var rejectBtn = card.querySelector(".reject-btn");
+  if (rejectBtn){
+    rejectBtn.addEventListener("click", function(){
+      var panel = card.querySelector('[data-reject-panel="' + ev.id + '"]');
+      if (panel) panel.classList.toggle("show");
+    });
+  }
+
+  // Cancel reject
+  var cancelReject = card.querySelector(".cancel-reject-btn");
+  if (cancelReject){
+    cancelReject.addEventListener("click", function(){
+      var panel = card.querySelector('[data-reject-panel="' + ev.id + '"]');
+      if (panel) panel.classList.remove("show");
+    });
+  }
+
+  // Confirm reject
+  var confirmReject = card.querySelector(".confirm-reject-btn");
+  if (confirmReject){
+    confirmReject.addEventListener("click", function(){
+      var panel = card.querySelector('[data-reject-panel="' + ev.id + '"]');
+      var textarea = panel ? panel.querySelector("textarea") : null;
+      var reason = textarea ? textarea.value.trim() : "";
+      rejectEvent(ev.id, reason, card);
+    });
+  }
+
+  // Restore from rejected
+  var restoreBtn = card.querySelector(".restore-btn");
+  if (restoreBtn){
+    restoreBtn.addEventListener("click", function(){
+      restoreEvent(ev.id, card);
+    });
+  }
+
+  // Yoco link inputs — visual feedback
+  card.querySelectorAll(".yoco-input").forEach(function(inp){
+    inp.addEventListener("input", function(){
+      var val = this.value.trim();
+      this.classList.toggle("ok", val.length > 8 && val.indexOf("http") === 0);
+    });
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   ACTIONS
+   ══════════════════════════════════════════════════════════════ */
+function collectYocoLinks(card){
+  var links = {};
+  card.querySelectorAll(".yoco-input").forEach(function(inp){
+    var tier = inp.dataset.yocoTier;
+    links[tier] = (inp.value || "").trim();
+  });
+  return links;
+}
+
+async function approveEvent(eventId, card){
+  var ev = allEvents.find(function(e){ return e.id === eventId; });
+  if (!ev) return;
+
+  var links = collectYocoLinks(card);
+  var tiers = getActiveTiers(ev);
+
+  // Check if all tiers have links (warn but don't block)
+  var missing = tiers.filter(function(k){ return !links[k]; });
+  if (missing.length){
+    var missingNames = missing.map(function(k){ return getTierName(ev, k); }).join(", ");
+    var proceed = confirm(
+      "These tiers don't have Yoco links yet:\n\n" + missingNames +
+      "\n\nBuyers will see 'I've paid — contact us' on those tiers instead of a Yoco button.\n\nApprove anyway?"
+    );
+    if (!proceed) return;
+  }
+
+  var btn = card.querySelector(".approve-final-btn");
+  var orig = btn ? btn.innerHTML : "";
+  if (btn){
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Approving…';
+  }
+
+  try {
+    await db.collection(EVENTS).doc(eventId).update({
+      status: "live",
+      paymentLinks: links,
+      approvedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      approvedBy: currentUser.uid,
+      approvedByEmail: currentUser.email || "",
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showToast("Event approved and live!", "success", 4000);
+  } catch(err){
+    console.error("approveEvent error:", err);
+    showToast("Could not approve: " + (err.message || "unknown error"), "error", 5000);
+    if (btn){
+      btn.disabled = false;
+      btn.innerHTML = orig;
+      refreshIcons();
+    }
+  }
+}
+
+async function saveYocoLinks(eventId, card){
+  var links = collectYocoLinks(card);
+  var btn = card.querySelector(".save-links-btn");
+  var orig = btn ? btn.innerHTML : "";
+  if (btn){
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Saving…';
+  }
+
+  try {
+    await db.collection(EVENTS).doc(eventId).update({
+      paymentLinks: links,
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showToast("Yoco links saved.", "success", 3000);
+    if (btn){
+      btn.disabled = false;
+      btn.innerHTML = orig;
+      refreshIcons();
+    }
+  } catch(err){
+    console.error("saveYocoLinks error:", err);
+    showToast("Could not save: " + (err.message || "unknown error"), "error", 5000);
+    if (btn){
+      btn.disabled = false;
+      btn.innerHTML = orig;
+      refreshIcons();
+    }
+  }
+}
+
+async function rejectEvent(eventId, reason, card){
+  var btn = card.querySelector(".confirm-reject-btn");
+  var orig = btn ? btn.innerHTML : "";
+  if (btn){
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Rejecting…';
+  }
+
+  try {
+    await db.collection(EVENTS).doc(eventId).update({
+      status: "rejected",
+      rejectionReason: reason || "",
+      rejectedAt: firebase.firestore.FieldValue.serverTimestamp(),
+      rejectedBy: currentUser.uid,
+      rejectedByEmail: currentUser.email || "",
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showToast("Event rejected.", "success", 3000);
+  } catch(err){
+    console.error("rejectEvent error:", err);
+    showToast("Could not reject: " + (err.message || "unknown error"), "error", 5000);
+    if (btn){
+      btn.disabled = false;
+      btn.innerHTML = orig;
+      refreshIcons();
+    }
+  }
+}
+
+async function restoreEvent(eventId, card){
+  var btn = card.querySelector(".restore-btn");
+  var orig = btn ? btn.innerHTML : "";
+  if (btn){
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Restoring…';
+  }
+
+  try {
+    await db.collection(EVENTS).doc(eventId).update({
+      status: "pending_review",
+      rejectionReason: firebase.firestore.FieldValue.delete(),
+      rejectedAt: firebase.firestore.FieldValue.delete(),
+      rejectedBy: firebase.firestore.FieldValue.delete(),
+      rejectedByEmail: firebase.firestore.FieldValue.delete(),
+      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    showToast("Event moved back to pending review.", "success", 3000);
+  } catch(err){
+    console.error("restoreEvent error:", err);
+    showToast("Could not restore: " + (err.message || "unknown error"), "error", 5000);
+    if (btn){
+      btn.disabled = false;
+      btn.innerHTML = orig;
+      refreshIcons();
+    }
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   FILTER BAR
+   ══════════════════════════════════════════════════════════════ */
+function wireFilterBar(){
+  document.querySelectorAll(".filter-chip").forEach(function(chip){
+    chip.addEventListener("click", function(){
+      activeFilter = this.dataset.filter || "all";
+      document.querySelectorAll(".filter-chip").forEach(function(c){
+        c.classList.toggle("active", c === chip);
+      });
+      renderList();
+    });
+  });
+}
+
+/* ══════════════════════════════════════════════════════════════
+   AUTH
+   ══════════════════════════════════════════════════════════════ */
+function applyAuth(user){
+  currentUser = user;
+  isAdmin = !!(user && ADMINS.map(function(e){ return e.toLowerCase(); }).indexOf(String(user.email || "").toLowerCase()) !== -1);
+
+  if (user){
+    var chip = $("userChip");
+    if (chip) chip.style.display = "inline-flex";
+    var av = $("userAvatar");
+    if (av) av.textContent = initialsFrom(user.displayName, user.email);
+    var nm = $("userName");
+    if (nm) nm.textContent = user.displayName || user.email.split("@")[0];
+  } else {
+    var chip2 = $("userChip");
+    if (chip2) chip2.style.display = "none";
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════
+   BOOT
+   ══════════════════════════════════════════════════════════════ */
+document.addEventListener("DOMContentLoaded", function(){
+  $("year").textContent = new Date().getFullYear();
+  refreshIcons();
+  showLoading();
+  wireFilterBar();
+
+  var retryBtn = $("retryBtn");
+  if (retryBtn){
+    retryBtn.addEventListener("click", function(){
+      if (isAdmin) attachEventsListener();
+    });
+  }
+
+  auth.onAuthStateChanged(function(user){
+    applyAuth(user);
+
+    if (!user){
+      showSignin();
+      return;
+    }
+
+    if (!isAdmin){
+      showNotAdmin();
+      return;
+    }
+
+    attachEventsListener();
+  });
+});
+
+window.addEventListener("beforeunload", function(){
+  if (unsubscribe){ try { unsubscribe(); } catch(e){} }
+});
+
+})();
+</script>
+</body>
+  </html>
