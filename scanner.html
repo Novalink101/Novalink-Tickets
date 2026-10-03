@@ -43,7 +43,7 @@ button{cursor:pointer;background:none;border:none;touch-action:manipulation}
 a{color:inherit;text-decoration:none}
 .hidden{display:none!important}
 
-/* Nav — compact, dark for door context */
+/* Nav */
 .nav{background:var(--surface);border-bottom:1px solid var(--line);padding:10px 14px;display:flex;align-items:center;gap:12px;flex-shrink:0;z-index:10}
 .nav-brand{display:inline-flex;align-items:center;gap:8px;font-weight:900;font-size:12px;letter-spacing:.15em;color:var(--ink-2);text-transform:uppercase;flex-shrink:0}
 .nav-brand svg{width:18px;height:22px}
@@ -53,9 +53,18 @@ a{color:inherit;text-decoration:none}
 .nav-back:hover{background:#fff;border-color:var(--brand);color:var(--brand-darker)}
 .nav-back svg{width:16px;height:16px}
 
+/* Live counts bar */
+.counts-bar{display:flex;gap:6px;padding:8px 14px;background:var(--surface-2);border-bottom:1px solid var(--line);flex-shrink:0;overflow-x:auto;scrollbar-width:none}
+.counts-bar::-webkit-scrollbar{display:none}
+.count-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 10px;border-radius:var(--r-full);background:var(--surface);border:1px solid var(--line);font-size:11.5px;font-weight:800;white-space:nowrap;flex-shrink:0}
+.count-pill svg{width:12px;height:12px;flex-shrink:0;color:var(--brand-darker)}
+.count-pill .v{font-family:var(--mono);font-weight:900;color:var(--ink)}
+.count-pill.checked svg{color:var(--success)}
+.count-pill.checked .v{color:var(--success)}
+
 /* Tabs */
 .tabs{display:flex;gap:4px;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-md);padding:4px;margin:12px 14px 0;flex-shrink:0}
-.tab{flex:1;padding:11px 14px;background:transparent;border-radius:var(--r-sm);color:var(--slate);font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:all .2s var(--ease)}
+.tab{flex:1;padding:11px 14px;background:transparent;border-radius:var(--r-sm);color:var(--slate);font-size:13px;font-weight:800;text-transform:uppercase;letter-spacing:.04em;display:inline-flex;align-items:center;justify-content:center;gap:8px;transition:all .2s var(--ease);font-family:inherit}
 .tab svg{width:15px;height:15px}
 .tab.active{background:var(--ink);color:#fff}
 .tab:disabled{opacity:.4;cursor:not-allowed}
@@ -196,7 +205,7 @@ main{flex:1;display:flex;flex-direction:column;align-items:center;justify-conten
 .result-action{
   padding:10px 16px;border-radius:var(--r-md);
   font-size:12px;font-weight:900;text-transform:uppercase;letter-spacing:.04em;
-  flex-shrink:0;min-width:88px;
+  flex-shrink:0;min-width:88px;font-family:inherit;
 }
 .result-action.checkin{background:var(--ink);color:#fff;border:1px solid var(--ink)}
 .result-action.checkin:hover:not(:disabled){background:var(--ink-2)}
@@ -278,13 +287,10 @@ main{flex:1;display:flex;flex-direction:column;align-items:center;justify-conten
   text-transform:uppercase;letter-spacing:.04em;
   display:inline-flex;align-items:center;justify-content:center;gap:8px;
   min-height:52px;
+  font-family:inherit;cursor:pointer;
 }
 .result-btn:hover{transform:translateY(-2px)}
 .result-btn svg{width:17px;height:17px}
-.result-btn.ghost{
-  background:rgba(255,255,255,.18);color:#fff;
-  border:1.5px solid rgba(255,255,255,.4);
-}
 
 /* Paused overlay */
 .paused-overlay{
@@ -346,6 +352,24 @@ main{flex:1;display:flex;flex-direction:column;align-items:center;justify-conten
     <option value="">Loading…</option>
   </select>
 </nav>
+
+<div class="counts-bar" id="countsBar">
+  <span class="count-pill" id="pillTotal">
+    <i data-lucide="users"></i>
+    <span>Total</span>
+    <span class="v" id="countTotal">—</span>
+  </span>
+  <span class="count-pill checked" id="pillChecked">
+    <i data-lucide="check-circle"></i>
+    <span>Checked in</span>
+    <span class="v" id="countChecked">—</span>
+  </span>
+  <span class="count-pill" id="pillRemaining">
+    <i data-lucide="hourglass"></i>
+    <span>Remaining</span>
+    <span class="v" id="countRemaining">—</span>
+  </span>
+</div>
 
 <div class="tabs">
   <button class="tab active" data-mode="scan" type="button">
@@ -421,72 +445,6 @@ main{flex:1;display:flex;flex-direction:column;align-items:center;justify-conten
 
 <div class="toast" id="toast"></div>
 
-<!-- ═══════════════════ SCRIPTS ═══════════════════ -->
-
-<script>
-/* ═══════════════════════════════════════════════════════════════
-   INLINE SCHEMA HELPERS
-   ═══════════════════════════════════════════════════════════════ */
-(function(){
-  'use strict';
-  var TIER_DEFAULT_NAMES={black:'Elite',elite:'Elite',gold:'VIP',silver:'Silver',cyan:'Standard',standard:'Standard',tier5:'Platinum',tier6:'Diamond'};
-  function isObject(v){return v!==null&&typeof v==='object'&&!Array.isArray(v);}
-  function isNonEmptyString(v){return typeof v==='string'&&v.trim().length>0;}
-
-  function getTierName(event,key){
-    if(!key)return '';
-    if(event&&isObject(event.tierNames)&&isNonEmptyString(event.tierNames[key]))return event.tierNames[key];
-    if(TIER_DEFAULT_NAMES[key])return TIER_DEFAULT_NAMES[key];
-    return String(key).charAt(0).toUpperCase()+String(key).slice(1);
-  }
-  function formatSeat(t){
-    if(!t)return '';
-    if(t.generalAdmission)return 'General admission';
-    var parts=[];
-    if(isNonEmptyString(t.seatBlock))parts.push(t.seatBlock);
-    if(isNonEmptyString(t.seatSection))parts.push(t.seatSection);
-    if(t.seatTable)parts.push('Table '+t.seatTable);
-    if(isNonEmptyString(t.seatRow))parts.push('Row '+t.seatRow);
-    if(t.seatNumber)parts.push('Seat '+t.seatNumber);
-    if(parts.length)return parts.join(' · ');
-    var raw=t.seat;
-    if(!isNonEmptyString(raw))return '';
-    var m1=/^([A-Z])-T(\d+)-C(\d+)$/i.exec(raw);
-    if(m1)return 'Table '+m1[1]+parseInt(m1[2],10)+' · Seat '+parseInt(m1[3],10);
-    var m2=/^([A-Z])-T(\d+)$/i.exec(raw);
-    if(m2)return 'Table '+m2[1]+parseInt(m2[2],10);
-    var m3=/^([A-Z])-(\d+)$/i.exec(raw);
-    if(m3)return 'Block '+m3[1]+' · Seat '+parseInt(m3[2],10);
-    return raw;
-  }
-  function looksLikeNovalinkRef(text){
-    return /^NL-[A-Z0-9]{1,4}-[A-Z0-9]{1,4}-[A-Z0-9]{1,4}$/i.test(String(text||'').trim());
-  }
-  function short4(s){
-    var t=String(s||'').replace(/[^A-Za-z0-9]/g,'').toUpperCase();
-    if(t.length<=4)return t.padStart(4,'0');
-    return t.slice(-4);
-  }
-  function rand4(){
-    var c='ABCDEFGHJKMNPQRSTUVWXYZ23456789',out='';
-    for(var i=0;i<4;i++)out+=c.charAt(Math.floor(Math.random()*c.length));
-    return out;
-  }
-  function buildTicketRef(eventId,ticketId,rand){
-    var e=short4(eventId),t=short4(ticketId);
-    var r=isNonEmptyString(rand)?String(rand).toUpperCase():rand4();
-    return 'NL-'+e+'-'+t+'-'+r;
-  }
-
-  window.NovalinkSchema={
-    getTierName:getTierName,
-    formatSeat:formatSeat,
-    looksLikeNovalinkRef:looksLikeNovalinkRef,
-    buildTicketRef:buildTicketRef
-  };
-})();
-</script>
-
 <script>
 (function(){
 'use strict';
@@ -511,8 +469,9 @@ var ADMINS=['nylnathan340@gmail.com','customerservicesnovalink@gmail.com'];
 /* ═══════════════════════════════════════════════════════════════
    CONFIG
    ═══════════════════════════════════════════════════════════════ */
-var SCAN_COOLDOWN_MS=2500;
+var SCAN_COOLDOWN_MS=1500;
 var SEARCH_DEBOUNCE_MS=220;
+var LAST_EVENT_KEY='novalink_last_scanner_event';
 
 /* ═══════════════════════════════════════════════════════════════
    HELPERS
@@ -549,6 +508,83 @@ function statusLabel(k){
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   SCHEMA HELPERS
+   ═══════════════════════════════════════════════════════════════ */
+var TIER_DEFAULT_NAMES={black:'Elite',elite:'Elite',gold:'VIP',silver:'Silver',cyan:'Standard',standard:'Standard',tier5:'Platinum',tier6:'Diamond'};
+function isObject(v){return v!==null&&typeof v==='object'&&!Array.isArray(v);}
+function isNonEmptyString(v){return typeof v==='string'&&v.trim().length>0;}
+
+function getTierName(ev,key){
+  if(!key)return '';
+  if(ev&&isObject(ev.tierNames)&&isNonEmptyString(ev.tierNames[key]))return ev.tierNames[key];
+  if(ev&&Array.isArray(ev.tiers)){
+    var t=ev.tiers.find(function(x){return x&&(x.key===key||x.id===key);});
+    if(t&&isNonEmptyString(t.name))return t.name;
+  }
+  if(TIER_DEFAULT_NAMES[key])return TIER_DEFAULT_NAMES[key];
+  return String(key).charAt(0).toUpperCase()+String(key).slice(1);
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   formatSeat — prefers the saved full label
+   ═══════════════════════════════════════════════════════════════ */
+function formatSeat(t){
+  if(!t)return '';
+  if(t.generalAdmission)return 'General admission';
+
+  if(isNonEmptyString(t.seat))return t.seat;
+
+  var parts=[];
+  if(isNonEmptyString(t.seatBlock))parts.push(t.seatBlock);
+  if(isNonEmptyString(t.seatSection)&&t.seatSection!==t.seatBlock)parts.push(t.seatSection);
+  if(t.seatTable)parts.push('Table '+t.seatTable);
+  if(isNonEmptyString(t.seatRow))parts.push('Row '+t.seatRow);
+  if(t.seatNumber)parts.push('Seat '+t.seatNumber);
+  if(parts.length)return parts.join(' · ');
+  return '';
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SOUND + HAPTIC FEEDBACK
+   ═══════════════════════════════════════════════════════════════ */
+var audioCtx=null;
+function ensureAudio(){
+  if(audioCtx)return audioCtx;
+  try{
+    var Ctx=window.AudioContext||window.webkitAudioContext;
+    if(!Ctx)return null;
+    audioCtx=new Ctx();
+  }catch(e){audioCtx=null;}
+  return audioCtx;
+}
+function beep(freq,duration,type){
+  var ctx=ensureAudio();
+  if(!ctx)return;
+  try{
+    if(ctx.state==='suspended')ctx.resume();
+    var osc=ctx.createOscillator();
+    var gain=ctx.createGain();
+    osc.type=type||'sine';
+    osc.frequency.value=freq;
+    gain.gain.setValueAtTime(0,ctx.currentTime);
+    gain.gain.linearRampToValueAtTime(0.15,ctx.currentTime+0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001,ctx.currentTime+duration);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(ctx.currentTime);
+    osc.stop(ctx.currentTime+duration);
+  }catch(e){}
+}
+function soundValid(){beep(880,0.18,'sine');setTimeout(function(){beep(1320,0.14,'sine');},110);}
+function soundInvalid(){beep(220,0.32,'sawtooth');}
+function soundWarn(){beep(440,0.2,'triangle');}
+function vibrate(pattern){
+  if(navigator.vibrate){
+    try{navigator.vibrate(pattern);}catch(e){}
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
    STATE
    ═══════════════════════════════════════════════════════════════ */
 var currentUser=null;
@@ -564,6 +600,9 @@ var searchTimer=null;
 var allEventTickets=[];
 var ticketsLoaded=false;
 var loadingTickets=false;
+
+/* Live counts */
+var stats={total:0,checked:0};
 
 /* ═══════════════════════════════════════════════════════════════
    PAUSED STATE
@@ -611,10 +650,49 @@ function showResult(kind,title,subtitle,info){
   }else{
     infoEl.classList.add('hidden');
   }
+
+  /* Sound + vibration based on result kind */
+  if(kind==='valid'){
+    soundValid();
+    vibrate([60,40,60]);
+  }else if(kind==='used'){
+    soundWarn();
+    vibrate([120]);
+  }else if(kind==='cancelled'||kind==='expired'||kind==='invalid'||kind==='error'){
+    soundInvalid();
+    vibrate([300]);
+  }else if(kind==='pending'){
+    soundWarn();
+    vibrate([150]);
+  }
+
   refreshIcons();
 }
 function hideResult(){
   $('resultOverlay').classList.remove('open');
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   LIVE COUNTS
+   ═══════════════════════════════════════════════════════════════ */
+function updateCounts(){
+  if(!currentEventId){
+    $('countTotal').textContent='—';
+    $('countChecked').textContent='—';
+    $('countRemaining').textContent='—';
+    return;
+  }
+  $('countTotal').textContent=stats.total;
+  $('countChecked').textContent=stats.checked;
+  $('countRemaining').textContent=Math.max(0,stats.total-stats.checked);
+}
+function recomputeStats(){
+  stats.total=allEventTickets.length;
+  stats.checked=allEventTickets.filter(function(t){
+    var s=String(t.status||'').toLowerCase();
+    return s==='checked-in'||s==='checked_in'||s==='used';
+  }).length;
+  updateCounts();
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -653,18 +731,29 @@ function populateEventSelect(){
     sel.disabled=true;
     return;
   }
+
+  var lastId=null;
+  try{lastId=localStorage.getItem(LAST_EVENT_KEY);}catch(e){}
+
   myEvents.forEach(function(ev,i){
     var opt=document.createElement('option');
     opt.value=ev.id;
     var label=ev.eventName||'Untitled';
     if(ev.startDate)label+=' · '+ev.startDate;
     opt.textContent=label;
-    if(i===0)opt.selected=true;
     sel.appendChild(opt);
   });
+
+  var pickIdx=0;
+  if(lastId){
+    var idx=myEvents.findIndex(function(e){return e.id===lastId;});
+    if(idx>=0)pickIdx=idx;
+  }
+  sel.selectedIndex=pickIdx;
   sel.disabled=false;
-  currentEventId=myEvents[0].id;
-  currentEvent=myEvents[0];
+  currentEventId=myEvents[pickIdx].id;
+  currentEvent=myEvents[pickIdx];
+  try{localStorage.setItem(LAST_EVENT_KEY,currentEventId);}catch(e){}
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -750,8 +839,8 @@ async function onScanSuccess(decodedText){
 async function handleScannedCode(text){
   var ref=String(text||'').trim();
 
-  if(!ref||!NovalinkSchema.looksLikeNovalinkRef(ref)){
-    showResult('invalid','Invalid code',"This QR doesn't belong to a Novalink ticket.",[],true);
+  if(!ref||!looksLikeNovalinkRef(ref)){
+    showResult('invalid','Invalid code',"This QR doesn't belong to a Novalink ticket.",[]);
     return;
   }
 
@@ -789,6 +878,10 @@ async function handleScannedCode(text){
   }
 }
 
+function looksLikeNovalinkRef(text){
+  return /^NL-[A-Z0-9]{1,4}-[A-Z0-9]{1,4}-[A-Z0-9]{1,4}$/i.test(String(text||'').trim());
+}
+
 /* ═══════════════════════════════════════════════════════════════
    PROCESS TICKET
    ═══════════════════════════════════════════════════════════════ */
@@ -799,9 +892,9 @@ async function processTicket(ticketDoc,ticket,ref,source){
 
   var info=[
     {lbl:'Guest',val:ticket.guestName||ticket.buyerName||'Guest'},
-    {lbl:'Tier',val:NovalinkSchema.getTierName(ev,ticket.tier)}
+    {lbl:'Tier',val:getTierName(ev,ticket.tier)}
   ];
-  var seatDisplay=NovalinkSchema.formatSeat(ticket);
+  var seatDisplay=formatSeat(ticket);
   if(seatDisplay)info.push({lbl:'Seat',val:seatDisplay});
   info.push({lbl:'Reference',val:ref,mono:true});
 
@@ -837,7 +930,7 @@ async function processTicket(ticketDoc,ticket,ref,source){
     return false;
   }
 
-  // Valid — check in
+  /* Valid — check in */
   var nowTs=firebase.firestore.FieldValue.serverTimestamp();
   await db.collection(EVENTS).doc(currentEventId)
     .collection('tickets').doc(ticket.id)
@@ -850,12 +943,17 @@ async function processTicket(ticketDoc,ticket,ref,source){
       scannerSource:source
     });
 
-  // Update local cache
+  /* Update local cache */
   var cached=allEventTickets.find(function(t){return t.id===ticket.id;});
   if(cached){
     cached.status='checked-in';
     cached.checkedInAt=new Date();
+  }else{
+    ticket.status='checked-in';
+    ticket.checkedInAt=new Date();
+    allEventTickets.push(ticket);
   }
+  recomputeStats();
 
   showResult('valid','Valid ticket','Let them in.',info);
   return true;
@@ -870,7 +968,7 @@ function loadAllEventTickets(){
   loadingTickets=true;
   return db.collection(EVENTS).doc(currentEventId)
     .collection('tickets')
-    .limit(500)
+    .limit(1000)
     .get()
     .then(function(snap){
       allEventTickets=[];
@@ -881,12 +979,14 @@ function loadAllEventTickets(){
       });
       ticketsLoaded=true;
       loadingTickets=false;
+      recomputeStats();
       return allEventTickets;
     })
     .catch(function(err){
       console.warn('[load tickets]',err);
       allEventTickets=[];
       loadingTickets=false;
+      recomputeStats();
       return [];
     });
 }
@@ -924,7 +1024,7 @@ function renderSearchResults(){
     });
   }
 
-  // Sort: valid first, then pending, then used/cancelled
+  /* Sort: valid first, then pending, then used/cancelled */
   var order={valid:0,pending:1,used:2,expired:3,cancelled:4};
   matches.sort(function(a,b){
     var ka=statusKind(a.status),kb=statusKind(b.status);
@@ -952,9 +1052,9 @@ function renderSearchResults(){
     card.className='result-card';
 
     var kind=statusKind(t.status);
-    var ref=t.paymentRef||NovalinkSchema.buildTicketRef(currentEventId,t.id,t.paymentRefRand);
-    var seatDisplay=NovalinkSchema.formatSeat(t);
-    var tierName=NovalinkSchema.getTierName(currentEvent,t.tier);
+    var ref=t.paymentRef||'';
+    var seatDisplay=formatSeat(t);
+    var tierName=getTierName(currentEvent,t.tier);
 
     var meta=[];
     meta.push('<span class="result-chip">'+esc(tierName)+'</span>');
@@ -1038,27 +1138,35 @@ function switchMode(mode){
 document.addEventListener('DOMContentLoaded',function(){
   refreshIcons();
 
-  // Continue button on result overlay
+  /* Continue button on result overlay */
   $('continueBtn').addEventListener('click',function(){
     hideResult();
     if(currentMode==='scan')resumeScanning();
   });
 
-  // Mode tabs
+  /* Mode tabs */
   document.querySelectorAll('.tab').forEach(function(tab){
     tab.addEventListener('click',function(){
       switchMode(this.dataset.mode);
     });
   });
 
-  // Event change
+  /* Event change */
   $('eventSelect').addEventListener('change',function(){
     currentEventId=this.value;
     currentEvent=myEvents.find(function(e){return e.id===currentEventId;})||null;
+    try{
+      if(currentEventId)localStorage.setItem(LAST_EVENT_KEY,currentEventId);
+    }catch(e){}
+
     ticketsLoaded=false;
     allEventTickets=[];
+    stats={total:0,checked:0};
+    updateCounts();
+
     if(!currentEventId){showPaused('No event selected.');return;}
     hidePaused();
+
     if(currentMode==='scan'){
       stopScanner().then(function(){startScanner();});
     }else{
@@ -1075,7 +1183,7 @@ document.addEventListener('DOMContentLoaded',function(){
     showToast('Event changed','success',1500);
   });
 
-  // Search input
+  /* Search input */
   var input=$('searchInput');
   var clearBtn=$('clearSearchBtn');
 
@@ -1091,14 +1199,14 @@ document.addEventListener('DOMContentLoaded',function(){
     input.focus();
   });
 
-  // Escape key
+  /* Escape key */
   document.addEventListener('keydown',function(e){
     if(e.key==='Escape'){
       if($('resultOverlay').classList.contains('open')){hideResult();if(currentMode==='scan')resumeScanning();}
     }
   });
 
-  // Boot
+  /* Boot */
   showPaused('Signing in…');
 
   auth.onAuthStateChanged(function(user){
@@ -1133,4 +1241,4 @@ document.addEventListener('DOMContentLoaded',function(){
 </script>
 
 </body>
-  </html>
+      </html>
