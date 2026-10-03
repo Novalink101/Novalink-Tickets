@@ -545,8 +545,8 @@ function getActiveTierKeys(event){
       var f=activeMap[k];
       return f===true||f===1||f==='true'||f==='1'||f==='yes';
     });
-    if(filtered.length>=2)return filtered;
-    return all.slice(0,Math.max(2,filtered.length||2));
+    if(filtered.length>=1)return filtered;
+    return all.slice(0,Math.max(1,filtered.length||1));
   }
   if(!isNaN(count)&&count>=1){
     if(count>all.length)count=all.length;
@@ -626,6 +626,14 @@ function computeEventStartMs(event){
 /* ═══════════════════════════════════════════════════════════════
    SEAT GENERATION
    Given a section, produce every seat label it contains.
+
+   Sections are expected to have an explicit `type` field:
+     - 'rows'    → Row A · Seat 1, Row A · Seat 2, Row B · Seat 1…
+     - 'tables'  → Table 1 · Seat 1, Table 1 · Seat 2…
+     - 'simple'  → Seat 1, Seat 2, Seat 3…  (standing / general)
+
+   Legacy sections missing `type` default to 'simple' — this is
+   the safest fallback because it does not invent rows.
    ═══════════════════════════════════════════════════════════════ */
 function rowLetter(i){
   var n=i,s='';
@@ -633,10 +641,13 @@ function rowLetter(i){
   return s;
 }
 
-function generateSeats(section){
+function generateSeats(section, sectionIndex){
   var seats=[];
   var type=section.type||'simple';
-  var sectionName=section.name||'Section';
+  var sectionName=section.name||('Section '+((sectionIndex||0)+1));
+  /* Legacy sections may have no id — synthesise one so seat keys stay unique */
+  var sectionId=section.id||('legacy-'+sectionIndex);
+  var tierKey=section.tier||null;
 
   if(type==='rows'){
     var rows=Math.max(1,parseInt(section.rows,10)||0);
@@ -645,7 +656,7 @@ function generateSeats(section){
       var rl=rowLetter(r);
       for(var s=1;s<=perRow;s++){
         seats.push({
-          key:section.id+':R'+rl+'-S'+s,
+          key:sectionId+':R'+rl+'-S'+s,
           seatBlock:sectionName,
           seatRow:rl,
           seatTable:null,
@@ -661,7 +672,7 @@ function generateSeats(section){
     for(var t=1;t<=tables;t++){
       for(var s2=1;s2<=perTable;s2++){
         seats.push({
-          key:section.id+':T'+t+'-S'+s2,
+          key:sectionId+':T'+t+'-S'+s2,
           seatBlock:sectionName,
           seatRow:null,
           seatTable:t,
@@ -675,7 +686,7 @@ function generateSeats(section){
     var count=Math.max(1,parseInt(section.count,10)||0);
     for(var i=1;i<=count;i++){
       seats.push({
-        key:section.id+':S'+i,
+        key:sectionId+':S'+i,
         seatBlock:sectionName,
         seatRow:null,
         seatTable:null,
@@ -686,8 +697,7 @@ function generateSeats(section){
     }
   }
 
-  // Attach the tier to every seat
-  seats.forEach(function(s){s.tier=section.tier;});
+  seats.forEach(function(s){s.tier=tierKey;});
   return seats;
 }
 
@@ -697,9 +707,9 @@ function generateSeats(section){
 var eventId=null;
 var eventData=null;
 var tiers=[];
-var tierSeats={};         // tierKey → [seat objects]
-var takenSeatKeys={};     // Set of taken seat keys
-var tierRemaining={};     // tierKey → count of free seats
+var tierSeats={};
+var takenSeatKeys={};
+var tierRemaining={};
 var hasSeating=false;
 var selectedTier=null;
 var qty=1;
@@ -731,7 +741,6 @@ function loadEvent(){
       var startMs=computeEventStartMs(eventData);
       if(startMs&&Date.now()>startMs+12*60*60*1000){showState('stateEnded');refreshIcons();return;}
 
-      // Load sold seats, then render
       loadSoldSeats().then(function(){
         buildSeatPools();
         renderEvent();
@@ -753,9 +762,8 @@ function loadSoldSeats(){
         var t=doc.data()||{};
         var s=String(t.status||'').toLowerCase();
         if(s==='cancelled'||s==='expired')return;
-        // Only count tickets that have a seat key
         if(t.seatKey)takenSeatKeys[t.seatKey]=true;
-        else if(t.seat)takenSeatKeys[t.seat]=true; // legacy
+        else if(t.seat)takenSeatKeys[t.seat]=true;
       });
     })
     .catch(function(err){
@@ -771,16 +779,16 @@ function buildSeatPools(){
 
   var sections=Array.isArray(eventData.seatingSections)?eventData.seatingSections:[];
   if(sections.length){
-    sections.forEach(function(sec){
-      var seats=generateSeats(sec);
+    sections.forEach(function(sec,idx){
+      var seats=generateSeats(sec,idx);
       seats.forEach(function(seat){
-        if(!tierSeats[seat.tier])tierSeats[seat.tier]=[];
-        tierSeats[seat.tier].push(seat);
+        var key=seat.tier||'_unassigned';
+        if(!tierSeats[key])tierSeats[key]=[];
+        tierSeats[key].push(seat);
       });
     });
   }
 
-  // Count remaining per tier
   Object.keys(tierSeats).forEach(function(tk){
     var remaining=tierSeats[tk].filter(function(s){
       return !takenSeatKeys[s.key];
@@ -823,12 +831,10 @@ function renderEvent(){
   var ev=eventData;
   document.title=(ev.eventName||'Event')+' · Novalink';
 
-  // Hero
   var img=ev.heroImage||ev.coverImage||'';
   if(img){$('heroImg').style.backgroundImage="url('"+img.replace(/'/g,"\\'")+"')";}
   else{$('heroImg').style.backgroundImage='linear-gradient(135deg,#0A0F14,#1A2129)';}
 
-  // Badges
   var badgesHtml='';
   var typeLabel=ev.eventType?(ev.eventType.charAt(0).toUpperCase()+ev.eventType.slice(1)):'Event';
   badgesHtml+='<span class="badge badge-dark">'+esc(typeLabel)+'</span>';
@@ -841,19 +847,24 @@ function renderEvent(){
   var venue=[ev.venueName||ev.venueAddress,ev.city].filter(Boolean).join(', ')||'Venue TBA';
   $('eventVenue').textContent=venue;
 
-  // Description
   var desc=(ev.eventDescription||'').trim();
   if(desc){$('eventDescription').textContent=desc;}
   else{$('aboutCard').classList.add('hidden');}
 
-  // Seating plan image
   if(ev.seatingPlanImage&&hasSeating){
     $('seatPlanImg').src=ev.seatingPlanImage;
     $('seatPlanCard').style.display='block';
   }
 
-  // Tiers
+  /* ── Tiers ──
+     Sort cheapest-first so buyers see the lowest price on top.
+     This is standard for event ticketing (Ticketmaster, Eventbrite). */
   tiers=getActiveTiers(ev);
+  tiers.sort(function(a,b){
+    if(a.price!==b.price)return a.price-b.price;
+    return a.name.localeCompare(b.name);
+  });
+
   if(!tiers.length){
     $('tierGrid').innerHTML='<p style="color:var(--slate);font-size:13.5px">No tiers available yet.</p>';
     return;
@@ -895,11 +906,16 @@ function renderEvent(){
     grid.appendChild(btn);
   });
 
-  // Auto-select first non-soldout tier
+  /* ── Auto-select ──
+     Prefer the FIRST tier (cheapest, since we sorted ascending) that
+     still has seats. If the whole event is sold out, fall back to the
+     first tier so the UI still has something to show. */
   var firstAvailable=tiers.find(function(t){
+    if(!hasSeating)return true;
     var r=tierRemaining[t.key];
-    return !hasSeating||r===null||r>0;
+    return r===null||r===undefined||r>0;
   });
+  if(!firstAvailable&&tiers.length)firstAvailable=tiers[0];
   if(firstAvailable)selectTier(firstAvailable.key,true);
   updateQtyUI();
   refreshIcons();
@@ -935,7 +951,6 @@ function updateQtyUI(){
   while(guestNames.length<qty)guestNames.push('');
   if(guestNames.length>qty)guestNames=guestNames.slice(0,qty);
   updateTotal();
-  // Seat info
   var info=$('seatInfo');
   if(info){
     if(hasSeating){
@@ -959,7 +974,6 @@ function openBuy(){
   if(!currentUser){openSignin();return;}
   if(!selectedTier){showToast('Please choose a tier first.','error');return;}
 
-  // Check available
   var max=maxQtyForTier();
   if(max<1){
     showToast('This tier is sold out.','error',3500);
@@ -970,7 +984,6 @@ function openBuy(){
     return;
   }
 
-  // Preview seats for the guest inputs
   var previewSeats=null;
   if(hasSeating)previewSeats=findNextSeats(selectedTier,qty);
 
@@ -1156,12 +1169,9 @@ function createTickets(){
   return new Promise(function(resolve,reject){
     if(!currentUser){reject(new Error('Not signed in.'));return;}
 
-    // ── Re-fetch sold seats right now (race fix) ──
     loadSoldSeats().then(function(){
-      // Rebuild pools with fresh data
       buildSeatPools();
 
-      // Find seats again with fresh data
       var seats=null;
       if(hasSeating){
         seats=findNextSeats(selectedTier,qty);
@@ -1172,7 +1182,6 @@ function createTickets(){
         }
       }
 
-      // Update the preview in the modal
       renderGuestInputs(seats);
 
       var buyerEmail=($('buyerEmail').value||'').trim();
@@ -1211,14 +1220,13 @@ function createTickets(){
           tier:selectedTier,
           tierName:getTierName(eventData,selectedTier),
 
-          // Seat fields
-          seat:seat?seat.seatLabel:'',           // full readable label
-          seatKey:seat?seat.key:'',              // unique key for dedup
-          seatBlock:seat?seat.seatBlock:'',      // section name
-          seatSection:seat?seat.seatBlock:'',    // alias
-          seatRow:seat?seat.seatRow:'',          // row letter (or '')
-          seatTable:seat?seat.seatTable:null,    // table number (or null)
-          seatNumber:seat?seat.seatNumber:null,  // seat number within row/table
+          seat:seat?seat.seatLabel:'',
+          seatKey:seat?seat.key:'',
+          seatBlock:seat?seat.seatBlock:'',
+          seatSection:seat?seat.seatBlock:'',
+          seatRow:seat?seat.seatRow:'',
+          seatTable:seat?seat.seatTable:null,
+          seatNumber:seat?seat.seatNumber:null,
           generalAdmission:!seat,
 
           quantity:1,
@@ -1379,4 +1387,4 @@ document.addEventListener('DOMContentLoaded',function(){
 </script>
 
 </body>
-   </html>
+  </html>
