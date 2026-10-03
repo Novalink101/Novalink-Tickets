@@ -1,0 +1,688 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<meta name="theme-color" content="#0a0f14" />
+<title>Find my ticket · Novalink</title>
+
+<script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+
+<style>
+:root{
+  --brand:#00E5E5;--brand-dark:#00B8B8;--brand-darker:#00999A;
+  --brand-soft:#E6FFFF;--brand-tint:#B3FFFF;--brand-ink:#04161C;
+  --ink:#0A0F14;--ink-2:#1A2129;--ink-3:#2B3644;
+  --slate:#6B7787;--slate-2:#94A3B8;
+  --line:#E4E9F0;--line-2:#D3DBE5;
+  --bg:#F6F8FB;--surface:#FFFFFF;--surface-2:#F1F4F8;
+  --success:#059669;--success-soft:#ECFDF5;--success-line:#A7F3D0;
+  --warning:#D97706;--warning-soft:#FFFBEB;--warning-line:#FDE68A;
+  --danger:#DC2626;--danger-soft:#FEF2F2;--danger-line:#FECACA;
+  --font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:22px;--r-full:999px;
+  --shadow-sm:0 1px 3px rgba(10,15,20,.06);
+  --shadow-md:0 4px 14px rgba(10,15,20,.06);
+  --shadow-lg:0 12px 32px rgba(10,15,20,.10);
+  --shadow-xl:0 24px 60px rgba(10,15,20,.14);
+  --ease:cubic-bezier(.25,.8,.25,1);
+  --ease-out:cubic-bezier(.22,.9,.3,1);
+  --container:640px;
+  --tk-c1:#E6FFFF;--tk-c2:#B3FFFF;--tk-text:#0A0F14;
+  --tk-muted:rgba(0,0,0,.6);--tk-logo:#1e2f4d;
+  --tk-badge-bg:rgba(0,0,0,.08);--tk-badge-text:#4a5568;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{-webkit-text-size-adjust:100%}
+body{font-family:var(--font);font-size:14px;line-height:1.55;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column}
+img,svg{display:block;max-width:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:none}
+a{color:inherit;text-decoration:none}
+h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
+::selection{background:var(--brand);color:var(--brand-ink)}
+.hidden{display:none!important}
+
+.nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.nav-inner{max-width:var(--container);margin:0 auto;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.nav-brand{display:inline-flex;align-items:center;gap:10px;font-weight:900;font-size:15px;color:var(--ink-2);letter-spacing:.02em}
+.nav-brand svg{width:26px;height:32px;flex-shrink:0}
+@media (max-width:480px){.nav-inner{padding:10px 14px}.nav-brand span{display:none}.nav-brand svg{width:22px;height:27px}}
+
+.container{max-width:var(--container);margin:0 auto;padding:0 20px;width:100%}
+@media (max-width:560px){.container{padding:0 16px}}
+
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:10px 18px;border-radius:var(--r-md);font-weight:800;font-size:13.5px;border:1px solid transparent;transition:all .22s var(--ease);white-space:nowrap;line-height:1;min-height:44px;text-decoration:none;font-family:inherit}
+.btn svg,.btn i{width:16px;height:16px;flex-shrink:0}
+.btn-primary{background:var(--ink);color:#fff}
+.btn-primary:hover:not(:disabled){background:var(--ink-2);transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.btn-accent{background:linear-gradient(135deg,var(--brand),var(--brand-dark));color:var(--brand-ink);font-weight:900}
+.btn-accent:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 22px rgba(0,229,229,.35)}
+.btn-ghost{background:var(--surface);color:var(--ink-2);border-color:var(--line-2)}
+.btn-ghost:hover:not(:disabled){border-color:var(--brand);color:var(--brand-darker)}
+.btn-lg{padding:14px 26px;font-size:15px;min-height:50px;border-radius:var(--r-lg)}
+.btn-block{width:100%}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important;box-shadow:none!important}
+
+main{flex:1;padding:40px 0 64px}
+@media (max-width:560px){main{padding:24px 0 48px}}
+
+.hero{text-align:center;margin-bottom:28px}
+.hero-tag{display:inline-flex;align-items:center;gap:7px;background:var(--brand-soft);border:1px solid var(--brand-tint);color:var(--brand-darker);font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;padding:6px 12px;border-radius:var(--r-full);margin-bottom:14px}
+.hero-tag svg{width:12px;height:12px}
+.hero h1{font-size:clamp(1.6rem,3.4vw,2.2rem);font-weight:900;color:var(--ink);letter-spacing:-.02em;margin-bottom:8px}
+.hero p{color:var(--slate);font-size:14.5px;line-height:1.6;max-width:480px;margin:0 auto}
+
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-xl);padding:28px 24px;box-shadow:var(--shadow-md);margin-bottom:18px}
+@media (max-width:560px){.card{padding:22px 18px;border-radius:var(--r-lg)}}
+
+.field{margin-bottom:16px}
+.field label{display:block;font-size:11px;font-weight:900;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.field input{width:100%;padding:14px 16px;background:var(--surface-2);border:2px solid var(--line-2);border-radius:var(--r-md);font-size:18px;font-weight:800;font-family:var(--mono);letter-spacing:.05em;text-align:center;text-transform:uppercase;color:var(--ink);transition:all .22s var(--ease);min-height:56px}
+.field input:focus{outline:none;border-color:var(--brand);background:#fff;box-shadow:0 0 0 4px rgba(0,229,229,.15)}
+.field input::placeholder{color:#B9C2CE;font-weight:700;letter-spacing:.08em;text-transform:none;font-size:15px}
+.field-hint{font-size:11.5px;color:var(--slate);margin-top:8px;text-align:center;line-height:1.5;font-style:italic}
+
+.error-box{display:flex;gap:10px;padding:12px 14px;background:var(--danger-soft);border:1px solid var(--danger-line);border-radius:var(--r-md);font-size:13px;color:#991B1B;line-height:1.5;margin-bottom:16px}
+.error-box svg{width:16px;height:16px;flex-shrink:0;margin-top:2px}
+
+.info-box{display:flex;gap:10px;padding:12px 14px;background:var(--brand-soft);border:1px solid var(--brand-tint);border-radius:var(--r-md);font-size:12.5px;color:var(--brand-darker);line-height:1.55;margin-bottom:16px}
+.info-box svg{width:16px;height:16px;flex-shrink:0;margin-top:2px}
+
+/* Result card */
+.result-head{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:16px;flex-wrap:wrap}
+.result-head h2{font-size:16px;font-weight:900;color:var(--ink);display:flex;align-items:center;gap:8px;margin:0}
+.result-head h2 svg{width:18px;height:18px;color:var(--success)}
+.result-head .count{font-size:12px;font-weight:800;color:var(--slate);background:var(--surface-2);padding:4px 10px;border-radius:var(--r-full)}
+
+/* Ticket */
+.ticket{background:linear-gradient(135deg,var(--tk-c1),var(--tk-c2));color:var(--tk-text);border-radius:var(--r-lg);padding:22px;box-shadow:var(--shadow-md);position:relative;overflow:hidden;display:flex;flex-direction:column;gap:14px;margin-bottom:14px;border:1px solid rgba(0,0,0,.06)}
+.ticket::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle at 1px 1px,rgba(0,0,0,.05) 1px,transparent 0);background-size:16px 16px;opacity:.4;pointer-events:none}
+.ticket > *{position:relative;z-index:1}
+.tk-head{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}
+.tk-logo{font-size:11px;font-weight:900;letter-spacing:1.5px;color:var(--tk-logo)}
+.tk-badges{display:flex;gap:5px;flex-wrap:wrap}
+.tk-badge{font-size:9.5px;font-weight:900;padding:4px 9px;border-radius:5px;text-transform:uppercase;letter-spacing:.05em;background:var(--tk-badge-bg);color:var(--tk-badge-text)}
+
+.tk-event{font-size:20px;font-weight:900;line-height:1.15;text-transform:uppercase;letter-spacing:-.005em;word-break:break-word}
+.tk-meta{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--tk-muted);margin-top:4px;word-break:break-word}
+
+.tk-divider{position:relative;height:1px;background:repeating-linear-gradient(90deg,currentColor 0,currentColor 5px,transparent 5px,transparent 10px);opacity:.35;margin:2px -22px}
+.tk-divider::before,.tk-divider::after{content:'';position:absolute;top:50%;transform:translateY(-50%);width:20px;height:20px;border-radius:50%;background:var(--bg)}
+.tk-divider::before{left:-10px}
+.tk-divider::after{right:-10px}
+
+.tk-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.tk-grid .full{grid-column:1/-1}
+.tk-grid .k{font-size:9.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--tk-muted);margin-bottom:3px}
+.tk-grid .v{font-size:14px;font-weight:800;word-break:break-word;line-height:1.25}
+.tk-grid .v.mono{font-family:var(--mono);font-size:12.5px;letter-spacing:.03em}
+
+.tk-qr-wrap{background:#fff;border-radius:var(--r-md);padding:14px;display:flex;flex-direction:column;align-items:center;gap:10px}
+.tk-qr{width:180px;height:180px;max-width:100%;display:flex;align-items:center;justify-content:center}
+.tk-qr canvas,.tk-qr img{width:100%!important;height:100%!important;border-radius:6px}
+.tk-qr-hint{font-size:11px;color:#4a5568;font-weight:700;text-align:center}
+
+.tk-barcode{width:100%;height:40px;background:repeating-linear-gradient(to right,#000 0,#000 2px,#fff 2px,#fff 4px,#000 4px,#000 6px,#fff 6px,#fff 10px,#000 10px,#000 12px,#fff 12px,#fff 16px)}
+.tk-barcode-num{font-family:var(--mono);font-size:11px;font-weight:700;color:#000;letter-spacing:2px;word-break:break-all;text-align:center;margin-top:6px}
+
+.tk-actions{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:18px}
+.tk-actions .btn{flex:1;min-width:140px}
+
+/* Sign-in prompt */
+.signin-prompt{text-align:center;padding:24px 20px;background:var(--surface-2);border:1.5px dashed var(--line-2);border-radius:var(--r-md)}
+.signin-prompt .ic{width:56px;height:56px;border-radius:50%;background:var(--brand-soft);border:1px solid var(--brand-tint);color:var(--brand-darker);display:flex;align-items:center;justify-content:center;margin:0 auto 14px}
+.signin-prompt .ic svg{width:26px;height:26px}
+.signin-prompt h3{font-size:15px;font-weight:900;color:var(--ink);margin-bottom:6px}
+.signin-prompt p{font-size:13px;color:var(--slate);line-height:1.55;margin-bottom:16px;max-width:340px;margin-left:auto;margin-right:auto}
+.signin-prompt .btn{min-width:200px}
+
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(10,15,20,.65);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;align-items:flex-start;justify-content:center;z-index:100;padding:24px 16px;overflow-y:auto;opacity:0;transition:opacity .22s var(--ease)}
+.modal-bg.open{display:flex;opacity:1}
+.modal{background:var(--surface);border-radius:var(--r-xl);max-width:420px;width:100%;padding:26px;position:relative;margin:auto;box-shadow:var(--shadow-xl);transform:translateY(20px) scale(.96);opacity:0;transition:transform .4s var(--ease-out),opacity .22s var(--ease)}
+.modal-bg.open .modal{transform:translateY(0) scale(1);opacity:1}
+.modal-close{position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:var(--r-md);background:var(--surface-2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;transition:all .22s var(--ease)}
+.modal-close:hover{background:var(--danger-soft);color:var(--danger);transform:rotate(90deg)}
+.modal-close svg{width:16px;height:16px}
+.modal h2{font-size:20px;font-weight:900;margin-bottom:6px;padding-right:40px}
+.modal .sub{font-size:13.5px;color:var(--slate);margin-bottom:20px;line-height:1.55}
+.modal .btn{width:100%;margin-top:8px}
+
+/* Footer */
+.footer{background:var(--ink);color:#C9D2DD;padding:24px 0 18px;font-size:13px;margin-top:auto}
+.footer-inner{max-width:var(--container);margin:0 auto;padding:0 20px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;color:#8A96A4;font-size:12px}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120%);background:var(--ink);color:#fff;padding:12px 18px;border-radius:var(--r-full);font-size:13.5px;font-weight:700;z-index:200;transition:transform .4s var(--ease-out),opacity .22s var(--ease);display:flex;align-items:center;gap:10px;pointer-events:none;opacity:0;max-width:calc(100vw - 40px);box-shadow:var(--shadow-lg)}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.success{background:var(--success)}
+.toast.error{background:var(--danger)}
+.toast svg{width:16px;height:16px;flex-shrink:0}
+
+.spinner{width:16px;height:16px;border:2px solid rgba(0,0,0,.15);border-top-color:#04161c;border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+/* Print */
+@media print{
+  .nav,.footer,.hero,.tk-actions,.signin-prompt,.toast,.modal-bg{display:none!important}
+  body{background:#fff}
+  .card{border:none;box-shadow:none;padding:0}
+  .ticket{box-shadow:none;border:1px solid #000;break-inside:avoid;page-break-inside:avoid}
+}
+</style>
+</head>
+<body>
+
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand">
+      <svg viewBox="0 0 60 74" aria-hidden="true"><path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/><path fill="#00E5E5" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/></svg>
+      <span>NOVALINK</span>
+    </a>
+    <a href="index.html" class="btn btn-ghost" style="padding:8px 12px;font-size:13px;min-height:34px">
+      <i data-lucide="home"></i> Home
+    </a>
+  </div>
+</nav>
+
+<main>
+  <div class="container">
+
+    <div class="hero">
+      <span class="hero-tag"><i data-lucide="search"></i> Ticket lookup</span>
+      <h1>Find my ticket</h1>
+      <p>Enter your reference number to look up your ticket. Works even if you lost access to the account you bought it with — as long as you're signed in.</p>
+    </div>
+
+    <!-- LOOKUP FORM -->
+    <div class="card" id="lookupCard">
+      <div class="info-box">
+        <i data-lucide="info"></i>
+        <div>Your reference looks like <strong style="font-family:var(--mono)">NL-A3F9-K27C-M44Q</strong>. You can find it on your confirmation email or any screenshot you saved.</div>
+      </div>
+
+      <div id="lookupError" class="error-box hidden">
+        <i data-lucide="alert-circle"></i>
+        <div id="lookupErrorText"></div>
+      </div>
+
+      <div class="field">
+        <label for="refInput">Reference number</label>
+        <input type="text" id="refInput" placeholder="NL-XXXX-XXXX-XXXX" autocomplete="off" spellcheck="false" maxlength="20" />
+        <div class="field-hint">Not case-sensitive. Dashes optional.</div>
+      </div>
+
+      <button type="button" class="btn btn-accent btn-lg btn-block" id="searchBtn">
+        <i data-lucide="search"></i> Find my ticket
+      </button>
+
+      <div id="signinPrompt" class="signin-prompt hidden" style="margin-top:18px">
+        <div class="ic"><i data-lucide="lock"></i></div>
+        <h3>Sign in first</h3>
+        <p>You need to be signed in to view tickets. Sign in with the same account you bought them with.</p>
+        <button type="button" class="btn btn-accent" id="signinBtn2">
+          <i data-lucide="log-in"></i> Sign in with Google
+        </button>
+      </div>
+    </div>
+
+    <!-- RESULT CARD -->
+    <div id="resultCard" class="hidden">
+      <div class="result-head">
+        <h2><i data-lucide="check-circle"></i> <span id="resultTitle">Ticket found</span></h2>
+        <span class="count" id="resultCount">1 ticket</span>
+      </div>
+      <div id="resultBody"></div>
+    </div>
+
+  </div>
+</main>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <span>© <span id="year"></span> Novalink. All rights reserved.</span>
+    <span>Johannesburg, South Africa</span>
+  </div>
+</footer>
+
+<div class="modal-bg" id="signinModal">
+  <div class="modal">
+    <button class="modal-close" id="signinClose" aria-label="Close"><i data-lucide="x"></i></button>
+    <h2>Sign in to look up your ticket</h2>
+    <p class="sub">Use the same Google account you bought your ticket with.</p>
+    <button class="btn btn-ghost" id="googleBtn" style="justify-content:center">
+      <svg viewBox="0 0 24 24" width="18" height="18"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Continue with Google
+    </button>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+'use strict';
+
+var firebaseConfig={
+  apiKey:"AIzaSyDSnns131jOlBXAqKo6qy7lTW4Rij-1oWU",
+  authDomain:"novalink-864cf.firebaseapp.com",
+  projectId:"novalink-864cf",
+  storageBucket:"novalink-864cf.firebasestorage.app",
+  messagingSenderId:"602780280140",
+  appId:"1:602780280140:web:5d9ff2351e5a7d5e66dbe9"
+};
+if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
+var db=firebase.firestore();
+var auth=firebase.auth();
+
+function $(id){return document.getElementById(id);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function refreshIcons(){if(window.lucide)lucide.createIcons();}
+function showToast(msg,type,ms){
+  type=type||'info';ms=ms||3000;
+  var t=$('toast');
+  var ic=type==='error'?'alert-circle':(type==='success'?'check-circle':'info');
+  t.className='toast '+type;
+  t.innerHTML='<i data-lucide="'+ic+'"></i><span>'+esc(msg)+'</span>';
+  refreshIcons();
+  requestAnimationFrame(function(){t.classList.add('show');});
+  clearTimeout(showToast._t);
+  showToast._t=setTimeout(function(){t.classList.remove('show');},ms);
+}
+function money(v){
+  v=parseFloat(v)||0;
+  if(v<=0)return 'Free';
+  return 'R '+v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+}
+function formatEventDate(dateStr,timeStr){
+  if(!dateStr)return 'Date TBA';
+  try{
+    var d=new Date(dateStr+'T'+(timeStr||'00:00')+':00+02:00');
+    if(isNaN(d.getTime()))return dateStr;
+    var out=d.toLocaleDateString('en-ZA',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+    if(timeStr)out+=' · '+timeStr;
+    return out;
+  }catch(e){return dateStr;}
+}
+
+/* Schema helpers */
+var TIER_ORDER=['black','elite','gold','tier5','tier6','silver','cyan','standard'];
+var TIER_DEFAULT_NAMES={black:'Elite',elite:'Elite',gold:'VIP',silver:'Silver',cyan:'Standard',standard:'Standard',tier5:'Platinum',tier6:'Diamond'};
+var TIER_DEFAULT_COLOURS={black:'#1a202c',elite:'#1a202c',gold:'#ecc94b',silver:'#cbd5e1',cyan:'#00FFFF',standard:'#00FFFF',tier5:'#a855f7',tier6:'#f472b6'};
+function isObject(v){return v!==null&&typeof v==='object'&&!Array.isArray(v);}
+function isNonEmptyString(v){return typeof v==='string'&&v.trim().length>0;}
+function getTierName(ev,key){
+  if(!key)return '';
+  if(ev&&isObject(ev.tierNames)&&isNonEmptyString(ev.tierNames[key]))return ev.tierNames[key];
+  if(TIER_DEFAULT_NAMES[key])return TIER_DEFAULT_NAMES[key];
+  return String(key).charAt(0).toUpperCase()+String(key).slice(1);
+}
+function getTierColour(ev,key){
+  if(!key)return TIER_DEFAULT_COLOURS.cyan;
+  var map=(ev&&isObject(ev.tierColours))?ev.tierColours:(ev&&isObject(ev.tierColors))?ev.tierColors:null;
+  if(map&&isNonEmptyString(map[key]))return map[key];
+  if(TIER_DEFAULT_COLOURS[key])return TIER_DEFAULT_COLOURS[key];
+  return TIER_DEFAULT_COLOURS.cyan;
+}
+function formatSeat(t){
+  if(!t)return '';
+  if(t.generalAdmission)return 'General admission';
+  var parts=[];
+  if(isNonEmptyString(t.seatBlock))parts.push(t.seatBlock);
+  if(isNonEmptyString(t.seatSection)&&t.seatSection!==t.seatBlock)parts.push(t.seatSection);
+  if(t.seatTable)parts.push('Table '+t.seatTable);
+  if(isNonEmptyString(t.seatRow))parts.push('Row '+t.seatRow);
+  if(t.seatNumber)parts.push('Seat '+t.seatNumber);
+  if(parts.length)return parts.join(' · ');
+  return t.seat||'';
+}
+
+/* Colour palette */
+function hexToRgb(hex){
+  var c=String(hex||'').replace('#','');
+  if(c.length===3)c=c[0]+c[0]+c[1]+c[1]+c[2]+c[2];
+  if(c.length!==6)return null;
+  return {r:parseInt(c.slice(0,2),16),g:parseInt(c.slice(2,4),16),b:parseInt(c.slice(4,6),16)};
+}
+function rgbToHex(c){return '#'+[c.r,c.g,c.b].map(function(x){return Math.max(0,Math.min(255,Math.round(x))).toString(16).padStart(2,'0');}).join('');}
+function mixWhite(hex,r){var c=hexToRgb(hex);if(!c)return hex;return rgbToHex({r:c.r+(255-c.r)*r,g:c.g+(255-c.g)*r,b:c.b+(255-c.b)*r});}
+function mixBlack(hex,r){var c=hexToRgb(hex);if(!c)return hex;return rgbToHex({r:c.r*(1-r),g:c.g*(1-r),b:c.b*(1-r)});}
+function luminance(hex){var c=hexToRgb(hex);if(!c)return .5;var arr=[c.r,c.g,c.b].map(function(v){v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4);});return .2126*arr[0]+.7152*arr[1]+.0722*arr[2];}
+function getPalette(hex){
+  var c=hexToRgb(hex);
+  if(!c)return {c1:'#E6FFFF',c2:'#B3FFFF',text:'#0A0F14',muted:'rgba(0,0,0,.6)',logo:'#1e2f4d',badgeBg:'rgba(0,0,0,.08)',badgeText:'#4a5568'};
+  var lum=luminance(hex);
+  if(lum<.35)return {c1:mixWhite(hex,.06),c2:mixBlack(hex,.45),text:'#ffffff',muted:'rgba(255,255,255,.65)',logo:'#00E5E5',badgeBg:'rgba(255,255,255,.15)',badgeText:'#ffffff'};
+  var c1=mixWhite(hex,.92);
+  var c2=mixWhite(hex,.4);
+  var text=luminance(c2)>.5?'#0a0f14':'#ffffff';
+  var isLight=text==='#ffffff';
+  return {
+    c1:c1,c2:c2,text:text,
+    muted:isLight?'rgba(255,255,255,.7)':'rgba(0,0,0,.6)',
+    logo:isLight?'#00E5E5':'#1e2f4d',
+    badgeBg:isLight?'rgba(255,255,255,.15)':'rgba(0,0,0,.08)',
+    badgeText:isLight?'#ffffff':'#4a5568'
+  };
+}
+
+/* Reference normalisation */
+function normaliseRef(raw){
+  var t=String(raw||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+  // Rebuild NL-XXXX-XXXX-XXXX
+  if(t.indexOf('NL')===0)t=t.slice(2);
+  if(t.length!==12)return null;
+  return 'NL-'+t.slice(0,4)+'-'+t.slice(4,8)+'-'+t.slice(8,12);
+}
+function formatRefInput(el){
+  var cursor=el.selectionStart||0;
+  var before=el.value.length;
+  var t=String(el.value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
+  if(t.length>14)t=t.slice(0,14);
+  var out='';
+  if(t.length>0){
+    out='NL';
+    var rest=t.indexOf('NL')===0?t.slice(2):t;
+    if(rest.length>0)out+='-'+rest.slice(0,4);
+    if(rest.length>4)out+='-'+rest.slice(4,8);
+    if(rest.length>8)out+='-'+rest.slice(8,12);
+  }
+  el.value=out;
+  var after=out.length;
+  var newCursor=cursor+(after-before);
+  if(newCursor<0)newCursor=after;
+  try{el.setSelectionRange(newCursor,newCursor);}catch(e){}
+}
+
+/* State */
+var currentUser=null;
+var lastQuery=null;
+
+/* Sign in */
+function openSignin(){$('signinModal').classList.add('open');refreshIcons();}
+function closeSignin(){$('signinModal').classList.remove('open');}
+
+function applyAuth(user){
+  currentUser=user;
+  $('signinPrompt').classList.toggle('hidden',!!user);
+}
+
+/* Errors */
+function showError(msg){
+  $('lookupError').classList.remove('hidden');
+  $('lookupErrorText').textContent=msg;
+  refreshIcons();
+}
+function clearError(){$('lookupError').classList.add('hidden');}
+
+/* ═══════════════════════════════════════════════════════════════
+   LOOKUP
+   ═══════════════════════════════════════════════════════════════ */
+function lookup(){
+  clearError();
+
+  if(!currentUser){
+    showError('You need to sign in first. Click "Sign in with Google" below.');
+    $('signinPrompt').classList.remove('hidden');
+    return;
+  }
+
+  var ref=normaliseRef($('refInput').value);
+  if(!ref){
+    showError('That reference doesn\'t look right. It should look like NL-A3F9-K27C-M44Q.');
+    return;
+  }
+
+  var btn=$('searchBtn');
+  var orig=btn.innerHTML;
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner"></span> Searching…';
+
+  // Query across all tickets owned by this user (collection group)
+  db.collectionGroup('tickets')
+    .where('buyerUid','==',currentUser.uid)
+    .where('paymentRef','==',ref)
+    .limit(5)
+    .get()
+    .then(function(snap){
+      btn.disabled=false;
+      btn.innerHTML=orig;
+      refreshIcons();
+
+      if(snap.empty){
+        showError('We couldn\'t find a ticket with that reference in your account. Check the reference and try again, or contact support.');
+        $('resultCard').classList.add('hidden');
+        return;
+      }
+
+      // Found — pull tickets + parent events
+      var tickets=[];
+      var eventIds={};
+      snap.forEach(function(doc){
+        var t=doc.data()||{};
+        t.id=doc.id;
+        t._ref=doc.ref.parent.parent;
+        if(t._ref)eventIds[t._ref.id]=t._ref;
+        tickets.push(t);
+      });
+
+      loadParentEvents(tickets,eventIds);
+    })
+    .catch(function(err){
+      console.error('[lookup]',err);
+      btn.disabled=false;
+      btn.innerHTML=orig;
+      refreshIcons();
+      showError('Could not search: '+(err.message||'unknown error'));
+    });
+}
+
+function loadParentEvents(tickets,eventIds){
+  var ids=Object.keys(eventIds);
+  if(!ids.length){showResults(tickets);return;}
+
+  var promises=ids.map(function(id){
+    return db.collection('events').doc(id).get().then(function(snap){
+      return {id:id,data:snap.exists?snap.data():null};
+    });
+  });
+
+  Promise.all(promises).then(function(parents){
+    var byId={};
+    parents.forEach(function(p){
+      if(p.data){p.data.id=p.id;byId[p.id]=p.data;}
+    });
+    tickets.forEach(function(t){
+      if(t._ref)t._event=byId[t._ref.id]||null;
+    });
+    showResults(tickets);
+  });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   RENDER RESULT
+   ═══════════════════════════════════════════════════════════════ */
+function showResults(tickets){
+  lastQuery=tickets;
+  $('resultCount').textContent=tickets.length+(tickets.length===1?' ticket':' tickets');
+  $('resultTitle').textContent=tickets.length===1?'Ticket found':'Tickets found';
+
+  var body=$('resultBody');
+  body.innerHTML='';
+
+  tickets.forEach(function(t){
+    body.appendChild(buildTicket(t));
+  });
+
+  $('resultCard').classList.remove('hidden');
+  refreshIcons();
+}
+
+function buildTicket(t){
+  var ev=t._event||{};
+  var el=document.createElement('div');
+  el.className='ticket';
+
+  var tierColour=getTierColour(ev,t.tier);
+  var p=getPalette(tierColour);
+  el.style.setProperty('--tk-c1',p.c1);
+  el.style.setProperty('--tk-c2',p.c2);
+  el.style.setProperty('--tk-text',p.text);
+  el.style.setProperty('--tk-muted',p.muted);
+  el.style.setProperty('--tk-logo',p.logo);
+  el.style.setProperty('--tk-badge-bg',p.badgeBg);
+  el.style.setProperty('--tk-badge-text',p.badgeText);
+
+  var tierName=getTierName(ev,t.tier);
+  var statusLabel='VALID';
+  var status=String(t.status||'').toLowerCase();
+  if(status==='pending')statusLabel='PENDING';
+  else if(status==='cancelled')statusLabel='CANCELLED';
+  else if(status==='expired')statusLabel='EXPIRED';
+  else if(status==='checked-in'||status==='checked_in'||status==='used')statusLabel='USED';
+
+  var ref=t.paymentRef||'';
+  var seat=formatSeat(t)||'General admission';
+  var dateStr=formatEventDate(ev.startDate,ev.startTime);
+  var venue=[ev.venueName||ev.venueAddress,ev.city].filter(Boolean).join(', ')||'Venue TBA';
+  var price=parseFloat(t.pricePaid)||0;
+
+  var barcodeNum=String(ref).replace(/[^0-9A-Z]/g,'').padEnd(16,'0').slice(0,16);
+  barcodeNum=barcodeNum.replace(/(.{4})/g,'$1 ').trim();
+
+  el.innerHTML=
+    '<div class="tk-head">'+
+      '<div class="tk-logo">NOVALINK</div>'+
+      '<div class="tk-badges">'+
+        '<span class="tk-badge">'+esc(statusLabel)+'</span>'+
+        '<span class="tk-badge">'+esc(tierName.toUpperCase())+'</span>'+
+      '</div>'+
+    '</div>'+
+    '<div>'+
+      '<div class="tk-event">'+esc(ev.eventName||'Untitled Event')+'</div>'+
+      '<div class="tk-meta">'+esc(dateStr)+' · '+esc(venue)+'</div>'+
+    '</div>'+
+    '<div class="tk-divider"></div>'+
+    '<div class="tk-grid">'+
+      '<div><div class="k">Guest</div><div class="v">'+esc(t.guestName||t.buyerName||'Guest')+'</div></div>'+
+      '<div><div class="k">Tier</div><div class="v">'+esc(tierName)+'</div></div>'+
+      '<div class="full"><div class="k">Seat</div><div class="v mono">'+esc(seat)+'</div></div>'+
+      '<div class="full"><div class="k">Reference</div><div class="v mono">'+esc(ref)+'</div></div>'+
+    '</div>'+
+    '<div class="tk-divider"></div>'+
+    '<div class="tk-qr-wrap">'+
+      '<div class="tk-qr" data-qr="'+esc(ref)+'"></div>'+
+      '<div class="tk-qr-hint">Show this at the door</div>'+
+      '<div class="tk-barcode"></div>'+
+      '<div class="tk-barcode-num">'+esc(barcodeNum)+'</div>'+
+    '</div>';
+
+  // Render QR after element is in DOM
+  setTimeout(function(){
+    var qrBox=el.querySelector('.tk-qr');
+    if(!qrBox)return;
+    if(window.QRCode&&QRCode.toCanvas){
+      var canvas=document.createElement('canvas');
+      QRCode.toCanvas(canvas,ref,{width:200,margin:1,color:{dark:'#0A0F14',light:'#FFFFFF'}},function(err){
+        if(err){return;}
+        qrBox.appendChild(canvas);
+      });
+    }else{
+      var img=document.createElement('img');
+      img.alt='QR';
+      img.src='https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='+encodeURIComponent(ref);
+      qrBox.appendChild(img);
+    }
+  },30);
+
+  // Wrap with actions
+  var wrap=document.createElement('div');
+  wrap.appendChild(el);
+
+  var actions=document.createElement('div');
+  actions.className='tk-actions';
+  actions.innerHTML=
+    '<button type="button" class="btn btn-accent btn-sm" data-action="print"><i data-lucide="printer"></i> Save as PDF</button>'+
+    '<button type="button" class="btn btn-ghost btn-sm" data-action="copy"><i data-lucide="copy"></i> Copy reference</button>'+
+    '<button type="button" class="btn btn-ghost btn-sm" data-action="share"><i data-lucide="share-2"></i> Share link</button>';
+
+  wrap.appendChild(actions);
+  refreshIcons();
+
+  // Wire actions
+  actions.querySelector('[data-action="print"]').addEventListener('click',function(){window.print();});
+  actions.querySelector('[data-action="copy"]').addEventListener('click',function(){
+    if(navigator.clipboard&&navigator.clipboard.writeText){
+      navigator.clipboard.writeText(ref).then(function(){showToast('Reference copied','success',2000);}).catch(function(){showToast('Copy failed','error');});
+    }else{
+      showToast('Copy not supported','error');
+    }
+  });
+  actions.querySelector('[data-action="share"]').addEventListener('click',function(){
+    var url=location.origin+location.pathname.replace(/find-ticket\.html.*$/,'')+'view-card.html?event='+encodeURIComponent(t._ref?t._ref.id:'')+'&ticket='+encodeURIComponent(t.id);
+    if(navigator.share){
+      navigator.share({title:'My ticket',text:ref,url:url}).catch(function(){});
+    }else{
+      if(navigator.clipboard&&navigator.clipboard.writeText){
+        navigator.clipboard.writeText(url).then(function(){showToast('Link copied','success',2000);});
+      }
+    }
+  });
+
+  return wrap;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   WIRE UP
+   ═══════════════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded',function(){
+  $('year').textContent=new Date().getFullYear();
+  refreshIcons();
+
+  var input=$('refInput');
+  input.addEventListener('input',function(){formatRefInput(this);});
+  input.addEventListener('keydown',function(e){
+    if(e.key==='Enter'){e.preventDefault();lookup();}
+  });
+
+  $('searchBtn').addEventListener('click',lookup);
+
+  $('signinBtn2').addEventListener('click',openSignin);
+  $('signinClose').addEventListener('click',closeSignin);
+  $('signinModal').addEventListener('click',function(e){if(e.target===this)closeSignin();});
+
+  $('googleBtn').addEventListener('click',function(){
+    var btn=this;btn.disabled=true;
+    var p=new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(p)
+      .then(function(){
+        closeSignin();
+        showToast('Signed in!','success');
+        // If they had typed a reference, search now
+        if($('refInput').value.trim())lookup();
+      })
+      .catch(function(err){
+        console.error('[google]',err);
+        showToast(err.message||'Sign in failed','error',4000);
+      })
+      .then(function(){btn.disabled=false;});
+  });
+
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape')closeSignin();
+  });
+
+  auth.onAuthStateChanged(applyAuth);
+});
+
+})();
+</script>
+
+</body>
+</html>
