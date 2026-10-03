@@ -5,649 +5,682 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="theme-color" content="#0a0f14" />
 <title>Event Review · Novalink Admin</title>
+
 <script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
 <style>
 :root{
-  --cy:#00FFFF;--cy2:#00CCCC;--cy3:#009999;--cyf:#e6ffff;
-  --bg:#f6f8fb;--sf:#ffffff;--sf2:#f1f4f8;
-  --bd:#e4e9f0;--bd2:#d3dbe5;
-  --tx:#0a0f14;--tx2:#2b3644;--mut:#6b7787;
-  --rd:14px;--font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
-  --dg:#dc2626;--dgf:#fef2f2;--sv:#059669;--svf:#ecfdf5;--nv:#1e2f4d;
-  --am:#f59e0b;--amf:#fffbeb;
-  --ease:cubic-bezier(0.25,0.8,0.25,1);
+  --brand:#00E5E5;--brand-dark:#00B8B8;--brand-darker:#00999A;
+  --brand-soft:#E6FFFF;--brand-tint:#B3FFFF;--brand-ink:#04161C;
+  --ink:#0A0F14;--ink-2:#1A2129;--ink-3:#2B3644;
+  --slate:#6B7787;--slate-2:#94A3B8;
+  --line:#E4E9F0;--line-2:#D3DBE5;
+  --bg:#F6F8FB;--surface:#FFFFFF;--surface-2:#F1F4F8;
+  --success:#059669;--success-soft:#ECFDF5;--success-line:#A7F3D0;
+  --warning:#D97706;--warning-soft:#FFFBEB;--warning-line:#FDE68A;
+  --danger:#DC2626;--danger-soft:#FEF2F2;--danger-line:#FECACA;
+  --font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:20px;--r-full:999px;
+  --shadow-sm:0 1px 3px rgba(10,15,20,.06);
+  --shadow-md:0 4px 14px rgba(10,15,20,.06);
+  --shadow-lg:0 12px 32px rgba(10,15,20,.10);
+  --ease:cubic-bezier(.25,.8,.25,1);
+  --ease-out:cubic-bezier(.22,.9,.3,1);
+  --container:1100px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font);background:var(--bg);color:var(--tx);line-height:1.6;min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
-.container{max-width:1280px;margin:0 auto;padding:0 24px;width:100%}
-h1,h2,h3{line-height:1.15;font-weight:700}
+html{-webkit-text-size-adjust:100%}
+body{font-family:var(--font);font-size:14px;line-height:1.55;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column}
+img,svg{display:block;max-width:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:none}
 a{color:inherit;text-decoration:none}
-button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation}
-input,select,textarea{font-family:inherit;font-size:14px}
+h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
+::selection{background:var(--brand);color:var(--brand-ink)}
+.hidden{display:none!important}
 
-.logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none;margin-left:12px}
-.logo .mark{width:34px;height:42px;flex-shrink:0}
-.logo .wm{font-weight:800;font-size:1.1rem;color:var(--nv)}
+/* Nav */
+.nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.nav-inner{max-width:var(--container);margin:0 auto;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.nav-brand{display:inline-flex;align-items:center;gap:10px;font-weight:900;font-size:15px;color:var(--ink-2);letter-spacing:.02em}
+.nav-brand svg{width:26px;height:32px;flex-shrink:0}
+.admin-tag{background:var(--ink);color:var(--brand);font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;padding:5px 10px;border-radius:var(--r-full);margin-left:6px}
+.nav-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+@media (max-width:480px){.nav-inner{padding:10px 14px}.nav-brand span.wm{display:none}.nav-brand svg{width:22px;height:27px}.admin-tag{display:none}}
 
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 18px;border-radius:12px;font-weight:600;font-size:14px;border:1px solid transparent;cursor:pointer;transition:all 0.2s var(--ease);white-space:nowrap;font-family:inherit;text-decoration:none}
-.btn svg,.btn i{width:16px;height:16px}
-.btn-accent{background:linear-gradient(135deg,var(--cy),var(--cy2));color:#04161c}
-.btn-accent:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,255,255,0.35)}
-.btn-ghost{background:transparent;color:var(--tx2);border:1px solid var(--bd2)}
-.btn-ghost:hover{background:var(--sf2);border-color:var(--cy);color:var(--cy3)}
-.btn-success{background:var(--sv);color:#fff}
-.btn-success:hover:not(:disabled){background:#047857;transform:translateY(-2px);box-shadow:0 8px 20px rgba(5,150,105,0.3)}
-.btn-danger{background:var(--dg);color:#fff}
-.btn-danger:hover:not(:disabled){background:#b91c1c}
-.btn-danger-soft{background:var(--dgf);color:var(--dg);border:1px solid #fecaca}
-.btn-danger-soft:hover:not(:disabled){background:var(--dg);color:#fff;border-color:var(--dg)}
-.btn-sm{padding:8px 12px;font-size:13px}
-.btn-lg{padding:14px 24px;font-size:15px}
-.btn-block{width:100%}
-.btn:disabled{opacity:0.55;cursor:not-allowed;transform:none!important}
+/* Container */
+.container{max-width:var(--container);margin:0 auto;padding:24px 20px 64px;width:100%}
+@media (max-width:560px){.container{padding:16px 14px 48px}}
 
-.site-header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,0.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--bd);padding:12px 0}
-.header-inner{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
-.hdr-actions{display:flex;gap:8px;align-items:center;position:relative;flex-wrap:wrap}
-.admin-badge{background:#fef3c7;color:#92400e;font-size:10.5px;font-weight:900;padding:4px 10px;border-radius:99px;text-transform:uppercase;letter-spacing:0.06em}
-.user-btn{display:inline-flex;align-items:center;gap:8px;padding:5px 12px 5px 5px;background:var(--sf2);border:1px solid var(--bd);border-radius:99px;font-family:inherit}
-.user-btn .av{width:26px;height:26px;border-radius:50%;background:linear-gradient(135deg,var(--cy),var(--cy2));display:flex;align-items:center;justify-content:center;font-weight:700;font-size:11px;color:#04161c;flex-shrink:0}
-.user-btn .nm{font-size:13px;font-weight:600;max-width:120px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+/* Page header */
+.page-head{margin-bottom:22px;display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.page-head h1{font-size:26px;font-weight:900;color:var(--ink);margin-bottom:6px;letter-spacing:-.02em}
+.page-head p{color:var(--slate);font-size:14px;max-width:640px}
 
-.page{flex:1;padding:32px 0 64px}
-.ls{text-align:center;padding:80px 20px;color:var(--mut)}
-.ls i{width:32px;height:32px;margin:0 auto 12px;color:var(--cy3);animation:sp 1.2s linear infinite;display:block}
-@keyframes sp{to{transform:rotate(360deg)}}
-.es{text-align:center;padding:60px 24px;max-width:520px;margin:0 auto}
-.es .ic{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px}
-.es .ic.danger{background:var(--dgf);color:var(--dg)}
-.es .ic.warn{background:var(--amf);color:var(--am)}
-.es .ic i{width:28px;height:28px}
-.es h2{margin-bottom:8px}
-.es p{color:var(--mut);margin-bottom:22px;font-size:14.5px;line-height:1.6}
-.es .actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
+/* Stats */
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
+@media (max-width:560px){.stats{grid-template-columns:1fr;gap:8px}}
+.stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:14px 16px;position:relative;overflow:hidden}
+.stat::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--warning)}
+.stat.live::before{background:var(--success)}
+.stat.rejected::before{background:var(--danger)}
+.stat .lbl{font-size:10.5px;font-weight:900;color:var(--slate);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
+.stat .val{font-size:24px;font-weight:900;color:var(--ink);font-family:var(--mono);letter-spacing:-.02em;line-height:1}
+.stat.live .val{color:var(--success)}
+.stat.rejected .val{color:var(--danger)}
 
-.page-head{margin-bottom:24px}
-.page-head .eyebrow{display:inline-flex;align-items:center;gap:6px;font-size:11px;font-weight:800;letter-spacing:0.1em;text-transform:uppercase;color:var(--cy3);background:var(--cyf);border:1px solid var(--cy);padding:5px 12px;border-radius:99px;margin-bottom:12px}
-.page-head .eyebrow i{width:13px;height:13px}
-.page-head h1{font-size:clamp(1.6rem,3.4vw,2.2rem);color:var(--nv);margin-bottom:6px}
-.page-head p{color:var(--mut);font-size:14px}
+/* Filter tabs */
+.tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px}
+.tab{padding:8px 14px;border-radius:var(--r-full);font-size:12.5px;font-weight:800;background:var(--surface);border:1px solid var(--line);color:var(--ink-3);transition:all .22s var(--ease);display:inline-flex;align-items:center;gap:6px}
+.tab:hover{border-color:var(--brand)}
+.tab.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+.tab .cnt{font-size:10.5px;font-weight:900;background:rgba(0,0,0,.08);padding:1px 7px;border-radius:var(--r-full);font-family:var(--mono)}
+.tab.active .cnt{background:rgba(255,255,255,.2)}
 
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:14px;margin-bottom:24px}
-.stat{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rd);padding:16px 18px;position:relative;overflow:hidden;box-shadow:0 4px 16px rgba(10,15,20,0.04)}
-.stat::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--am)}
-.stat.live::before{background:var(--sv)}
-.stat.rejected::before{background:var(--dg)}
-.stat .lbl{font-size:10.5px;font-weight:800;letter-spacing:0.06em;text-transform:uppercase;color:var(--mut)}
-.stat .val{font-size:24px;font-weight:900;color:var(--nv);font-family:var(--mono);letter-spacing:-0.5px}
-.stat.live .val{color:var(--sv)}
-.stat.rejected .val{color:var(--dg)}
+/* States */
+.state{text-align:center;padding:60px 24px;max-width:480px;margin:0 auto}
+.state-icon{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;background:var(--surface-2);color:var(--slate)}
+.state-icon svg{width:28px;height:28px}
+.state-icon.danger{background:var(--danger-soft);color:var(--danger)}
+.state-icon.warning{background:var(--warning-soft);color:var(--warning)}
+.state h2{font-size:20px;margin-bottom:8px;color:var(--ink-2)}
+.state p{color:var(--slate);font-size:14px;line-height:1.6;margin-bottom:20px}
+.state .actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.spinner{width:28px;height:28px;border:3px solid rgba(0,229,229,.2);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-.filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:20px;align-items:center}
-.filter-chip{padding:7px 14px;border-radius:99px;font-size:12.5px;font-weight:700;background:var(--sf);border:1px solid var(--bd);color:var(--tx2);transition:all 0.15s var(--ease);display:inline-flex;align-items:center;gap:6px;font-family:inherit;cursor:pointer}
-.filter-chip:hover{border-color:var(--cy);color:var(--cy3)}
-.filter-chip.active{background:#0a0f14;color:#fff;border-color:#0a0f14}
-.filter-chip .fc-count{font-size:10px;font-weight:900;background:rgba(0,0,0,0.08);padding:1px 7px;border-radius:99px;margin-left:2px}
-.filter-chip.active .fc-count{background:rgba(255,255,255,0.2)}
+/* Review card */
+.review{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);margin-bottom:14px;box-shadow:var(--shadow-sm);overflow:hidden;transition:box-shadow .22s var(--ease)}
+.review:hover{box-shadow:var(--shadow-md)}
+.review.open{box-shadow:var(--shadow-lg)}
 
-.review-list{display:flex;flex-direction:column;gap:16px}
-.review-card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rd);overflow:hidden;box-shadow:0 4px 16px rgba(10,15,20,0.04);transition:box-shadow 0.2s var(--ease)}
-.review-card:hover{box-shadow:0 8px 28px rgba(10,15,20,0.08)}
-.review-card.expanded{box-shadow:0 12px 40px rgba(10,15,20,0.12)}
-
-.rc-head{display:flex;gap:16px;padding:18px 20px;cursor:pointer;align-items:flex-start;flex-wrap:wrap}
-.rc-thumb{width:96px;height:72px;border-radius:10px;flex-shrink:0;background:linear-gradient(135deg,#0a0f14,#1f2937);background-size:cover;background-position:center;overflow:hidden;position:relative}
-.rc-thumb.empty::after{content:'No cover';position:absolute;inset:0;display:flex;align-items:center;justify-content:center;color:#6b7787;font-size:10.5px;font-weight:700;letter-spacing:.08em;text-transform:uppercase}
-.rc-body{flex:1;min-width:0}
-.rc-title-row{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:6px}
-.rc-title{font-size:16px;font-weight:800;color:var(--tx);letter-spacing:-0.01em;word-break:break-word}
-.rc-badge{font-size:10px;font-weight:900;padding:3px 9px;border-radius:6px;text-transform:uppercase;letter-spacing:.05em;white-space:nowrap}
-.rc-badge.pending_review{background:var(--amf);color:#92400e;border:1px solid #fde68a}
-.rc-badge.live{background:var(--svf);color:#065f46;border:1px solid #a7f3d0}
-.rc-badge.rejected{background:var(--dgf);color:#991b1b;border:1px solid #fecaca}
-.rc-meta{display:flex;gap:14px;flex-wrap:wrap;font-size:12.5px;color:var(--mut);font-weight:500}
-.rc-meta span{display:inline-flex;align-items:center;gap:5px}
-.rc-meta i{width:13px;height:13px;flex-shrink:0}
-.rc-actions{display:flex;gap:8px;align-items:center;flex-shrink:0;flex-wrap:wrap}
-
-.rc-details{padding:0 20px 20px;border-top:1px dashed var(--bd);background:var(--sf2);display:none}
-.review-card.expanded .rc-details{display:block}
-.rc-details-inner{padding-top:18px}
-.rc-section{margin-bottom:22px}
-.rc-section:last-child{margin-bottom:0}
-.rc-section-head{font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--cy3);margin-bottom:10px;display:flex;align-items:center;gap:6px;flex-wrap:wrap}
-.rc-section-head i{width:14px;height:14px}
-
-.save-indicator{font-size:11px;font-weight:900;padding:3px 10px;border-radius:99px;transition:all .2s ease;text-transform:uppercase;letter-spacing:.05em;margin-left:auto}
-.save-indicator:empty{display:none}
-.save-indicator.unsaved{background:#fef3c7;color:#92400e}
-.save-indicator.saving{background:#e0f2fe;color:#0369a1}
-.save-indicator.saved{background:#d1fae5;color:#065f46}
-.save-indicator.error{background:#fee2e2;color:#991b1b}
-
-.rc-desc{font-size:13.5px;color:var(--tx2);line-height:1.6;background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;white-space:pre-wrap;word-break:break-word}
-
-.kv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
-.kv{background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:10px 12px}
-.kv .k{font-size:10px;font-weight:800;color:var(--mut);letter-spacing:.05em;text-transform:uppercase;margin-bottom:2px}
-.kv .v{font-size:13px;font-weight:700;color:var(--tx);word-break:break-word}
-
-.tier-pay-block{background:var(--sf);border:1px solid var(--bd);border-radius:10px;padding:14px;margin-bottom:12px}
-.tier-pay-block:last-child{margin-bottom:0}
-.tier-pay-head{display:flex;align-items:center;gap:10px;margin-bottom:10px;flex-wrap:wrap}
-.tier-pay-swatch{width:14px;height:14px;border-radius:4px;flex-shrink:0;border:1px solid rgba(0,0,0,0.12)}
-.tier-pay-name{font-size:13px;font-weight:800;color:var(--nv)}
-.tier-pay-price{font-size:11.5px;color:var(--mut);font-family:var(--mono);font-weight:700;margin-left:auto}
-.tier-pay-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px}
-.tier-pay-field{display:flex;flex-direction:column;gap:3px;min-width:0}
-.tier-pay-field label{font-size:9.5px;font-weight:900;color:var(--mut);text-transform:uppercase;letter-spacing:.06em}
-.tier-pay-field input{padding:8px 10px;font-size:11px;font-family:var(--mono);background:#fff;border:1px solid var(--bd2);border-radius:8px;min-width:0;width:100%;color:var(--tx)}
-.tier-pay-field input:focus{outline:none;border-color:var(--cy);box-shadow:0 0 0 2px rgba(0,255,255,.15)}
-.tier-pay-field input.ok{border-color:#a7f3d0;background:var(--svf)}
-.tier-pay-field input::placeholder{color:#b9c2ce;font-style:italic}
-
-.rc-footer{display:flex;gap:10px;justify-content:flex-end;flex-wrap:wrap;padding-top:14px;border-top:1px dashed var(--bd);margin-top:14px}
-.rc-footer .btn{min-width:120px}
-
-.link-note{font-size:11.5px;color:var(--mut);margin-top:8px;line-height:1.5}
-.link-note code{background:var(--sf);border:1px solid var(--bd);border-radius:5px;padding:1px 6px;font-family:var(--mono);font-size:11px;color:var(--cy3)}
-
-.reject-panel{display:none;background:var(--dgf);border:1px solid #fecaca;border-radius:10px;padding:14px;margin-top:12px}
-.reject-panel.show{display:block}
-.reject-panel label{display:block;font-size:11px;font-weight:900;color:#991b1b;text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
-.reject-panel textarea{width:100%;min-height:70px;padding:10px 12px;border:1px solid #fecaca;border-radius:8px;font-size:13px;font-family:inherit;background:#fff;resize:vertical}
-.reject-panel textarea:focus{outline:none;border-color:var(--dg);box-shadow:0 0 0 3px rgba(220,38,38,0.15)}
-.reject-panel .rp-actions{display:flex;gap:8px;justify-content:flex-end;margin-top:10px;flex-wrap:wrap}
-
-.modal-overlay{position:fixed;inset:0;background:rgba(10,15,20,0.6);backdrop-filter:blur(8px);display:none;align-items:flex-start;justify-content:center;z-index:100;padding:24px 20px;overflow-y:auto;opacity:0;transition:opacity 0.3s ease}
-.modal-overlay.open{display:flex;opacity:1}
-.modal{background:var(--sf);border:1px solid var(--bd);border-radius:20px;max-width:520px;width:100%;padding:28px 26px;position:relative;margin:auto;box-shadow:0 24px 60px rgba(10,15,20,0.25);transform:translateY(20px) scale(0.96);opacity:0;transition:transform 0.4s var(--ease),opacity 0.3s ease}
-.modal-overlay.open .modal{transform:translateY(0) scale(1);opacity:1}
-.modal-close{position:absolute;top:14px;right:14px;background:var(--sf2);border:1px solid var(--bd);color:var(--tx2);padding:7px;border-radius:10px;display:flex;align-items:center;justify-content:center;transition:all 0.2s ease;cursor:pointer}
-.modal-close:hover{background:var(--dgf);color:var(--dg);transform:rotate(90deg)}
-.modal-close i{width:16px;height:16px}
-.modal h2{font-size:1.25rem;color:var(--nv);margin-bottom:6px;padding-right:36px}
-.modal .subtitle{color:var(--mut);font-size:13.5px;margin-bottom:20px;line-height:1.5}
-
-.delete-summary{background:var(--sf2);border:1px solid var(--bd);border-radius:12px;padding:14px;margin-bottom:16px;display:flex;gap:12px;align-items:center}
-.delete-summary .thumb{width:60px;height:46px;border-radius:8px;background:linear-gradient(135deg,#0a0f14,#1f2937);background-size:cover;background-position:center;flex-shrink:0}
-.delete-summary .meta{flex:1;min-width:0}
-.delete-summary .nm{font-size:14px;font-weight:800;color:var(--tx);word-break:break-word;line-height:1.25}
-.delete-summary .sub{font-size:11.5px;color:var(--mut);margin-top:3px;display:flex;gap:10px;flex-wrap:wrap}
-.delete-summary .sub span{display:inline-flex;align-items:center;gap:4px}
-
-.warn-box{background:var(--dgf);border:1.5px solid #fecaca;border-radius:12px;padding:14px 16px;margin-bottom:16px}
-.warn-box.has-tickets{background:linear-gradient(135deg,#fef3c7,#fef9e7);border-color:#fde68a}
-.warn-box .wb-head{display:flex;align-items:center;gap:10px;font-weight:900;color:#991b1b;font-size:13.5px;margin-bottom:8px}
-.warn-box.has-tickets .wb-head{color:#92400e}
-.warn-box .wb-head i{width:18px;height:18px;flex-shrink:0}
-.warn-box ul{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:5px}
-.warn-box li{font-size:12.5px;color:#7f1d1d;padding-left:20px;position:relative;line-height:1.5}
-.warn-box.has-tickets li{color:#78350f}
-.warn-box li::before{content:'';position:absolute;left:0;top:7px;width:8px;height:8px;border-radius:50%;background:var(--dg)}
-.warn-box.has-tickets li::before{background:var(--am)}
-
-.confirm-input{width:100%;padding:12px 14px;background:var(--bg);border:1.5px solid #fecaca;border-radius:10px;color:var(--tx);font-size:14px;font-family:var(--mono);letter-spacing:0.08em;text-align:center;text-transform:uppercase;transition:border-color 0.2s ease,box-shadow 0.2s ease;margin-bottom:14px}
-.confirm-input:focus{outline:none;border-color:var(--dg);box-shadow:0 0 0 3px rgba(220,38,38,0.15)}
-.confirm-input.ok{border-color:var(--sv);background:var(--svf)}
-
-.modal-actions{display:flex;gap:10px;flex-wrap:wrap}
-.modal-actions .btn{flex:1;min-width:140px;padding:12px;font-size:14px}
-
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120%);background:#0a0f14;color:#fff;padding:12px 18px;border-radius:12px;font-size:13.5px;z-index:200;transition:transform 0.4s var(--ease),opacity 0.3s ease;display:flex;align-items:center;gap:10px;pointer-events:none;opacity:0;max-width:calc(100vw - 40px)}
-.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
-.toast.success{background:#065f46}
-.toast.error{background:#991b1b}
-.toast i{width:16px;height:16px;flex-shrink:0}
-
-.footer{background:#0a0f14;color:#c9d2dd;padding:28px 0 20px;margin-top:auto;font-size:13px}
-.fb{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;color:#6b7787;font-size:12px}
-
-.spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:sp .7s linear infinite;display:inline-block;flex-shrink:0}
-
-@media (max-width:640px){
-  .rc-actions{width:100%;justify-content:flex-start}
-  .rc-footer{justify-content:stretch}
-  .rc-footer .btn{flex:1 1 100%}
+/* Review head */
+.review-head{display:flex;gap:14px;padding:16px 18px;cursor:pointer;align-items:flex-start;flex-wrap:wrap}
+.review-thumb{
+  width:84px;height:64px;border-radius:var(--r-md);flex-shrink:0;
+  background:linear-gradient(135deg,#0A0F14,#1A2129) center/cover;
+  overflow:hidden;position:relative;
+  border:1px solid var(--line);
 }
+.review-thumb.empty::after{
+  content:'No cover';
+  position:absolute;inset:0;
+  display:flex;align-items:center;justify-content:center;
+  color:#6B7787;font-size:9.5px;font-weight:800;
+  letter-spacing:.06em;text-transform:uppercase;
+}
+.review-body{flex:1;min-width:0}
+.review-title-row{display:flex;align-items:center;gap:8px;flex-wrap:wrap;margin-bottom:4px}
+.review-title{font-size:15.5px;font-weight:800;color:var(--ink);letter-spacing:-.005em;word-break:break-word;line-height:1.25}
+.review-status{
+  font-size:9.5px;font-weight:900;
+  padding:3px 8px;border-radius:var(--r-sm);
+  text-transform:uppercase;letter-spacing:.05em;
+  white-space:nowrap;
+}
+.review-status.pending{background:var(--warning-soft);color:#92400E;border:1px solid var(--warning-line)}
+.review-status.live{background:var(--success-soft);color:#065F46;border:1px solid var(--success-line)}
+.review-status.rejected{background:var(--danger-soft);color:#991B1B;border:1px solid var(--danger-line)}
+
+.review-meta{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--slate);font-weight:600}
+.review-meta span{display:inline-flex;align-items:center;gap:5px}
+.review-meta svg{width:12px;height:12px;flex-shrink:0}
+
+.review-toggle{
+  width:34px;height:34px;border-radius:var(--r-sm);
+  background:var(--surface-2);border:1px solid var(--line);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;transition:all .22s var(--ease);
+}
+.review-toggle svg{width:16px;height:16px;color:var(--slate)}
+.review.open .review-toggle{transform:rotate(180deg);background:var(--brand-soft);border-color:var(--brand-tint)}
+.review.open .review-toggle svg{color:var(--brand-darker)}
+
+/* Review detail */
+.review-detail{display:none;padding:0 18px 18px;border-top:1px dashed var(--line)}
+.review.open .review-detail{display:block}
+
+.detail-section{margin-top:16px}
+.detail-section h4{
+  font-size:11px;font-weight:900;
+  letter-spacing:.08em;text-transform:uppercase;
+  color:var(--brand-darker);
+  margin-bottom:10px;display:flex;align-items:center;gap:7px;
+}
+.detail-section h4 svg{width:14px;height:14px}
+.detail-section .desc{
+  font-size:13.5px;color:var(--ink-3);line-height:1.6;
+  background:var(--surface-2);border:1px solid var(--line);
+  border-radius:var(--r-md);padding:12px 14px;
+  white-space:pre-wrap;word-break:break-word;
+}
+
+/* KV grid */
+.kv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
+.kv{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:9px 12px}
+.kv .k{font-size:10px;font-weight:900;color:var(--slate);letter-spacing:.05em;text-transform:uppercase;margin-bottom:3px}
+.kv .v{font-size:13px;font-weight:700;color:var(--ink);word-break:break-word;line-height:1.35}
+
+/* Tier payment blocks */
+.tier-block{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-md);padding:14px;margin-bottom:12px}
+.tier-head{display:flex;align-items:center;gap:10px;margin-bottom:12px;flex-wrap:wrap}
+.tier-swatch{width:16px;height:16px;border-radius:5px;flex-shrink:0;box-shadow:inset 0 0 0 1px rgba(0,0,0,.1)}
+.tier-name{font-size:13.5px;font-weight:900;color:var(--ink)}
+.tier-price{font-size:11.5px;color:var(--slate);font-family:var(--mono);font-weight:700;margin-left:auto}
+.save-indicator{
+  font-size:11px;font-weight:900;
+  padding:3px 10px;border-radius:var(--r-full);
+  text-transform:uppercase;letter-spacing:.05em;
+  transition:all .22s var(--ease);
+  margin-left:auto;
+}
+.save-indicator:empty{display:none}
+.save-indicator.unsaved{background:var(--warning-soft);color:#92400E}
+.save-indicator.saving{background:var(--brand-soft);color:var(--brand-darker)}
+.save-indicator.saved{background:var(--success-soft);color:var(--success)}
+.save-indicator.error{background:var(--danger-soft);color:var(--danger)}
+
+.qty-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:8px}
+.qty-field{display:flex;flex-direction:column;gap:4px;min-width:0}
+.qty-field label{
+  font-size:10px;font-weight:900;
+  color:var(--slate);text-transform:uppercase;
+  letter-spacing:.06em;
+}
+.qty-field input{
+  padding:9px 11px;
+  font-size:11.5px;font-family:var(--mono);
+  background:#fff;border:1px solid var(--line-2);
+  border-radius:var(--r-sm);
+  width:100%;min-width:0;
+  transition:all .22s var(--ease);
+}
+.qty-field input:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(0,229,229,.15)}
+.qty-field input.ok{border-color:var(--success-line);background:var(--success-soft)}
+.qty-field input.is-error{border-color:var(--danger-line);background:var(--danger-soft)}
+.qty-field input::placeholder{color:#B9C2CE;font-style:italic}
+
+.link-note{font-size:11.5px;color:var(--slate);margin-top:10px;line-height:1.55}
+.link-note code{background:#fff;border:1px solid var(--line);border-radius:4px;padding:1px 6px;font-family:var(--mono);font-size:11px;color:var(--brand-darker)}
+
+/* Actions row */
+.review-actions{display:flex;gap:8px;flex-wrap:wrap;padding-top:14px;border-top:1px dashed var(--line);margin-top:16px}
+.review-actions .btn{flex:1;min-width:120px}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 18px;border-radius:var(--r-md);font-weight:800;font-size:13.5px;border:1px solid transparent;transition:all .22s var(--ease);white-space:nowrap;line-height:1;min-height:44px;text-decoration:none}
+.btn svg,.btn i{width:15px;height:15px;flex-shrink:0}
+.btn-primary{background:var(--ink);color:#fff}
+.btn-primary:hover:not(:disabled){background:var(--ink-2);transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.btn-accent{background:linear-gradient(135deg,var(--brand),var(--brand-dark));color:var(--brand-ink);font-weight:900}
+.btn-accent:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 22px rgba(0,229,229,.35)}
+.btn-ghost{background:var(--surface);color:var(--ink-2);border-color:var(--line-2)}
+.btn-ghost:hover:not(:disabled){border-color:var(--brand);color:var(--brand-darker)}
+.btn-success{background:var(--success-soft);color:var(--success);border-color:var(--success-line);font-weight:900}
+.btn-success:hover:not(:disabled){background:var(--success);color:#fff;border-color:var(--success)}
+.btn-danger{background:var(--danger-soft);color:var(--danger);border-color:var(--danger-line)}
+.btn-danger:hover:not(:disabled){background:var(--danger);color:#fff;border-color:var(--danger)}
+.btn-sm{padding:8px 14px;font-size:12.5px;min-height:36px}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important;box-shadow:none!important}
+
+/* Footer */
+.footer{background:var(--ink);color:#C9D2DD;padding:24px 0 18px;margin-top:auto;font-size:13px}
+.footer-inner{max-width:var(--container);margin:0 auto;padding:0 20px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;color:#8A96A4;font-size:12px}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120%);background:var(--ink);color:#fff;padding:12px 18px;border-radius:var(--r-full);font-size:13.5px;font-weight:700;z-index:200;transition:transform .4s var(--ease-out),opacity .22s var(--ease);display:flex;align-items:center;gap:10px;pointer-events:none;opacity:0;max-width:calc(100vw - 40px);box-shadow:var(--shadow-lg)}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.success{background:var(--success)}
+.toast.error{background:var(--danger)}
+.toast svg{width:16px;height:16px;flex-shrink:0}
+
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(10,15,20,.65);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;align-items:flex-start;justify-content:center;z-index:100;padding:24px 16px;overflow-y:auto;opacity:0;transition:opacity .22s var(--ease)}
+.modal-bg.open{display:flex;opacity:1}
+.modal{background:var(--surface);border-radius:var(--r-xl);max-width:520px;width:100%;padding:26px;position:relative;margin:auto;box-shadow:var(--shadow-lg);transform:translateY(20px) scale(.96);opacity:0;transition:transform .4s var(--ease-out),opacity .22s var(--ease)}
+.modal-bg.open .modal{transform:translateY(0) scale(1);opacity:1}
+.modal-close{position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:var(--r-md);background:var(--surface-2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;transition:all .22s var(--ease)}
+.modal-close:hover{background:var(--danger-soft);color:var(--danger);transform:rotate(90deg)}
+.modal-close svg{width:16px;height:16px}
+.modal h2{font-size:19px;font-weight:900;margin-bottom:6px;padding-right:40px}
+.modal .sub{font-size:13.5px;color:var(--slate);margin-bottom:18px;line-height:1.55}
 </style>
 </head>
 <body>
 
-<header class="site-header">
-  <div class="container header-inner">
-    <a href="index.html" class="logo">
-      <svg class="mark" viewBox="0 0 60 74"><path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/><path fill="#00FFFF" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/></svg>
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand">
+      <svg viewBox="0 0 60 74" aria-hidden="true"><path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/><path fill="#00E5E5" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/></svg>
       <span class="wm">NOVALINK</span>
+      <span class="admin-tag">Admin</span>
     </a>
-    <div class="hdr-actions">
-      <span class="admin-badge">Admin</span>
-      <button class="user-btn" id="userChip" style="display:none;">
-        <span class="av" id="userAvatar">?</span>
-        <span class="nm" id="userName">Admin</span>
+    <div class="nav-actions">
+      <a href="admin-payments.html" class="btn btn-ghost btn-sm" style="padding:8px 12px;min-height:34px">
+        <i data-lucide="credit-card"></i> Payments
+      </a>
+      <a href="index.html" class="btn btn-ghost btn-sm" style="padding:8px 12px;min-height:34px">
+        <i data-lucide="home"></i> Home
+      </a>
+    </div>
+  </div>
+</nav>
+
+<div class="container">
+
+  <!-- LOADING -->
+  <div id="stateLoading" class="state">
+    <span class="spinner"></span>
+    <p style="margin-top:16px">Loading events…</p>
+  </div>
+
+  <!-- SIGNIN -->
+  <div id="stateSignin" class="state hidden">
+    <div class="state-icon warning"><i data-lucide="lock"></i></div>
+    <h2>Sign in required</h2>
+    <p>Only Novalink admins can review events.</p>
+    <div class="actions">
+      <a href="index.html#signin" class="btn btn-accent"><i data-lucide="log-in"></i> Sign in</a>
+    </div>
+  </div>
+
+  <!-- NOT ADMIN -->
+  <div id="stateNotAdmin" class="state hidden">
+    <div class="state-icon danger"><i data-lucide="shield-x"></i></div>
+    <h2>Admin access only</h2>
+    <p>Your account doesn't have permission to review events.</p>
+    <div class="actions">
+      <a href="index.html" class="btn btn-accent"><i data-lucide="arrow-left"></i> Back to home</a>
+    </div>
+  </div>
+
+  <!-- ERROR -->
+  <div id="stateError" class="state hidden">
+    <div class="state-icon danger"><i data-lucide="alert-triangle"></i></div>
+    <h2>Could not load</h2>
+    <p id="errorMsg">Something went wrong.</p>
+    <div class="actions">
+      <button class="btn btn-accent" id="retryBtn" type="button"><i data-lucide="refresh-cw"></i> Try again</button>
+    </div>
+  </div>
+
+  <!-- EMPTY -->
+  <div id="stateEmpty" class="state hidden">
+    <div class="state-icon warning"><i data-lucide="inbox"></i></div>
+    <h2 id="emptyTitle">Nothing to review</h2>
+    <p id="emptyMsg">No pending events right now.</p>
+  </div>
+
+  <!-- CONTENT -->
+  <div id="stateContent" class="hidden">
+    <div class="page-head">
+      <div>
+        <h1>Event review</h1>
+        <p>Paste Yoco links per tier and quantity. Links save automatically as you type.</p>
+      </div>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="lbl">Pending review</div>
+        <div class="val" id="statPending">0</div>
+      </div>
+      <div class="stat live">
+        <div class="lbl">Live</div>
+        <div class="val" id="statLive">0</div>
+      </div>
+      <div class="stat rejected">
+        <div class="lbl">Rejected</div>
+        <div class="val" id="statRejected">0</div>
+      </div>
+    </div>
+
+    <div class="tabs" id="filterTabs">
+      <button class="tab active" data-filter="pending_review" type="button">
+        <i data-lucide="clock" style="width:13px;height:13px"></i>
+        Pending <span class="cnt" id="cntPending">0</span>
       </button>
-      <a href="dashboard.html" class="btn btn-ghost btn-sm"><i data-lucide="layout-dashboard"></i> Dashboard</a>
-      <a href="admin-payments.html" class="btn btn-ghost btn-sm"><i data-lucide="credit-card"></i> Payments</a>
-    </div>
-  </div>
-</header>
-
-<main class="page">
-  <div class="container">
-
-    <div id="loadingState" class="ls">
-      <i data-lucide="loader-2"></i>
-      <p>Loading events…</p>
-    </div>
-
-    <div id="signinState" class="es" style="display:none">
-      <div class="ic warn"><i data-lucide="lock"></i></div>
-      <h2>Sign in required</h2>
-      <p>Only Novalink admins can review events.</p>
-      <div class="actions">
-        <a href="index.html#signin" class="btn btn-accent"><i data-lucide="log-in"></i> Sign in</a>
-      </div>
-    </div>
-
-    <div id="notAdminState" class="es" style="display:none">
-      <div class="ic danger"><i data-lucide="shield-x"></i></div>
-      <h2>Admin access only</h2>
-      <p>Your account doesn't have permission to review events. If you think this is a mistake, contact <a href="mailto:customerservicesnovalink@gmail.com" style="color:var(--cy3);font-weight:800;">customerservicesnovalink@gmail.com</a>.</p>
-      <div class="actions">
-        <a href="index.html" class="btn btn-accent"><i data-lucide="arrow-left"></i> Back to home</a>
-      </div>
-    </div>
-
-    <div id="errorState" class="es" style="display:none">
-      <div class="ic danger"><i data-lucide="alert-circle"></i></div>
-      <h2>Could not load</h2>
-      <p id="errorMsg">Something went wrong.</p>
-      <div class="actions">
-        <button class="btn btn-accent" id="retryBtn"><i data-lucide="refresh-cw"></i> Try again</button>
-        <a href="index.html" class="btn btn-ghost"><i data-lucide="arrow-left"></i> Home</a>
-      </div>
-    </div>
-
-    <div id="content" style="display:none">
-
-      <div class="page-head">
-        <span class="eyebrow"><i data-lucide="clipboard-check"></i> Event Review</span>
-        <h1>Pending events</h1>
-        <p>Paste Yoco links per tier. They save automatically when you tab out or stop typing.</p>
-      </div>
-
-      <div class="stats">
-        <div class="stat">
-          <span class="lbl">Pending Review</span>
-          <span class="val" id="statPending">0</span>
-        </div>
-        <div class="stat live">
-          <span class="lbl">Live</span>
-          <span class="val" id="statLive">0</span>
-        </div>
-        <div class="stat rejected">
-          <span class="lbl">Rejected</span>
-          <span class="val" id="statRejected">0</span>
-        </div>
-      </div>
-
-      <div class="filter-bar" id="filterBar">
-        <button class="filter-chip active" data-filter="pending_review"><i data-lucide="clock"></i> Pending <span class="fc-count" id="countPending">0</span></button>
-        <button class="filter-chip" data-filter="live"><i data-lucide="check-circle"></i> Live <span class="fc-count" id="countLive">0</span></button>
-        <button class="filter-chip" data-filter="rejected"><i data-lucide="x-circle"></i> Rejected <span class="fc-count" id="countRejected">0</span></button>
-        <button class="filter-chip" data-filter="all"><i data-lucide="layers"></i> All <span class="fc-count" id="countAll">0</span></button>
-      </div>
-
-      <div id="emptyState" class="es" style="display:none">
-        <div class="ic warn"><i data-lucide="inbox"></i></div>
-        <h2 id="emptyTitle">Nothing to review</h2>
-        <p id="emptyMsg">No pending events right now. Check back later.</p>
-      </div>
-
-      <div class="review-list" id="reviewList"></div>
-
-    </div>
-
-  </div>
-</main>
-
-<div class="modal-overlay" id="deleteModal">
-  <div class="modal">
-    <button class="modal-close" id="deleteModalClose" type="button"><i data-lucide="x"></i></button>
-    <h2>Delete event</h2>
-    <p class="subtitle">This action cannot be undone. Please read carefully.</p>
-
-    <div class="delete-summary" id="deleteSummary">
-      <div class="thumb" id="deleteSummaryThumb"></div>
-      <div class="meta">
-        <div class="nm" id="deleteSummaryName">Event name</div>
-        <div class="sub" id="deleteSummarySub"></div>
-      </div>
-    </div>
-
-    <div class="warn-box" id="deleteWarnBox">
-      <div class="wb-head"><i data-lucide="alert-triangle"></i> <span id="deleteWarnTitle">What happens when you delete</span></div>
-      <ul id="deleteWarnList">
-        <li>The event is removed from the public site immediately.</li>
-        <li>Buyers can no longer open the event page.</li>
-        <li>Its place in listings disappears.</li>
-      </ul>
-    </div>
-
-    <div id="deleteTicketsWarn" class="warn-box has-tickets" style="display:none">
-      <div class="wb-head"><i data-lucide="ticket"></i> <span>This event has sold tickets</span></div>
-      <ul>
-        <li id="deleteTicketsCount">—</li>
-        <li>Buyers are <strong>not refunded automatically</strong> — refund them on Yoco first.</li>
-        <li>Their QR codes become unusable at the door.</li>
-        <li>Tickets remain in the database for records but can't be scanned.</li>
-      </ul>
-    </div>
-
-    <p style="font-size:12px;color:var(--mut);margin-bottom:6px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;">Type <strong style="color:var(--dg);">DELETE</strong> to confirm</p>
-    <input type="text" id="deleteConfirmInput" class="confirm-input" placeholder="Type DELETE" maxlength="10" autocomplete="off" spellcheck="false" />
-
-    <div class="modal-actions">
-      <button class="btn btn-ghost" id="deleteCancelBtn" type="button">Cancel</button>
-      <button class="btn btn-danger" id="deleteConfirmBtn" type="button" disabled>
-        <i data-lucide="trash-2"></i> Delete forever
+      <button class="tab" data-filter="live" type="button">
+        <i data-lucide="check-circle" style="width:13px;height:13px"></i>
+        Live <span class="cnt" id="cntLive">0</span>
+      </button>
+      <button class="tab" data-filter="rejected" type="button">
+        <i data-lucide="x-circle" style="width:13px;height:13px"></i>
+        Rejected <span class="cnt" id="cntRejected">0</span>
+      </button>
+      <button class="tab" data-filter="all" type="button">
+        <i data-lucide="layers" style="width:13px;height:13px"></i>
+        All <span class="cnt" id="cntAll">0</span>
       </button>
     </div>
+
+    <div id="reviewList"></div>
   </div>
+
 </div>
 
 <footer class="footer">
-  <div class="container">
-    <div class="fb">
-      <span>&copy; <span id="year"></span> Novalink. All rights reserved.</span>
-      <span>Johannesburg, South Africa</span>
-    </div>
+  <div class="footer-inner">
+    <span>© <span id="year"></span> Novalink. All rights reserved.</span>
+    <span>Johannesburg, South Africa</span>
   </div>
 </footer>
 
 <div class="toast" id="toast"></div>
 
+<!-- ═══════════════════ SCRIPTS ═══════════════════ -->
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   INLINE SCHEMA HELPERS
+   ═══════════════════════════════════════════════════════════════ */
+(function(){
+  'use strict';
+  var V2_KEYS=['black','gold','cyan','tier5','tier6'];
+  var V1_KEYS=['elite','standard'];
+  var TIER_ORDER=['black','elite','gold','tier5','tier6','silver','cyan','standard'];
+  var TIER_DEFAULT_NAMES={black:'Elite',elite:'Elite',gold:'VIP',silver:'Silver',cyan:'Standard',standard:'Standard',tier5:'Platinum',tier6:'Diamond'};
+  var TIER_DEFAULT_COLOURS={black:'#1a202c',elite:'#1a202c',gold:'#ecc94b',silver:'#cbd5e1',cyan:'#00FFFF',standard:'#00FFFF',tier5:'#a855f7',tier6:'#f472b6'};
+
+  function isObject(v){return v!==null&&typeof v==='object'&&!Array.isArray(v);}
+  function isNonEmptyString(v){return typeof v==='string'&&v.trim().length>0;}
+
+  function collectTierKeys(event){
+    if(!isObject(event))return [];
+    var seen={};
+    [event.tierActive,event.tierNames,event.tierColours,event.tierColors,event.tierPrices].forEach(function(src){
+      if(!isObject(src))return;
+      Object.keys(src).forEach(function(k){seen[k]=true;});
+    });
+    return Object.keys(seen);
+  }
+  function sortTierKeys(keys){
+    return keys.slice().sort(function(a,b){
+      var ia=TIER_ORDER.indexOf(a),ib=TIER_ORDER.indexOf(b);
+      if(ia===-1&&ib===-1)return a.localeCompare(b);
+      if(ia===-1)return 1;if(ib===-1)return -1;return ia-ib;
+    });
+  }
+  function getTierKeys(event){
+    var keys=collectTierKeys(event);
+    if(!keys.length)return ['elite','silver','standard'];
+    return sortTierKeys(keys);
+  }
+  function getActiveTierKeys(event){
+    var all=getTierKeys(event);
+    if(!all.length)return [];
+    var activeMap=event&&event.tierActive;
+    var count=event&&parseInt(event.activeTierCount,10);
+    if(isObject(activeMap)&&Object.keys(activeMap).length>0){
+      var filtered=all.filter(function(k){
+        var f=activeMap[k];
+        return f===true||f===1||f==='true'||f==='1'||f==='yes';
+      });
+      if(filtered.length>=2)return filtered;
+      return all.slice(0,Math.max(2,filtered.length||2));
+    }
+    if(!isNaN(count)&&count>=1){
+      if(count>all.length)count=all.length;
+      return all.slice(0,count);
+    }
+    return all;
+  }
+  function getTierName(event,key){
+    if(!key)return '';
+    if(event&&isObject(event.tierNames)&&isNonEmptyString(event.tierNames[key]))return event.tierNames[key];
+    if(TIER_DEFAULT_NAMES[key])return TIER_DEFAULT_NAMES[key];
+    return String(key).charAt(0).toUpperCase()+String(key).slice(1);
+  }
+  function getTierColour(event,key){
+    if(!key)return TIER_DEFAULT_COLOURS.cyan;
+    var map=(event&&isObject(event.tierColours))?event.tierColours:(event&&isObject(event.tierColors))?event.tierColors:null;
+    if(map&&isNonEmptyString(map[key]))return map[key];
+    if(TIER_DEFAULT_COLOURS[key])return TIER_DEFAULT_COLOURS[key];
+    return TIER_DEFAULT_COLOURS.cyan;
+  }
+  function getTierPrice(event,key){
+    if(!key||!event)return 0;
+    var v;
+    if(isObject(event.tierPrices)&&event.tierPrices[key]!==undefined)v=parseFloat(event.tierPrices[key]);
+    if(isNaN(v)||v<0)return 0;
+    return Math.round(v*100)/100;
+  }
+
+  window.NovalinkSchema={
+    getActiveTierKeys:getActiveTierKeys,
+    getTierName:getTierName,
+    getTierColour:getTierColour,
+    getTierPrice:getTierPrice
+  };
+})();
+</script>
+
 <script>
 (function(){
 'use strict';
 
-var firebaseConfig = {
-  apiKey: "AIzaSyDSnns131jOlBXAqKo6qy7lTW4Rij-1oWU",
-  authDomain: "novalink-864cf.firebaseapp.com",
-  projectId: "novalink-864cf",
-  storageBucket: "novalink-864cf.firebasestorage.app",
-  messagingSenderId: "602780280140",
-  appId: "1:602780280140:web:5d9ff2351e5a7d5e66dbe9"
+/* ═══════════════════════════════════════════════════════════════
+   FIREBASE
+   ═══════════════════════════════════════════════════════════════ */
+var firebaseConfig={
+  apiKey:"AIzaSyDSnns131jOlBXAqKo6qy7lTW4Rij-1oWU",
+  authDomain:"novalink-864cf.firebaseapp.com",
+  projectId:"novalink-864cf",
+  storageBucket:"novalink-864cf.firebasestorage.app",
+  messagingSenderId:"602780280140",
+  appId:"1:602780280140:web:5d9ff2351e5a7d5e66dbe9"
 };
-if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-var db = firebase.firestore();
-var auth = firebase.auth();
-var EVENTS = "events";
+if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
+var db=firebase.firestore();
+var auth=firebase.auth();
+var EVENTS='events';
+var ADMINS=['nylnathan340@gmail.com','customerservicesnovalink@gmail.com'];
+var QTY_OPTIONS=[1,2,3,4,5];
 
-var ADMINS = [
-  "nylnathan340@gmail.com",
-  "customerservicesnovalink@gmail.com"
-];
-
-var TIER_KEYS = ["elite","silver","standard"];
-var QTY_OPTIONS = [1, 2, 3, 4, 5];
-var TIER_COLOR_DEFAULTS = {
-  elite:    "#1a202c",
-  silver:   "#cbd5e1",
-  standard: "#00FFFF"
-};
-var TIER_NAME_DEFAULTS = {
-  elite:    "Elite",
-  silver:   "Silver",
-  standard: "Standard"
-};
-
-var currentUser = null;
-var isAdmin = false;
-var allEvents = [];
-var activeFilter = "pending_review";
-var unsubscribe = null;
-var openEventIds = {};
-var pendingDeleteId = null;
-
-function $(id){ return document.getElementById(id); }
-function refreshIcons(){ if(window.lucide) lucide.createIcons(); }
-function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
-
-function showToast(msg, type, ms){
-  type = type || "info"; ms = ms || 3200;
-  var t = $("toast");
-  var ic = type === "error" ? "alert-circle" : (type === "success" ? "check-circle" : "info");
-  t.className = "toast " + type;
-  t.innerHTML = '<i data-lucide="' + ic + '"></i><span>' + esc(msg) + '</span>';
+/* ═══════════════════════════════════════════════════════════════
+   HELPERS
+   ═══════════════════════════════════════════════════════════════ */
+function $(id){return document.getElementById(id);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function refreshIcons(){if(window.lucide)lucide.createIcons();}
+function showToast(msg,type,ms){
+  type=type||'info';ms=ms||3200;
+  var t=$('toast');
+  var ic=type==='error'?'alert-circle':(type==='success'?'check-circle':'info');
+  t.className='toast '+type;
+  t.innerHTML='<i data-lucide="'+ic+'"></i><span>'+esc(msg)+'</span>';
   refreshIcons();
-  requestAnimationFrame(function(){ t.classList.add("show"); });
+  requestAnimationFrame(function(){t.classList.add('show');});
   clearTimeout(showToast._t);
-  showToast._t = setTimeout(function(){ t.classList.remove("show"); }, ms);
+  showToast._t=setTimeout(function(){t.classList.remove('show');},ms);
 }
-
-function initialsFrom(name, email){
-  if (name && name.trim()){
-    var p = name.trim().split(/\s+/);
-    if (p.length >= 2) return (p[0][0] + p[1][0]).toUpperCase();
-    return p[0].slice(0, 2).toUpperCase();
-  }
-  if (email) return email.slice(0, 2).toUpperCase();
-  return "??";
+function money(v){
+  v=parseFloat(v)||0;
+  if(v<=0)return 'Free';
+  return 'R '+v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
 }
-
-function formatMoney(v){
-  if (typeof v !== "number") v = parseFloat(v) || 0;
-  if (v <= 0) return "Free";
-  return "R " + v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-}
-
-function formatDate(dateStr, timeStr){
-  if (!dateStr) return "Date TBA";
-  try {
-    var d = new Date(dateStr + "T" + (timeStr || "00:00"));
-    if (isNaN(d.getTime())) return dateStr;
-    var opts = { day: "numeric", month: "short", year: "numeric" };
-    var out = d.toLocaleDateString("en-ZA", opts);
-    if (timeStr) out += " · " + timeStr;
+function formatDate(dateStr,timeStr){
+  if(!dateStr)return '—';
+  try{
+    var d=new Date(dateStr+'T'+(timeStr||'00:00')+':00+02:00');
+    if(isNaN(d.getTime()))return dateStr;
+    var out=d.toLocaleDateString('en-ZA',{day:'numeric',month:'short',year:'numeric'});
+    if(timeStr)out+=' · '+timeStr;
     return out;
-  } catch(e){ return dateStr; }
+  }catch(e){return dateStr;}
+}
+function timeAgo(ts){
+  if(!ts)return '—';
+  try{
+    var d=ts.toDate?ts.toDate():new Date(ts);
+    if(isNaN(d.getTime()))return '—';
+    var diff=Date.now()-d.getTime();
+    var mins=Math.floor(diff/60000);
+    var hours=Math.floor(diff/3600000);
+    var days=Math.floor(diff/86400000);
+    if(mins<1)return 'just now';
+    if(mins<60)return mins+'m ago';
+    if(hours<24)return hours+'h ago';
+    if(days<7)return days+'d ago';
+    return d.toLocaleDateString('en-ZA',{day:'numeric',month:'short'});
+  }catch(e){return '—';}
+}
+function isAdmin(user){
+  if(!user||!user.email)return false;
+  var e=String(user.email).toLowerCase().trim();
+  return ADMINS.some(function(a){return a.toLowerCase()===e;});
 }
 
-function formatTimestamp(ts){
-  if (!ts) return "—";
-  try {
-    var d = ts.toDate ? ts.toDate() : new Date(ts);
-    if (isNaN(d.getTime())) return "—";
-    var now = Date.now();
-    var diff = now - d.getTime();
-    var mins = Math.floor(diff / 60000);
-    var hours = Math.floor(diff / 3600000);
-    var days = Math.floor(diff / 86400000);
-    if (mins < 1) return "just now";
-    if (mins < 60) return mins + " min ago";
-    if (hours < 24) return hours + "h ago";
-    if (days < 7) return days + "d ago";
-    return d.toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric" });
-  } catch(e){ return "—"; }
-}
-
-function getTierName(ev, tierKey){
-  if (!tierKey) tierKey = "standard";
-  if (ev && ev.tierNames && ev.tierNames[tierKey]) return ev.tierNames[tierKey];
-  return TIER_NAME_DEFAULTS[tierKey] || tierKey;
-}
-function getTierColor(ev, tierKey){
-  if (!tierKey) tierKey = "standard";
-  if (ev && ev.tierColours && ev.tierColours[tierKey]) return ev.tierColours[tierKey];
-  return TIER_COLOR_DEFAULTS[tierKey] || "#00FFFF";
-}
-function getTierPrice(ev, tierKey){
-  if (!ev || !ev.tierPrices) return 0;
-  var v = parseFloat(ev.tierPrices[tierKey]);
-  return isNaN(v) ? 0 : v;
-}
-function getActiveTiers(ev){
-  var count = parseInt(ev && ev.activeTierCount, 10);
-  if (isNaN(count) || count < 1) count = TIER_KEYS.length;
-  if (count > TIER_KEYS.length) count = TIER_KEYS.length;
-  var keys = TIER_KEYS.slice(0, count);
-  var activeFilter = ev && ev.tierActive;
-  if (activeFilter){
-    var filtered = keys.filter(function(k){ return activeFilter[k] !== false; });
-    if (filtered.length) return filtered;
+/* ═══════════════════════════════════════════════════════════════
+   YOCO URL VALIDATION
+   Accepts: pay.yoco.com, checkout.yoco.com, or any https URL
+   that looks like a payment link. Rejects typos like "hhttps://"
+   ═══════════════════════════════════════════════════════════════ */
+function normalizeYocoUrl(raw){
+  var url=String(raw||'').trim();
+  if(!url)return '';
+  if(url.indexOf('http://')!==0&&url.indexOf('https://')!==0){
+    url='https://'+url;
   }
-  return keys;
+  return url;
+}
+function isValidYocoUrl(url){
+  if(!url)return false;
+  try{
+    var u=new URL(url);
+    if(u.protocol!=='https:'&&u.protocol!=='http:')return false;
+    var host=u.hostname.toLowerCase();
+    // Must be yoco.com or have /pay/ /checkout/ in path
+    if(host.indexOf('yoco.com')!==-1)return true;
+    if(u.pathname.indexOf('/pay')!==-1)return true;
+    if(u.pathname.indexOf('/checkout')!==-1)return true;
+    return false;
+  }catch(e){return false;}
 }
 
-function normalizeLinks(raw){
-  var out = {};
-  TIER_KEYS.forEach(function(k){
-    out[k] = { "1":"", "2":"", "3":"", "4":"", "5":"" };
-  });
-  if (!raw) return out;
-  Object.keys(raw).forEach(function(k){
-    var v = raw[k];
-    if (!v) return;
-    if (typeof v === "string"){
-      if (!out[k]) out[k] = { "1":"", "2":"", "3":"", "4":"", "5":"" };
-      out[k]["1"] = v;
-    } else if (typeof v === "object"){
-      if (!out[k]) out[k] = { "1":"", "2":"", "3":"", "4":"", "5":"" };
-      QTY_OPTIONS.forEach(function(q){
-        var qs = String(q);
-        if (v[qs]) out[k][qs] = String(v[qs]);
-      });
-    }
-  });
-  return out;
-}
+/* ═══════════════════════════════════════════════════════════════
+   STATE
+   ═══════════════════════════════════════════════════════════════ */
+var currentUser=null;
+var allEvents=[];
+var activeFilter='pending_review';
+var openIds={};
+var unsub=null;
+var autoSaveTimers={};
 
-function showLoading(){
-  $("loadingState").style.display = "block";
-  $("signinState").style.display = "none";
-  $("notAdminState").style.display = "none";
-  $("errorState").style.display = "none";
-  $("content").style.display = "none";
+/* ═══════════════════════════════════════════════════════════════
+   STATES
+   ═══════════════════════════════════════════════════════════════ */
+function hideAll(){
+  ['stateLoading','stateSignin','stateNotAdmin','stateError','stateEmpty','stateContent'].forEach(function(id){
+    $(id).classList.add('hidden');
+  });
 }
-function showSignin(){
-  $("loadingState").style.display = "none";
-  $("signinState").style.display = "block";
-  $("notAdminState").style.display = "none";
-  $("errorState").style.display = "none";
-  $("content").style.display = "none";
-  refreshIcons();
-}
-function showNotAdmin(){
-  $("loadingState").style.display = "none";
-  $("signinState").style.display = "none";
-  $("notAdminState").style.display = "block";
-  $("errorState").style.display = "none";
-  $("content").style.display = "none";
-  refreshIcons();
-}
+function showLoading(){hideAll();$('stateLoading').classList.remove('hidden');}
+function showSignin(){hideAll();$('stateSignin').classList.remove('hidden');refreshIcons();}
+function showNotAdmin(){hideAll();$('stateNotAdmin').classList.remove('hidden');refreshIcons();}
 function showError(msg){
-  $("loadingState").style.display = "none";
-  $("signinState").style.display = "none";
-  $("notAdminState").style.display = "none";
-  $("errorState").style.display = "block";
-  $("content").style.display = "none";
-  if (msg) $("errorMsg").textContent = msg;
+  hideAll();
+  $('stateError').classList.remove('hidden');
+  if(msg)$('errorMsg').textContent=msg;
   refreshIcons();
 }
-function showContent(){
-  $("loadingState").style.display = "none";
-  $("signinState").style.display = "none";
-  $("notAdminState").style.display = "none";
-  $("errorState").style.display = "none";
-  $("content").style.display = "block";
+function showEmpty(title,msg){
+  hideAll();
+  $('stateEmpty').classList.remove('hidden');
+  if(title)$('emptyTitle').textContent=title;
+  if(msg)$('emptyMsg').textContent=msg;
+  refreshIcons();
 }
+function showContent(){hideAll();$('stateContent').classList.remove('hidden');refreshIcons();}
 
-function attachEventsListener(){
-  if (unsubscribe){ try { unsubscribe(); } catch(e){} }
+/* ═══════════════════════════════════════════════════════════════
+   LISTEN
+   ═══════════════════════════════════════════════════════════════ */
+function attachListener(){
+  if(unsub){try{unsub();}catch(e){}}
   showLoading();
 
-  unsubscribe = db.collection(EVENTS)
-    .orderBy("createdAt", "desc")
+  unsub=db.collection(EVENTS)
+    .orderBy('createdAt','desc')
     .limit(500)
     .onSnapshot(function(snap){
-      allEvents = [];
+      allEvents=[];
       snap.forEach(function(doc){
-        var d = doc.data() || {};
-        d.id = doc.id;
-        var status = String(d.status || "").toLowerCase();
-        if (!status) status = "pending_review";
-        d.status = status;
+        var d=doc.data()||{};
+        d.id=doc.id;
+        var status=String(d.status||'').toLowerCase()||'pending_review';
+        d.status=status;
         allEvents.push(d);
       });
-      allEvents.sort(function(a, b){
-        var order = { pending_review: 0, pending: 0, live: 1, rejected: 2 };
-        var oa = order[a.status] != null ? order[a.status] : 3;
-        var ob = order[b.status] != null ? order[b.status] : 3;
-        if (oa !== ob) return oa - ob;
-        var ta = a.createdAt && a.createdAt.toMillis ? a.createdAt.toMillis() : 0;
-        var tb = b.createdAt && b.createdAt.toMillis ? b.createdAt.toMillis() : 0;
-        return ta - tb;
+
+      // Sort: pending first, then live, then rejected, then by created time
+      var order={pending_review:0,pending:0,live:1,rejected:2};
+      allEvents.sort(function(a,b){
+        var oa=order[a.status]!=null?order[a.status]:3;
+        var ob=order[b.status]!=null?order[b.status]:3;
+        if(oa!==ob)return oa-ob;
+        var ta=a.createdAt&&a.createdAt.toMillis?a.createdAt.toMillis():0;
+        var tb=b.createdAt&&b.createdAt.toMillis?b.createdAt.toMillis():0;
+        return tb-ta;
       });
+
       renderStats();
       renderList();
-      showContent();
-    }, function(err){
-      console.error("Events load error:", err);
-      showError(err.message || "Could not load events. Check Firestore rules.");
+    },function(err){
+      console.error('[listen]',err);
+      showError(err.message||'Could not load events. Check Firestore rules.');
     });
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   STATS
+   ═══════════════════════════════════════════════════════════════ */
 function renderStats(){
-  var counts = { pending_review: 0, live: 0, rejected: 0, other: 0 };
+  var counts={pending:0,live:0,rejected:0};
   allEvents.forEach(function(ev){
-    if (ev.status === "pending_review" || ev.status === "pending") counts.pending_review++;
-    else if (ev.status === "live") counts.live++;
-    else if (ev.status === "rejected") counts.rejected++;
-    else counts.other++;
+    if(ev.status==='pending_review'||ev.status==='pending')counts.pending++;
+    else if(ev.status==='live')counts.live++;
+    else if(ev.status==='rejected')counts.rejected++;
   });
-  $("statPending").textContent = counts.pending_review;
-  $("statLive").textContent = counts.live;
-  $("statRejected").textContent = counts.rejected;
-
-  $("countPending").textContent = counts.pending_review;
-  $("countLive").textContent = counts.live;
-  $("countRejected").textContent = counts.rejected;
-  $("countAll").textContent = allEvents.length;
+  $('statPending').textContent=counts.pending;
+  $('statLive').textContent=counts.live;
+  $('statRejected').textContent=counts.rejected;
+  $('cntPending').textContent=counts.pending;
+  $('cntLive').textContent=counts.live;
+  $('cntRejected').textContent=counts.rejected;
+  $('cntAll').textContent=allEvents.length;
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   LIST
+   ═══════════════════════════════════════════════════════════════ */
 function renderList(){
-  var list = $("reviewList");
-  var empty = $("emptyState");
-
-  var filtered = allEvents.filter(function(ev){
-    if (activeFilter === "all") return true;
-    if (activeFilter === "pending_review") return ev.status === "pending_review" || ev.status === "pending";
-    return ev.status === activeFilter;
+  var filtered=allEvents.filter(function(ev){
+    if(activeFilter==='all')return true;
+    if(activeFilter==='pending_review')return ev.status==='pending_review'||ev.status==='pending';
+    return ev.status===activeFilter;
   });
 
-  if (!filtered.length){
-    list.innerHTML = "";
-    empty.style.display = "block";
-    var titles = {
-      pending_review: { t: "Nothing to review", m: "No pending events right now. Check back later." },
-      live: { t: "No live events", m: "Events you approve will appear here." },
-      rejected: { t: "No rejected events", m: "Rejected events will appear here." },
-      all: { t: "No events yet", m: "Once creators submit events, they'll show up here." }
+  if(!filtered.length){
+    var msgs={
+      pending_review:['Nothing to review','No pending events right now. Check back later.'],
+      live:['No live events','Approved events will show here.'],
+      rejected:['No rejected events','Rejected events will show here.'],
+      all:['No events yet','Events will show here once creators submit them.']
     };
-    var t = titles[activeFilter] || titles.all;
-    $("emptyTitle").textContent = t.t;
-    $("emptyMsg").textContent = t.m;
-    refreshIcons();
+    var m=msgs[activeFilter]||msgs.all;
+    showEmpty(m[0],m[1]);
     return;
   }
 
-  empty.style.display = "none";
-  list.innerHTML = "";
+  showContent();
+  var list=$('reviewList');
+  list.innerHTML='';
   filtered.forEach(function(ev){
     list.appendChild(buildCard(ev));
   });
@@ -655,610 +688,488 @@ function renderList(){
 }
 
 function buildCard(ev){
-  var card = document.createElement("div");
-  card.className = "review-card" + (openEventIds[ev.id] ? " expanded" : "");
-  card.dataset.eventId = ev.id;
+  var card=document.createElement('div');
+  card.className='review'+(openIds[ev.id]?' open':'');
+  card.dataset.id=ev.id;
 
-  var cover = ev.heroImage || ev.coverImage || "";
-  var thumbStyle = cover
-    ? "background-image:url('" + esc(cover) + "');background-size:cover;background-position:center;"
-    : "";
-  var thumbCls = "rc-thumb" + (cover ? "" : " empty");
+  var cover=ev.heroImage||ev.coverImage||'';
+  var thumbStyle=cover?"background-image:url('"+esc(cover)+"')":"";
+  var thumbCls='review-thumb'+(cover?'':' empty');
 
-  var statusLabels = {
-    pending_review: "Pending review",
-    pending: "Pending review",
-    live: "Live",
-    rejected: "Rejected"
-  };
-  var statusLabel = statusLabels[ev.status] || ev.status;
+  var statusLabel={
+    pending_review:'Pending',
+    pending:'Pending',
+    live:'Live',
+    rejected:'Rejected'
+  }[ev.status]||ev.status;
 
-  var venueText = [ev.venueName, ev.city].filter(Boolean).join(", ") || "Venue TBA";
-  var dateText = formatDate(ev.startDate, ev.startTime);
+  var statusCls={
+    pending_review:'pending',
+    pending:'pending',
+    live:'live',
+    rejected:'rejected'
+  }[ev.status]||'pending';
 
-  var actionsHTML = "";
-  if (ev.status === "pending_review" || ev.status === "pending"){
-    actionsHTML =
-      '<button class="btn btn-success btn-sm approve-btn" data-id="' + esc(ev.id) + '"><i data-lucide="check"></i> Approve</button>';
-  }
+  var venue=[ev.venueName,ev.city].filter(Boolean).join(', ')||'Venue TBA';
+  var dateText=formatDate(ev.startDate,ev.startTime);
 
-  card.innerHTML =
-    '<div class="rc-head">' +
-      '<div class="' + thumbCls + '" style="' + thumbStyle + '"></div>' +
-      '<div class="rc-body">' +
-        '<div class="rc-title-row">' +
-          '<span class="rc-title">' + esc(ev.eventName || "Untitled Event") + '</span>' +
-          '<span class="rc-badge ' + esc(ev.status) + '">' + esc(statusLabel) + '</span>' +
-        '</div>' +
-        '<div class="rc-meta">' +
-          '<span><i data-lucide="calendar"></i> ' + esc(dateText) + '</span>' +
-          '<span><i data-lucide="map-pin"></i> ' + esc(venueText) + '</span>' +
-          '<span><i data-lucide="user"></i> ' + esc(ev.hostName || ev.ownerName || "—") + '</span>' +
-          '<span><i data-lucide="clock"></i> ' + esc(formatTimestamp(ev.createdAt)) + '</span>' +
-        '</div>' +
-      '</div>' +
-      '<div class="rc-actions">' + actionsHTML + '</div>' +
-    '</div>' +
-    '<div class="rc-details"><div class="rc-details-inner">' +
-      buildDetailsHTML(ev) +
-    '</div></div>';
+  card.innerHTML=
+    '<div class="review-head">'+
+      '<div class="'+thumbCls+'" style="'+thumbStyle+'"></div>'+
+      '<div class="review-body">'+
+        '<div class="review-title-row">'+
+          '<span class="review-title">'+esc(ev.eventName||'Untitled Event')+'</span>'+
+          '<span class="review-status '+statusCls+'">'+esc(statusLabel)+'</span>'+
+        '</div>'+
+        '<div class="review-meta">'+
+          '<span><i data-lucide="calendar"></i> '+esc(dateText)+'</span>'+
+          '<span><i data-lucide="map-pin"></i> '+esc(venue)+'</span>'+
+          '<span><i data-lucide="user"></i> '+esc(ev.hostName||ev.ownerName||'—')+'</span>'+
+          '<span><i data-lucide="clock"></i> '+esc(timeAgo(ev.createdAt))+'</span>'+
+        '</div>'+
+      '</div>'+
+      '<div class="review-toggle"><i data-lucide="chevron-down"></i></div>'+
+    '</div>'+
+    '<div class="review-detail">'+buildDetail(ev)+'</div>';
 
-  card.querySelector(".rc-head").addEventListener("click", function(e){
-    if (e.target.closest("button")) return;
-    toggleCard(ev.id);
+  card.querySelector('.review-head').addEventListener('click',function(e){
+    if(e.target.closest('button'))return;
+    toggle(ev.id);
   });
 
-  var approveBtn = card.querySelector(".approve-btn");
-  if (approveBtn){
-    approveBtn.addEventListener("click", function(e){
-      e.stopPropagation();
-      if (!openEventIds[ev.id]){
-        openEventIds[ev.id] = true;
-        toggleCard(ev.id);
-      }
-      setTimeout(function(){
-        var el = card.querySelector(".rc-footer .approve-final-btn");
-        if (el) el.scrollIntoView({ behavior: "smooth", block: "center" });
-      }, 300);
-    });
-  }
-
-  wireDetailInteractions(card, ev);
+  wireDetail(card,ev);
   return card;
 }
 
-function toggleCard(id){
-  openEventIds[id] = !openEventIds[id];
-  var card = document.querySelector('.review-card[data-event-id="' + id + '"]');
-  if (card){
-    card.classList.toggle("expanded", openEventIds[id]);
+function toggle(id){
+  openIds[id]=!openIds[id];
+  var card=document.querySelector('.review[data-id="'+id+'"]');
+  if(card){
+    card.classList.toggle('open',openIds[id]);
     refreshIcons();
   }
 }
 
-function buildDetailsHTML(ev){
-  var tiers = getActiveTiers(ev);
-  var links = normalizeLinks(ev.paymentLinks);
+function buildDetail(ev){
+  var html='';
 
-  var descHTML = "";
-  if (ev.eventDescription && ev.eventDescription.trim()){
-    descHTML =
-      '<div class="rc-section">' +
-        '<div class="rc-section-head"><i data-lucide="file-text"></i> Description</div>' +
-        '<div class="rc-desc">' + esc(ev.eventDescription) + '</div>' +
+  // Description
+  if(ev.eventDescription&&ev.eventDescription.trim()){
+    html+=
+      '<div class="detail-section">'+
+        '<h4><i data-lucide="file-text"></i> Description</h4>'+
+        '<div class="desc">'+esc(ev.eventDescription)+'</div>'+
       '</div>';
   }
 
-  var kvs = [];
-  if (ev.hostName) kvs.push({ k: "Host", v: ev.hostName });
-  if (ev.hostEmail) kvs.push({ k: "Host email", v: ev.hostEmail });
-  if (ev.ownerEmail && ev.ownerEmail !== ev.hostEmail) kvs.push({ k: "Owner email", v: ev.ownerEmail });
-  if (ev.eventType) kvs.push({ k: "Type", v: ev.eventType.charAt(0).toUpperCase() + ev.eventType.slice(1) });
-  if (ev.cost !== undefined) kvs.push({ k: "Base price", v: formatMoney(ev.cost) });
-  if (ev.ageRestriction && ev.ageRestriction !== "all") kvs.push({ k: "Age limit", v: ev.ageRestriction + "+" });
-  if (ev.refundPolicy) kvs.push({ k: "Refunds", v: ev.refundPolicy });
-  if (ev.venueName) kvs.push({ k: "Venue", v: ev.venueName });
-  if (ev.venueAddress) kvs.push({ k: "Address", v: ev.venueAddress });
-  if (ev.city) kvs.push({ k: "City", v: ev.city });
-  if (ev.startDate) kvs.push({ k: "Date", v: ev.startDate });
-  if (ev.startTime) kvs.push({ k: "Time", v: ev.startTime });
-  if (ev.plan && ev.plan.id) kvs.push({ k: "Plan", v: ev.plan.id + " · " + ev.plan.fee + "%" });
+  // Event details
+  var kvs=[];
+  if(ev.hostName)kvs.push({k:'Host',v:ev.hostName});
+  if(ev.hostEmail)kvs.push({k:'Host email',v:ev.hostEmail});
+  if(ev.ownerEmail&&ev.ownerEmail!==ev.hostEmail)kvs.push({k:'Owner email',v:ev.ownerEmail});
+  if(ev.eventType)kvs.push({k:'Type',v:ev.eventType.charAt(0).toUpperCase()+ev.eventType.slice(1)});
+  if(ev.cost!==undefined)kvs.push({k:'Base price',v:money(ev.cost)});
+  if(ev.venueName)kvs.push({k:'Venue',v:ev.venueName});
+  if(ev.venueAddress)kvs.push({k:'Address',v:ev.venueAddress});
+  if(ev.city)kvs.push({k:'City',v:ev.city});
+  if(ev.startDate)kvs.push({k:'Date',v:ev.startDate});
+  if(ev.startTime)kvs.push({k:'Time',v:ev.startTime});
 
-  var kvHTML = "";
-  if (kvs.length){
-    kvHTML =
-      '<div class="rc-section">' +
-        '<div class="rc-section-head"><i data-lucide="info"></i> Event details</div>' +
-        '<div class="kv-grid">' +
+  if(kvs.length){
+    html+=
+      '<div class="detail-section">'+
+        '<h4><i data-lucide="info"></i> Event details</h4>'+
+        '<div class="kv-grid">'+
           kvs.map(function(kv){
-            return '<div class="kv"><div class="k">' + esc(kv.k) + '</div><div class="v">' + esc(kv.v) + '</div></div>';
-          }).join('') +
-        '</div>' +
+            return '<div class="kv"><div class="k">'+esc(kv.k)+'</div><div class="v">'+esc(kv.v)+'</div></div>';
+          }).join('')+
+        '</div>'+
       '</div>';
   }
 
-  var payBlocksHTML = "";
-  tiers.forEach(function(k){
-    var name = getTierName(ev, k);
-    var color = getTierColor(ev, k);
-    var price = getTierPrice(ev, k);
-    var priceLabel = price > 0 ? ("R " + price.toFixed(2) + " / ticket") : "Free tier";
+  // Yoco payment links
+  html+=
+    '<div class="detail-section">'+
+      '<h4><i data-lucide="tag"></i> Yoco payment links'+
+        '<span class="save-indicator" id="saveInd-'+esc(ev.id)+'"></span>'+
+      '</h4>'+
+      buildPaymentBlocks(ev)+
+      '<p class="link-note">'+
+        'Paste a Yoco link for each quantity you want to sell. '+
+        '<strong>Links save automatically when you tab out or stop typing.</strong> '+
+        'The buyer\'s chosen quantity picks the right link. Max 5 tickets per purchase.'+
+      '</p>'+
+    '</div>';
 
-    var fieldsHTML = "";
+  // Actions
+  html+='<div class="review-actions">';
+  if(ev.status==='pending_review'||ev.status==='pending'){
+    html+=
+      '<a href="view-event.html?id='+encodeURIComponent(ev.id)+'" target="_blank" rel="noopener" class="btn btn-ghost">'+
+        '<i data-lucide="external-link"></i> Preview'+
+      '</a>'+
+      '<button type="button" class="btn btn-danger reject-btn" data-id="'+esc(ev.id)+'">'+
+        '<i data-lucide="x"></i> Reject'+
+      '</button>'+
+      '<button type="button" class="btn btn-success approve-btn" data-id="'+esc(ev.id)+'">'+
+        '<i data-lucide="check-circle"></i> Approve &amp; go live'+
+      '</button>';
+  }else if(ev.status==='live'){
+    html+=
+      '<a href="view-event.html?id='+encodeURIComponent(ev.id)+'" target="_blank" rel="noopener" class="btn btn-ghost">'+
+        '<i data-lucide="external-link"></i> Open public page'+
+      '</a>'+
+      '<button type="button" class="btn btn-ghost reject-btn" data-id="'+esc(ev.id)+'">'+
+        '<i data-lucide="pause-circle"></i> Take offline'+
+      '</button>';
+  }else if(ev.status==='rejected'){
+    html+=
+      '<button type="button" class="btn btn-ghost restore-btn" data-id="'+esc(ev.id)+'">'+
+        '<i data-lucide="rotate-ccw"></i> Restore to review'+
+      '</button>';
+  }
+  html+=
+    '<button type="button" class="btn btn-danger delete-btn" data-id="'+esc(ev.id)+'">'+
+      '<i data-lucide="trash-2"></i> Delete'+
+    '</button>';
+  html+='</div>';
+
+  return html;
+}
+
+function buildPaymentBlocks(ev){
+  var tiers=NovalinkSchema.getActiveTierKeys(ev);
+  var links=normalizeLinks(ev.paymentLinks);
+
+  if(!tiers.length){
+    return '<p class="link-note">This event has no active tiers. Set up tiers first.</p>';
+  }
+
+  var html='';
+  tiers.forEach(function(k){
+    var name=NovalinkSchema.getTierName(ev,k);
+    var colour=NovalinkSchema.getTierColour(ev,k);
+    var price=NovalinkSchema.getTierPrice(ev,k);
+    var priceLabel=price>0?money(price)+' / ticket':'Free tier';
+
+    var fields='';
     QTY_OPTIONS.forEach(function(q){
-      var val = (links[k] && links[k][String(q)]) || "";
-      var cls = "yoco-input" + (val ? " ok" : "");
-      var label = q === 1 ? "1 ticket" : q + " tickets";
-      fieldsHTML +=
-        '<div class="tier-pay-field">' +
-          '<label>' + label + '</label>' +
-          '<input type="url" class="' + cls + '" ' +
-            'data-yoco-tier="' + esc(k) + '" data-yoco-qty="' + q + '" ' +
-            'placeholder="https://pay.yoco.com/…" value="' + esc(val) + '" />' +
+      var val=(links[k]&&links[k][String(q)])||'';
+      var cls='yoco-input'+(val&&isValidYocoUrl(val)?' ok':(val?' is-error':''));
+      var label=q===1?'1 ticket':q+' tickets';
+      fields+=
+        '<div class="qty-field">'+
+          '<label>'+label+'</label>'+
+          '<input type="text" class="'+cls+'" '+
+            'data-tier="'+esc(k)+'" data-qty="'+q+'" '+
+            'placeholder="https://pay.yoco.com/..." '+
+            'value="'+esc(val)+'" '+
+            'autocomplete="off" spellcheck="false" />'+
         '</div>';
     });
 
-    payBlocksHTML +=
-      '<div class="tier-pay-block" data-tier-block="' + esc(k) + '">' +
-        '<div class="tier-pay-head">' +
-          '<span class="tier-pay-swatch" style="background:' + esc(color) + '"></span>' +
-          '<span class="tier-pay-name">' + esc(name) + '</span>' +
-          '<span class="tier-pay-price">' + esc(priceLabel) + '</span>' +
-        '</div>' +
-        '<div class="tier-pay-grid">' + fieldsHTML + '</div>' +
+    html+=
+      '<div class="tier-block" data-tier-block="'+esc(k)+'">'+
+        '<div class="tier-head">'+
+          '<span class="tier-swatch" style="background:'+esc(colour)+'"></span>'+
+          '<span class="tier-name">'+esc(name)+'</span>'+
+          '<span class="tier-price">'+esc(priceLabel)+'</span>'+
+        '</div>'+
+        '<div class="qty-grid">'+fields+'</div>'+
       '</div>';
   });
 
-  var tierHTML =
-    '<div class="rc-section">' +
-      '<div class="rc-section-head"><i data-lucide="tag"></i> Yoco payment links' +
-        '<span class="save-indicator" id="saveIndicator-' + esc(ev.id) + '"></span>' +
-      '</div>' +
-      payBlocksHTML +
-      '<p class="link-note">' +
-        'Paste a Yoco link in each field. <strong>Links save automatically when you tab out or stop typing.</strong> ' +
-        'No need to tap a button. The system picks the right link based on how many tickets the buyer chooses. Max 5 tickets per purchase.' +
-      '</p>' +
-    '</div>';
+  return html;
+}
 
-  var footerHTML = '<div class="rc-footer">';
+function normalizeLinks(raw){
+  var out={};
+  if(!raw)return out;
+  Object.keys(raw).forEach(function(k){
+    var v=raw[k];
+    if(!v)return;
+    if(typeof v==='string'){
+      out[k]={'1':v};
+    }else if(typeof v==='object'){
+      out[k]=Object.assign({},v);
+    }
+  });
+  return out;
+}
 
-  if (ev.status === "pending_review" || ev.status === "pending"){
-    footerHTML +=
-      '<a href="view-event.html?id=' + encodeURIComponent(ev.id) + '" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">' +
-        '<i data-lucide="external-link"></i> Preview' +
-      '</a>' +
-      '<button class="btn btn-danger-soft btn-sm reject-btn" data-id="' + esc(ev.id) + '">' +
-        '<i data-lucide="x"></i> Reject' +
-      '</button>' +
-      '<button class="btn btn-success approve-final-btn" data-id="' + esc(ev.id) + '">' +
-        '<i data-lucide="check-circle"></i> Approve &amp; go live' +
-      '</button>';
-  } else if (ev.status === "live"){
-    footerHTML +=
-      '<a href="view-event.html?id=' + encodeURIComponent(ev.id) + '" target="_blank" rel="noopener" class="btn btn-ghost btn-sm">' +
-        '<i data-lucide="external-link"></i> Open public page' +
-      '</a>';
-  } else if (ev.status === "rejected"){
-    footerHTML +=
-      '<button class="btn btn-ghost btn-sm restore-btn" data-id="' + esc(ev.id) + '">' +
-        '<i data-lucide="rotate-ccw"></i> Restore to review' +
-      '</button>';
+/* ═══════════════════════════════════════════════════════════════
+   AUTO-SAVE + INTERACTIONS
+   ═══════════════════════════════════════════════════════════════ */
+function wireDetail(card,ev){
+  // Yoco link inputs
+  card.querySelectorAll('.yoco-input').forEach(function(inp){
+    var saveTimer=null;
+
+    inp.addEventListener('input',function(){
+      var val=normalizeYocoUrl(this.value);
+      if(val&&!isValidYocoUrl(val)){
+        this.classList.remove('ok');
+        this.classList.add('is-error');
+      }else if(val){
+        this.classList.remove('is-error');
+        this.classList.add('ok');
+      }else{
+        this.classList.remove('is-error','ok');
+      }
+
+      setIndicator(ev.id,'unsaved','Unsaved…');
+
+      clearTimeout(saveTimer);
+      saveTimer=setTimeout(function(){
+        autoSave(ev.id,card);
+      },900);
+    });
+
+    inp.addEventListener('blur',function(){
+      // Normalize on blur
+      if(this.value.trim()){
+        var normalized=normalizeYocoUrl(this.value);
+        if(normalized!==this.value)this.value=normalized;
+        this.classList.toggle('ok',isValidYocoUrl(normalized));
+        this.classList.toggle('is-error',!isValidYocoUrl(normalized));
+      }else{
+        this.classList.remove('is-error','ok');
+      }
+      clearTimeout(saveTimer);
+      autoSave(ev.id,card);
+    });
+  });
+
+  // Approve
+  var ap=card.querySelector('.approve-btn');
+  if(ap){
+    ap.addEventListener('click',function(e){
+      e.stopPropagation();
+      approveEvent(ev.id,card);
+    });
   }
 
-  footerHTML +=
-    '<button class="btn btn-danger-soft btn-sm delete-event-btn" data-id="' + esc(ev.id) + '" title="Permanently delete this event">' +
-      '<i data-lucide="trash-2"></i> Delete' +
-    '</button>';
+  // Reject
+  var rj=card.querySelector('.reject-btn');
+  if(rj){
+    rj.addEventListener('click',function(e){
+      e.stopPropagation();
+      var isLive=ev.status==='live';
+      var msg=isLive?'Take this event offline?':'Reject this event?';
+      var reason='';
+      if(!isLive){
+        reason=prompt('Reason for rejection (optional):')||'';
+        if(reason===null)return;
+      }
+      var confirmed=confirm(msg+'\n\n"'+(ev.eventName||'Untitled')+'"'+(isLive?' will be hidden from the public site.':' will be marked rejected.'));
+      if(!confirmed)return;
+      rejectEvent(ev.id,reason,card);
+    });
+  }
 
-  footerHTML += '</div>';
+  // Restore
+  var rs=card.querySelector('.restore-btn');
+  if(rs){
+    rs.addEventListener('click',function(e){
+      e.stopPropagation();
+      if(!confirm('Restore this event to pending review?'))return;
+      restoreEvent(ev.id,card);
+    });
+  }
 
-  var rejectPanelHTML =
-    '<div class="reject-panel" data-reject-panel="' + esc(ev.id) + '">' +
-      '<label>Reason for rejection (optional)</label>' +
-      '<textarea placeholder="Why is this event being rejected? The creator will see this."></textarea>' +
-      '<div class="rp-actions">' +
-        '<button class="btn btn-ghost btn-sm cancel-reject-btn">Cancel</button>' +
-        '<button class="btn btn-danger btn-sm confirm-reject-btn" data-id="' + esc(ev.id) + '">Confirm reject</button>' +
-      '</div>' +
-    '</div>';
-
-  return descHTML + kvHTML + tierHTML + footerHTML + rejectPanelHTML;
+  // Delete
+  var dl=card.querySelector('.delete-btn');
+  if(dl){
+    dl.addEventListener('click',function(e){
+      e.stopPropagation();
+      if(!confirm('DELETE "'+(ev.eventName||'Untitled')+'" permanently?\n\nThis cannot be undone.'))return;
+      deleteEvent(ev.id,card);
+    });
+  }
 }
 
-/* ══════════════════════════════════════════════════════════════
-   AUTO-SAVE LOGIC
-   ══════════════════════════════════════════════════════════════ */
-var autoSaveTimers = {};
-
-function setSaveIndicator(eventId, state, text){
-  var el = $("saveIndicator-" + eventId);
-  if (!el) return;
-  el.textContent = text || "";
-  el.className = "save-indicator" + (state ? " " + state : "");
+function setIndicator(eventId,state,text){
+  var el=$('saveInd-'+eventId);
+  if(!el)return;
+  el.textContent=text||'';
+  el.className='save-indicator'+(state?' '+state:'');
 }
 
-function autoSaveLinks(eventId, card){
-  var links = collectYocoLinks(card);
-
-  console.log('[autoSave] ' + eventId + ' →', JSON.stringify(links));
-
-  setSaveIndicator(eventId, 'saving', 'Saving…');
-
-  db.collection(EVENTS).doc(eventId).update({
-    paymentLinks: links,
-    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-  }).then(function(){
-    console.log('[autoSave] saved OK for ' + eventId);
-    setSaveIndicator(eventId, 'saved', '✓ Saved');
-    setTimeout(function(){ setSaveIndicator(eventId, '', ''); }, 2200);
-  }).catch(function(err){
-    console.error('[autoSave] failed:', err);
-    setSaveIndicator(eventId, 'error', '✗ Save failed');
-    showToast("Could not save link: " + (err.message || "unknown error"), "error", 5000);
-  });
-}
-
-function collectYocoLinks(card){
-  var links = {};
-  card.querySelectorAll(".yoco-input").forEach(function(inp){
-    var tier = inp.dataset.yocoTier;
-    var q = String(inp.dataset.yocoQty || "1");
-    var val = (inp.value || "").trim();
-    if (!tier) return;
-    if (!links[tier]) links[tier] = {};
-    if (val) links[tier][q] = val;
+function collectLinks(card){
+  var links={};
+  card.querySelectorAll('.yoco-input').forEach(function(inp){
+    var tier=inp.dataset.tier;
+    var q=String(inp.dataset.qty||'1');
+    var val=normalizeYocoUrl(inp.value);
+    if(!tier)return;
+    if(!links[tier])links[tier]={};
+    if(val)links[tier][q]=val;
   });
   return links;
 }
 
-function wireDetailInteractions(card, ev){
-  var approveFinal = card.querySelector(".approve-final-btn");
-  if (approveFinal){
-    approveFinal.addEventListener("click", function(){
-      approveEvent(ev.id, card);
-    });
-  }
+function autoSave(eventId,card){
+  var links=collectLinks(card);
+  setIndicator(eventId,'saving','Saving…');
 
-  var rejectBtn = card.querySelector(".reject-btn");
-  if (rejectBtn){
-    rejectBtn.addEventListener("click", function(){
-      var panel = card.querySelector('[data-reject-panel="' + ev.id + '"]');
-      if (panel) panel.classList.toggle("show");
-    });
-  }
-
-  var cancelReject = card.querySelector(".cancel-reject-btn");
-  if (cancelReject){
-    cancelReject.addEventListener("click", function(){
-      var panel = card.querySelector('[data-reject-panel="' + ev.id + '"]');
-      if (panel) panel.classList.remove("show");
-    });
-  }
-
-  var confirmReject = card.querySelector(".confirm-reject-btn");
-  if (confirmReject){
-    confirmReject.addEventListener("click", function(){
-      var panel = card.querySelector('[data-reject-panel="' + ev.id + '"]');
-      var textarea = panel ? panel.querySelector("textarea") : null;
-      var reason = textarea ? textarea.value.trim() : "";
-      rejectEvent(ev.id, reason, card);
-    });
-  }
-
-  var restoreBtn = card.querySelector(".restore-btn");
-  if (restoreBtn){
-    restoreBtn.addEventListener("click", function(){
-      restoreEvent(ev.id, card);
-    });
-  }
-
-  var deleteBtn = card.querySelector(".delete-event-btn");
-  if (deleteBtn){
-    deleteBtn.addEventListener("click", function(e){
-      e.stopPropagation();
-      openDeleteModal(ev.id);
-    });
-  }
-
-  /* ═══ Yoco link inputs: blur → save, typing → save after 900ms ═══ */
-  card.querySelectorAll(".yoco-input").forEach(function(inp){
-    var saveTimer = null;
-
-    inp.addEventListener('blur', function(){
-      var val = this.value.trim();
-      if (val && val.indexOf('http://') !== 0 && val.indexOf('https://') !== 0){
-        this.value = 'https://' + val;
-        val = this.value;
-      }
-      this.classList.toggle("ok", val.length > 8 && val.indexOf("http") === 0);
-      autoSaveLinks(ev.id, card);
-    });
-
-    inp.addEventListener("input", function(){
-      var val = this.value.trim();
-      this.classList.toggle("ok", val.length > 8 && val.indexOf("http") === 0);
-
-      setSaveIndicator(ev.id, 'unsaved', 'Unsaved…');
-
-      clearTimeout(saveTimer);
-      saveTimer = setTimeout(function(){
-        autoSaveLinks(ev.id, card);
-      }, 900);
-    });
+  db.collection(EVENTS).doc(eventId).update({
+    paymentLinks:links,
+    updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function(){
+    setIndicator(eventId,'saved','✓ Saved');
+    setTimeout(function(){setIndicator(eventId,'','');},2200);
+  }).catch(function(err){
+    console.error('[autosave]',err);
+    setIndicator(eventId,'error','✗ Save failed');
+    showToast('Could not save link: '+(err.message||'unknown'),'error',5000);
   });
 }
 
-/* ══════════════════════════════════════════════════════════════
+/* ═══════════════════════════════════════════════════════════════
    ACTIONS
-   ══════════════════════════════════════════════════════════════ */
-async function approveEvent(eventId, card){
-  var ev = allEvents.find(function(e){ return e.id === eventId; });
-  if (!ev) return;
+   ═══════════════════════════════════════════════════════════════ */
+function approveEvent(eventId,card){
+  var ev=allEvents.find(function(e){return e.id===eventId;});
+  if(!ev)return;
 
-  /* First: save any pending link changes */
-  var links = collectYocoLinks(card);
-  try {
-    await db.collection(EVENTS).doc(eventId).update({
-      paymentLinks: links
+  var links=collectLinks(card);
+
+  // Warn if any tier is missing qty=1
+  var tiers=NovalinkSchema.getActiveTierKeys(ev);
+  var missing=tiers.filter(function(k){return !links[k]||!links[k]['1'];});
+
+  var go=function(){
+    var btn=card.querySelector('.approve-btn');
+    if(btn){btn.disabled=true;btn.innerHTML='<span class="spinner" style="width:14px;height:14px;border-width:2px"></span> Approving…';}
+
+    db.collection(EVENTS).doc(eventId).update({
+      status:'live',
+      paymentLinks:links,
+      approvedAt:firebase.firestore.FieldValue.serverTimestamp(),
+      approvedBy:currentUser.uid,
+      approvedByEmail:currentUser.email||'',
+      updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+    }).then(function(){
+      showToast('Event approved and live!','success',4000);
+    }).catch(function(err){
+      console.error('[approve]',err);
+      showToast('Could not approve: '+(err.message||'unknown'),'error',5000);
+      if(btn){btn.disabled=false;btn.innerHTML='<i data-lucide="check-circle"></i> Approve & go live';refreshIcons();}
     });
-  } catch(err){
-    console.warn('Could not save links before approving:', err);
-  }
+  };
 
-  var tiers = getActiveTiers(ev);
-  var missing = tiers.filter(function(k){ return !links[k] || !links[k]["1"]; });
-
-  if (missing.length){
-    var missingNames = missing.map(function(k){ return getTierName(ev, k); }).join(", ");
-    var proceed = confirm(
-      "These tiers don't have a payment link for 1 ticket:\n\n" + missingNames +
-      "\n\nBuyers will see 'I've paid — contact us' on those tiers.\n\nApprove anyway?"
-    );
-    if (!proceed) return;
-  }
-
-  var btn = card.querySelector(".approve-final-btn");
-  var orig = btn ? btn.innerHTML : "";
-  if (btn){
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span> Approving…';
-  }
-
-  try {
-    await db.collection(EVENTS).doc(eventId).update({
-      status: "live",
-      paymentLinks: links,
-      approvedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      approvedBy: currentUser.uid,
-      approvedByEmail: currentUser.email || "",
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    showToast("Event approved and live!", "success", 4000);
-  } catch(err){
-    console.error("approveEvent error:", err);
-    showToast("Could not approve: " + (err.message || "unknown error"), "error", 5000);
-    if (btn){
-      btn.disabled = false;
-      btn.innerHTML = orig;
-      refreshIcons();
+  if(missing.length){
+    var names=missing.map(function(k){return NovalinkSchema.getTierName(ev,k);}).join(', ');
+    if(confirm('These tiers have no payment link for 1 ticket:\n\n'+names+'\n\nBuyers will see "contact us to pay". Approve anyway?')){
+      go();
+    }
+  }else{
+    if(confirm('Approve "'+(ev.eventName||'Untitled')+'" and make it live?')){
+      go();
     }
   }
 }
 
-async function rejectEvent(eventId, reason, card){
-  var btn = card.querySelector(".confirm-reject-btn");
-  var orig = btn ? btn.innerHTML : "";
-  if (btn){
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span> Rejecting…';
-  }
+function rejectEvent(eventId,reason,card){
+  var btn=card.querySelector('.reject-btn');
+  var orig=btn?btn.innerHTML:'';
+  if(btn){btn.disabled=true;btn.innerHTML='<span class="spinner" style="width:14px;height:14px;border-width:2px"></span>';}
 
-  try {
-    await db.collection(EVENTS).doc(eventId).update({
-      status: "rejected",
-      rejectionReason: reason || "",
-      rejectedAt: firebase.firestore.FieldValue.serverTimestamp(),
-      rejectedBy: currentUser.uid,
-      rejectedByEmail: currentUser.email || "",
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    showToast("Event rejected.", "success", 3000);
-  } catch(err){
-    console.error("rejectEvent error:", err);
-    showToast("Could not reject: " + (err.message || "unknown error"), "error", 5000);
-    if (btn){
-      btn.disabled = false;
-      btn.innerHTML = orig;
-      refreshIcons();
-    }
-  }
-}
-
-async function restoreEvent(eventId, card){
-  var btn = card.querySelector(".restore-btn");
-  var orig = btn ? btn.innerHTML : "";
-  if (btn){
-    btn.disabled = true;
-    btn.innerHTML = '<span class="spinner"></span> Restoring…';
-  }
-
-  try {
-    await db.collection(EVENTS).doc(eventId).update({
-      status: "pending_review",
-      rejectionReason: firebase.firestore.FieldValue.delete(),
-      rejectedAt: firebase.firestore.FieldValue.delete(),
-      rejectedBy: firebase.firestore.FieldValue.delete(),
-      rejectedByEmail: firebase.firestore.FieldValue.delete(),
-      updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-    });
-    showToast("Event moved back to pending review.", "success", 3000);
-  } catch(err){
-    console.error("restoreEvent error:", err);
-    showToast("Could not restore: " + (err.message || "unknown error"), "error", 5000);
-    if (btn){
-      btn.disabled = false;
-      btn.innerHTML = orig;
-      refreshIcons();
-    }
-  }
-}
-
-/* ══════════════════════════════════════════════════════════════
-   DELETE
-   ══════════════════════════════════════════════════════════════ */
-async function openDeleteModal(eventId){
-  var ev = allEvents.find(function(e){ return e.id === eventId; });
-  if (!ev) return;
-
-  pendingDeleteId = eventId;
-
-  var cover = ev.heroImage || ev.coverImage || "";
-  var thumb = $("deleteSummaryThumb");
-  if (thumb){
-    thumb.style.backgroundImage = cover ? "url('" + cover.replace(/'/g, "\\'") + "')" : "linear-gradient(135deg,#0a0f14,#1f2937)";
-  }
-  $("deleteSummaryName").textContent = ev.eventName || "Untitled Event";
-
-  var subBits = [];
-  if (ev.startDate) subBits.push(formatDate(ev.startDate, ev.startTime));
-  if (ev.venueName) subBits.push(ev.venueName);
-  if (ev.city) subBits.push(ev.city);
-  $("deleteSummarySub").innerHTML = subBits.map(function(s){
-    return '<span>' + esc(s) + '</span>';
-  }).join('');
-
-  $("deleteTicketsWarn").style.display = "none";
-  $("deleteWarnBox").classList.remove("has-tickets");
-  $("deleteWarnTitle").textContent = "What happens when you delete";
-  $("deleteConfirmInput").value = "";
-  $("deleteConfirmInput").classList.remove("ok");
-  $("deleteConfirmBtn").disabled = true;
-  $("deleteConfirmBtn").innerHTML = '<i data-lucide="trash-2"></i> Delete forever';
-
-  $("deleteModal").classList.add("open");
-  document.body.style.overflow = "hidden";
-  refreshIcons();
-
-  try {
-    var snap = await db.collection(EVENTS).doc(eventId).collection("tickets").get();
-    var total = snap.size;
-    if (total > 0){
-      var countEl = $("deleteTicketsCount");
-      if (countEl) countEl.textContent = "This event has " + total + " ticket" + (total === 1 ? "" : "s") + " on file.";
-      $("deleteTicketsWarn").style.display = "block";
-      $("deleteWarnBox").classList.add("has-tickets");
-      $("deleteWarnTitle").textContent = "Heads up — this event has sales";
-    }
-  } catch(err){
-    console.warn("Could not check ticket count:", err);
-  }
-}
-
-function closeDeleteModal(){
-  $("deleteModal").classList.remove("open");
-  document.body.style.overflow = "";
-  pendingDeleteId = null;
-}
-
-function wireDeleteModal(){
-  $("deleteModalClose").addEventListener("click", closeDeleteModal);
-  $("deleteCancelBtn").addEventListener("click", closeDeleteModal);
-  $("deleteModal").addEventListener("click", function(e){
-    if (e.target === $("deleteModal")) closeDeleteModal();
-  });
-
-  var input = $("deleteConfirmInput");
-  input.addEventListener("input", function(){
-    var val = this.value.trim().toUpperCase();
-    var ok = val === "DELETE";
-    this.classList.toggle("ok", ok);
-    $("deleteConfirmBtn").disabled = !ok;
-  });
-
-  $("deleteConfirmBtn").addEventListener("click", function(){
-    if (!pendingDeleteId) return;
-    doDeleteEvent(pendingDeleteId, this);
+  db.collection(EVENTS).doc(eventId).update({
+    status:'rejected',
+    rejectionReason:reason||'',
+    rejectedAt:firebase.firestore.FieldValue.serverTimestamp(),
+    rejectedBy:currentUser.uid,
+    rejectedByEmail:currentUser.email||'',
+    updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function(){
+    showToast('Event rejected.','success',3000);
+  }).catch(function(err){
+    console.error('[reject]',err);
+    showToast('Could not reject: '+(err.message||'unknown'),'error',5000);
+    if(btn){btn.disabled=false;btn.innerHTML=orig;refreshIcons();}
   });
 }
 
-async function doDeleteEvent(eventId, btn){
-  var ev = allEvents.find(function(e){ return e.id === eventId; });
-  var name = ev ? (ev.eventName || "Event") : "Event";
+function restoreEvent(eventId,card){
+  var btn=card.querySelector('.restore-btn');
+  var orig=btn?btn.innerHTML:'';
+  if(btn){btn.disabled=true;btn.innerHTML='<span class="spinner" style="width:14px;height:14px;border-width:2px"></span>';}
 
-  var orig = btn.innerHTML;
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spinner"></span> Deleting…';
-
-  try {
-    await db.collection(EVENTS).doc(eventId).delete();
-    closeDeleteModal();
-    showToast('"' + name + '" deleted.', "success", 4000);
-  } catch(err){
-    console.error("doDeleteEvent error:", err);
-    showToast("Could not delete: " + (err.message || "unknown error"), "error", 5000);
-    btn.disabled = false;
-    btn.innerHTML = orig;
-    refreshIcons();
-  }
+  db.collection(EVENTS).doc(eventId).update({
+    status:'pending_review',
+    rejectionReason:firebase.firestore.FieldValue.delete(),
+    rejectedAt:firebase.firestore.FieldValue.delete(),
+    rejectedBy:firebase.firestore.FieldValue.delete(),
+    rejectedByEmail:firebase.firestore.FieldValue.delete(),
+    updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+  }).then(function(){
+    showToast('Event restored to review.','success',3000);
+  }).catch(function(err){
+    console.error('[restore]',err);
+    showToast('Could not restore: '+(err.message||'unknown'),'error',5000);
+    if(btn){btn.disabled=false;btn.innerHTML=orig;refreshIcons();}
+  });
 }
 
-function wireFilterBar(){
-  document.querySelectorAll(".filter-chip").forEach(function(chip){
-    chip.addEventListener("click", function(){
-      activeFilter = this.dataset.filter || "all";
-      document.querySelectorAll(".filter-chip").forEach(function(c){
-        c.classList.toggle("active", c === chip);
+function deleteEvent(eventId,card){
+  var btn=card.querySelector('.delete-btn');
+  var orig=btn?btn.innerHTML:'';
+  if(btn){btn.disabled=true;btn.innerHTML='<span class="spinner" style="width:14px;height:14px;border-width:2px"></span> Deleting…';}
+
+  db.collection(EVENTS).doc(eventId).delete()
+    .then(function(){
+      showToast('Event deleted.','success',3000);
+    })
+    .catch(function(err){
+      console.error('[delete]',err);
+      showToast('Could not delete: '+(err.message||'unknown'),'error',5000);
+      if(btn){btn.disabled=false;btn.innerHTML=orig;refreshIcons();}
+    });
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   FILTER TABS
+   ═══════════════════════════════════════════════════════════════ */
+function wireTabs(){
+  document.querySelectorAll('.tab').forEach(function(tab){
+    tab.addEventListener('click',function(){
+      activeFilter=this.dataset.filter||'all';
+      document.querySelectorAll('.tab').forEach(function(t){
+        t.classList.toggle('active',t===tab);
       });
       renderList();
     });
   });
 }
 
-function applyAuth(user){
-  currentUser = user;
-  isAdmin = !!(user && ADMINS.map(function(e){ return e.toLowerCase(); }).indexOf(String(user.email || "").toLowerCase()) !== -1);
-
-  if (user){
-    var chip = $("userChip");
-    if (chip) chip.style.display = "inline-flex";
-    var av = $("userAvatar");
-    if (av) av.textContent = initialsFrom(user.displayName, user.email);
-    var nm = $("userName");
-    if (nm) nm.textContent = user.displayName || user.email.split("@")[0];
-  } else {
-    var chip2 = $("userChip");
-    if (chip2) chip2.style.display = "none";
-  }
-}
-
-document.addEventListener("DOMContentLoaded", function(){
-  $("year").textContent = new Date().getFullYear();
+/* ═══════════════════════════════════════════════════════════════
+   BOOT
+   ═══════════════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded',function(){
+  $('year').textContent=new Date().getFullYear();
   refreshIcons();
   showLoading();
-  wireFilterBar();
-  wireDeleteModal();
+  wireTabs();
 
-  var retryBtn = $("retryBtn");
-  if (retryBtn){
-    retryBtn.addEventListener("click", function(){
-      if (isAdmin) attachEventsListener();
-    });
-  }
+  $('retryBtn').addEventListener('click',function(){
+    if(isAdmin(currentUser))attachListener();
+  });
 
   auth.onAuthStateChanged(function(user){
-    applyAuth(user);
-    if (!user){ showSignin(); return; }
-    if (!isAdmin){ showNotAdmin(); return; }
-    attachEventsListener();
+    currentUser=user;
+    if(!user){showSignin();return;}
+    if(!isAdmin(user)){showNotAdmin();return;}
+    attachListener();
   });
-});
 
-window.addEventListener("beforeunload", function(){
-  if (unsubscribe){ try { unsubscribe(); } catch(e){} }
+  window.addEventListener('beforeunload',function(){
+    if(unsub){try{unsub();}catch(e){}}
+  });
 });
 
 })();
 </script>
+
 </body>
-                                                                                                              </html>
+    </html>
