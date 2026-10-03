@@ -9,6 +9,7 @@
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 <style>
 :root{
   --cy:#00FFFF;--cy2:#00CCCC;--cy3:#009999;--cyf:#e6ffff;
@@ -390,6 +391,11 @@ if (BASE_URL.indexOf("/Novalink-Tickets/") === -1 && window.location.hostname.in
   BASE_URL = window.location.origin + "/Novalink-Tickets/";
 }
 
+/* ── EmailJS config ── */
+var EMAILJS_SERVICE_ID  = "service_prn9hay";
+var EMAILJS_TEMPLATE_ID = "template_5pt25oi";
+var EMAILJS_PUBLIC_KEY  = "bmHeI_nQwa4UY6mR4";
+
 /* ── TIER DEFAULTS — semantic keys ── */
 var TIER_DEFAULTS = {
   elite:    "#1a202c",
@@ -499,6 +505,12 @@ var db = firebase.firestore();
 var auth = firebase.auth();
 var EVENTS = "events";
 
+/* ── Init EmailJS ── */
+if (window.emailjs) {
+  try { emailjs.init({ publicKey: EMAILJS_PUBLIC_KEY }); }
+  catch(e){ console.warn('[emailjs init]', e); }
+}
+
 var $ = function(id){ return document.getElementById(id); };
 var esc = function(s){ return String(s == null ? '' : s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&#39;'); };
 var refreshIcons = function(){ if (window.lucide) lucide.createIcons(); };
@@ -568,6 +580,54 @@ function extractRef(line){
   var m = /NL-([A-Z0-9]{1,4})-([A-Z0-9]{1,4})/i.exec(String(line || ''));
   if (!m) return null;
   return 'NL-' + m[1].toUpperCase() + '-' + m[2].toUpperCase();
+}
+
+/* ══════════════════════════════════════════════════════════════
+   EMAIL — send the buyer their ticket on confirmation
+   ══════════════════════════════════════════════════════════════ */
+function sendTicketEmail(t){
+  if (!window.emailjs){
+    console.warn('[email] EmailJS not loaded — skipping.');
+    return;
+  }
+  if (!t || !t.buyerEmail){
+    console.warn('[email] No buyer email on ticket', t && t.id);
+    return;
+  }
+
+  var eventName = t._event ? (t._event.eventName || 'Event') : 'Event';
+  var tierName  = getTierName(t._event, t.tier);
+  var seat      = prettySeat(t.seat) || 'General admission';
+  var ref       = t._ref || '';
+  var amount    = (Number(t.pricePaid) || 0).toFixed(2);
+
+  var ticketUrl = BASE_URL + 'view-card.html?event=' + encodeURIComponent(t._eventId) +
+                  '&ticket=' + encodeURIComponent(t.id);
+
+  var eventDate = (t._event && t._event.startDate) ? t._event.startDate : '';
+  var eventTime = (t._event && t._event.startTime) ? t._event.startTime : '';
+  var eventVenue = (t._event && (t._event.venueName || t._event.city))
+    ? [t._event.venueName, t._event.city].filter(Boolean).join(', ')
+    : '';
+
+  emailjs.send(EMAILJS_SERVICE_ID, EMAILJS_TEMPLATE_ID, {
+    to_email:    t.buyerEmail,
+    event_name:  eventName,
+    event_date:  eventDate,
+    event_time:  eventTime,
+    event_venue: eventVenue,
+    guest_name:  t.guestName || 'Guest',
+    tier_name:   tierName,
+    seat:        seat,
+    ticket_ref:  ref,
+    ticket_url:  ticketUrl,
+    amount:      amount
+  }).then(function(){
+    console.log('[email] Sent to', t.buyerEmail, 'for', ref);
+  }).catch(function(err){
+    console.error('[email] Failed:', err);
+    toast('Ticket confirmed, but email failed. Send the draft manually.', 'error', 6000);
+  });
 }
 
 /* ══════════════════════════════════════════════════════════════
@@ -952,6 +1012,7 @@ function confirmPaid(t){
   }).then(function(){
     toast('Ticket confirmed.', 'success');
     showDraft('confirmed', t);
+    sendTicketEmail(t);
   }).catch(function(err){
     console.error('[confirm]', err);
     toast('Failed: ' + err.message, 'error', 5000);
@@ -1192,6 +1253,10 @@ function executeBulkUpdate(matched){
   batch.commit().then(function(){
     toast(matched.length + ' tickets confirmed as paid.', 'success', 4000);
     closeBulkPaste();
+
+    /* Send confirmation emails to each buyer */
+    matched.forEach(function(t){ sendTicketEmail(t); });
+
     if (matched.length === 1){
       setTimeout(function(){ showDraft('confirmed', matched[0]); }, 400);
     }
