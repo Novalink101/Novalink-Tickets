@@ -162,10 +162,10 @@ h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
 
 .type-picker{display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin-bottom:12px}
 @media (max-width:520px){.type-picker{grid-template-columns:1fr}}
-.type-btn{padding:9px 10px;background:#fff;border:1.5px solid var(--line-2);border-radius:var(--r-sm);font-family:inherit;font-size:12px;font-weight:800;color:var(--ink-3);cursor:pointer;transition:all .15s var(--ease);display:flex;align-items:center;gap:6px;justify-content:center}
+.type-btn{padding:9px 10px;background:#fff;border:1.5px solid var(--line-2);border-radius:var(--r-sm);font-family:inherit;font-size:12px;font-weight:800;color:var(--ink-3);cursor:pointer;transition:all .15s var(--ease);display:flex;align-items:center;gap:6px;justify-content:center;text-align:center;line-height:1.25}
 .type-btn:hover{border-color:var(--brand)}
 .type-btn.active{background:var(--ink);border-color:var(--ink);color:#fff}
-.type-btn svg{width:13px;height:13px}
+.type-btn svg{width:13px;height:13px;flex-shrink:0}
 
 .capacity-total{background:linear-gradient(135deg,var(--ink),var(--ink-2));color:#fff;border-radius:var(--r-md);padding:16px 18px;margin-top:14px;display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
 .capacity-total .lbl{font-size:11px;font-weight:900;color:rgba(255,255,255,.55);letter-spacing:.08em;text-transform:uppercase}
@@ -410,7 +410,7 @@ h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
     </div>
   </section>
 
-  <!-- ═══════ STEP 2: PRICING (only 2 plans) ═══════ -->
+  <!-- ═══════ STEP 2: PRICING ═══════ -->
   <section class="panel" data-panel="2">
     <div class="layout">
       <div>
@@ -463,15 +463,18 @@ h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
           <div class="card-head"><h1>Tiers & prices</h1><p>Name your tiers, set the price for each, and pick the colour.</p></div>
           <div class="alert alert-info">
             <i data-lucide="info"></i>
-            <div>Most events need <strong>2 tiers</strong>. Add up to 4. These tier names appear on tickets and everywhere in the app.</div>
+            <div>Most events need <strong>2 tiers</strong>. You can add up to 4. These tier names appear on tickets and everywhere in the app.</div>
           </div>
 
           <div class="field">
             <label>Your tiers</label>
             <div id="tierList"></div>
-            <button type="button" class="btn btn-ghost btn-sm" id="addTierBtn" style="margin-top:8px">
-              <i data-lucide="plus"></i> Add tier
-            </button>
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-top:8px;gap:12px;flex-wrap:wrap">
+              <button type="button" class="btn btn-ghost btn-sm" id="addTierBtn">
+                <i data-lucide="plus"></i> Add tier
+              </button>
+              <span style="font-size:11px;font-weight:800;color:var(--slate);text-transform:uppercase;letter-spacing:.05em">Min 2 · Max 4</span>
+            </div>
           </div>
 
           <div class="step-nav">
@@ -707,12 +710,25 @@ var db=firebase.firestore();
 var auth=firebase.auth();
 var EVENTS='events';
 
+/* ═══════════════════════════════════════════════════════════════
+   TIER DEFAULTS
+   ─────────────────────────────────────────────────────────────
+   Only 4 tier keys exist. The wizard shows the FIRST N of these
+   as active tiers. User can rename them freely.
+   ═══════════════════════════════════════════════════════════════ */
 var TIER_DEFAULTS=[
   { key:'black',  name:'Elite',    colour:'#1a202c', price:400 },
   { key:'gold',   name:'VIP',      colour:'#ecc94b', price:250 },
   { key:'silver', name:'Silver',   colour:'#cbd5e1', price:150 },
   { key:'cyan',   name:'Standard', colour:'#00FFFF', price:80  }
 ];
+
+/* Default tier count on fresh load. */
+var DEFAULT_TIER_COUNT=2;
+
+/* Bounds the user can toggle between. */
+var MIN_TIERS=2;
+var MAX_TIERS=4;
 
 function $(id){return document.getElementById(id);}
 function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
@@ -745,14 +761,18 @@ var currentUser=null;
 var currentStep=1;
 var isPublishing=false;
 
+/* ═══════════════════════════════════════════════════════════════
+   STATE
+   ─────────────────────────────────────────────────────────────
+   tiers starts with DEFAULT_TIER_COUNT entries. The wizard will
+   only save those keys to Firestore. Sections are forced to use
+   one of those keys — no orphans, no dead tiers.
+   ═══════════════════════════════════════════════════════════════ */
 var state={
   plan:{ id:'standard', fee:7, limit:500 },
-  tiers:[
-    Object.assign({},TIER_DEFAULTS[0]),
-    Object.assign({},TIER_DEFAULTS[1]),
-    Object.assign({},TIER_DEFAULTS[2]),
-    Object.assign({},TIER_DEFAULTS[3])
-  ],
+  tiers:TIER_DEFAULTS.slice(0,DEFAULT_TIER_COUNT).map(function(t){
+    return Object.assign({},t);
+  }),
   coverImage:'',
   seatPlanImage:'',
   sections:[]
@@ -795,19 +815,19 @@ function updatePreviews(){
   var dateLabel=date+(time?' · '+time:'');
   var venueLabel=venue+(city?', '+city:'');
 
+  /* Cheapest tier drives the preview colour, so the badge matches the buyer-facing first tier */
   var tier=state.tiers[0];
   for(var i=1;i<state.tiers.length;i++){
     if(state.tiers[i].price<tier.price)tier=state.tiers[i];
   }
 
-  // Find a sample seat from the sections
+  /* Sample seat — always shows a Row if the first section has type 'rows' */
   var sampleSeat='General admission';
   if(state.sections.length){
     var s=state.sections[0];
-    if(s.type==='rows')sampleSeat='Row A · Seat 1';
-    else if(s.type==='tables')sampleSeat='Table 1 · Seat 1';
-    else sampleSeat='Seat 1';
-    sampleSeat=s.name+' · '+sampleSeat;
+    if(s.type==='rows')sampleSeat=s.name+' · Row A · Seat 1';
+    else if(s.type==='tables')sampleSeat=s.name+' · Table 1 · Seat 1';
+    else sampleSeat=s.name+' · Seat 1';
   }
 
   [1,2,3,4,5].forEach(function(i){
@@ -868,12 +888,17 @@ function getPalette(hex){
 
 /* ═══════════════════════════════════════════════════════════════
    TIERS
+   ─────────────────────────────────────────────────────────────
+   - Minimum 2 tiers. Maximum 4.
+   - Removing a tier reassigns orphaned sections to the first tier.
+   - Renaming / repricing updates every preview live.
    ═══════════════════════════════════════════════════════════════ */
 function renderTiers(){
   var wrap=$('tierList');
   wrap.innerHTML='';
 
   state.tiers.forEach(function(t,i){
+    var canRemove=state.tiers.length>MIN_TIERS;
     var row=document.createElement('div');
     row.className='tier-row';
     row.innerHTML=
@@ -885,7 +910,7 @@ function renderTiers(){
         '<span class="tier-price-prefix">R</span>'+
         '<input type="number" min="0" step="0.01" value="'+t.price+'" data-role="price" data-idx="'+i+'" />'+
       '</div>'+
-      '<button type="button" class="tier-toggle" data-role="remove" data-idx="'+i+'"'+(state.tiers.length<=2?' disabled':'')+' aria-label="Remove tier">'+
+      '<button type="button" class="tier-toggle" data-role="remove" data-idx="'+i+'"'+(canRemove?'':' disabled')+' aria-label="Remove tier">'+
         '<i data-lucide="trash-2"></i>'+
       '</button>';
     wrap.appendChild(row);
@@ -917,10 +942,14 @@ function renderTiers(){
   });
   wrap.querySelectorAll('[data-role="remove"]').forEach(function(btn){
     btn.addEventListener('click',function(){
-      if(state.tiers.length<=2)return;
+      if(state.tiers.length<=MIN_TIERS){
+        showToast('Minimum '+MIN_TIERS+' tiers.','info',2200);
+        return;
+      }
       var i=parseInt(this.dataset.idx,10);
       var removedKey=state.tiers[i].key;
       state.tiers.splice(i,1);
+      /* Reassign any section that was on the removed tier */
       state.sections.forEach(function(s){
         if(s.tier===removedKey)s.tier=state.tiers[0].key;
       });
@@ -930,14 +959,19 @@ function renderTiers(){
     });
   });
 
-  $('addTierBtn').disabled=state.tiers.length>=4;
+  $('addTierBtn').disabled=state.tiers.length>=MAX_TIERS;
   refreshIcons();
 }
+
 function addTier(){
-  if(state.tiers.length>=4){showToast('Maximum 4 tiers.','info',2500);return;}
-  var used={};state.tiers.forEach(function(t){used[t.key]=true;});
+  if(state.tiers.length>=MAX_TIERS){
+    showToast('Maximum '+MAX_TIERS+' tiers.','info',2500);
+    return;
+  }
+  var used={};
+  state.tiers.forEach(function(t){used[t.key]=true;});
   var next=TIER_DEFAULTS.find(function(t){return !used[t.key];});
-  if(!next){showToast('No more tier slots.','info');return;}
+  if(!next){showToast('No more tier slots available.','info');return;}
   state.tiers.push(Object.assign({},next));
   renderTiers();
   renderSections();
@@ -1003,14 +1037,11 @@ function renderSections(){
     });
   }
 
-  // Total capacity
   $('totalCapacity').textContent=totalCapacity();
 
-  // Per-tier summary
   var summaryEl=$('tierSummary');
   summaryEl.innerHTML='';
-  var activeTiers=state.tiers.slice(0,4);
-  activeTiers.forEach(function(t){
+  state.tiers.forEach(function(t){
     var cap=tierCapacity(t.key);
     var el=document.createElement('div');
     el.className='tier-summary-item';
@@ -1026,7 +1057,7 @@ function buildSectionCard(sec,i){
   el.className='section-card';
 
   var tierOpts='';
-  state.tiers.slice(0,4).forEach(function(t){
+  state.tiers.forEach(function(t){
     tierOpts+='<option value="'+esc(t.key)+'"'+(sec.tier===t.key?' selected':'')+'>'+esc(t.name)+' · '+money(t.price)+'</option>';
   });
 
@@ -1049,9 +1080,9 @@ function buildSectionCard(sec,i){
     '<div style="margin-top:12px">'+
       '<label style="display:block;font-size:11px;font-weight:900;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Layout type</label>'+
       '<div class="type-picker">'+
-        '<button type="button" class="type-btn'+(sec.type==='rows'?' active':'')+'" data-role="set-type" data-idx="'+i+'" data-type="rows"><i data-lucide="rows-3"></i> Rows</button>'+
+        '<button type="button" class="type-btn'+(sec.type==='rows'?' active':'')+'" data-role="set-type" data-idx="'+i+'" data-type="rows"><i data-lucide="rows-3"></i> Rows (numbered seats)</button>'+
         '<button type="button" class="type-btn'+(sec.type==='tables'?' active':'')+'" data-role="set-type" data-idx="'+i+'" data-type="tables"><i data-lucide="circle-dot"></i> Tables</button>'+
-        '<button type="button" class="type-btn'+(sec.type==='simple'?' active':'')+'" data-role="set-type" data-idx="'+i+'" data-type="simple"><i data-lucide="hash"></i> Simple</button>'+
+        '<button type="button" class="type-btn'+(sec.type==='simple'?' active':'')+'" data-role="set-type" data-idx="'+i+'" data-type="simple"><i data-lucide="hash"></i> Standing (no seat numbers)</button>'+
       '</div>'+
       '<div class="section-rows" id="typeInputs-'+i+'">'+buildTypeInputs(sec,i)+'</div>'+
       '<div class="section-cap"><i data-lucide="users"></i> '+sectionCapacity(sec)+' seats in this section</div>'+
@@ -1082,88 +1113,26 @@ function buildTypeInputs(sec,i){
     '<p class="field-hint">Seats numbered <strong>Seat 1</strong>, <strong>Seat 2</strong>, <strong>Seat 3</strong>…</p>';
 }
 
-function wireSectionInputs(){
-  document.querySelectorAll('[data-role="remove-section"]').forEach(function(btn){
-    btn.addEventListener('click',function(){
-      var i=parseInt(this.dataset.idx,10);
-      state.sections.splice(i,1);
-      renderSections();
-      updatePreviews();
-    });
-  });
-  document.querySelectorAll('[data-role="sec-name"]').forEach(function(inp){
-    inp.addEventListener('input',function(){
-      var i=parseInt(this.dataset.idx,10);
-      state.sections[i].name=this.value;
-      // Update the section title live
-      var card=this.closest('.section-card');
-      var titleEl=card.querySelector('.section-title');
-      if(titleEl)titleEl.textContent=this.value||('Section '+(i+1));
-      updatePreviews();
-    });
-  });
-  document.querySelectorAll('[data-role="sec-tier"]').forEach(function(sel){
-    sel.addEventListener('change',function(){
-      var i=parseInt(this.dataset.idx,10);
-      state.sections[i].tier=this.value;
-      renderSections();
-      updatePreviews();
-    });
-  });
-  document.querySelectorAll('[data-role="set-type"]').forEach(function(btn){
-    btn.addEventListener('click',function(){
-      var i=parseInt(this.dataset.idx,10);
-      state.sections[i].type=this.dataset.type;
-      renderSections();
-      updatePreviews();
-    });
-  });
-  ['sec-rows','sec-seats-per-row','sec-tables','sec-seats-per-table','sec-count'].forEach(function(role){
-    document.querySelectorAll('[data-role="'+role+'"]').forEach(function(inp){
-      inp.addEventListener('input',function(){
-        var i=parseInt(this.dataset.idx,10);
-        var v=Math.max(1,parseInt(this.value,10)||1);
-        if(role==='sec-rows')state.sections[i].rows=v;
-        else if(role==='sec-seats-per-row')state.sections[i].seatsPerRow=v;
-        else if(role==='sec-tables')state.sections[i].tables=v;
-        else if(role==='sec-seats-per-table')state.sections[i].seatsPerTable=v;
-        else if(role==='sec-count')state.sections[i].count=v;
-        // Update the cap line
-        var card=this.closest('.section-card');
-        var capEl=card.querySelector('.section-cap');
-        if(capEl)capEl.innerHTML='<i data-lucide="users"></i> '+sectionCapacity(state.sections[i])+' seats in this section';
-        $('totalCapacity').textContent=totalCapacity();
-        // Update tier summary
-        var summaryEl=$('tierSummary');
-        var items=summaryEl.querySelectorAll('.tier-summary-item');
-        var idx=0;
-        state.tiers.slice(0,4).forEach(function(t){
-          var cap=tierCapacity(t.key);
-          if(items[idx]){
-            items[idx].querySelector('.ct').textContent=cap;
-          }
-          idx++;
-        });
-        refreshIcons();
-        updatePreviews();
-      });
-    });
-  });
-}
-
 function addSection(){
   if(state.sections.length>=10){showToast('Maximum 10 sections.','info');return;}
-  var usedTier=state.sections.length?state.sections[state.sections.length-1].tier:state.tiers[0].key;
+  /* Default to the tier of the previous section (or the first tier).
+     This prevents orphan sections sitting on a tier nobody wants. */
+  var usedTier=state.sections.length
+    ? state.sections[state.sections.length-1].tier
+    : state.tiers[0].key;
   state.sections.push({
     id:uid(),
     name:'Section '+(state.sections.length+1),
     tier:usedTier,
+    /* Always start as 'rows' — the safe, most common option.
+       The user must consciously switch to Tables or Standing. */
     type:'rows',
     rows:10,
     seatsPerRow:10,
-    tables:10,
-    seatsPerTable:8,
-    count:100
+    /* Table/standing fields left at 0 — populated only if type switches */
+    tables:0,
+    seatsPerTable:0,
+    count:0
   });
   renderSections();
   updatePreviews();
@@ -1196,7 +1165,7 @@ function renderReview(){
       var tierName='—';
       var t=state.tiers.find(function(x){return x.key===s.tier;});
       if(t)tierName=t.name;
-      var typeLabel2=s.type==='rows'?'Rows':(s.type==='tables'?'Tables':'Simple');
+      var typeLabel2=s.type==='rows'?'Rows (numbered)':(s.type==='tables'?'Tables':'Standing');
       sectionsHtml+='<div style="font-size:13px;font-weight:700;padding:4px 0"><strong>'+esc(s.name)+'</strong> · '+esc(tierName)+' · '+typeLabel2+' · '+sectionCapacity(s)+' seats</div>';
     });
   }
@@ -1278,6 +1247,7 @@ function publishEvent(){
   $('saveError').classList.add('hidden');
   $('saveSuccess').classList.add('hidden');
 
+  /* Build tier maps from active tiers only */
   var tierNames={},tierColours={},tierPrices={},tierActive={};
   state.tiers.forEach(function(t){
     tierNames[t.key]=t.name;
@@ -1289,20 +1259,25 @@ function publishEvent(){
   var cover=state.coverImage||($('coverImageUrl').value||'').trim()||'';
   var seatPlanImg=state.seatPlanImage||($('seatPlanUrl').value||'').trim()||'';
 
-  // Build sections array with clean data
+  /* Clean sections — only include fields relevant to the chosen type */
   var cleanSections=state.sections.map(function(s){
-    return {
+    var base={
       id:s.id,
       name:s.name,
       tier:s.tier,
       type:s.type,
-      rows:parseInt(s.rows,10)||0,
-      seatsPerRow:parseInt(s.seatsPerRow,10)||0,
-      tables:parseInt(s.tables,10)||0,
-      seatsPerTable:parseInt(s.seatsPerTable,10)||0,
-      count:parseInt(s.count,10)||0,
       capacity:sectionCapacity(s)
     };
+    if(s.type==='rows'){
+      base.rows=parseInt(s.rows,10)||0;
+      base.seatsPerRow=parseInt(s.seatsPerRow,10)||0;
+    }else if(s.type==='tables'){
+      base.tables=parseInt(s.tables,10)||0;
+      base.seatsPerTable=parseInt(s.seatsPerTable,10)||0;
+    }else{
+      base.count=parseInt(s.count,10)||0;
+    }
+    return base;
   });
 
   var payload={
@@ -1322,6 +1297,7 @@ function publishEvent(){
 
     plan:{ id:state.plan.id, fee:state.plan.fee, limit:state.plan.limit },
 
+    /* Only the active tier keys are saved — nothing else exists */
     activeTierCount:state.tiers.length,
     tierNames:tierNames,
     tierColours:tierColours,
@@ -1331,7 +1307,7 @@ function publishEvent(){
     cost:tierPrices[state.tiers[state.tiers.length-1].key]||0,
     tierColor:tierColours[state.tiers[0].key]||'#00FFFF',
 
-    // Seating logic
+    /* Seating logic — clean shape */
     seatingPlanImage:seatPlanImg,
     seatingSections:cleanSections,
     hasSeating:cleanSections.length>0,
@@ -1416,7 +1392,8 @@ document.addEventListener('DOMContentLoaded',function(){
     hint.textContent='Recommended price: R'+min.toFixed(2)+' – R'+max.toFixed(2)+' per ticket';
     var mid=(min+max)/2;
     if(mid>0){
-      var mult=[6,4,2,1];
+      /* Spread recommended prices across the tiers — highest tier gets the highest price */
+      var mult=[4,2.5,1.6,1];
       state.tiers.forEach(function(t,i){t.price=Math.round(mid*mult[i]*100)/100;});
       renderTiers();
       updatePreviews();
@@ -1470,7 +1447,7 @@ document.addEventListener('DOMContentLoaded',function(){
   $('addTierBtn').addEventListener('click',addTier);
   $('addSectionBtn').addEventListener('click',addSection);
 
-  // Use event delegation for section inputs
+  /* ── Section input delegation ── */
   document.addEventListener('input',function(e){
     if(e.target.dataset&&e.target.dataset.role){
       var role=e.target.dataset.role;
@@ -1497,7 +1474,7 @@ document.addEventListener('DOMContentLoaded',function(){
           var summaryEl=$('tierSummary');
           var items=summaryEl.querySelectorAll('.tier-summary-item');
           var idx=0;
-          state.tiers.slice(0,4).forEach(function(t){
+          state.tiers.forEach(function(t){
             if(items[idx])items[idx].querySelector('.ct').textContent=tierCapacity(t.key);
             idx++;
           });
@@ -1527,7 +1504,16 @@ document.addEventListener('DOMContentLoaded',function(){
       renderSections();
       updatePreviews();
     }else if(role==='set-type'){
-      state.sections[i].type=btn.dataset.type;
+      var sec=state.sections[i];
+      if(!sec)return;
+      var newType=btn.dataset.type;
+      sec.type=newType;
+      /* Populate defaults for the new type if they're missing.
+         Prevents 'rows' sections having 0 seats when switched from
+         'tables' and vice versa. */
+      if(newType==='rows'&&!sec.rows){sec.rows=10;sec.seatsPerRow=10;}
+      if(newType==='tables'&&!sec.tables){sec.tables=10;sec.seatsPerTable=8;}
+      if(newType==='simple'&&!sec.count){sec.count=100;}
       renderSections();
       updatePreviews();
     }
@@ -1570,6 +1556,7 @@ document.addEventListener('DOMContentLoaded',function(){
     }
   });
 
+  /* ── Bootstrap ── */
   selectPlan('standard',7,500);
   renderTiers();
   renderCover();
