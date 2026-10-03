@@ -5,1613 +5,1356 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="theme-color" content="#0a0f14" />
 <title>Create an Event · Novalink Studio</title>
+
 <script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+
 <style>
 :root{
-  --cy:#00FFFF;--cy2:#00CCCC;--cy3:#009999;--cyf:#e6ffff;
-  --bg:#f6f8fb;--sf:#ffffff;--sf2:#f1f4f8;
-  --bd:#e4e9f0;--bd2:#d3dbe5;
-  --tx:#0a0f14;--tx2:#2b3644;--mut:#6b7787;
-  --nv:#1e2f4d;--ink:#0a0f14;
-  --dg:#dc2626;--dgf:#fef2f2;--sv:#059669;--svf:#ecfdf5;
-  --am:#f59e0b;--amf:#fffbeb;
-  --rd:14px;--ease:cubic-bezier(0.25,0.8,0.25,1);
+  --brand:#00E5E5;--brand-dark:#00B8B8;--brand-darker:#00999A;
+  --brand-soft:#E6FFFF;--brand-tint:#B3FFFF;--brand-ink:#04161C;
+  --ink:#0A0F14;--ink-2:#1A2129;--ink-3:#2B3644;
+  --slate:#6B7787;--slate-2:#94A3B8;
+  --line:#E4E9F0;--line-2:#D3DBE5;
+  --bg:#F6F8FB;--surface:#FFFFFF;--surface-2:#F1F4F8;
+  --success:#059669;--success-soft:#ECFDF5;--success-line:#A7F3D0;
+  --warning:#D97706;--warning-soft:#FFFBEB;--warning-line:#FDE68A;
+  --danger:#DC2626;--danger-soft:#FEF2F2;--danger-line:#FECACA;
   --font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:22px;--r-full:999px;
+  --shadow-sm:0 1px 3px rgba(10,15,20,.06);
+  --shadow-md:0 4px 14px rgba(10,15,20,.06);
+  --shadow-lg:0 12px 32px rgba(10,15,20,.10);
+  --shadow-xl:0 24px 60px rgba(10,15,20,.14);
+  --ease:cubic-bezier(.25,.8,.25,1);
+  --ease-out:cubic-bezier(.22,.9,.3,1);
+  --container:1100px;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font);background:var(--bg);color:var(--tx);line-height:1.6;min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
-.container{max-width:1400px;margin:0 auto;padding:0 24px;width:100%}
-h1,h2,h3,h4{line-height:1.15;font-weight:700}
+html{-webkit-text-size-adjust:100%;scroll-behavior:smooth}
+body{font-family:var(--font);font-size:14px;line-height:1.55;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column}
+img,svg{display:block;max-width:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:none}
 a{color:inherit;text-decoration:none}
-button{font:inherit;font-family:inherit;cursor:pointer}
-input,select,textarea{font-family:inherit;font-size:14px}
+h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
+::selection{background:var(--brand);color:var(--brand-ink)}
+.hidden{display:none!important}
 
-.site-header{background:var(--sf);border-bottom:1px solid var(--bd);padding:14px 0;position:sticky;top:0;z-index:40}
-.hdr{display:flex;align-items:center;justify-content:space-between;gap:12px}
-.logo{display:inline-flex;align-items:center;gap:10px}
-.logo svg{width:30px;height:37px;display:block}
-.logo b{font-weight:800;font-size:1.1rem;color:var(--nv)}
-.studio-badge{background:var(--ink);color:var(--cy);font-size:10.5px;font-weight:900;padding:5px 11px;border-radius:99px;text-transform:uppercase;letter-spacing:.06em}
+/* Nav */
+.nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.nav-inner{max-width:var(--container);margin:0 auto;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap}
+.nav-brand{display:inline-flex;align-items:center;gap:10px;font-weight:900;font-size:15px;color:var(--ink-2);letter-spacing:.02em}
+.nav-brand svg{width:26px;height:32px;flex-shrink:0}
+.studio-badge{background:var(--ink);color:var(--brand);font-size:10px;font-weight:900;letter-spacing:.12em;text-transform:uppercase;padding:5px 10px;border-radius:var(--r-full);margin-left:6px}
+.nav-actions{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+@media (max-width:480px){.nav-inner{padding:10px 14px}.nav-brand span{display:none}.nav-brand svg{width:22px;height:27px}.studio-badge{display:none}}
 
-main{flex:1;padding:24px 0 64px}
-.split{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:28px;align-items:start}
-.split-wide{display:grid;grid-template-columns:minmax(0,1fr);gap:20px}
-@media (max-width:960px){.split{grid-template-columns:1fr;gap:20px}}
+/* Container */
+.container{max-width:var(--container);margin:0 auto;padding:24px 20px 64px;width:100%}
+@media (max-width:560px){.container{padding:16px 14px 48px}}
 
-.card{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rd);padding:26px;box-shadow:0 6px 20px rgba(10,15,20,.05);min-width:0}
-.card-h{text-align:center;margin-bottom:22px}
-.card-h h1{font-size:1.5rem;color:var(--nv);margin-bottom:6px}
-.card-h p{color:var(--mut);font-size:13.5px}
-
-.steps-wrap{background:var(--sf);border:1px solid var(--bd);border-radius:var(--rd);padding:14px;margin-bottom:22px;box-shadow:0 6px 20px rgba(10,15,20,.04)}
-.steps{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:8px;margin-bottom:12px}
-@media (max-width:820px){.steps{grid-template-columns:repeat(2,minmax(0,1fr))}}
-@media (max-width:480px){.steps{grid-template-columns:1fr}}
-.step{display:flex;align-items:center;gap:10px;padding:11px 13px;background:var(--bg);border:2px solid var(--bd2);border-radius:11px;cursor:pointer;font-size:12.5px;font-weight:800;color:var(--tx2);transition:.2s;text-align:left;min-width:0}
-.step:hover{border-color:var(--cy)}
-.step.active{background:var(--ink);color:#fff;border-color:var(--ink);box-shadow:0 6px 18px rgba(10,15,20,.18)}
-.step.active .step-num{background:var(--cy);color:#04161c}
-.step.done{border-color:var(--cy2);background:var(--cyf);color:var(--cy3)}
-.step.done .step-num{background:var(--cy2);color:#04161c}
-.step-num{display:inline-flex;align-items:center;justify-content:center;width:26px;height:26px;border-radius:50%;background:var(--bd2);color:var(--tx2);font-size:12px;font-weight:900;flex-shrink:0}
+/* Steps */
+.steps{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:14px;margin-bottom:20px;box-shadow:var(--shadow-sm)}
+.steps-row{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+@media (max-width:760px){.steps-row{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:440px){.steps-row{grid-template-columns:1fr}}
+.step{display:flex;align-items:center;gap:10px;padding:11px 13px;background:var(--surface-2);border:2px solid var(--line-2);border-radius:var(--r-md);cursor:pointer;font-size:12.5px;font-weight:800;color:var(--ink-3);transition:all .2s var(--ease);text-align:left;min-width:0}
+.step:hover:not(.active){border-color:var(--brand)}
+.step.active{background:var(--ink);color:#fff;border-color:var(--ink)}
+.step.active .step-num{background:var(--brand);color:var(--brand-ink)}
+.step.done{border-color:var(--brand);background:var(--brand-soft);color:var(--brand-darker)}
+.step.done .step-num{background:var(--brand);color:var(--brand-ink)}
+.step-num{display:inline-flex;align-items:center;justify-content:center;width:24px;height:24px;border-radius:50%;background:var(--line-2);color:var(--ink-3);font-size:11.5px;font-weight:900;flex-shrink:0}
 .step-lbl{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.progress{height:6px;background:var(--bg);border-radius:99px;overflow:hidden}
-.progress-fill{height:100%;background:linear-gradient(90deg,var(--cy),var(--cy2));border-radius:99px;transition:width .35s var(--ease)}
-.progress-text{display:flex;justify-content:space-between;margin-top:8px;font-size:11px;font-weight:800;color:var(--mut);letter-spacing:.04em;text-transform:uppercase}
+.progress-bar{height:6px;background:var(--surface-2);border-radius:var(--r-full);overflow:hidden}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--brand),var(--brand-dark));border-radius:var(--r-full);transition:width .35s var(--ease)}
+.progress-text{display:flex;justify-content:space-between;margin-top:8px;font-size:11px;font-weight:900;color:var(--slate);letter-spacing:.06em;text-transform:uppercase}
 
-.panel{display:none;animation:fade .3s var(--ease)}
+/* Panel */
+.panel{display:none;animation:fadeUp .3s var(--ease-out)}
 .panel.active{display:block}
-@keyframes fade{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
 
-.fg{margin-bottom:16px;min-width:0}
-.fg label{display:block;font-size:11px;font-weight:800;color:var(--tx2);margin-bottom:7px;text-transform:uppercase;letter-spacing:.06em}
-.fg input,.fg select,.fg textarea{width:100%;padding:11px 14px;background:var(--bg);border:1px solid var(--bd2);border-radius:10px;color:var(--tx);font-size:14px;transition:.2s;min-width:0}
-.fg input:focus,.fg select:focus,.fg textarea:focus{outline:none;border-color:var(--cy);background:#fff;box-shadow:0 0 0 3px rgba(0,255,255,.15)}
-.fg textarea{resize:vertical;min-height:80px}
-.fg select{appearance:none;padding-right:38px;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7787' stroke-width='3'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:12px;cursor:pointer}
-.row2{display:grid;grid-template-columns:1fr 1fr;gap:14px}
-.row3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
-@media (max-width:600px){.row2,.row3{grid-template-columns:1fr}}
-.hint{font-size:11.5px;color:var(--mut);margin-top:6px;font-style:italic}
-.hint.rec{color:var(--cy3);font-weight:800;font-style:normal}
+/* Layout */
+.layout{display:grid;grid-template-columns:minmax(0,1fr) 340px;gap:22px;align-items:start}
+@media (max-width:960px){.layout{grid-template-columns:1fr;gap:16px}}
+.col-side{position:sticky;top:80px}
+@media (max-width:960px){.col-side{position:static}}
 
-.divider{margin:22px 0;border-top:1px dashed var(--bd);position:relative;text-align:center}
-.divider span{background:var(--sf);padding:0 12px;font-size:11px;font-weight:800;color:var(--mut);text-transform:uppercase;letter-spacing:.06em;position:relative;top:-10px}
+/* Card */
+.card{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);padding:26px;box-shadow:var(--shadow-sm)}
+.card + .card{margin-top:14px}
+@media (max-width:560px){.card{padding:18px;border-radius:var(--r-md)}}
 
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 20px;border-radius:11px;font-weight:800;font-size:13.5px;border:1px solid transparent;cursor:pointer;transition:.15s;white-space:nowrap;font-family:inherit;text-decoration:none}
-.btn i{width:16px;height:16px}
-.btn-accent{background:linear-gradient(135deg,var(--cy),var(--cy2));color:#04161c}
-.btn-accent:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 22px rgba(0,255,255,.35)}
-.btn-ghost{background:transparent;color:var(--tx2);border-color:var(--bd2)}
-.btn-ghost:hover:not(:disabled){background:var(--sf2);border-color:var(--cy);color:var(--cy3)}
-.btn-danger{background:var(--dgf);color:var(--dg);border-color:#fecaca}
-.btn-danger:hover:not(:disabled){background:var(--dg);color:#fff}
+.card-head{text-align:center;margin-bottom:22px}
+.card-head h1{font-size:1.5rem;font-weight:900;color:var(--ink);margin-bottom:6px;letter-spacing:-.02em}
+.card-head p{color:var(--slate);font-size:13.5px;line-height:1.55}
+
+/* Fields */
+.field{margin-bottom:16px}
+.field label{display:block;font-size:11px;font-weight:900;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px}
+.field label .req{color:var(--danger)}
+.field input,.field select,.field textarea{width:100%;padding:11px 14px;background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-md);font-size:14px;color:var(--ink);transition:all .22s var(--ease);min-height:44px;font-family:inherit}
+.field textarea{min-height:100px;resize:vertical;line-height:1.6;padding:12px 14px}
+.field input:focus,.field select:focus,.field textarea:focus{outline:none;border-color:var(--brand);background:#fff;box-shadow:0 0 0 3px rgba(0,229,229,.15)}
+.field input.is-error,.field select.is-error{border-color:var(--danger);background:var(--danger-soft)}
+.field select{appearance:none;-webkit-appearance:none;padding-right:38px;background-image:url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%236b7787' stroke-width='3'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;background-size:12px;cursor:pointer}
+.field-hint{font-size:11.5px;color:var(--slate);margin-top:6px;line-height:1.5;font-style:italic}
+.field-hint.rec{color:var(--brand-darker);font-style:normal;font-weight:800}
+.field-error{font-size:11.5px;color:var(--danger);font-weight:800;margin-top:6px;display:none}
+.field-error.show{display:block}
+
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:12px}
+.field-row-3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+@media (max-width:600px){.field-row,.field-row-3{grid-template-columns:1fr}}
+
+/* Currency */
+.curr{display:flex;align-items:stretch;width:100%}
+.curr-prefix{display:inline-flex;align-items:center;justify-content:center;padding:0 14px;background:var(--surface-2);border:1px solid var(--line-2);border-right:none;border-radius:var(--r-md) 0 0 var(--r-md);font-weight:900;color:var(--brand-darker);font-size:14.5px;flex-shrink:0}
+.curr input{border-top-left-radius:0!important;border-bottom-left-radius:0!important}
+
+/* Divider */
+.divider{margin:22px 0;border-top:1px dashed var(--line);position:relative;text-align:center}
+.divider span{background:var(--surface);padding:0 12px;font-size:11px;font-weight:900;color:var(--slate);text-transform:uppercase;letter-spacing:.08em;position:relative;top:-9px}
+
+/* Cover image */
+.cover-preview{aspect-ratio:21/9;background:var(--surface-2);border:1.5px dashed var(--line-2);border-radius:var(--r-md);overflow:hidden;position:relative;display:flex;align-items:center;justify-content:center;margin-top:8px;min-height:120px}
+.cover-preview img{width:100%;height:100%;object-fit:cover;display:block}
+.cover-preview .ph{display:flex;flex-direction:column;align-items:center;gap:6px;color:var(--slate-2);text-align:center;padding:16px}
+.cover-preview .ph svg{width:28px;height:28px;stroke-width:1.75}
+.cover-preview .ph .t{font-size:10.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase}
+.cover-preview .ph .s{font-size:10.5px;color:var(--slate);margin-top:2px;font-weight:500}
+
+/* Plan cards */
+.plan-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
+.plan{position:relative;display:flex;flex-direction:column;gap:4px;padding:16px;background:var(--surface);border:2px solid var(--line-2);border-radius:var(--r-md);cursor:pointer;transition:all .2s var(--ease);overflow:hidden;text-align:left;font-family:inherit}
+.plan:hover{border-color:var(--brand);transform:translateY(-2px)}
+.plan.selected{background:var(--ink);border-color:var(--ink);color:#fff;box-shadow:var(--shadow-lg)}
+.plan.selected .plan-name,.plan.selected .plan-fee{color:#fff}
+.plan.selected .plan-desc{color:rgba(255,255,255,.7)}
+.plan.selected .plan-fee small{color:var(--brand)}
+.plan-badge{position:absolute;top:0;right:0;background:var(--brand);color:var(--brand-ink);font-size:8.5px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;padding:3px 9px;border-radius:0 var(--r-md) 0 8px}
+.plan-name{font-size:13px;font-weight:800}
+.plan-fee{font-size:22px;font-weight:900;color:var(--brand-darker);line-height:1}
+.plan-fee small{font-size:10.5px;color:var(--slate);font-weight:700;margin-left:2px}
+.plan-desc{font-size:10.5px;color:var(--slate);line-height:1.35;margin-top:4px}
+
+/* Tiers */
+.tier-row{display:grid;grid-template-columns:36px 1fr 90px 110px 40px;gap:10px;align-items:center;padding:11px 12px;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-md);margin-bottom:8px;transition:all .2s var(--ease)}
+@media (max-width:700px){.tier-row{grid-template-columns:36px 1fr 80px;grid-auto-rows:auto}.tier-row > *:nth-child(4){grid-column:2/3}.tier-row > *:nth-child(5){grid-column:3/4;grid-row:1/2;justify-self:end}}
+.tier-swatch{width:36px;height:36px;border-radius:var(--r-sm);border:none;cursor:pointer;padding:0;overflow:hidden;position:relative;box-shadow:inset 0 0 0 1px rgba(0,0,0,.08);transition:transform .15s var(--ease)}
+.tier-swatch:hover{transform:scale(1.08)}
+.tier-swatch input{position:absolute;inset:0;opacity:0;cursor:pointer}
+.tier-name{width:100%;padding:9px 12px;background:#fff;border:1px solid var(--line-2);border-radius:var(--r-sm);font-size:13.5px;font-weight:800;color:var(--ink);font-family:inherit;min-width:0}
+.tier-name:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(0,229,229,.15)}
+.tier-price{display:flex;align-items:stretch}
+.tier-price-prefix{display:inline-flex;align-items:center;padding:0 10px;background:#fff;border:1px solid var(--line-2);border-right:none;border-radius:var(--r-sm) 0 0 var(--r-sm);font-weight:900;color:var(--brand-darker);font-size:13px}
+.tier-price input{width:100%;padding:9px 10px;background:#fff;border:1px solid var(--line-2);border-radius:0 var(--r-sm) var(--r-sm) 0;font-size:13px;font-family:var(--mono);font-weight:800;color:var(--ink);min-width:0}
+.tier-price input:focus{outline:none;border-color:var(--brand);box-shadow:0 0 0 3px rgba(0,229,229,.15)}
+.tier-toggle{width:32px;height:32px;border-radius:50%;background:#fff;border:1px solid var(--line-2);display:flex;align-items:center;justify-content:center;flex-shrink:0;transition:all .2s var(--ease)}
+.tier-toggle:hover:not(:disabled){border-color:var(--danger);color:var(--danger);background:var(--danger-soft)}
+.tier-toggle:disabled{opacity:.3;cursor:not-allowed}
+.tier-toggle svg{width:14px;height:14px}
+
+/* Ticket preview */
+.tk{
+  position:relative;
+  border-radius:var(--r-lg);
+  padding:20px;
+  background:linear-gradient(135deg,var(--tk-c1,#E6FFFF),var(--tk-c2,#B3FFFF));
+  color:var(--tk-text,#0A0F14);
+  box-shadow:var(--shadow-lg);
+  overflow:hidden;
+  display:flex;flex-direction:column;gap:14px;
+  transition:background .35s var(--ease),color .35s var(--ease);
+  border:1px solid rgba(0,0,0,.05);
+}
+.tk::before{content:'';position:absolute;inset:0;background-image:radial-gradient(circle at 1px 1px,rgba(0,0,0,.05) 1px,transparent 0);background-size:14px 14px;opacity:.4;pointer-events:none}
+.tk > *{position:relative;z-index:1}
+.tk-head{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
+.tk-logo{font-size:11px;font-weight:900;letter-spacing:1.5px;color:var(--tk-logo,#1e2f4d)}
+.tk-badges{display:flex;gap:5px;flex-wrap:wrap}
+.tk-badge{font-size:9px;font-weight:900;padding:3px 8px;border-radius:4px;text-transform:uppercase;letter-spacing:.05em;background:var(--tk-badge-bg,rgba(0,0,0,.08));color:var(--tk-badge-text,#4a5568)}
+.tk-event{font-size:19px;font-weight:900;line-height:1.1;text-transform:uppercase;letter-spacing:-.005em;word-break:break-word}
+.tk-meta{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--tk-muted,rgba(0,0,0,.6));margin-top:4px;word-break:break-word}
+.tk-body{display:flex;justify-content:space-between;gap:12px;align-items:flex-end}
+.tk-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
+.tk-guest{font-size:14px;font-weight:800;margin-top:8px}
+.tk-ref{font-size:10px;font-family:var(--mono);color:var(--tk-muted,rgba(0,0,0,.6));margin-top:4px}
+.tk-qr{width:64px;height:64px;background:#fff;border-radius:8px;flex-shrink:0;box-shadow:0 4px 10px rgba(0,0,0,.1)}
+.tk-loc{display:flex;align-items:center;gap:5px;font-size:10.5px;color:var(--tk-muted,rgba(0,0,0,.6))}
+.tk-loc svg{width:12px;height:12px}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 18px;border-radius:var(--r-md);font-weight:800;font-size:13.5px;border:1px solid transparent;transition:all .22s var(--ease);white-space:nowrap;line-height:1;min-height:44px;text-decoration:none;font-family:inherit}
+.btn svg,.btn i{width:15px;height:15px;flex-shrink:0}
+.btn-primary{background:var(--ink);color:#fff}
+.btn-primary:hover:not(:disabled){background:var(--ink-2);transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.btn-accent{background:linear-gradient(135deg,var(--brand),var(--brand-dark));color:var(--brand-ink);font-weight:900}
+.btn-accent:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 22px rgba(0,229,229,.35)}
+.btn-ghost{background:var(--surface);color:var(--ink-2);border-color:var(--line-2)}
+.btn-ghost:hover:not(:disabled){border-color:var(--brand);color:var(--brand-darker)}
+.btn-danger{background:var(--danger-soft);color:var(--danger);border-color:var(--danger-line)}
+.btn-danger:hover:not(:disabled){background:var(--danger);color:#fff;border-color:var(--danger)}
+.btn-lg{padding:14px 24px;font-size:15px;min-height:48px;border-radius:var(--r-lg)}
 .btn-block{width:100%}
-.btn-sm{padding:8px 14px;font-size:12.5px;border-radius:9px}
-.btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
-.step-nav{display:flex;justify-content:space-between;gap:12px;margin-top:24px;padding-top:18px;border-top:1px dashed var(--bd)}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important;box-shadow:none!important}
+
+/* Step nav */
+.step-nav{display:flex;justify-content:space-between;gap:12px;margin-top:24px;padding-top:20px;border-top:1px dashed var(--line)}
 .step-nav .btn{flex:1;max-width:220px}
 @media (max-width:520px){.step-nav{flex-direction:column}.step-nav .btn{max-width:none}}
 
-.plan-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
-.plan-card{position:relative;padding:16px;background:var(--sf);border:2px solid var(--bd2);border-radius:12px;cursor:pointer;transition:.2s;display:flex;flex-direction:column;gap:4px;overflow:hidden}
-.plan-card:hover{border-color:var(--cy);transform:translateY(-2px)}
-.plan-card.selected{background:var(--ink);color:#fff;border-color:var(--ink);box-shadow:0 8px 20px rgba(10,15,20,.2)}
-.plan-card.selected .plan-name,.plan-card.selected .plan-fee,.plan-card.selected .plan-desc{color:#fff}
-.plan-card.selected .plan-fee small{color:var(--cy)}
-.plan-card input{position:absolute;opacity:0;pointer-events:none}
-.plan-badge{position:absolute;top:0;right:0;background:var(--cy2);color:#04161c;font-size:8.5px;font-weight:900;padding:3px 8px;border-radius:0 10px 0 8px;letter-spacing:.06em;text-transform:uppercase}
-.plan-name{font-size:13px;font-weight:800}
-.plan-fee{font-size:22px;font-weight:900;color:var(--cy3);line-height:1}
-.plan-fee small{font-size:11px;font-weight:700;color:var(--mut);margin-left:2px}
-.plan-desc{font-size:10.5px;color:var(--mut);line-height:1.4;margin-top:4px}
+/* Summary list */
+.summary-list{display:flex;flex-direction:column;gap:10px}
+.summary-row{display:flex;justify-content:space-between;gap:12px;padding:12px 14px;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-md);align-items:center;flex-wrap:wrap}
+.summary-row .k{font-size:10.5px;font-weight:900;color:var(--slate);text-transform:uppercase;letter-spacing:.06em}
+.summary-row .v{font-size:13.5px;font-weight:800;color:var(--ink);text-align:right;word-break:break-word;min-width:0}
+.summary-row .v.mono{font-family:var(--mono);font-size:12.5px;color:var(--brand-darker)}
 
-.tier-list{display:flex;flex-direction:column;gap:8px}
-.tier-row{display:grid;grid-template-columns:20px minmax(80px,1.2fr) 80px minmax(110px,1fr) auto;gap:10px;align-items:center;padding:10px 12px;background:var(--bg);border:1px solid var(--bd2);border-radius:10px;min-width:0;transition:opacity .15s}
-@media (max-width:700px){.tier-row{grid-template-columns:20px 1fr}.tier-row .tier-qty,.tier-row .curr,.tier-row .tier-rev-wrap{grid-column:2 / -1}}
-.tier-swatch{width:20px;height:20px;border-radius:6px;border:1px solid rgba(0,0,0,.15);flex-shrink:0}
-.tier-name{padding:8px 10px;font-size:13px;font-weight:800;background:#fff;border:1px solid var(--bd2);border-radius:8px;min-width:0;width:100%}
-.tier-name[readonly]{background:var(--sf2);color:var(--mut);cursor:not-allowed}
-.tier-name:disabled{background:var(--sf2);color:var(--mut);cursor:not-allowed}
-.tier-qty{font-size:11px;font-weight:800;color:var(--cy3);background:var(--cyf);padding:5px 9px;border-radius:6px;text-align:center;white-space:nowrap}
-.curr{display:flex;align-items:stretch;width:100%}
-.curr-prefix{display:inline-flex;align-items:center;justify-content:center;padding:0 12px;background:var(--bg);border:1px solid var(--bd2);border-right:none;border-radius:10px 0 0 10px;font-weight:800;color:var(--cy3);font-size:14px}
-.curr input{border-top-left-radius:0!important;border-bottom-left-radius:0!important;padding:8px 10px;font-weight:800}
-.curr input:disabled{background:var(--sf2);color:var(--mut);cursor:not-allowed}
-.tier-rev{font-size:12.5px;font-weight:800;color:var(--tx2);text-align:right;font-family:var(--mono);white-space:nowrap}
-.tier-rev-wrap{display:flex;align-items:center;justify-content:flex-end;gap:10px;flex-shrink:0}
-.tier-toggle{position:relative;display:inline-flex;align-items:center;cursor:pointer;flex-shrink:0}
-.tier-toggle input{position:absolute;opacity:0;pointer-events:none}
-.tier-toggle-track{width:38px;height:22px;border-radius:99px;background:var(--bd2);transition:.2s;position:relative;display:inline-block}
-.tier-toggle-track::after{content:'';position:absolute;top:2px;left:2px;width:18px;height:18px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.2);transition:.2s}
-.tier-toggle input:checked + .tier-toggle-track{background:var(--cy2)}
-.tier-toggle input:checked + .tier-toggle-track::after{left:18px}
-.tier-toggle input:disabled + .tier-toggle-track{opacity:.4;cursor:not-allowed}
-.tier-row.off{opacity:.55}
+/* Alert */
+.alert{display:flex;gap:10px;padding:12px 14px;border-radius:var(--r-md);font-size:12.5px;line-height:1.55;margin-bottom:16px}
+.alert svg{width:16px;height:16px;flex-shrink:0;margin-top:2px}
+.alert-info{background:var(--brand-soft);border:1px solid var(--brand-tint);color:var(--brand-darker)}
+.alert-warn{background:var(--warning-soft);border:1px solid var(--warning-line);color:#92400E}
+.alert-danger{background:var(--danger-soft);border:1px solid var(--danger-line);color:#991B1B}
+.alert-success{background:var(--success-soft);border:1px solid var(--success-line);color:#065F46}
 
-.tier-color-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px}
-.tier-color-item{display:flex;align-items:center;gap:10px;padding:9px 11px;background:var(--bg);border:1px solid var(--bd2);border-radius:10px}
-.tier-color-swatch{width:20px;height:20px;border-radius:6px;flex-shrink:0}
-.tier-color-item label{flex:1;font-size:12px;font-weight:700;color:var(--tx2);margin:0;text-transform:none;letter-spacing:0}
-.tier-color-item input[type=color]{width:44px;height:32px;padding:2px 4px;border-radius:8px;border:1px solid var(--bd2);background:#fff;cursor:pointer}
-.tier-color-item input[type=color]:disabled{opacity:.5;cursor:not-allowed}
+/* Modal */
+.modal-bg{position:fixed;inset:0;background:rgba(10,15,20,.65);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);display:none;align-items:flex-start;justify-content:center;z-index:100;padding:24px 16px;overflow-y:auto;opacity:0;transition:opacity .22s var(--ease)}
+.modal-bg.open{display:flex;opacity:1}
+.modal{background:var(--surface);border-radius:var(--r-xl);max-width:420px;width:100%;padding:26px;position:relative;margin:auto;box-shadow:var(--shadow-xl);transform:translateY(20px) scale(.96);opacity:0;transition:transform .4s var(--ease-out),opacity .22s var(--ease)}
+.modal-bg.open .modal{transform:translateY(0) scale(1);opacity:1}
+.modal-close{position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:var(--r-md);background:var(--surface-2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;transition:all .22s var(--ease)}
+.modal-close:hover{background:var(--danger-soft);color:var(--danger);transform:rotate(90deg)}
+.modal-close svg{width:16px;height:16px}
+.modal h2{font-size:19px;font-weight:900;margin-bottom:6px;padding-right:40px}
+.modal .sub{font-size:13.5px;color:var(--slate);margin-bottom:18px;line-height:1.55}
+.modal .btn{width:100%;margin-top:8px}
 
-.locked-note{display:flex;gap:10px;padding:11px 14px;background:var(--amf);border:1px solid #fde68a;border-radius:10px;margin-bottom:14px;font-size:12.5px;color:#92400e;line-height:1.55;font-weight:600}
-.locked-note i{width:15px;height:15px;flex-shrink:0;margin-top:2px}
-.locked-note strong{font-weight:900}
+/* Footer */
+.footer{background:var(--ink);color:#C9D2DD;padding:24px 0 18px;margin-top:auto;font-size:13px}
+.footer-inner{max-width:var(--container);margin:0 auto;padding:0 20px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;color:#8A96A4;font-size:12px}
 
-.upload-box{position:relative;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:34px 20px;border:2px dashed var(--bd2);border-radius:14px;background:var(--bg);cursor:pointer;transition:.15s;text-align:center;min-height:170px}
-.upload-box:hover{border-color:var(--cy);background:var(--cyf)}
-.upload-box.has-image{padding:0;border-style:solid;border-color:var(--cy);background:#fff;min-height:0}
-.upload-box>svg{width:36px;height:36px;color:var(--cy3);margin-bottom:10px}
-.upload-box .up-title{font-size:14px;font-weight:900;color:var(--nv);margin-bottom:4px}
-.upload-box .up-sub{font-size:12px;color:var(--mut);max-width:340px;line-height:1.5}
-.upload-box input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer}
-.upload-preview{position:relative;width:100%;border-radius:12px;overflow:hidden}
-.upload-preview img{display:block;width:100%;height:auto;max-height:420px;object-fit:contain;background:#f6f8fb}
-.upload-remove{position:absolute;top:10px;right:10px;background:rgba(10,15,20,.78);color:#fff;border:none;padding:7px 12px;border-radius:99px;font-size:11.5px;font-weight:800;display:inline-flex;align-items:center;gap:5px;font-family:inherit}
-.upload-remove:hover{background:var(--dg)}
-.upload-remove i{width:13px;height:13px}
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120%);background:var(--ink);color:#fff;padding:12px 18px;border-radius:var(--r-full);font-size:13.5px;font-weight:700;z-index:200;transition:transform .4s var(--ease-out),opacity .22s var(--ease);display:flex;align-items:center;gap:10px;pointer-events:none;opacity:0;max-width:calc(100vw - 40px);box-shadow:var(--shadow-lg)}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.success{background:var(--success)}
+.toast.error{background:var(--danger)}
+.toast svg{width:16px;height:16px;flex-shrink:0}
 
-.preset-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:10px}
-.preset-card{position:relative;padding:16px 14px;background:var(--sf);border:2px solid var(--bd2);border-radius:12px;cursor:pointer;transition:.15s;text-align:left;font-family:inherit;display:flex;flex-direction:column;gap:6px;min-height:110px}
-.preset-card:hover{border-color:var(--cy);background:var(--cyf);transform:translateY(-2px)}
-.preset-card.selected{background:var(--ink);color:#fff;border-color:var(--ink);box-shadow:0 8px 20px rgba(10,15,20,.2)}
-.preset-card.selected .preset-name,.preset-card.selected .preset-desc{color:#fff}
-.preset-card.selected .preset-icon{color:var(--cy)}
-.preset-icon{width:26px;height:26px;color:var(--cy3);flex-shrink:0}
-.preset-name{font-size:13px;font-weight:800;color:var(--nv);line-height:1.2}
-.preset-desc{font-size:11px;color:var(--mut);line-height:1.4;font-weight:500}
-
-.block-tabs{display:flex;flex-wrap:wrap;gap:6px;padding:10px;background:var(--bg);border:1px solid var(--bd2);border-radius:12px;margin-bottom:14px;align-items:center}
-.block-tab{padding:8px 14px;border-radius:99px;font-size:12px;font-weight:800;color:var(--tx2);background:#fff;border:1.5px solid var(--bd2);cursor:pointer;transition:.15s;display:inline-flex;align-items:center;gap:6px;font-family:inherit}
-.block-tab:hover{border-color:var(--cy)}
-.block-tab.active{background:var(--ink);color:#fff;border-color:var(--ink)}
-.block-tab .cnt{font-size:10px;font-weight:900;background:rgba(0,0,0,.08);padding:1px 7px;border-radius:99px}
-.block-tab.active .cnt{background:rgba(0,255,255,.2);color:var(--cy)}
-.block-tab-add{padding:8px 14px;border-radius:99px;font-size:12px;font-weight:800;color:var(--cy3);background:transparent;border:1.5px dashed var(--cy);cursor:pointer;font-family:inherit}
-.block-tab-add:hover{background:var(--cyf)}
-
-.block-editor{background:var(--bg);border:1px solid var(--bd2);border-radius:12px;padding:16px;margin-bottom:14px}
-.block-editor-h{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-bottom:14px;flex-wrap:wrap}
-.block-editor-h h3{font-size:14px;color:var(--nv);font-weight:800}
-.block-editor-actions{display:flex;gap:6px;flex-wrap:wrap}
-
-.total-chip{display:inline-flex;align-items:center;gap:6px;background:var(--cyf);color:var(--cy3);font-size:12px;font-weight:900;padding:8px 12px;border-radius:8px;margin-top:14px;font-family:var(--mono)}
-.total-chip i{width:14px;height:14px}
-
-.summary-list{display:flex;flex-direction:column;gap:8px}
-.summary-row{display:flex;justify-content:space-between;align-items:center;gap:10px;padding:12px 14px;background:var(--bg);border:1px solid var(--bd2);border-radius:10px;flex-wrap:wrap}
-.summary-row .sr-name{font-weight:800;font-size:13px;color:var(--tx)}
-.summary-row .sr-detail{font-size:12px;color:var(--mut);font-family:var(--mono)}
-.summary-row .sr-seats{font-weight:900;font-size:13px;color:var(--cy3);font-family:var(--mono);white-space:nowrap}
-.summary-total{display:flex;justify-content:space-between;align-items:center;padding:14px 16px;background:var(--ink);color:#fff;border-radius:10px;margin-top:12px}
-.summary-total .st-lbl{font-size:11px;font-weight:900;text-transform:uppercase;letter-spacing:.08em;color:rgba(255,255,255,.55)}
-.summary-total .st-val{font-family:var(--mono);font-size:22px;font-weight:900;color:var(--cy)}
-
-.ticket-wrap{perspective:1600px}
-.ticket{padding:22px;border-radius:18px;box-shadow:0 22px 44px -12px rgba(0,0,0,.22);display:flex;flex-direction:column;gap:14px;position:relative;overflow:hidden;border:1px solid rgba(0,0,0,.05);background:linear-gradient(135deg,var(--tkt-bg1,#e6ffff),var(--tkt-bg2,#b3ffff));color:var(--tkt-text,#0a0f14)}
-.ticket-h{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap}
-.ticket-logo{font-weight:800;font-size:12px;letter-spacing:1.5px;color:var(--tkt-logo,var(--nv))}
-.ticket-badges{display:flex;gap:6px}
-.ticket-badge{font-size:9px;font-weight:900;padding:3px 8px;border-radius:4px;letter-spacing:.5px;text-transform:uppercase;background:var(--tkt-badge-bg,rgba(0,0,0,.08));color:var(--tkt-badge-text,#4a5568)}
-.ticket-body{display:flex;justify-content:space-between;align-items:flex-end;gap:12px;min-width:0}
-.ticket-info{flex:1;min-width:0;display:flex;flex-direction:column;gap:4px}
-.ticket-title{font-size:19px;font-weight:900;line-height:1.1;text-transform:uppercase;letter-spacing:-.3px;word-break:break-word}
-.ticket-meta{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--tkt-muted,rgba(0,0,0,.6));word-break:break-word}
-.ticket-guest{font-size:14px;font-weight:800;margin-top:6px;word-break:break-word}
-.ticket-seat{font-size:11px;font-weight:600;color:var(--tkt-muted,rgba(0,0,0,.6))}
-.ticket-qr{width:64px;height:64px;background:#fff;border-radius:8px;flex-shrink:0}
-.ticket-loc{display:flex;align-items:center;gap:6px;font-size:10.5px;font-weight:600;color:var(--tkt-muted,rgba(0,0,0,.6))}
-.ticket-loc i{width:12px;height:12px}
-.ticket-barcode{background:#fff;border-radius:6px;padding:7px 8px;display:flex;flex-direction:column;align-items:center;gap:3px}
-.barcode{width:100%;height:26px;background:repeating-linear-gradient(to right,#000 0 2px,#fff 2px 4px,#000 4px 6px,#fff 6px 10px,#000 10px 12px,#fff 12px 16px)}
-.barcode-num{font-family:var(--mono);font-size:9px;font-weight:700;color:#000;letter-spacing:1.5px}
-
-.rev-card{background:linear-gradient(135deg,#0a0f14,#1a2129);color:#fff;border-radius:14px;padding:20px;box-shadow:0 12px 30px rgba(10,15,20,.2);border:1px solid #1f2937}
-.rev-head{display:flex;align-items:center;gap:8px;font-size:11px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:#67e8f9;margin-bottom:14px}
-.rev-head i{width:15px;height:15px}
-.rev-row{display:flex;justify-content:space-between;gap:10px;padding:8px 0;font-size:13.5px;color:#c9d2dd;border-bottom:1px solid rgba(255,255,255,.06)}
-.rev-row:last-child{border-bottom:none}
-.rev-row.net{padding-top:14px;margin-top:6px;border-top:1px dashed rgba(0,255,255,.3);font-size:15px}
-.rev-row.net span:first-child{color:#fff;font-weight:900;text-transform:uppercase;letter-spacing:.05em;font-size:12px}
-.rev-amt{font-family:var(--mono);font-weight:800;color:#fff;font-size:14px}
-.rev-row.fee .rev-amt{color:#fbbf24}
-.rev-row.net .rev-amt{color:var(--cy);font-size:22px;font-weight:900}
-.rev-plan{color:var(--cy);font-weight:800}
-.rev-warn{margin-top:10px;background:#7f1d1d;color:#fecaca;padding:9px 12px;border-radius:8px;font-size:11.5px;font-weight:700;line-height:1.5;display:none}
-.rev-warn.show{display:block}
-
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:20px}
-.stat{background:var(--sf);border:1px solid var(--bd);border-radius:12px;padding:14px 16px;position:relative;overflow:hidden}
-.stat::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--cy)}
-.stat.rev::before{background:var(--sv)}
-.stat.fee::before{background:var(--am)}
-.stat .lbl{font-size:10px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin-bottom:4px}
-.stat .val{font-size:22px;font-weight:900;color:var(--nv);font-family:var(--mono);letter-spacing:-.5px;line-height:1}
-.stat.rev .val{color:var(--sv)}
-.stat.fee .val{color:#b45309}
-
-.modal-wrap{position:fixed;inset:0;background:rgba(10,15,20,.6);backdrop-filter:blur(8px);display:none;align-items:flex-start;justify-content:center;z-index:100;padding:24px 20px;overflow-y:auto}
-.modal-wrap.open{display:flex}
-.modal{background:var(--sf);border:1px solid var(--bd);border-radius:18px;max-width:460px;width:100%;padding:30px 26px;position:relative;margin:auto;box-shadow:0 24px 60px rgba(10,15,20,.25)}
-.modal h3{text-align:center;margin-bottom:8px;font-size:1.3rem}
-.modal .sub{text-align:center;color:var(--mut);font-size:13.5px;margin-bottom:20px}
-.modal-close{position:absolute;top:14px;right:14px;background:var(--bg);border:1px solid var(--bd);color:var(--tx2);padding:6px;border-radius:10px;display:flex}
-.modal-close i{width:16px;height:16px}
-.modal-close:hover{background:var(--dgf);color:var(--dg)}
-.tabs{display:flex;gap:6px;background:var(--bg);border:1px solid var(--bd);border-radius:12px;padding:4px;margin-bottom:20px}
-.tab{flex:1;padding:10px;background:transparent;border:none;border-radius:9px;color:var(--mut);font-size:13px;font-weight:700;text-transform:uppercase;cursor:pointer}
-.tab.active{background:var(--ink);color:#fff}
-
-#toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,18px);background:var(--ink);color:var(--cy);font-size:13px;font-weight:800;padding:13px 22px;border-radius:99px;box-shadow:0 14px 34px rgba(0,0,0,.35);opacity:0;pointer-events:none;transition:.22s;z-index:20000;max-width:90vw;text-align:center;display:flex;align-items:center;gap:9px}
-#toast.show{opacity:1;transform:translate(-50%,0)}
-#toast svg{width:15px;height:15px;flex-shrink:0}
-#toast.success{background:#065f46;color:#d1fae5}
-#toast.error{background:#991b1b;color:#fef2f2}
-
-.spin{width:14px;height:14px;border:2px solid rgba(0,0,0,.2);border-top-color:#04161c;border-radius:50%;animation:sp .7s linear infinite;display:inline-block}
-@keyframes sp{to{transform:rotate(360deg)}}
+/* Spinner */
+.spinner{width:16px;height:16px;border:2px solid rgba(0,0,0,.15);border-top-color:#04161c;border-radius:50%;animation:spin .7s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
 </style>
 </head>
 <body>
 
-<header class="site-header">
-  <div class="container hdr">
-    <a href="index.html" class="logo">
-      <svg viewBox="0 0 60 74"><path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/><path fill="#00FFFF" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/></svg>
-      <b>NOVALINK</b>
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand">
+      <svg viewBox="0 0 60 74" aria-hidden="true"><path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/><path fill="#00E5E5" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/></svg>
+      <span>NOVALINK</span>
+      <span class="studio-badge">Event Studio</span>
     </a>
-    <span class="studio-badge">Event Studio</span>
-  </div>
-</header>
-
-<main>
-  <div class="container">
-
-    <div class="steps-wrap">
-      <div class="steps" id="stepTabs">
-        <button type="button" class="step active" data-step="1"><span class="step-num">1</span><span class="step-lbl">Event Details</span></button>
-        <button type="button" class="step" data-step="2"><span class="step-num">2</span><span class="step-lbl">Pricing Plan</span></button>
-        <button type="button" class="step" data-step="3"><span class="step-num">3</span><span class="step-lbl">Tiers</span></button>
-        <button type="button" class="step" data-step="4"><span class="step-num">4</span><span class="step-lbl">Seating Logic</span></button>
-        <button type="button" class="step" data-step="5"><span class="step-num">5</span><span class="step-lbl">Revenue</span></button>
-      </div>
-      <div class="progress"><div class="progress-fill" id="progFill" style="width:20%"></div></div>
-      <div class="progress-text"><span id="progLbl">Step 1 of 5 · Event Details</span><span id="progPct">20%</span></div>
+    <div class="nav-actions">
+      <a href="my-events.html" class="btn btn-ghost btn-sm" style="padding:7px 12px;min-height:34px">
+        <i data-lucide="layout-grid"></i> My events
+      </a>
     </div>
+  </div>
+</nav>
 
-    <!-- STEP 1 -->
-    <section class="panel active" data-panel="1">
-      <div class="split">
+<div class="container">
+
+  <!-- Steps bar -->
+  <div class="steps">
+    <div class="steps-row" id="stepsRow">
+      <button class="step active" data-step="1" type="button">
+        <span class="step-num">1</span>
+        <span class="step-lbl">Details</span>
+      </button>
+      <button class="step" data-step="2" type="button">
+        <span class="step-num">2</span>
+        <span class="step-lbl">Pricing</span>
+      </button>
+      <button class="step" data-step="3" type="button">
+        <span class="step-num">3</span>
+        <span class="step-lbl">Tiers</span>
+      </button>
+      <button class="step" data-step="4" type="button">
+        <span class="step-num">4</span>
+        <span class="step-lbl">Review</span>
+      </button>
+    </div>
+    <div class="progress-bar"><div class="progress-fill" id="progressFill" style="width:25%"></div></div>
+    <div class="progress-text">
+      <span id="progressLabel">Step 1 of 4 · Details</span>
+      <span id="progressPct">25%</span>
+    </div>
+  </div>
+
+  <!-- ══════════ STEP 1: DETAILS ══════════ -->
+  <section class="panel active" data-panel="1">
+    <div class="layout">
+      <div>
         <div class="card">
-          <div class="card-h"><h1>Event Details</h1><p>Who's hosting, where, when, and how much.</p></div>
-          <div class="divider"><span>Organiser</span></div>
-          <div class="fg"><label for="hostName">Host Name</label><input type="text" id="hostName" placeholder="e.g., John Doe" /></div>
-          <div class="fg"><label for="hostEmail">Host Email</label><input type="email" id="hostEmail" placeholder="john@example.com" /></div>
+          <div class="card-head">
+            <h1>Event details</h1>
+            <p>Who's hosting, where, when, and what to call it.</p>
+          </div>
+
+          <div class="divider"><span>Host</span></div>
+          <div class="field">
+            <label for="hostName">Host name <span class="req">*</span></label>
+            <input type="text" id="hostName" placeholder="e.g., Nathan Nyl" autocomplete="name" />
+            <div class="field-error" id="err-hostName">Please enter a host name.</div>
+          </div>
+          <div class="field">
+            <label for="hostEmail">Host email <span class="req">*</span></label>
+            <input type="email" id="hostEmail" placeholder="you@example.com" autocomplete="email" />
+            <div class="field-error" id="err-hostEmail">Please enter a valid email.</div>
+          </div>
+
+          <div class="divider"><span>Event</span></div>
+          <div class="field">
+            <label for="eventName">Event name <span class="req">*</span></label>
+            <input type="text" id="eventName" placeholder="e.g., Neon Nights Live" maxlength="80" />
+            <div class="field-error" id="err-eventName">Please enter an event name.</div>
+          </div>
+          <div class="field">
+            <label for="eventType">Event type</label>
+            <select id="eventType">
+              <option value="" data-min="0" data-max="0">Choose event type…</option>
+              <option value="church" data-min="20" data-max="50">Church service / small gathering</option>
+              <option value="community" data-min="30" data-max="80">Community event</option>
+              <option value="workshop" data-min="150" data-max="500">Workshop / seminar</option>
+              <option value="concert" data-min="100" data-max="350">Concert / live music</option>
+              <option value="conference" data-min="500" data-max="2500">Conference</option>
+              <option value="gala" data-min="800" data-max="2500">Gala dinner</option>
+              <option value="festival" data-min="200" data-max="800">Festival</option>
+              <option value="sports" data-min="50" data-max="500">Sports event</option>
+              <option value="party" data-min="50" data-max="200">Party / club night</option>
+              <option value="corporate" data-min="400" data-max="1500">Corporate function</option>
+              <option value="other" data-min="50" data-max="500">Other</option>
+            </select>
+            <p class="field-hint rec" id="eventTypeHint">Choose a type to see a recommended price.</p>
+          </div>
+          <div class="field">
+            <label for="eventDescription">Description (optional)</label>
+            <textarea id="eventDescription" placeholder="What to expect, dress code, age limits…" maxlength="800"></textarea>
+          </div>
+
+          <div class="divider"><span>Date & time</span></div>
+          <div class="field-row">
+            <div class="field">
+              <label for="startDate">Date <span class="req">*</span></label>
+              <input type="date" id="startDate" />
+              <div class="field-error" id="err-startDate">Please pick a date.</div>
+            </div>
+            <div class="field">
+              <label for="startTime">Start time <span class="req">*</span></label>
+              <input type="time" id="startTime" />
+              <div class="field-error" id="err-startTime">Please pick a time.</div>
+            </div>
+          </div>
+
           <div class="divider"><span>Venue</span></div>
-          <div class="row2">
-            <div class="fg"><label for="venueName">Venue Name</label><input type="text" id="venueName" placeholder="Boksburg Stadium" /></div>
-            <div class="fg"><label for="venueCity">City / Town</label>
-              <select id="venueCity">
-                <option value="">Select a city…</option>
-                <option>Boksburg</option><option>Germiston</option><option>Reiger Park</option><option>Boksburg North</option><option>Boksburg West</option>
-              </select>
+          <div class="field">
+            <label for="venueName">Venue name <span class="req">*</span></label>
+            <input type="text" id="venueName" placeholder="e.g., Boksburg Civic Centre" />
+            <div class="field-error" id="err-venueName">Please enter a venue.</div>
+          </div>
+          <div class="field-row">
+            <div class="field">
+              <label for="venueAddress">Address (optional)</label>
+              <input type="text" id="venueAddress" placeholder="Street, suburb" />
+            </div>
+            <div class="field">
+              <label for="city">City</label>
+              <input type="text" id="city" placeholder="e.g., Boksburg" />
             </div>
           </div>
-          <div class="fg"><label for="venueAddress">Full Address (optional)</label><input type="text" id="venueAddress" placeholder="Street, suburb" /></div>
-          <div class="divider"><span>Date &amp; Type</span></div>
-          <div class="row2">
-            <div class="fg"><label for="eventType">Event Type</label>
-              <select id="eventType">
-                <option value="" data-min="0" data-max="0">Select…</option>
-                <option value="church" data-min="20" data-max="50">Church</option>
-                <option value="community" data-min="30" data-max="80">Community</option>
-                <option value="workshop" data-min="150" data-max="500">Workshop</option>
-                <option value="concert" data-min="100" data-max="350">Concert</option>
-                <option value="conference" data-min="500" data-max="2500">Conference</option>
-                <option value="gala" data-min="800" data-max="2500">Gala Dinner</option>
-                <option value="festival" data-min="200" data-max="800">Festival</option>
-                <option value="sports" data-min="50" data-max="500">Sports</option>
-                <option value="party" data-min="50" data-max="200">Party</option>
-                <option value="wedding" data-min="0" data-max="0">Wedding (Free)</option>
-                <option value="corporate" data-min="400" data-max="1500">Corporate</option>
-                <option value="other" data-min="50" data-max="500">Other</option>
-              </select>
-              <p class="hint rec" id="typeHint">Choose a type to see a recommended price.</p>
-            </div>
-            <div class="fg"><label for="startTime">Start Time</label><input type="time" id="startTime" /></div>
+
+          <div class="divider"><span>Cover image</span></div>
+          <div class="field">
+            <label for="coverImageUrl">Image URL (optional)</label>
+            <input type="url" id="coverImageUrl" placeholder="https://…" />
+            <p class="field-hint">Paste a direct image URL, or upload below. This becomes the event banner.</p>
           </div>
-          <div class="row2">
-            <div class="fg" id="basePriceGroup"><label for="cost">Base Ticket Price (R)</label>
-              <div class="curr"><span class="curr-prefix">R</span><input type="number" id="cost" min="0" step="0.01" placeholder="25.50" /></div>
-            </div>
-            <div class="fg"><label for="startDate">Start Date</label><input type="date" id="startDate" /></div>
-          </div>
-          <div class="divider"><span>Event Name</span></div>
-          <div class="fg"><label for="eventName">Event Name</label><input type="text" id="eventName" placeholder="Neon Nights Live" /></div>
-          <div class="fg"><label for="eventDesc">Description (optional)</label><textarea id="eventDesc" placeholder="What to expect, dress code, age limits…" maxlength="600"></textarea></div>
-          <div class="divider"><span>Cover Image</span></div>
-          <div class="fg"><label for="coverUrl">Cover Image URL (optional)</label><input type="url" id="coverUrl" placeholder="https://…" /></div>
-          <div class="fg"><label for="coverFile">Or upload (max 500 KB)</label><input type="file" id="coverFile" accept="image/*" /></div>
-          <div class="step-nav">
-            <button type="button" class="btn btn-ghost" disabled>← Previous</button>
-            <button type="button" class="btn btn-accent" data-next="2">Next: Pricing Plan →</button>
-          </div>
-        </div>
-        <div>
-          <div class="card">
-            <div style="font-size:10.5px;font-weight:900;color:var(--mut);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">Live Ticket Preview</div>
-            <div class="ticket-wrap">
-              <div class="ticket" id="ticketFront">
-                <div class="ticket-h"><div class="ticket-logo">NOVALINK</div><div class="ticket-badges"><span class="ticket-badge">PUBLIC</span><span class="ticket-badge" id="tierBadge">STANDARD</span></div></div>
-                <div class="ticket-body">
-                  <div class="ticket-info">
-                    <div class="ticket-title" id="tEventName">EVENT NAME</div>
-                    <div class="ticket-meta" id="tDateVenue">DATE · VENUE</div>
-                    <div class="ticket-guest">GUEST NAME</div>
-                    <div class="ticket-seat">Seat not assigned</div>
-                  </div>
-                  <div class="ticket-qr"></div>
-                </div>
-                <div class="ticket-loc"><i data-lucide="map-pin"></i> <span id="tLoc">VENUE</span></div>
-                <div class="ticket-barcode"><div class="barcode"></div><div class="barcode-num">0000 0000 0000 0000</div></div>
+          <div class="field">
+            <label for="coverImageFile">Or upload (max 500 KB)</label>
+            <input type="file" id="coverImageFile" accept="image/*" />
+            <div class="cover-preview" id="coverPreview">
+              <div class="ph">
+                <i data-lucide="image-plus"></i>
+                <div class="t">No cover yet</div>
+                <div class="s">Paste a URL above or choose a file</div>
               </div>
             </div>
           </div>
+
+          <div class="step-nav">
+            <button class="btn btn-ghost" disabled type="button">← Previous</button>
+            <button class="btn btn-accent" data-next="2" type="button">Next: Pricing →</button>
+          </div>
         </div>
       </div>
-    </section>
 
-    <!-- STEP 2 -->
-    <section class="panel" data-panel="2">
-      <div class="split">
+      <!-- Sidebar: live preview -->
+      <div class="col-side">
         <div class="card">
-          <div class="card-h"><h1>Pricing Plan</h1><p>Pick the plan that matches your scale.</p></div>
-          <div class="plan-grid" id="planGrid">
-            <label class="plan-card" data-plan="basic">
-              <input type="radio" name="plan" value="basic" />
-              <div class="plan-name">Basic</div><div class="plan-fee">5<small>% per ticket</small></div>
-              <div class="plan-desc">Up to 100 tickets · 1 tier · No seating logic</div>
-            </label>
-            <label class="plan-card selected" data-plan="standard">
-              <span class="plan-badge">Popular</span>
-              <input type="radio" name="plan" value="standard" checked />
-              <div class="plan-name">Standard</div><div class="plan-fee">7<small>% per ticket</small></div>
-              <div class="plan-desc">Up to 500 tickets · 3 tiers · Full seating logic</div>
-            </label>
-            <label class="plan-card" data-plan="premium">
-              <input type="radio" name="plan" value="premium" />
-              <div class="plan-name">Premium</div><div class="plan-fee">10<small>% per ticket</small></div>
-              <div class="plan-desc">Up to 2,000 tickets · Everything in Standard</div>
-            </label>
-            <label class="plan-card" data-plan="enterprise">
-              <input type="radio" name="plan" value="enterprise" />
-              <div class="plan-name">Enterprise</div><div class="plan-fee">12<small>% per ticket</small></div>
-              <div class="plan-desc">Unlimited · Everything unlocked</div>
-            </label>
+          <div class="field" style="margin-bottom:10px">
+            <label style="text-align:center;display:block">Live ticket preview</label>
           </div>
-          <div class="step-nav">
-            <button type="button" class="btn btn-ghost" data-prev="1">← Back</button>
-            <button type="button" class="btn btn-accent" data-next="3">Next: Tiers →</button>
-          </div>
-        </div>
-        <div>
-          <div class="card">
-            <div class="rev-head" style="color:var(--cy3)"><i data-lucide="badge-check"></i> Your Plan</div>
-            <div class="rev-row" style="color:var(--tx2);border-color:var(--bd)"><span>Plan</span><span class="rev-plan" style="color:var(--cy3)" id="planName">Standard · 7%</span></div>
-            <div class="rev-row" style="color:var(--tx2);border-color:var(--bd)"><span>Tier limit</span><span id="planTierLimit">3</span></div>
-            <div class="rev-row" style="color:var(--tx2);border-color:var(--bd)"><span>Rename tiers</span><span id="planRename">Yes</span></div>
-            <div class="rev-row" style="color:var(--tx2);border-color:var(--bd)"><span>Edit colours</span><span id="planColors">Yes</span></div>
-            <div class="rev-row" style="color:var(--tx2);border-color:var(--bd)"><span>Seating logic</span><span id="planSeating">Full</span></div>
-            <div class="rev-row" style="color:var(--tx2);border-color:var(--bd)"><span>Ticket limit</span><span id="planLimit">500</span></div>
+          <div class="tk" id="ticketPreview">
+            <div class="tk-head">
+              <div class="tk-logo">NOVALINK</div>
+              <div class="tk-badges">
+                <span class="tk-badge" id="tkBadge">PUBLIC</span>
+                <span class="tk-badge" id="tkTierBadge">STANDARD</span>
+              </div>
+            </div>
+            <div>
+              <div class="tk-event" id="tkEventName">EVENT NAME</div>
+              <div class="tk-meta" id="tkEventMeta">DATE · VENUE</div>
+            </div>
+            <div class="tk-body">
+              <div class="tk-info">
+                <div class="tk-guest">GUEST NAME</div>
+                <div class="tk-ref" id="tkRef">Ref: NL-XXXX-XXXX-XXXX</div>
+              </div>
+              <div class="tk-qr"></div>
+            </div>
+            <div class="tk-loc"><i data-lucide="map-pin"></i> <span id="tkVenue">VENUE</span></div>
           </div>
         </div>
       </div>
-    </section>
-
-    <!-- STEP 3 -->
-    <section class="panel" data-panel="3">
-      <div class="split">
-        <div class="card">
-          <div class="card-h"><h1>Your Tiers</h1><p>Toggle off the tiers you don't need. At least one must stay on.</p></div>
-          <div class="locked-note" id="basicTierNote" style="display:none;">
-            <i data-lucide="lock"></i>
-            <div><strong>Basic plan:</strong> one tier, locked to "Standard". Upgrade to Standard or higher for three tiers.</div>
-          </div>
-          <div class="fg"><label>Customise each tier</label><div class="tier-list" id="tierList"></div></div>
-          <div class="divider"><span>Tier Colours</span></div>
-          <div class="locked-note" id="basicColorNote" style="display:none;">
-            <i data-lucide="lock"></i>
-            <div><strong>Colours are locked on Basic.</strong> Upgrade to Standard or higher to customise.</div>
-          </div>
-          <div class="tier-color-grid" id="tierColorGrid"></div>
-          <div class="step-nav">
-            <button type="button" class="btn btn-ghost" data-prev="2">← Back</button>
-            <button type="button" class="btn btn-accent" data-next="4">Next: Seating Logic →</button>
-          </div>
-        </div>
-        <div>
-          <div class="card">
-            <div style="font-size:10.5px;font-weight:900;color:var(--mut);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">Live Preview</div>
-            <div class="ticket">
-              <div class="ticket-h"><div class="ticket-logo">NOVALINK</div><div class="ticket-badges"><span class="ticket-badge">PUBLIC</span><span class="ticket-badge" id="tierBadge2">STANDARD</span></div></div>
-              <div class="ticket-body">
-                <div class="ticket-info">
-                  <div class="ticket-title" id="tEventName2">EVENT NAME</div>
-                  <div class="ticket-meta" id="tDateVenue2">DATE · VENUE</div>
-                  <div class="ticket-guest">GUEST NAME</div>
-                  <div class="ticket-seat">Seat not assigned</div>
-                </div>
-                <div class="ticket-qr"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- STEP 4 -->
-    <section class="panel" data-panel="4">
-      <div class="split-wide">
-        <div class="card">
-          <div class="card-h">
-            <h1>Seating Logic</h1>
-            <p>Upload your venue picture, then describe the layout with numbers. The system assigns seats at purchase.</p>
-          </div>
-
-          <div class="locked-note" id="basicSeatingNote" style="display:none;">
-            <i data-lucide="lock"></i>
-            <div><strong>Basic plan has no seating logic.</strong> Upgrade to Standard or higher to configure seats.</div>
-          </div>
-
-          <div id="seatingEditor">
-
-            <div class="divider"><span>Venue Picture (optional)</span></div>
-            <div class="upload-box" id="planUploadBox">
-              <input type="file" id="planImageInput" accept="image/*" />
-              <div id="planUploadEmpty">
-                <svg data-lucide="image-plus"></svg>
-                <div class="up-title">Upload a picture of your venue</div>
-                <div class="up-sub">Buyers see this as a reference. Optional — you can skip it and just describe the layout below.</div>
-              </div>
-              <div class="upload-preview" id="planUploadPreview" style="display:none;">
-                <img id="planImagePreview" alt="Venue picture" />
-                <button type="button" class="upload-remove" id="planImageRemove"><i data-lucide="x"></i> Remove</button>
-              </div>
-            </div>
-
-            <div class="divider"><span>Choose a layout format</span></div>
-            <div class="preset-grid" id="presetGrid"></div>
-
-            <div class="divider"><span>Blocks</span></div>
-            <div class="block-tabs" id="blockTabs"></div>
-            <div class="block-editor" id="blockEditor"></div>
-
-            <div class="divider"><span>Summary</span></div>
-            <div class="summary-list" id="summaryList"></div>
-            <div class="summary-total">
-              <span class="st-lbl">Total seats</span>
-              <span class="st-val" id="summaryTotalSeats">0</span>
-            </div>
-
-          </div>
-
-          <div class="step-nav">
-            <button type="button" class="btn btn-ghost" data-prev="3">← Back</button>
-            <button type="button" class="btn btn-accent" data-next="5">Next: Revenue →</button>
-          </div>
-        </div>
-      </div>
-    </section>
-
-    <!-- STEP 5 -->
-    <section class="panel" data-panel="5">
-      <div class="split">
-        <div class="card">
-          <div class="card-h"><h1>Live Revenue</h1><p>Real-time estimate based on plan, tiers and capacity.</p></div>
-          <div class="stats">
-            <div class="stat"><div class="lbl">Seats</div><div class="val" id="revTickets">0</div></div>
-            <div class="stat rev"><div class="lbl">Gross</div><div class="val" id="revGross">R0</div></div>
-            <div class="stat fee"><div class="lbl">Fee</div><div class="val" id="revFee">R0</div></div>
-          </div>
-          <div class="rev-card">
-            <div class="rev-head"><i data-lucide="trending-up"></i> Live Estimate</div>
-            <div class="rev-row"><span>Plan</span><span class="rev-plan" id="revPlanName">Standard · 7%</span></div>
-            <div class="rev-row"><span>Total capacity</span><span id="revTotal">0 / 500</span></div>
-            <div class="rev-row"><span>Gross revenue</span><span class="rev-amt" id="revGross2">R 0.00</span></div>
-            <div class="rev-row fee"><span>Novalink fee (<span id="revFeePct">7%</span>)</span><span class="rev-amt" id="revFee2">− R 0.00</span></div>
-            <div class="rev-row net"><span>Your Net</span><span class="rev-amt" id="revNet">R 0.00</span></div>
-            <div class="rev-warn" id="revWarn"></div>
-          </div>
-          <div class="divider"><span>Per-Tier Breakdown</span></div>
-          <div class="tier-list" id="tierBreakdown"></div>
-          <div class="divider"><span>Publish</span></div>
-          <button type="button" class="btn btn-accent btn-block" id="submitBtn" style="padding:14px;"><i data-lucide="shield-check"></i> Save &amp; Finalize Event</button>
-          <p class="hint" style="text-align:center;margin-top:8px;">Once saved, your event appears in the admin review queue.</p>
-          <div class="step-nav">
-            <button type="button" class="btn btn-ghost" data-prev="4">← Back to Seating</button>
-          </div>
-        </div>
-        <div>
-          <div class="card">
-            <div style="font-size:10.5px;font-weight:900;color:var(--mut);text-transform:uppercase;letter-spacing:.1em;margin-bottom:8px;">Live Preview</div>
-            <div class="ticket">
-              <div class="ticket-h"><div class="ticket-logo">NOVALINK</div><div class="ticket-badges"><span class="ticket-badge">PUBLIC</span><span class="ticket-badge" id="tierBadge3">STANDARD</span></div></div>
-              <div class="ticket-body">
-                <div class="ticket-info">
-                  <div class="ticket-title" id="tEventName3">EVENT NAME</div>
-                  <div class="ticket-meta" id="tDateVenue3">DATE · VENUE</div>
-                  <div class="ticket-guest">GUEST NAME</div>
-                  <div class="ticket-seat">Seat not assigned</div>
-                </div>
-                <div class="ticket-qr"></div>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </section>
-
-  </div>
-</main>
-
-<div class="modal-wrap" id="authModal">
-  <div class="modal">
-    <button class="modal-close" id="authClose" type="button"><i data-lucide="x"></i></button>
-    <h3 id="authTitle">Welcome back</h3>
-    <p class="sub" id="authSub">Sign in to save events.</p>
-    <div class="tabs">
-      <button class="tab active" data-mode="signin" type="button">Sign in</button>
-      <button class="tab" data-mode="signup" type="button">Create account</button>
     </div>
-    <button type="button" class="btn btn-ghost btn-block" id="googleBtn" style="margin-bottom:14px;">Continue with Google</button>
-    <form id="authForm">
-      <div class="fg" id="nameGroup" style="display:none;"><label>Full name</label><input type="text" id="authName" /></div>
-      <div class="fg"><label>Email</label><input type="email" id="authEmail" required /></div>
-      <div class="fg"><label>Password</label><input type="password" id="authPassword" required minlength="6" /></div>
-      <button type="submit" class="btn btn-accent btn-block" id="authSubmit">Sign in</button>
-    </form>
+  </section>
+
+  <!-- ══════════ STEP 2: PRICING ══════════ -->
+  <section class="panel" data-panel="2">
+    <div class="layout">
+      <div>
+        <div class="card">
+          <div class="card-head">
+            <h1>Pricing plan</h1>
+            <p>Pick the plan that matches your scale. Fee is taken per ticket — no monthly cost.</p>
+          </div>
+
+          <div class="alert alert-info">
+            <i data-lucide="info"></i>
+            <div>You only pay when you sell a ticket. The fee is deducted from your payout after the event.</div>
+          </div>
+
+          <div class="plan-grid" id="planGrid">
+            <button type="button" class="plan" data-plan="basic" data-fee="5" data-limit="100">
+              <div class="plan-name">Basic</div>
+              <div class="plan-fee">5<small>% per ticket</small></div>
+              <div class="plan-desc">Up to 100 tickets. Good for small gatherings.</div>
+            </button>
+            <button type="button" class="plan selected" data-plan="standard" data-fee="7" data-limit="500">
+              <span class="plan-badge">Popular</span>
+              <div class="plan-name">Standard</div>
+              <div class="plan-fee">7<small>% per ticket</small></div>
+              <div class="plan-desc">Up to 500 tickets. Most events fit here.</div>
+            </button>
+            <button type="button" class="plan" data-plan="premium" data-fee="10" data-limit="2000">
+              <div class="plan-name">Premium</div>
+              <div class="plan-fee">10<small>% per ticket</small></div>
+              <div class="plan-desc">Up to 2,000 tickets. Larger venues.</div>
+            </button>
+            <button type="button" class="plan" data-plan="enterprise" data-fee="12" data-limit="999999">
+              <div class="plan-name">Enterprise</div>
+              <div class="plan-fee">12<small>% per ticket</small></div>
+              <div class="plan-desc">Unlimited tickets. Everything unlocked.</div>
+            </button>
+          </div>
+
+          <div class="step-nav">
+            <button class="btn btn-ghost" data-prev="1" type="button">← Back</button>
+            <button class="btn btn-accent" data-next="3" type="button">Next: Tiers →</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-side">
+        <div class="card">
+          <div class="field">
+            <label style="text-align:center;display:block">Your plan</label>
+          </div>
+          <div class="summary-list">
+            <div class="summary-row"><span class="k">Plan</span><span class="v" id="sumPlanName">Standard</span></div>
+            <div class="summary-row"><span class="k">Fee</span><span class="v mono" id="sumPlanFee">7%</span></div>
+            <div class="summary-row"><span class="k">Ticket limit</span><span class="v" id="sumPlanLimit">500</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ STEP 3: TIERS ══════════ -->
+  <section class="panel" data-panel="3">
+    <div class="layout">
+      <div>
+        <div class="card">
+          <div class="card-head">
+            <h1>Tiers & prices</h1>
+            <p>Name your tiers, set the price for each, and pick the colour.</p>
+          </div>
+
+          <div class="alert alert-info">
+            <i data-lucide="info"></i>
+            <div>Most events need <strong>2 tiers</strong>. Add up to 4. The colour appears on the ticket and on the seat map.</div>
+          </div>
+
+          <div class="field">
+            <label>Your tiers</label>
+            <div id="tierList"></div>
+            <button type="button" class="btn btn-ghost btn-sm" id="addTierBtn" style="margin-top:8px">
+              <i data-lucide="plus"></i> Add tier
+            </button>
+          </div>
+
+          <div class="step-nav">
+            <button class="btn btn-ghost" data-prev="2" type="button">← Back</button>
+            <button class="btn btn-accent" data-next="4" type="button">Next: Review →</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-side">
+        <div class="card">
+          <div class="field" style="margin-bottom:10px">
+            <label style="text-align:center;display:block">Ticket preview</label>
+          </div>
+          <div class="tk" id="ticketPreview2">
+            <div class="tk-head">
+              <div class="tk-logo">NOVALINK</div>
+              <div class="tk-badges">
+                <span class="tk-badge">PUBLIC</span>
+                <span class="tk-badge" id="tkTierBadge2">STANDARD</span>
+              </div>
+            </div>
+            <div>
+              <div class="tk-event" id="tkEventName2">EVENT NAME</div>
+              <div class="tk-meta" id="tkEventMeta2">DATE · VENUE</div>
+            </div>
+            <div class="tk-body">
+              <div class="tk-info">
+                <div class="tk-guest">GUEST NAME</div>
+                <div class="tk-ref">Ref: NL-XXXX-XXXX-XXXX</div>
+              </div>
+              <div class="tk-qr"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ══════════ STEP 4: REVIEW ══════════ -->
+  <section class="panel" data-panel="4">
+    <div class="layout">
+      <div>
+        <div class="card">
+          <div class="card-head">
+            <h1>Review & publish</h1>
+            <p>Check everything looks right. When you publish, it goes to the Novalink review queue.</p>
+          </div>
+
+          <div class="alert alert-warn">
+            <i data-lucide="clock"></i>
+            <div>Your event is <strong>submitted for review</strong>. Novalink admins approve it and set up payment links. Once approved, it appears to buyers.</div>
+          </div>
+
+          <div class="field">
+            <label>Summary</label>
+            <div class="summary-list" id="reviewSummary"></div>
+          </div>
+
+          <div class="field" id="finalCheckField">
+            <label>Before you publish</label>
+            <label style="display:flex;align-items:flex-start;gap:10px;font-weight:500;text-transform:none;letter-spacing:0;font-size:13.5px;color:var(--ink-3);cursor:pointer;padding:12px 14px;background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-md)">
+              <input type="checkbox" id="confirmCheck" style="width:auto;min-height:0;margin-top:2px;flex-shrink:0;cursor:pointer" />
+              <span>I confirm this is my event and I have the right to sell tickets to it. I've read the <a href="terms.html" target="_blank" style="color:var(--brand-darker);font-weight:800;text-decoration:underline">Terms</a>.</span>
+            </label>
+          </div>
+
+          <div id="saveError" class="alert alert-danger hidden">
+            <i data-lucide="alert-circle"></i>
+            <div id="saveErrorText"></div>
+          </div>
+
+          <div id="saveSuccess" class="alert alert-success hidden">
+            <i data-lucide="check-circle"></i>
+            <div id="saveSuccessText"></div>
+          </div>
+
+          <div style="margin-top:20px">
+            <button class="btn btn-accent btn-lg btn-block" id="publishBtn" type="button">
+              <i data-lucide="shield-check"></i> Publish event for review
+            </button>
+            <p class="field-hint" style="text-align:center;margin-top:8px">
+              You can edit this event anytime from <a href="my-events.html" style="color:var(--brand-darker);font-weight:800">My events</a>.
+            </p>
+          </div>
+
+          <div class="step-nav">
+            <button class="btn btn-ghost" data-prev="3" type="button">← Back to Tiers</button>
+            <button class="btn btn-ghost" disabled type="button">Done</button>
+          </div>
+        </div>
+      </div>
+
+      <div class="col-side">
+        <div class="card">
+          <div class="field" style="margin-bottom:10px">
+            <label style="text-align:center;display:block">Final ticket</label>
+          </div>
+          <div class="tk" id="ticketPreview3">
+            <div class="tk-head">
+              <div class="tk-logo">NOVALINK</div>
+              <div class="tk-badges">
+                <span class="tk-badge">PUBLIC</span>
+                <span class="tk-badge" id="tkTierBadge3">STANDARD</span>
+              </div>
+            </div>
+            <div>
+              <div class="tk-event" id="tkEventName3">EVENT NAME</div>
+              <div class="tk-meta" id="tkEventMeta3">DATE · VENUE</div>
+            </div>
+            <div class="tk-body">
+              <div class="tk-info">
+                <div class="tk-guest">GUEST NAME</div>
+                <div class="tk-ref">Ref: NL-XXXX-XXXX-XXXX</div>
+              </div>
+              <div class="tk-qr"></div>
+            </div>
+            <div class="tk-loc"><i data-lucide="map-pin"></i> <span id="tkVenue3">VENUE</span></div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</div>
+
+<footer class="footer">
+  <div class="footer-inner">
+    <span>© <span id="year"></span> Novalink. All rights reserved.</span>
+    <span>Johannesburg, South Africa</span>
+  </div>
+</footer>
+
+<!-- ═══════════════════ SIGN IN MODAL ═══════════════════ -->
+<div class="modal-bg" id="signinModal">
+  <div class="modal">
+    <button type="button" class="modal-close" id="signinClose" aria-label="Close"><i data-lucide="x"></i></button>
+    <h2>Sign in to publish</h2>
+    <p class="sub">You need an account to create events. Takes 5 seconds with Google.</p>
+    <button type="button" class="btn btn-ghost btn-lg btn-block" id="googleSignin" style="justify-content:center">
+      <svg viewBox="0 0 24 24" width="18" height="18"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Continue with Google
+    </button>
+    <p style="text-align:center;font-size:12.5px;color:var(--slate);margin-top:16px;line-height:1.55">
+      By continuing, you agree to our <a href="terms.html" style="color:var(--brand-darker);font-weight:700">Terms</a>.
+    </p>
   </div>
 </div>
 
-<div id="toast"></div>
+<div class="toast" id="toast"></div>
+
+<!-- ═══════════════════ SCRIPTS ═══════════════════ -->
 
 <script>
 (function(){
 'use strict';
 
-var firebaseConfig = {
-  apiKey: "AIzaSyDSnns131jOlBXAqKo6qy7lTW4Rij-1oWU",
-  authDomain: "novalink-864cf.firebaseapp.com",
-  projectId: "novalink-864cf",
-  storageBucket: "novalink-864cf.firebasestorage.app",
-  messagingSenderId: "602780280140",
-  appId: "1:602780280140:web:5d9ff2351e5a7d5e66dbe9"
+/* ═══════════════════════════════════════════════════════════════
+   FIREBASE
+   ═══════════════════════════════════════════════════════════════ */
+var firebaseConfig={
+  apiKey:"AIzaSyDSnns131jOlBXAqKo6qy7lTW4Rij-1oWU",
+  authDomain:"novalink-864cf.firebaseapp.com",
+  projectId:"novalink-864cf",
+  storageBucket:"novalink-864cf.firebasestorage.app",
+  messagingSenderId:"602780280140",
+  appId:"1:602780280140:web:5d9ff2351e5a7d5e66dbe9"
 };
-if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-var db = firebase.firestore();
-var auth = firebase.auth();
-var EVENTS = "events";
+if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
+var db=firebase.firestore();
+var auth=firebase.auth();
+var EVENTS='events';
 
-var $ = function(id){ return document.getElementById(id); };
-var $$ = function(s){ return Array.from(document.querySelectorAll(s)); };
-var esc = function(s){ return String(s==null?'':s).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); };
-var refreshIcons = function(){ if (window.lucide) lucide.createIcons(); };
-var icon = function(n){ return '<i data-lucide="'+n+'"></i>'; };
-var fmtR = function(n){ return 'R' + Math.round(Number(n||0)).toLocaleString('en-ZA'); };
-var fmtR2 = function(n){ return 'R ' + Number(n||0).toFixed(2); };
-var uid = function(){ return 'x' + Math.random().toString(36).slice(2,9) + Date.now().toString(36).slice(-4); };
-
-function toast(msg, type, ms){
-  type = type || 'info'; ms = ms || 3000;
-  var t = $('toast');
-  var ic = type === 'error' ? 'alert-circle' : (type === 'success' ? 'check-circle' : 'info');
-  t.className = type;
-  t.innerHTML = icon(ic) + '<span>' + esc(msg) + '</span>';
-  refreshIcons();
-  requestAnimationFrame(function(){ t.classList.add('show'); });
-  clearTimeout(toast._t);
-  toast._t = setTimeout(function(){ t.classList.remove('show'); }, ms);
-}
-function cap(s){ return s.charAt(0).toUpperCase() + s.slice(1); }
-
-var TIER_KEYS = ['elite','silver','standard'];
-var TIER_DEFAULT_NAMES = { elite:'Elite', silver:'Silver', standard:'Standard' };
-var TIER_DEFAULT_COLORS = { elite:'#1a202c', silver:'#cbd5e1', standard:'#00FFFF' };
-
-var PLANS = {
-  basic:      { fee:5,  limit:100,    tierLimit:1, canRename:false, canColor:false, seating:false },
-  standard:   { fee:7,  limit:500,    tierLimit:3, canRename:true,  canColor:true,  seating:true  },
-  premium:    { fee:10, limit:2000,   tierLimit:3, canRename:true,  canColor:true,  seating:true  },
-  enterprise: { fee:12, limit:999999, tierLimit:3, canRename:true,  canColor:true,  seating:true  }
-};
-
-var PRESETS = [
-  { id:'rows-simple',    name:'Simple rows',      desc:'One grid of rows and seats',            fields:['rows','seatsPerRow'] },
-  { id:'rows-sections',  name:'Rows with sections', desc:'Split rows into sections with an aisle', fields:['sections','rows','seatsPerRow'] },
-  { id:'rows-aisle',     name:'Centre aisle',     desc:'Rows with a gap after seat N',          fields:['rows','seatsPerRow','aisleAfter'] },
-  { id:'multi-blocks',   name:'Multiple blocks',  desc:'Add many blocks (A, B, C…)',            fields:['rows','seatsPerRow'] },
-  { id:'tables-round',   name:'Round tables',     desc:'Circular tables with chairs',           fields:['tables','chairsPerTable'] },
-  { id:'tables-rect',    name:'Rectangular tables', desc:'Long tables with chairs per side',    fields:['tables','longSide','shortSide'] },
-  { id:'tables-sections',name:'Table sections',   desc:'Tables split into sections',            fields:['sections','tables','chairsPerTable'] },
-  { id:'general-admission', name:'General admission', desc:'No assigned seats, just capacity',  fields:['capacity'] }
+/* ═══════════════════════════════════════════════════════════════
+   TIER METADATA — v2 schema (matches the rest of the app)
+   ═══════════════════════════════════════════════════════════════ */
+var TIER_DEFAULTS=[
+  { key:'black',  name:'Elite',    colour:'#1a202c', price:400 },
+  { key:'gold',   name:'VIP',      colour:'#ecc94b', price:250 },
+  { key:'silver', name:'Silver',   colour:'#cbd5e1', price:150 },
+  { key:'cyan',   name:'Standard', colour:'#00FFFF', price:80  }
 ];
 
-var state = {
-  user: null,
-  step: 1,
-  plan: 'standard',
-  features: PLANS.standard,
-  tierNames:  Object.assign({}, TIER_DEFAULT_NAMES),
-  tierColors: Object.assign({}, TIER_DEFAULT_COLORS),
-  tierPrices: { elite:0, silver:0, standard:0 },
-  tierActive: { elite:true, silver:true, standard:true },
-  savedTierActive: null,
-  tierPricesTouched: false,
-  savedNames: null,
-  savedColors: null,
-  planImage: '',
-  blocks: [],
-  selectedBlock: null,
-  coverImage: '',
-  venue: { name:'', city:'', address:'' }
+/* ═══════════════════════════════════════════════════════════════
+   HELPERS
+   ═══════════════════════════════════════════════════════════════ */
+function $(id){return document.getElementById(id);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function refreshIcons(){if(window.lucide)lucide.createIcons();}
+function showToast(msg,type,ms){
+  type=type||'info';ms=ms||3200;
+  var t=$('toast');
+  var ic=type==='error'?'alert-circle':(type==='success'?'check-circle':'info');
+  t.className='toast '+type;
+  t.innerHTML='<i data-lucide="'+ic+'"></i><span>'+esc(msg)+'</span>';
+  refreshIcons();
+  requestAnimationFrame(function(){t.classList.add('show');});
+  clearTimeout(showToast._t);
+  showToast._t=setTimeout(function(){t.classList.remove('show');},ms);
+}
+function money(v){
+  v=parseFloat(v)||0;
+  if(v<=0)return 'Free';
+  return 'R '+v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
+}
+function getTodayLocal(){
+  var d=new Date();
+  return d.getFullYear()+'-'+String(d.getMonth()+1).padStart(2,'0')+'-'+String(d.getDate()).padStart(2,'0');
+}
+function formatEventDate(dateStr,timeStr){
+  if(!dateStr)return 'DATE TBA';
+  try{
+    var d=new Date(dateStr+'T'+(timeStr||'00:00')+':00+02:00');
+    if(isNaN(d.getTime()))return dateStr;
+    var out=d.toLocaleDateString('en-ZA',{day:'numeric',month:'short',year:'numeric'});
+    if(timeStr)out+=' · '+timeStr;
+    return out;
+  }catch(e){return dateStr;}
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   STATE
+   ═══════════════════════════════════════════════════════════════ */
+var currentUser=null;
+var currentStep=1;
+var isPublishing=false;
+
+var state={
+  plan:{ id:'standard', fee:7, limit:500 },
+  tiers:[
+    Object.assign({},TIER_DEFAULTS[0]),
+    Object.assign({},TIER_DEFAULTS[1]),
+    Object.assign({},TIER_DEFAULTS[2]),
+    Object.assign({},TIER_DEFAULTS[3])
+  ],
+  coverImage:''
 };
 
-function activeTierKeys(){
-  if (state.plan === 'basic') return ['standard'];
-  return TIER_KEYS.slice();
-}
-function activeTierKeysFiltered(){
-  var keys = activeTierKeys();
-  if (state.plan === 'basic') return keys;
-  var filtered = keys.filter(function(k){ return state.tierActive[k] !== false; });
-  if (!filtered.length) return keys;
-  return filtered;
-}
-function blockLetter(idx){
-  var n = idx, s = '';
-  do { s = String.fromCharCode(65 + (n%26)) + s; n = Math.floor(n/26) - 1; } while (n >= 0);
-  return s;
-}
-function makeBlock(idx, preset){
-  preset = preset || 'rows-simple';
-  return {
-    id: uid(),
-    name: 'Block ' + blockLetter(idx),
-    preset: preset,
-    tier: null,
-    sections: 1,
-    rows: 4,
-    seatsPerRow: 8,
-    aisleAfter: 0,
-    tables: 4,
-    chairsPerTable: 8,
-    longSide: 4,
-    shortSide: 1,
-    capacity: 100
-  };
-}
-function getBlock(id){ return state.blocks.find(function(b){ return b.id === id; }); }
+/* ═══════════════════════════════════════════════════════════════
+   STEP NAVIGATION
+   ═══════════════════════════════════════════════════════════════ */
+var STEP_NAMES={1:'Details',2:'Pricing',3:'Tiers',4:'Review'};
 
-function blockSeatCount(b){
-  if (!b) return 0;
-  var p = b.preset;
-  if (p === 'rows-simple')    return b.rows * b.seatsPerRow;
-  if (p === 'rows-sections')  return b.sections * b.rows * b.seatsPerRow;
-  if (p === 'rows-aisle')     return b.rows * b.seatsPerRow;
-  if (p === 'multi-blocks')   return b.rows * b.seatsPerRow;
-  if (p === 'tables-round')   return b.tables * b.chairsPerTable;
-  if (p === 'tables-rect')    return b.tables * (b.longSide * 2 + b.shortSide * 2);
-  if (p === 'tables-sections')return b.sections * b.tables * b.chairsPerTable;
-  if (p === 'general-admission') return b.capacity;
-  return 0;
-}
-
-function computeTierCounts(){
-  var counts = {};
-  activeTierKeysFiltered().forEach(function(k){ counts[k] = 0; });
-  if (!state.features.seating || !state.blocks.length) return counts;
-  var fallback = activeTierKeysFiltered()[activeTierKeysFiltered().length-1] || 'standard';
-  state.blocks.forEach(function(b){
-    var t = b.tier || fallback;
-    if (state.tierActive[t] === false && state.plan !== 'basic') return;
-    counts[t] = (counts[t] || 0) + blockSeatCount(b);
-  });
-  return counts;
-}
-
-function hexToRgb(h){
-  h = String(h||'').replace('#','');
-  if (h.length === 3) h = h[0]+h[0]+h[1]+h[1]+h[2]+h[2];
-  if (h.length !== 6) return null;
-  return { r:parseInt(h.slice(0,2),16), g:parseInt(h.slice(2,4),16), b:parseInt(h.slice(4,6),16) };
-}
-function mix(a, b, t){
-  var ca = hexToRgb(a), cb = hexToRgb(b);
-  if (!ca || !cb) return a;
-  return '#' + ['r','g','b'].map(function(ch){
-    return Math.round(ca[ch] + (cb[ch]-ca[ch])*t).toString(16).padStart(2,'0');
-  }).join('');
-}
-function relLum(h){
-  var c = hexToRgb(h); if (!c) return 0.5;
-  var arr = [c.r, c.g, c.b].map(function(v){
-    v /= 255;
-    return v <= 0.03928 ? v/12.92 : Math.pow((v+0.055)/1.055, 2.4);
-  });
-  return 0.2126*arr[0] + 0.7152*arr[1] + 0.0722*arr[2];
-}
-
-function applyPlan(){
-  state.features = PLANS[state.plan];
-  $$('.plan-card').forEach(function(c){
-    var r = c.querySelector('input');
-    c.classList.toggle('selected', r && r.checked);
-  });
-
-  if (!state.features.canRename){
-    if (!state.savedNames){
-      var changedN = TIER_KEYS.some(function(k){ return state.tierNames[k] !== TIER_DEFAULT_NAMES[k]; });
-      if (changedN) state.savedNames = Object.assign({}, state.tierNames);
-    }
-    TIER_KEYS.forEach(function(k){ state.tierNames[k] = TIER_DEFAULT_NAMES[k]; });
-  } else if (state.savedNames){
-    TIER_KEYS.forEach(function(k){ if (state.savedNames[k]) state.tierNames[k] = state.savedNames[k]; });
-    state.savedNames = null;
-  }
-
-  if (!state.features.canColor){
-    if (!state.savedColors){
-      var changedC = TIER_KEYS.some(function(k){ return state.tierColors[k] !== TIER_DEFAULT_COLORS[k]; });
-      if (changedC) state.savedColors = Object.assign({}, state.tierColors);
-    }
-    TIER_KEYS.forEach(function(k){ state.tierColors[k] = TIER_DEFAULT_COLORS[k]; });
-  } else if (state.savedColors){
-    TIER_KEYS.forEach(function(k){ if (state.savedColors[k]) state.tierColors[k] = state.savedColors[k]; });
-    state.savedColors = null;
-  }
-
-  if (state.plan === 'basic'){
-    state.tierNames.standard = 'Standard';
-    if (!state.savedTierActive){
-      state.savedTierActive = Object.assign({}, state.tierActive);
-    }
-    state.tierActive = { elite:false, silver:false, standard:true };
-  } else if (state.savedTierActive){
-    state.tierActive = Object.assign({ elite:true, silver:true, standard:true }, state.savedTierActive);
-    state.savedTierActive = null;
-  } else {
-    if (state.tierActive.elite === false && state.tierActive.silver === false && state.tierActive.standard === false){
-      state.tierActive = { elite:true, silver:true, standard:true };
-    }
-  }
-
-  $('basePriceGroup').style.display = (state.plan === 'basic') ? 'none' : '';
-  $('planName').textContent = cap(state.plan) + ' · ' + state.features.fee + '%';
-  $('planTierLimit').textContent = state.features.tierLimit;
-  $('planRename').textContent = state.features.canRename ? 'Yes' : 'No';
-  $('planColors').textContent = state.features.canColor ? 'Yes' : 'No';
-  $('planSeating').textContent = state.features.seating ? 'Full' : 'None';
-  $('planLimit').textContent = state.features.limit >= 999999 ? 'Unlimited' : state.features.limit;
-
-  $('basicTierNote').style.display = (state.plan === 'basic') ? 'flex' : 'none';
-  $('basicColorNote').style.display = (state.plan === 'basic') ? 'flex' : 'none';
-  $('basicSeatingNote').style.display = (!state.features.seating) ? 'flex' : 'none';
-  $('seatingEditor').style.display = (!state.features.seating) ? 'none' : 'block';
-
-  renderTierList();
-  renderTierColorGrid();
-  renderSeatingEditor();
-  renderRevenue();
-}
-
-function renderTierList(){
-  var list = $('tierList');
-  list.innerHTML = '';
-  var keys = activeTierKeys();
-  var canToggle = (state.plan !== 'basic');
-
-  keys.forEach(function(k){
-    var active = state.tierActive[k] !== false;
-    var row = document.createElement('div');
-    row.className = 'tier-row' + (active ? '' : ' off');
-    var readonly = state.features.canRename ? '' : 'readonly';
-
-    var toggleHtml = '';
-    if (canToggle){
-      var activeCount = keys.filter(function(x){ return state.tierActive[x] !== false; }).length;
-      var wouldLeaveNone = active && activeCount <= 1;
-      var title = wouldLeaveNone ? 'At least one tier must stay on' : 'Toggle tier';
-      toggleHtml =
-        '<label class="tier-toggle" title="' + title + '">' +
-          '<input type="checkbox" data-tier-toggle="' + k + '"' + (active ? ' checked' : '') + (wouldLeaveNone ? ' disabled' : '') + ' />' +
-          '<span class="tier-toggle-track"></span>' +
-        '</label>';
-    }
-
-    row.innerHTML =
-      '<span class="tier-swatch" style="background:'+state.tierColors[k]+'"></span>' +
-      '<input type="text" class="tier-name" data-tier="'+k+'" value="'+esc(state.tierNames[k])+'" maxlength="20" '+readonly+(active?'':' disabled')+' />' +
-      '<span class="tier-qty" data-qty="'+k+'">0 seats</span>' +
-      '<div class="curr"><span class="curr-prefix">R</span><input type="number" class="tier-price" data-tier="'+k+'" min="0" step="0.01" value="'+(state.tierPrices[k]||0)+'"'+(active?'':' disabled')+' /></div>' +
-      '<div class="tier-rev-wrap">' +
-        '<span class="tier-rev" data-rev="'+k+'">R 0.00</span>' +
-        toggleHtml +
-      '</div>';
-    list.appendChild(row);
-  });
-
-  list.querySelectorAll('.tier-name').forEach(function(inp){
-    inp.addEventListener('input', function(){
-      if (!state.features.canRename){ this.value = TIER_DEFAULT_NAMES[this.dataset.tier]; return; }
-      state.tierNames[this.dataset.tier] = this.value.trim() || TIER_DEFAULT_NAMES[this.dataset.tier];
-      renderTierColorGrid();
-      updateTicketBadges();
-      renderBlockEditor();
-    });
-  });
-  list.querySelectorAll('.tier-price').forEach(function(inp){
-    inp.addEventListener('input', function(){
-      state.tierPricesTouched = true;
-      var v = parseFloat(this.value);
-      state.tierPrices[this.dataset.tier] = (isNaN(v) || v < 0) ? 0 : Math.round(v*100)/100;
-      renderRevenue();
-    });
-  });
-  list.querySelectorAll('[data-tier-toggle]').forEach(function(inp){
-    inp.addEventListener('change', function(){
-      var k = this.dataset.tierToggle;
-      var keys2 = activeTierKeys();
-      var wouldBeActive = keys2.filter(function(x){
-        if (x === k) return inp.checked;
-        return state.tierActive[x] !== false;
-      }).length;
-      if (wouldBeActive < 1){
-        this.checked = true;
-        toast('You must keep at least one tier active.', 'error');
-        return;
-      }
-      state.tierActive[k] = this.checked;
-      renderTierList();
-      renderTierColorGrid();
-      renderBlockEditor();
-      renderSummary();
-      renderRevenue();
-    });
-  });
-}
-
-function renderTierColorGrid(){
-  var grid = $('tierColorGrid');
-  grid.innerHTML = '';
-  var keys = activeTierKeys();
-  keys.forEach(function(k){
-    if (state.plan !== 'basic' && state.tierActive[k] === false) return;
-
-    var item = document.createElement('div');
-    item.className = 'tier-color-item';
-    item.innerHTML =
-      '<span class="tier-color-swatch" style="background:'+state.tierColors[k]+'"></span>' +
-      '<label>'+esc(state.tierNames[k])+'</label>' +
-      '<input type="color" data-tier="'+k+'" value="'+state.tierColors[k]+'" '+(state.features.canColor ? '' : 'disabled')+' />';
-    grid.appendChild(item);
-  });
-  grid.querySelectorAll('input[type=color]').forEach(function(inp){
-    inp.addEventListener('input', function(){
-      if (!state.features.canColor) return;
-      state.tierColors[this.dataset.tier] = this.value;
-      renderTierList();
-      updateTicketColors();
-    });
-  });
-  updateTicketColors();
-}
-
-function updateTicketBadges(){
-  var keys = activeTierKeysFiltered();
-  var top = keys[0] || 'standard';
-  var label = (state.tierNames[top] || 'Standard').toUpperCase();
-  ['tierBadge','tierBadge2','tierBadge3'].forEach(function(id){ if ($(id)) $(id).textContent = label; });
-  updateTicketColors();
-}
-
-function updateTicketColors(){
-  var keys = activeTierKeysFiltered();
-  var top = keys[0] || 'standard';
-  var hex = state.tierColors[top];
-  var lum = relLum(hex);
-  var bg1, bg2, text, muted;
-  if (lum < 0.35){
-    bg1 = mix(hex, '#ffffff', 0.06);
-    bg2 = mix(hex, '#000000', 0.45);
-    text = '#ffffff'; muted = 'rgba(255,255,255,0.65)';
-  } else {
-    bg1 = mix(hex, '#ffffff', 0.92);
-    bg2 = mix(hex, '#ffffff', 0.4);
-    var c2lum = relLum(bg2);
-    text = c2lum > 0.5 ? '#0a0f14' : '#ffffff';
-    muted = text === '#ffffff' ? 'rgba(255,255,255,0.7)' : 'rgba(0,0,0,0.6)';
-  }
-  var el = $('ticketFront');
-  if (el){
-    el.style.setProperty('--tkt-bg1', bg1);
-    el.style.setProperty('--tkt-bg2', bg2);
-    el.style.setProperty('--tkt-text', text);
-    el.style.setProperty('--tkt-muted', muted);
-    el.style.setProperty('--tkt-logo', lum < 0.35 ? '#00FFFF' : '#1e2f4d');
-  }
-}
-
-var STEP_NAMES = {1:'Event Details',2:'Pricing Plan',3:'Tiers',4:'Seating Logic',5:'Revenue'};
 function goToStep(n){
-  if (n < 1 || n > 5) return;
-  state.step = n;
-  $$('.panel').forEach(function(p){ p.classList.toggle('active', parseInt(p.dataset.panel) === n); });
-  $$('.step').forEach(function(t){
-    var s = parseInt(t.dataset.step);
-    t.classList.toggle('active', s === n);
-    t.classList.toggle('done', s < n);
+  if(n<1||n>4)return;
+  currentStep=n;
+  document.querySelectorAll('.panel').forEach(function(p){
+    p.classList.toggle('active',parseInt(p.dataset.panel,10)===n);
   });
-  var pct = Math.round(n/5*100);
-  $('progFill').style.width = pct + '%';
-  $('progLbl').textContent = 'Step ' + n + ' of 5 · ' + STEP_NAMES[n];
-  $('progPct').textContent = pct + '%';
-  window.scrollTo({ top:0, behavior:'smooth' });
-  if (n === 4) renderSeatingEditor();
-  if (n === 5) renderRevenue();
+  document.querySelectorAll('.step').forEach(function(t){
+    var s=parseInt(t.dataset.step,10);
+    t.classList.toggle('active',s===n);
+    t.classList.toggle('done',s<n);
+  });
+  var pct=Math.round((n/4)*100);
+  $('progressFill').style.width=pct+'%';
+  $('progressLabel').textContent='Step '+n+' of 4 · '+STEP_NAMES[n];
+  $('progressPct').textContent=pct+'%';
+  window.scrollTo({top:0,behavior:'smooth'});
+  if(n===3)renderTiers();
+  if(n===4)renderReview();
+  updateTicketPreviews();
 }
 
-function ensureBlocks(){
-  if (!state.blocks.length){
-    var b = makeBlock(0, 'rows-simple');
-    state.blocks.push(b);
-    state.selectedBlock = b.id;
+/* ═══════════════════════════════════════════════════════════════
+   TICKET PREVIEW
+   ═══════════════════════════════════════════════════════════════ */
+function updateTicketPreviews(){
+  var name=($('eventName').value||'').trim()||'EVENT NAME';
+  var date=($('startDate').value||'')||'DATE';
+  var time=($('startTime').value||'');
+  var venue=($('venueName').value||'').trim()||'VENUE';
+  var city=($('city').value||'').trim();
+
+  var dateLabel=date+(time?' · '+time:'');
+  var venueLabel=venue+(city?', '+city:'');
+
+  // Pick the cheapest tier for the preview
+  var tier=state.tiers[0];
+  for(var i=1;i<state.tiers.length;i++){
+    if(state.tiers[i].price<tier.price)tier=state.tiers[i];
   }
+
+  // Update every preview slot
+  [1,2,3].forEach(function(i){
+    var sfx=i===1?'':String(i);
+    var nameEl=$('tkEventName'+sfx);if(nameEl)nameEl.textContent=name;
+    var metaEl=$('tkEventMeta'+sfx);if(metaEl)metaEl.textContent=dateLabel+' · '+venueLabel;
+    var tierEl=$('tkTierBadge'+sfx);if(tierEl)tierEl.textContent=tier.name.toUpperCase();
+    var venueEl=$('tkVenue'+sfx);if(venueEl)venueEl.textContent=venueLabel;
+  });
+
+  // Apply palette from tier colour
+  var previews=['ticketPreview','ticketPreview2','ticketPreview3'];
+  previews.forEach(function(id){
+    var el=$(id);
+    if(!el)return;
+    var p=getPalette(tier.colour);
+    el.style.setProperty('--tk-c1',p.c1);
+    el.style.setProperty('--tk-c2',p.c2);
+    el.style.setProperty('--tk-text',p.text);
+    el.style.setProperty('--tk-muted',p.muted);
+    el.style.setProperty('--tk-logo',p.logo);
+    el.style.setProperty('--tk-badge-bg',p.badgeBg);
+    el.style.setProperty('--tk-badge-text',p.badgeText);
+  });
 }
 
-function renderSeatingEditor(){
-  if (!state.features.seating) return;
-  ensureBlocks();
-  renderPlanImage();
-  renderPresetGrid();
-  renderBlockTabs();
-  renderBlockEditor();
-  renderSummary();
-}
-
-function renderPlanImage(){
-  var box = $('planUploadBox');
-  var empty = $('planUploadEmpty');
-  var prev = $('planUploadPreview');
-  var img = $('planImagePreview');
-  if (state.planImage){
-    box.classList.add('has-image');
-    empty.style.display = 'none';
-    prev.style.display = 'block';
-    img.src = state.planImage;
-  } else {
-    box.classList.remove('has-image');
-    empty.style.display = 'block';
-    prev.style.display = 'none';
+function getPalette(hex){
+  var c=hexToRgb(hex);
+  if(!c)return {c1:'#E6FFFF',c2:'#B3FFFF',text:'#0A0F14',muted:'rgba(0,0,0,.6)',logo:'#1e2f4d',badgeBg:'rgba(0,0,0,.08)',badgeText:'#4a5568'};
+  var lum=luminance(hex);
+  if(lum<.35){
+    return {
+      c1:mixWhite(hex,.06),c2:mixBlack(hex,.45),
+      text:'#ffffff',muted:'rgba(255,255,255,.65)',
+      logo:'#00E5E5',
+      badgeBg:'rgba(255,255,255,.15)',badgeText:'#ffffff'
+    };
   }
-  refreshIcons();
+  var c1=mixWhite(hex,.92);
+  var c2=mixWhite(hex,.4);
+  var text=luminance(c2)>.5?'#0a0f14':'#ffffff';
+  var isLight=text==='#ffffff';
+  return {
+    c1:c1,c2:c2,text:text,
+    muted:isLight?'rgba(255,255,255,.7)':'rgba(0,0,0,.6)',
+    logo:isLight?'#00E5E5':'#1e2f4d',
+    badgeBg:isLight?'rgba(255,255,255,.15)':'rgba(0,0,0,.08)',
+    badgeText:isLight?'#ffffff':'#4a5568'
+  };
 }
-
-function renderPresetGrid(){
-  var grid = $('presetGrid');
-  grid.innerHTML = '';
-  var current = state.selectedBlock ? getBlock(state.selectedBlock) : null;
-  PRESETS.forEach(function(p){
-    var btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'preset-card' + (current && current.preset === p.id ? ' selected' : '');
-    btn.dataset.preset = p.id;
-    btn.innerHTML =
-      '<svg data-lucide="' + presetIcon(p.id) + '" class="preset-icon"></svg>' +
-      '<div class="preset-name">' + esc(p.name) + '</div>' +
-      '<div class="preset-desc">' + esc(p.desc) + '</div>';
-    btn.addEventListener('click', function(){
-      var b = getBlock(state.selectedBlock);
-      if (!b) return;
-      b.preset = p.id;
-      renderPresetGrid();
-      renderBlockEditor();
-      renderSummary();
-      renderRevenue();
-    });
-    grid.appendChild(btn);
-  });
-  refreshIcons();
+function hexToRgb(hex){
+  var c=String(hex||'').replace('#','');
+  if(c.length===3)c=c[0]+c[0]+c[1]+c[1]+c[2]+c[2];
+  if(c.length!==6)return null;
+  return {r:parseInt(c.slice(0,2),16),g:parseInt(c.slice(2,4),16),b:parseInt(c.slice(4,6),16)};
 }
-
-function presetIcon(id){
-  if (id.indexOf('tables') === 0) return 'circle';
-  if (id === 'general-admission') return 'users';
-  if (id === 'rows-aisle') return 'columns-3';
-  if (id === 'rows-sections') return 'layers';
-  if (id === 'multi-blocks') return 'grid-2x2';
-  return 'rows-3';
-}
-
-function renderBlockTabs(){
-  var tabs = $('blockTabs');
-  tabs.innerHTML = '';
-  state.blocks.forEach(function(b){
-    var tab = document.createElement('button');
-    tab.type = 'button';
-    tab.className = 'block-tab' + (b.id === state.selectedBlock ? ' active' : '');
-    tab.innerHTML = esc(b.name) + ' <span class="cnt">' + blockSeatCount(b) + '</span>';
-    tab.addEventListener('click', function(){
-      state.selectedBlock = b.id;
-      renderBlockTabs();
-      renderPresetGrid();
-      renderBlockEditor();
-    });
-    tabs.appendChild(tab);
-  });
-  var add = document.createElement('button');
-  add.type = 'button';
-  add.className = 'block-tab-add';
-  add.textContent = '+ Add block';
-  add.addEventListener('click', function(){
-    var b = makeBlock(state.blocks.length, 'rows-simple');
-    state.blocks.push(b);
-    state.selectedBlock = b.id;
-    renderBlockTabs();
-    renderPresetGrid();
-    renderBlockEditor();
-    renderSummary();
-    renderRevenue();
-  });
-  tabs.appendChild(add);
-}
-
-function tierOptionsHtml(selected){
-  return activeTierKeysFiltered().map(function(k){
-    return '<option value="'+k+'"'+(selected===k?' selected':'')+'>'+esc(state.tierNames[k])+'</option>';
+function rgbToHex(c){
+  return '#'+[c.r,c.g,c.b].map(function(x){
+    return Math.max(0,Math.min(255,Math.round(x))).toString(16).padStart(2,'0');
   }).join('');
 }
-
-function renderBlockEditor(){
-  var editor = $('blockEditor');
-  var b = getBlock(state.selectedBlock);
-  if (!b){ editor.innerHTML = ''; return; }
-
-  var html = '<div class="block-editor-h">' +
-    '<h3>' + esc(b.name) + '</h3>' +
-    '<div class="block-editor-actions">' +
-      '<button type="button" class="btn btn-danger btn-sm" id="delBlockBtn">' + icon('trash-2') + ' Delete</button>' +
-    '</div>' +
-  '</div>';
-
-  html += '<div class="row2">' +
-    '<div class="fg" style="margin-bottom:0;">' +
-      '<label>Block name</label>' +
-      '<input type="text" id="blockNameInput" value="' + esc(b.name) + '" maxlength="30" />' +
-    '</div>' +
-    '<div class="fg" style="margin-bottom:0;">' +
-      '<label>Tier</label>' +
-      '<select id="blockTierInput">' +
-        '<option value="">— Default —</option>' +
-        tierOptionsHtml(b.tier) +
-      '</select>' +
-    '</div>' +
-  '</div>';
-
-  var preset = PRESETS.find(function(p){ return p.id === b.preset; });
-  if (preset){
-    var f = preset.fields;
-    html += '<div style="margin-top:14px;">';
-    html += renderFieldsForPreset(b, f);
-    html += '</div>';
-  }
-
-  html += '<div class="total-chip">' + icon('users') + ' ' + blockSeatCount(b) + ' seats in this block</div>';
-
-  editor.innerHTML = html;
-  refreshIcons();
-
-  $('blockNameInput').addEventListener('input', function(){
-    b.name = this.value || 'Block';
-    renderBlockTabs();
-    renderSummary();
-  });
-  $('blockTierInput').addEventListener('change', function(){
-    b.tier = this.value || null;
-    renderSummary();
-    renderRevenue();
-  });
-
-  editor.querySelectorAll('[data-field]').forEach(function(inp){
-    inp.addEventListener('input', function(){
-      var k = this.dataset.field;
-      var v = parseInt(this.value, 10) || 0;
-      var max = parseInt(this.dataset.max || 999, 10);
-      var min = parseInt(this.dataset.min || 0, 10);
-      v = Math.max(min, Math.min(max, v));
-      b[k] = v;
-      this.value = v;
-      var chip = editor.querySelector('.total-chip');
-      if (chip){ chip.innerHTML = icon('users') + ' ' + blockSeatCount(b) + ' seats in this block'; refreshIcons(); }
-      renderBlockTabs();
-      renderSummary();
-      renderRevenue();
-    });
-  });
-
-  $('delBlockBtn').addEventListener('click', function(){
-    if (state.blocks.length <= 1){ toast('At least one block is required.', 'error'); return; }
-    if (!confirm('Delete "' + b.name + '"?')) return;
-    state.blocks = state.blocks.filter(function(x){ return x.id !== b.id; });
-    state.selectedBlock = state.blocks[0].id;
-    renderBlockTabs();
-    renderPresetGrid();
-    renderBlockEditor();
-    renderSummary();
-    renderRevenue();
-  });
+function mixWhite(hex,r){var c=hexToRgb(hex);if(!c)return hex;return rgbToHex({r:c.r+(255-c.r)*r,g:c.g+(255-c.g)*r,b:c.b+(255-c.b)*r});}
+function mixBlack(hex,r){var c=hexToRgb(hex);if(!c)return hex;return rgbToHex({r:c.r*(1-r),g:c.g*(1-r),b:c.b*(1-r)});}
+function luminance(hex){
+  var c=hexToRgb(hex);if(!c)return .5;
+  var arr=[c.r,c.g,c.b].map(function(v){v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4);});
+  return .2126*arr[0]+.7152*arr[1]+.0722*arr[2];
 }
 
-function renderFieldsForPreset(b, fields){
-  var html = '';
-  var cols = fields.length >= 3 ? 'row3' : 'row2';
+/* ═══════════════════════════════════════════════════════════════
+   TIERS
+   ═══════════════════════════════════════════════════════════════ */
+function renderTiers(){
+  var wrap=$('tierList');
+  wrap.innerHTML='';
 
-  html += '<div class="' + cols + '">';
-  fields.forEach(function(f){
-    html += fieldHtml(b, f);
-  });
-  html += '</div>';
-  return html;
-}
+  state.tiers.forEach(function(t,i){
+    var row=document.createElement('div');
+    row.className='tier-row';
+    row.dataset.idx=i;
 
-function fieldHtml(b, field){
-  var labelMap = {
-    rows: 'Rows',
-    seatsPerRow: 'Seats per row',
-    sections: 'Sections',
-    aisleAfter: 'Aisle after seat N',
-    tables: 'Tables',
-    chairsPerTable: 'Chairs per table',
-    longSide: 'Chairs long side',
-    shortSide: 'Chairs short side',
-    capacity: 'Capacity'
-  };
-  var hintMap = {
-    sections: '1 = no split',
-    aisleAfter: '0 = no aisle',
-    longSide: '2–5 per long side',
-    shortSide: '0 or 1 per short side'
-  };
-  var minMap = { sections: 1, aisleAfter: 0, longSide: 2, shortSide: 0, capacity: 1 };
-  var maxMap = { sections: 26, rows: 999, seatsPerRow: 99, aisleAfter: 99, tables: 999, chairsPerTable: 99, longSide: 5, shortSide: 1, capacity: 99999 };
-  var v = b[field] || 0;
-  return '<div class="fg" style="margin-bottom:0;">' +
-    '<label>' + (labelMap[field] || field) + '</label>' +
-    '<input type="number" data-field="' + field + '" min="' + (minMap[field] || 0) + '" max="' + (maxMap[field] || 999) + '" value="' + v + '" />' +
-    (hintMap[field] ? '<p class="hint">' + hintMap[field] + '</p>' : '') +
-  '</div>';
-}
+    row.innerHTML=
+      '<label class="tier-swatch" style="background:'+esc(t.colour)+'">'+
+        '<input type="color" value="'+esc(t.colour)+'" data-role="colour" data-idx="'+i+'" />'+
+      '</label>'+
+      '<input type="text" class="tier-name" value="'+esc(t.name)+'" maxlength="20" placeholder="Tier name" data-role="name" data-idx="'+i+'" />'+
+      '<div class="tier-price">'+
+        '<span class="tier-price-prefix">R</span>'+
+        '<input type="number" min="0" step="0.01" value="'+t.price+'" data-role="price" data-idx="'+i+'" />'+
+      '</div>'+
+      '<button type="button" class="tier-toggle" data-role="remove" data-idx="'+i+'"'+(state.tiers.length<=2?' disabled':'')+' aria-label="Remove tier">'+
+        '<i data-lucide="trash-2"></i>'+
+      '</button>';
 
-function renderSummary(){
-  var wrap = $('summaryList');
-  if (!wrap) return;
-  wrap.innerHTML = '';
-
-  if (!state.blocks.length){
-    wrap.innerHTML = '<div class="summary-row"><span class="sr-name" style="color:var(--mut);font-weight:500;">No blocks yet.</span></div>';
-    $('summaryTotalSeats').textContent = '0';
-    return;
-  }
-
-  var total = 0;
-  state.blocks.forEach(function(b){
-    var p = PRESETS.find(function(x){ return x.id === b.preset; });
-    var detail = describeBlock(b);
-    var seats = blockSeatCount(b);
-    total += seats;
-    var tierName = b.tier ? state.tierNames[b.tier] : (state.tierNames[activeTierKeysFiltered()[activeTierKeysFiltered().length-1]] || 'Standard');
-
-    var row = document.createElement('div');
-    row.className = 'summary-row';
-    row.innerHTML =
-      '<div style="min-width:0;">' +
-        '<div class="sr-name">' + esc(b.name) + ' <span style="color:var(--mut);font-weight:600;font-size:11.5px;">· ' + esc(p ? p.name : '') + ' · ' + esc(tierName) + '</span></div>' +
-        '<div class="sr-detail">' + esc(detail) + '</div>' +
-      '</div>' +
-      '<div class="sr-seats">' + seats + ' seats</div>';
     wrap.appendChild(row);
   });
 
-  $('summaryTotalSeats').textContent = total;
-}
-
-function describeBlock(b){
-  var parts = [];
-  if (b.sections > 1) parts.push(b.sections + ' sections');
-  if (b.preset === 'tables-rect'){
-    parts.push(b.tables + ' tables');
-    parts.push(b.longSide + ' long + ' + b.shortSide + ' short');
-  } else if (b.preset.indexOf('tables') === 0){
-    parts.push(b.tables + ' tables');
-    parts.push(b.chairsPerTable + ' chairs each');
-  } else if (b.preset === 'general-admission'){
-    parts.push('General admission');
-  } else {
-    parts.push(b.rows + ' rows');
-    parts.push(b.seatsPerRow + ' seats per row');
-    if (b.aisleAfter > 0) parts.push('aisle after seat ' + b.aisleAfter);
-  }
-  return parts.join(' · ');
-}
-
-function renderRevenue(){
-  var counts = computeTierCounts();
-  var keys = activeTierKeysFiltered();
-  var total = 0, gross = 0;
-
-  keys.forEach(function(k){
-    var q = counts[k] || 0;
-    var p = state.tierPrices[k] || 0;
-    total += q;
-    gross += q * p;
-    var qEl = document.querySelector('[data-qty="'+k+'"]');
-    if (qEl) qEl.textContent = q + ' seat' + (q === 1 ? '' : 's');
-    var rEl = document.querySelector('[data-rev="'+k+'"]');
-    if (rEl) rEl.textContent = 'R ' + (q * p).toFixed(2);
+  wrap.querySelectorAll('input[type="color"]').forEach(function(inp){
+    inp.addEventListener('input',function(){
+      var i=parseInt(this.dataset.idx,10);
+      state.tiers[i].colour=this.value;
+      // update swatch background
+      this.parentNode.style.background=this.value;
+      updateTicketPreviews();
+    });
   });
 
-  var fee = gross * (state.features.fee / 100);
-  var net = gross - fee;
-
-  $('revTickets').textContent = total;
-  $('revGross').textContent = fmtR(gross);
-  $('revFee').textContent = fmtR(fee);
-  $('revPlanName').textContent = cap(state.plan) + ' · ' + state.features.fee + '%';
-  $('revTotal').textContent = total + ' / ' + (state.features.limit >= 999999 ? 'unlimited' : state.features.limit);
-  $('revGross2').textContent = fmtR2(gross);
-  $('revFeePct').textContent = state.features.fee + '%';
-  $('revFee2').textContent = '− ' + fmtR2(fee);
-  $('revNet').textContent = fmtR2(net);
-
-  var warn = $('revWarn');
-  if (total > state.features.limit && state.features.limit < 999999){
-    warn.textContent = 'Capacity (' + total + ') exceeds the ' + cap(state.plan) + ' limit of ' + state.features.limit + '.';
-    warn.classList.add('show');
-  } else warn.classList.remove('show');
-
-  var bd = $('tierBreakdown');
-  bd.innerHTML = '';
-  keys.forEach(function(k){
-    var q = counts[k] || 0;
-    var p = state.tierPrices[k] || 0;
-    var row = document.createElement('div');
-    row.className = 'tier-row';
-    row.innerHTML =
-      '<span class="tier-swatch" style="background:'+state.tierColors[k]+'"></span>' +
-      '<span style="font-weight:800;font-size:13px;">'+esc(state.tierNames[k])+'</span>' +
-      '<span class="tier-qty">'+q+' seat'+(q === 1 ? '' : 's')+'</span>' +
-      '<span class="tier-qty" style="background:var(--bg);color:var(--tx2);">R '+p.toFixed(2)+'</span>' +
-      '<span class="tier-rev">R '+(q * p).toFixed(2)+'</span>';
-    bd.appendChild(row);
+  wrap.querySelectorAll('input[data-role="name"]').forEach(function(inp){
+    inp.addEventListener('input',function(){
+      var i=parseInt(this.dataset.idx,10);
+      state.tiers[i].name=this.value||'Tier';
+      updateTicketPreviews();
+    });
   });
 
-  updateTicketBadges();
-  updatePreviewFields();
-}
-
-function updatePreviewFields(){
-  var name  = ($('eventName') && $('eventName').value) || 'EVENT NAME';
-  var venue = ($('venueName') && $('venueName').value) || 'VENUE';
-  var city  = ($('venueCity') && $('venueCity').value) || '';
-  var date  = ($('startDate') && $('startDate').value) || 'DATE';
-  var dv = date + ' · ' + venue + (city ? ', ' + city : '');
-  ['tEventName','tEventName2','tEventName3'].forEach(function(id){ if ($(id)) $(id).textContent = name; });
-  ['tDateVenue','tDateVenue2','tDateVenue3'].forEach(function(id){ if ($(id)) $(id).textContent = dv; });
-  if ($('tLoc')) $('tLoc').textContent = venue + (city ? ', ' + city : '');
-}
-
-function buildBlocksPayload(){
-  return state.blocks.map(function(b){
-    var p = PRESETS.find(function(x){ return x.id === b.preset; });
-    var payload = {
-      id: b.id,
-      name: b.name,
-      preset: b.preset,
-      presetName: p ? p.name : '',
-      tier: b.tier || (activeTierKeysFiltered()[activeTierKeysFiltered().length-1] || 'standard'),
-      seats: blockSeatCount(b)
-    };
-    if (b.preset === 'general-admission'){
-      payload.capacity = b.capacity;
-    } else if (b.preset.indexOf('tables') === 0){
-      payload.sections = b.sections;
-      payload.tables = b.tables;
-      if (b.preset === 'tables-rect'){
-        payload.longSide = b.longSide;
-        payload.shortSide = b.shortSide;
-      } else {
-        payload.chairsPerTable = b.chairsPerTable;
-      }
-    } else {
-      payload.sections = b.sections;
-      payload.rows = b.rows;
-      payload.seatsPerRow = b.seatsPerRow;
-      if (b.preset === 'rows-aisle') payload.aisleAfter = b.aisleAfter;
-    }
-    return payload;
-  });
-}
-
-function buildPayload(){
-  var keys = activeTierKeys();
-  var tierNames = {}, tierColours = {}, tierPrices = {}, tierActiveOut = {};
-  keys.forEach(function(k){
-    tierNames[k] = state.tierNames[k];
-    tierColours[k] = state.tierColors[k];
-    tierPrices[k] = state.tierPrices[k] || 0;
-    tierActiveOut[k] = state.tierActive[k] !== false;
+  wrap.querySelectorAll('input[data-role="price"]').forEach(function(inp){
+    inp.addEventListener('input',function(){
+      var i=parseInt(this.dataset.idx,10);
+      var v=parseFloat(this.value);
+      state.tiers[i].price=(isNaN(v)||v<0)?0:Math.round(v*100)/100;
+      updateTicketPreviews();
+    });
   });
 
-  var cost = parseFloat($('cost').value) || 0;
-  var counts = computeTierCounts();
-  var gross = 0, totalTickets = 0;
-  keys.forEach(function(k){
-    var q = counts[k] || 0;
-    totalTickets += q;
-    gross += q * (state.tierPrices[k] || 0);
+  wrap.querySelectorAll('[data-role="remove"]').forEach(function(btn){
+    btn.addEventListener('click',function(){
+      if(state.tiers.length<=2)return;
+      var i=parseInt(this.dataset.idx,10);
+      state.tiers.splice(i,1);
+      renderTiers();
+      updateTicketPreviews();
+    });
   });
-  var fee = gross * (state.features.fee / 100);
 
-  return {
-    eventName: $('eventName').value.trim() || 'Untitled Event',
-    eventDescription: $('eventDesc').value.trim(),
-    hostName: $('hostName').value.trim(),
-    hostEmail: $('hostEmail').value.trim(),
-    venueName: state.venue.name,
-    venueAddress: state.venue.address,
-    city: state.venue.city,
-    startDate: $('startDate').value,
-    startTime: $('startTime').value,
-    eventType: $('eventType').value,
-    cost: cost,
-    costFormatted: cost <= 0 ? 'Free' : 'R ' + cost.toFixed(2),
-    coverImage: state.coverImage,
-    heroImage: state.coverImage,
-    tierColor: state.tierColors[keys[0]] || '#00FFFF',
-    activeTierCount: keys.length,
-    tierNames: tierNames,
-    tierColours: tierColours,
-    tierPrices: tierPrices,
-    tierActive: tierActiveOut,
-    plan: { id: state.plan, fee: state.features.fee, limit: state.features.limit },
-    seatingPlanImage: state.features.seating ? (state.planImage || '') : '',
-    blocks: state.features.seating ? buildBlocksPayload() : [],
-    totalAttendees: totalTickets,
-    revenue: { gross: gross, fee: fee, net: gross - fee, planFeePct: state.features.fee, planId: state.plan, totalTickets: totalTickets },
-    source: 'user',
-    status: 'pending_review'
-  };
+  $('addTierBtn').disabled=state.tiers.length>=4;
+  refreshIcons();
 }
 
-function saveEvent(){
-  var user = state.user || auth.currentUser;
-  if (!user){
-    toast('Please sign in to save.', 'error');
-    openAuth();
+function addTier(){
+  if(state.tiers.length>=4){
+    showToast('Maximum 4 tiers.','info',2500);
     return;
   }
-  var missing = [];
-  if (!$('hostName').value.trim()) missing.push('Host name');
-  if (!$('hostEmail').value.trim()) missing.push('Host email');
-  if (!$('startDate').value) missing.push('Start date');
-  if (!$('startTime').value) missing.push('Start time');
-  if (!$('eventName').value.trim()) missing.push('Event name');
-  if (!$('venueName').value.trim()) missing.push('Venue name');
-  if (!$('venueCity').value) missing.push('City');
-  if (missing.length){
-    toast('Please fill in: ' + missing.join(', '), 'error', 5000);
+  // Pick the next unused key
+  var used={};
+  state.tiers.forEach(function(t){used[t.key]=true;});
+  var next=TIER_DEFAULTS.find(function(t){return !used[t.key];});
+  if(!next){showToast('No more tier slots.','info');return;}
+  state.tiers.push(Object.assign({},next));
+  renderTiers();
+  updateTicketPreviews();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PLANS
+   ═══════════════════════════════════════════════════════════════ */
+function selectPlan(planId,fee,limit){
+  state.plan={id:planId,fee:fee,limit:limit};
+  document.querySelectorAll('.plan').forEach(function(card){
+    card.classList.toggle('selected',card.dataset.plan===planId);
+  });
+  $('sumPlanName').textContent=planId.charAt(0).toUpperCase()+planId.slice(1);
+  $('sumPlanFee').textContent=fee+'%';
+  $('sumPlanLimit').textContent=limit>=999999?'Unlimited':limit;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   COVER IMAGE
+   ═══════════════════════════════════════════════════════════════ */
+function renderCover(){
+  var wrap=$('coverPreview');
+  if(!wrap)return;
+  if(!state.coverImage){
+    wrap.innerHTML='<div class="ph"><i data-lucide="image-plus"></i><div class="t">No cover yet</div><div class="s">Paste a URL above or choose a file</div></div>';
+    refreshIcons();
+    return;
+  }
+  wrap.innerHTML='<img src="'+state.coverImage+'" alt="" />';
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   EVENT TYPE HINT
+   ═══════════════════════════════════════════════════════════════ */
+function updateTypeHint(){
+  var sel=$('eventType');
+  var opt=sel.options[sel.selectedIndex];
+  var min=parseFloat(opt.dataset.min)||0;
+  var max=parseFloat(opt.dataset.max)||0;
+  var hint=$('eventTypeHint');
+  if(!sel.value){
+    hint.textContent='Choose a type to see a recommended price.';
+    return;
+  }
+  if(min===0&&max===0){
+    hint.textContent='Recommended: Free entry (R0).';
+    return;
+  }
+  hint.textContent='Recommended price: R'+min.toFixed(2)+' – R'+max.toFixed(2)+' per ticket';
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   REVIEW
+   ═══════════════════════════════════════════════════════════════ */
+function renderReview(){
+  var wrap=$('reviewSummary');
+  var name=($('eventName').value||'').trim()||'—';
+  var hostName=($('hostName').value||'').trim()||'—';
+  var hostEmail=($('hostEmail').value||'').trim()||'—';
+  var date=($('startDate').value||'')||'—';
+  var time=($('startTime').value||'')||'—';
+  var venue=($('venueName').value||'').trim()||'—';
+  var city=($('city').value||'').trim();
+  var typeOpt=$('eventType').selectedOptions[0];
+  var typeLabel=typeOpt&&typeOpt.value?typeOpt.textContent:'—';
+
+  var tiersHtml='';
+  state.tiers.forEach(function(t){
+    tiersHtml+='<span style="display:inline-flex;align-items:center;gap:6px;margin-right:10px;font-size:13px;font-weight:700"><span style="width:12px;height:12px;border-radius:3px;background:'+esc(t.colour)+';display:inline-block"></span>'+esc(t.name)+' · '+money(t.price)+'</span>';
+  });
+
+  wrap.innerHTML=
+    '<div class="summary-row"><span class="k">Event</span><span class="v">'+esc(name)+'</span></div>'+
+    '<div class="summary-row"><span class="k">Host</span><span class="v">'+esc(hostName)+'<br><span style="font-weight:600;color:var(--slate);font-size:12px">'+esc(hostEmail)+'</span></span></div>'+
+    '<div class="summary-row"><span class="k">Type</span><span class="v">'+esc(typeLabel)+'</span></div>'+
+    '<div class="summary-row"><span class="k">When</span><span class="v">'+esc(formatEventDate(date,time))+'</span></div>'+
+    '<div class="summary-row"><span class="k">Where</span><span class="v">'+esc(venue)+(city?', '+esc(city):'')+'</span></div>'+
+    '<div class="summary-row"><span class="k">Plan</span><span class="v">'+esc(state.plan.id.charAt(0).toUpperCase()+state.plan.id.slice(1))+' · '+state.plan.fee+'%</span></div>'+
+    '<div class="summary-row"><span class="k">Tiers</span><span class="v" style="font-weight:600">'+tiersHtml+'</span></div>';
+  refreshIcons();
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   VALIDATE STEP 1
+   ═══════════════════════════════════════════════════════════════ */
+function validateBasics(){
+  var ok=true;
+
+  ['hostName','eventName','startDate','startTime','venueName'].forEach(function(id){
+    var el=$(id);
+    var err=$('err-'+id);
+    if(el)el.classList.remove('is-error');
+    if(err)err.classList.remove('show');
+  });
+
+  var checks=[
+    {id:'hostName',msg:'Please enter a host name.'},
+    {id:'eventName',msg:'Please enter an event name.'},
+    {id:'startDate',msg:'Please pick a date.'},
+    {id:'startTime',msg:'Please pick a start time.'},
+    {id:'venueName',msg:'Please enter a venue.'}
+  ];
+
+  var firstBad=null;
+  checks.forEach(function(c){
+    var el=$(c.id);
+    var v=(el.value||'').trim();
+    if(!v){
+      el.classList.add('is-error');
+      var err=$('err-'+c.id);
+      if(err){err.textContent=c.msg;err.classList.add('show');}
+      ok=false;
+      if(!firstBad)firstBad=el;
+    }
+  });
+
+  // Email
+  var email=($('hostEmail').value||'').trim();
+  if(!email||email.indexOf('@')===-1||email.indexOf('.')===-1){
+    $('hostEmail').classList.add('is-error');
+    var e=$('err-hostEmail');
+    if(e){e.textContent='Please enter a valid email.';e.classList.add('show');}
+    ok=false;
+    if(!firstBad)firstBad=$('hostEmail');
+  }
+
+  if(firstBad){
+    setTimeout(function(){
+      try{firstBad.focus();}catch(e){}
+      try{firstBad.scrollIntoView({behavior:'smooth',block:'center'});}catch(e){}
+    },50);
+  }
+  return ok;
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   PUBLISH
+   ═══════════════════════════════════════════════════════════════ */
+function publishEvent(){
+  if(isPublishing)return;
+  if(!currentUser){
+    $('signinModal').classList.add('open');
+    return;
+  }
+
+  // Validate step 1 once more
+  if(!validateBasics()){
+    showToast('Please fill in the highlighted fields.','error',3000);
     goToStep(1);
     return;
   }
-  state.venue.name = $('venueName').value.trim();
-  state.venue.city = $('venueCity').value;
-  state.venue.address = $('venueAddress').value.trim() || (state.venue.name + ', ' + state.venue.city);
 
-  var payload = buildPayload();
-  payload.ownerUid = user.uid;
-  payload.ownerEmail = user.email || '';
-  payload.ownerName = user.displayName || (user.email || '').split('@')[0];
-  payload.createdAt = firebase.firestore.FieldValue.serverTimestamp();
-  payload.updatedAt = firebase.firestore.FieldValue.serverTimestamp();
-
-  var btn = $('submitBtn');
-  var orig = btn.innerHTML;
-  btn.disabled = true;
-  btn.innerHTML = '<span class="spin"></span> Saving…';
-
-  var ref = db.collection(EVENTS).doc();
-  payload.id = ref.id;
-
-  ref.set(payload).then(function(){
-    btn.innerHTML = icon('check-circle') + ' Event Saved ✓';
-    refreshIcons();
-    toast('Event saved! It now appears in the admin review queue.', 'success', 4500);
-    setTimeout(function(){
-      if (confirm('Event saved. View your dashboard?')) window.location.href = 'dashboard.html';
-    }, 900);
-  }).catch(function(err){
-    console.error('[save]', err);
-    toast('Save failed: ' + (err.message || 'unknown error'), 'error', 6000);
-    btn.disabled = false;
-    btn.innerHTML = orig;
-    refreshIcons();
-  });
-}
-
-var authMode = 'signin';
-function openAuth(){
-  authMode = 'signin';
-  syncAuthTabs();
-  $('authModal').classList.add('open');
-  document.body.style.overflow = 'hidden';
-  refreshIcons();
-}
-function closeAuth(){
-  $('authModal').classList.remove('open');
-  document.body.style.overflow = '';
-}
-function syncAuthTabs(){
-  $$('.tab').forEach(function(t){ t.classList.toggle('active', t.dataset.mode === authMode); });
-  if (authMode === 'signup'){
-    $('authTitle').textContent = 'Create account';
-    $('authSub').textContent = 'Join Novalink to publish events.';
-    $('nameGroup').style.display = 'block';
-    $('authSubmit').textContent = 'Create account';
-  } else {
-    $('authTitle').textContent = 'Welcome back';
-    $('authSub').textContent = 'Sign in to save events.';
-    $('nameGroup').style.display = 'none';
-    $('authSubmit').textContent = 'Sign in';
+  if(!$('confirmCheck').checked){
+    showToast('Please confirm the checkbox before publishing.','error',3500);
+    $('confirmCheck').focus();
+    return;
   }
+
+  isPublishing=true;
+  var btn=$('publishBtn');
+  var orig=btn.innerHTML;
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner"></span> Publishing…';
+  $('saveError').classList.add('hidden');
+  $('saveSuccess').classList.add('hidden');
+
+  // Build tier maps from the tier list
+  var tierNames={},tierColours={},tierPrices={},tierActive={};
+  state.tiers.forEach(function(t){
+    tierNames[t.key]=t.name;
+    tierColours[t.key]=t.colour;
+    tierPrices[t.key]=t.price;
+    tierActive[t.key]=true;
+  });
+
+  var cover=state.coverImage||($('coverImageUrl').value||'').trim()||'';
+
+  var payload={
+    eventName:($('eventName').value||'').trim(),
+    eventDescription:($('eventDescription').value||'').trim(),
+    hostName:($('hostName').value||'').trim(),
+    hostEmail:($('hostEmail').value||'').trim(),
+    venueName:($('venueName').value||'').trim(),
+    venueAddress:($('venueAddress').value||'').trim(),
+    city:($('city').value||'').trim(),
+    startDate:$('startDate').value,
+    startTime:$('startTime').value,
+    eventType:$('eventType').value,
+
+    heroImage:cover,
+    coverImage:cover,
+
+    // Pricing plan
+    plan:{ id:state.plan.id, fee:state.plan.fee, limit:state.plan.limit },
+
+    // Tiers (v2 schema — matches create-event.html and every buyer page)
+    activeTierCount:state.tiers.length,
+    tierNames:tierNames,
+    tierColours:tierColours,
+    tierPrices:tierPrices,
+    tierActive:tierActive,
+
+    // Legacy-ish fields for compatibility
+    cost:tierPrices[state.tiers[state.tiers.length-1].key]||0,
+    tierColor:tierColours[state.tiers[0].key]||'#00FFFF',
+
+    // Payment links (empty — admin fills these in during review)
+    paymentLinks:{},
+
+    // Status
+    status:'pending_review',
+    source:'web',
+    ownerUid:currentUser.uid,
+    ownerEmail:currentUser.email||'',
+    ownerName:currentUser.displayName||'',
+
+    createdAt:firebase.firestore.FieldValue.serverTimestamp(),
+    updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+  };
+
+  db.collection(EVENTS).add(payload)
+    .then(function(ref){
+      isPublishing=false;
+      btn.disabled=false;
+      btn.innerHTML=orig;
+      refreshIcons();
+
+      $('saveSuccess').classList.remove('hidden');
+      $('saveSuccessText').innerHTML='Event published! It\'s now waiting for admin review. You can see it in <a href="my-events.html" style="color:inherit;font-weight:900;text-decoration:underline">My events</a>.';
+      showToast('Event published for review.','success',4000);
+
+      // Hide the publish button so they can't double-publish
+      btn.classList.add('hidden');
+      $('confirmCheck').disabled=true;
+    })
+    .catch(function(err){
+      console.error('[publish]',err);
+      isPublishing=false;
+      btn.disabled=false;
+      btn.innerHTML=orig;
+      refreshIcons();
+      $('saveError').classList.remove('hidden');
+      $('saveErrorText').textContent='Could not publish: '+(err.message||'unknown error');
+      showToast('Publish failed.','error',4000);
+    });
 }
 
-document.addEventListener('DOMContentLoaded', function(){
+/* ═══════════════════════════════════════════════════════════════
+   WIRE UP
+   ═══════════════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded',function(){
+  $('year').textContent=new Date().getFullYear();
   refreshIcons();
 
-  var d = new Date(); d.setDate(d.getDate()+1);
-  $('startDate').value = d.toISOString().slice(0,10);
+  // Default date = tomorrow
+  var d=new Date();
+  d.setDate(d.getDate()+1);
+  $('startDate').value=d.toISOString().slice(0,10);
 
-  $$('.step').forEach(function(t){
-    t.addEventListener('click', function(){ goToStep(parseInt(this.dataset.step,10)); });
-  });
-  $$('[data-next]').forEach(function(b){
-    b.addEventListener('click', function(){ goToStep(parseInt(this.dataset.next,10)); });
-  });
-  $$('[data-prev]').forEach(function(b){
-    b.addEventListener('click', function(){ goToStep(parseInt(this.dataset.prev,10)); });
-  });
-
-  $$('input[name="plan"]').forEach(function(r){
-    r.addEventListener('change', function(){ state.plan = this.value; applyPlan(); });
+  // Step tabs
+  document.querySelectorAll('.step').forEach(function(tab){
+    tab.addEventListener('click',function(){
+      var n=parseInt(this.dataset.step,10);
+      // If leaving step 1 forward, validate
+      if(n>1&&currentStep===1&&!validateBasics())return;
+      goToStep(n);
+    });
   });
 
-  $('eventType').addEventListener('change', function(){
-    var opt = this.options[this.selectedIndex];
-    var min = parseFloat(opt.dataset.min) || 0;
-    var max = parseFloat(opt.dataset.max) || 0;
-    var hint = $('typeHint');
-    if (!this.value){ hint.textContent = 'Choose a type to see a recommended price.'; hint.className = 'hint rec'; return; }
-    if (min === 0 && max === 0){ hint.textContent = 'Recommended: Free (R0).'; }
-    else hint.textContent = 'Recommended: R' + min.toFixed(2) + ' – R' + max.toFixed(2) + ' per ticket.';
+  document.querySelectorAll('[data-next]').forEach(function(b){
+    b.addEventListener('click',function(){
+      var n=parseInt(this.dataset.next,10);
+      if(n>1&&currentStep===1&&!validateBasics())return;
+      goToStep(n);
+    });
+  });
+  document.querySelectorAll('[data-prev]').forEach(function(b){
+    b.addEventListener('click',function(){
+      goToStep(parseInt(this.dataset.prev,10));
+    });
+  });
 
-    var mid = (min + max) / 2;
-    if (mid <= 0) return;
-    function applyRecommended(base){
-      var mult = { elite: 4, silver: 1.5, standard: 1 };
-      activeTierKeysFiltered().forEach(function(k){ state.tierPrices[k] = Math.round(base*(mult[k]||1)*100)/100; });
-      renderTierList();
-      renderRevenue();
+  // Preview inputs
+  ['eventName','startDate','startTime','venueName','city'].forEach(function(id){
+    var el=$(id);
+    if(el)el.addEventListener('input',updateTicketPreviews);
+  });
+
+  // Event type hint + auto-fill tier prices
+  $('eventType').addEventListener('change',function(){
+    updateTypeHint();
+    var opt=this.options[this.selectedIndex];
+    var min=parseFloat(opt.dataset.min)||0;
+    var max=parseFloat(opt.dataset.max)||0;
+    var mid=(min+max)/2;
+    if(mid>0&&state.tiers.length){
+      // Price the lowest tier at the midpoint, others scale up
+      var multipliers=[6,4,2,1];
+      state.tiers.forEach(function(t,i){
+        var mult=multipliers[i]||1;
+        t.price=Math.round(mid*mult*100)/100;
+      });
+      renderTiers();
+      updateTicketPreviews();
     }
-    if (state.tierPricesTouched){
-      if (confirm('You have custom tier prices set.\n\nReplace them with recommended prices for this event type?')){
-        state.tierPricesTouched = false;
-        applyRecommended(mid);
-        $('cost').value = mid.toFixed(2);
-      }
-    } else {
-      applyRecommended(mid);
-      $('cost').value = mid.toFixed(2);
+  });
+
+  // Plans
+  document.querySelectorAll('.plan').forEach(function(card){
+    card.addEventListener('click',function(){
+      selectPlan(this.dataset.plan,parseFloat(this.dataset.fee),parseInt(this.dataset.limit,10));
+    });
+  });
+
+  // Cover URL
+  $('coverImageUrl').addEventListener('input',function(){
+    var url=this.value.trim();
+    if(url){
+      state.coverImage=url;
+      renderCover();
+    }else{
+      state.coverImage='';
+      renderCover();
     }
   });
 
-  ['eventName','startDate','venueName','venueCity'].forEach(function(id){
-    var evt = (id === 'venueCity') ? 'change' : 'input';
-    $(id).addEventListener(evt, updatePreviewFields);
-  });
-
-  $('coverUrl').addEventListener('input', function(){ state.coverImage = this.value.trim(); });
-  $('coverFile').addEventListener('change', function(){
-    var f = this.files && this.files[0];
-    if (!f) return;
-    if (!/^image\//.test(f.type)){ toast('Use an image file.', 'error'); return; }
-    if (f.size > 500*1024){ toast('Image must be under 500 KB.', 'error'); return; }
-    var reader = new FileReader();
-    reader.onload = function(e){ state.coverImage = e.target.result; $('coverUrl').value = ''; toast('Cover loaded.', 'success'); };
-    reader.readAsDataURL(f);
-  });
-
-  $('planImageInput').addEventListener('change', function(){
-    var f = this.files && this.files[0];
-    if (!f) return;
-    if (!/^image\//.test(f.type)){ toast('Use an image file.', 'error'); this.value = ''; return; }
-    if (f.size > 2*1024*1024){ toast('Image must be under 2 MB.', 'error'); this.value = ''; return; }
-    var reader = new FileReader();
-    reader.onload = function(e){
-      state.planImage = e.target.result;
-      renderPlanImage();
-      toast('Venue picture loaded.', 'success');
+  // Cover file
+  $('coverImageFile').addEventListener('change',function(){
+    var f=this.files&&this.files[0];
+    if(!f)return;
+    if(!/^image\//.test(f.type)){showToast('Use an image file.','error');this.value='';return;}
+    if(f.size>500*1024){showToast('Image must be under 500 KB. Try compressing it.','error',5000);this.value='';return;}
+    var reader=new FileReader();
+    reader.onload=function(e){
+      state.coverImage=e.target.result;
+      $('coverImageUrl').value='';
+      renderCover();
+      showToast('Cover loaded.','success',1800);
     };
     reader.readAsDataURL(f);
   });
-  $('planImageRemove').addEventListener('click', function(e){
-    e.preventDefault();
-    e.stopPropagation();
-    state.planImage = '';
-    $('planImageInput').value = '';
-    renderPlanImage();
+
+  // Add tier
+  $('addTierBtn').addEventListener('click',addTier);
+
+  // Publish
+  $('publishBtn').addEventListener('click',publishEvent);
+
+  // Sign in modal
+  $('signinClose').addEventListener('click',function(){
+    $('signinModal').classList.remove('open');
+  });
+  $('signinModal').addEventListener('click',function(e){
+    if(e.target===this)this.classList.remove('open');
+  });
+  $('googleSignin').addEventListener('click',function(){
+    var btn=this;btn.disabled=true;
+    var provider=new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(provider)
+      .then(function(){
+        $('signinModal').classList.remove('open');
+        showToast('Signed in!','success');
+        // Prefill host fields
+        if(currentUser){
+          if(!$('hostName').value&&currentUser.displayName)$('hostName').value=currentUser.displayName;
+          if(!$('hostEmail').value&&currentUser.email)$('hostEmail').value=currentUser.email;
+          updateTicketPreviews();
+        }
+      })
+      .catch(function(err){
+        console.error('[google]',err);
+        showToast(err.message||'Sign in failed.','error',4000);
+      })
+      .then(function(){btn.disabled=false;});
   });
 
-  $('submitBtn').addEventListener('click', saveEvent);
-
-  $('authClose').addEventListener('click', closeAuth);
-  $('authModal').addEventListener('click', function(e){ if (e.target === this) closeAuth(); });
-  $$('.tab').forEach(function(t){
-    t.addEventListener('click', function(){ authMode = this.dataset.mode; syncAuthTabs(); });
-  });
-  $('googleBtn').addEventListener('click', function(){
-    auth.signInWithPopup(new firebase.auth.GoogleAuthProvider())
-      .then(function(){ toast('Signed in.', 'success'); closeAuth(); })
-      .catch(function(err){ toast(err.message, 'error'); });
-  });
-  $('authForm').addEventListener('submit', function(e){
-    e.preventDefault();
-    var email = $('authEmail').value.trim();
-    var pw = $('authPassword').value;
-    var name = $('authName').value.trim();
-    if (!email || !pw){ toast('Fill in all fields.', 'error'); return; }
-    if (authMode === 'signup' && pw.length < 6){ toast('Password must be 6+ characters.', 'error'); return; }
-    var btn = $('authSubmit');
-    btn.disabled = true;
-    var p = (authMode === 'signup')
-      ? auth.createUserWithEmailAndPassword(email, pw).then(function(c){
-          if (name) return c.user.updateProfile({ displayName: name }).then(function(){ return c; });
-          return c;
-        })
-      : auth.signInWithEmailAndPassword(email, pw);
-    p.then(function(){ toast('Signed in.', 'success'); closeAuth(); })
-     .catch(function(err){ toast(err.message || 'Auth failed', 'error'); })
-     .then(function(){ btn.disabled = false; });
+  // Escape key
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape'){
+      $('signinModal').classList.remove('open');
+    }
   });
 
-  applyPlan();
-  renderTierList();
-  renderTierColorGrid();
-  renderSeatingEditor();
-  renderRevenue();
-  updateTicketBadges();
-  updatePreviewFields();
-
-  auth.onAuthStateChanged(function(u){
-    state.user = u;
-    if (u) toast('Signed in as ' + (u.displayName || u.email), 'success', 2000);
+  // Auth
+  auth.onAuthStateChanged(function(user){
+    currentUser=user;
+    if(user){
+      // Prefill from Google account
+      if(!$('hostName').value&&user.displayName)$('hostName').value=user.displayName;
+      if(!$('hostEmail').value&&user.email)$('hostEmail').value=user.email;
+      updateTicketPreviews();
+    }
   });
+
+  // Init
+  selectPlan('standard',7,500);
+  renderTiers();
+  renderCover();
+  updateTicketPreviews();
+  updateTypeHint();
+  refreshIcons();
 });
+
 })();
 </script>
+
 </body>
-                    </html>
+  </html>
