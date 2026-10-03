@@ -58,9 +58,9 @@ h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
 @media (max-width:560px){.container{padding:16px 14px 48px}}
 
 /* Page header */
-.page-head{margin-bottom:22px;display:flex;justify-content:space-between;align-items:flex-end;gap:16px;flex-wrap:wrap}
+.page-head{margin-bottom:22px}
 .page-head h1{font-size:26px;font-weight:900;color:var(--ink);margin-bottom:6px;letter-spacing:-.02em}
-.page-head p{color:var(--slate);font-size:14px;max-width:640px}
+.page-head p{color:var(--slate);font-size:14px;max-width:720px}
 
 /* Stats */
 .stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
@@ -97,9 +97,10 @@ h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 /* Review card */
-.review{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);margin-bottom:14px;box-shadow:var(--shadow-sm);overflow:hidden;transition:box-shadow .22s var(--ease)}
+.review{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);margin-bottom:14px;box-shadow:var(--shadow-sm);overflow:hidden;transition:box-shadow .22s var(--ease);position:relative}
 .review:hover{box-shadow:var(--shadow-md)}
 .review.open{box-shadow:var(--shadow-lg)}
+.review.needs-links{border-left:4px solid var(--warning)}
 
 /* Review head */
 .review-head{display:flex;gap:14px;padding:16px 18px;cursor:pointer;align-items:flex-start;flex-wrap:wrap}
@@ -128,6 +129,8 @@ h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
 .review-status.pending{background:var(--warning-soft);color:#92400E;border:1px solid var(--warning-line)}
 .review-status.live{background:var(--success-soft);color:#065F46;border:1px solid var(--success-line)}
 .review-status.rejected{background:var(--danger-soft);color:#991B1B;border:1px solid var(--danger-line)}
+.review-status.no-links{background:#FEF3C7;color:#92400E;border:1px solid #FCD34D;display:inline-flex;align-items:center;gap:4px}
+.review-status.no-links svg{width:10px;height:10px}
 
 .review-meta{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--slate);font-weight:600}
 .review-meta span{display:inline-flex;align-items:center;gap:5px;min-width:0}
@@ -135,7 +138,7 @@ h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
 .review-meta .owner{color:var(--purple);font-weight:800}
 .review-meta .owner svg{color:var(--purple)}
 
-/* Quick actions on the head row — visible always, don't need to expand */
+/* Quick actions on the head row */
 .review-quick{display:flex;gap:6px;flex-shrink:0;align-items:center}
 .review-toggle{
   width:34px;height:34px;border-radius:var(--r-sm);
@@ -150,6 +153,36 @@ h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
 /* Review detail */
 .review-detail{display:none;padding:0 18px 18px;border-top:1px dashed var(--line)}
 .review.open .review-detail{display:block}
+
+/* Payment links — anchor section */
+.links-anchor{
+  background:var(--brand-soft);
+  border:1.5px solid var(--brand-tint);
+  border-radius:var(--r-md);
+  padding:14px 16px;
+  margin-top:16px;
+  margin-bottom:16px;
+  display:flex;
+  gap:12px;
+  align-items:flex-start;
+}
+.links-anchor svg{width:20px;height:20px;color:var(--brand-darker);flex-shrink:0;margin-top:2px}
+.links-anchor .t{font-size:13.5px;font-weight:900;color:var(--brand-darker);margin-bottom:3px}
+.links-anchor .s{font-size:12.5px;color:var(--ink-3);line-height:1.55}
+
+.links-anchor.warning{
+  background:var(--warning-soft);
+  border-color:var(--warning-line);
+}
+.links-anchor.warning svg{color:#B45309}
+.links-anchor.warning .t{color:#92400E}
+
+.links-anchor.live{
+  background:var(--success-soft);
+  border-color:var(--success-line);
+}
+.links-anchor.live svg{color:var(--success)}
+.links-anchor.live .t{color:#065F46}
 
 .detail-section{margin-top:16px}
 .detail-section h4{
@@ -183,6 +216,17 @@ h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
 .tier-swatch{width:16px;height:16px;border-radius:5px;flex-shrink:0;box-shadow:inset 0 0 0 1px rgba(0,0,0,.1)}
 .tier-name{font-size:13.5px;font-weight:900;color:var(--ink)}
 .tier-price{font-size:11.5px;color:var(--slate);font-family:var(--mono);font-weight:700;margin-left:auto}
+.tier-progress{
+  font-size:10.5px;font-weight:900;
+  padding:2px 8px;border-radius:var(--r-full);
+  background:var(--warning-soft);color:#92400E;
+  border:1px solid var(--warning-line);
+  margin-left:8px;
+}
+.tier-progress.complete{
+  background:var(--success-soft);color:var(--success);
+  border-color:var(--success-line);
+}
 .save-indicator{
   font-size:11px;font-weight:900;
   padding:3px 10px;border-radius:var(--r-full);
@@ -202,7 +246,11 @@ h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
   font-size:10px;font-weight:900;
   color:var(--slate);text-transform:uppercase;
   letter-spacing:.06em;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
 }
+.qty-field label .qty-badge{font-family:var(--mono);font-size:10px;color:var(--ink-3)}
 .qty-field input{
   padding:9px 11px;
   font-size:11.5px;font-family:var(--mono);
@@ -215,6 +263,13 @@ h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
 .qty-field input.ok{border-color:var(--success-line);background:var(--success-soft)}
 .qty-field input.is-error{border-color:var(--danger-line);background:var(--danger-soft)}
 .qty-field input::placeholder{color:#B9C2CE;font-style:italic}
+.qty-field input:disabled{background:var(--surface-2);color:var(--slate);cursor:not-allowed;opacity:.7}
+
+/* Inline help under each input */
+.qty-help{font-size:10px;color:var(--slate);font-weight:600;font-style:italic;margin-top:1px}
+.qty-help.required{color:#B45309;font-style:normal;font-weight:800}
+.qty-help.ok{color:var(--success);font-style:normal;font-weight:800}
+.qty-help.error{color:var(--danger);font-style:normal;font-weight:800}
 
 .link-note{font-size:11.5px;color:var(--slate);margin-top:10px;line-height:1.55}
 .link-note code{background:#fff;border:1px solid var(--line);border-radius:4px;padding:1px 6px;font-family:var(--mono);font-size:11px;color:var(--brand-darker)}
@@ -341,7 +396,7 @@ h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
     <div class="page-head">
       <div>
         <h1>Event review</h1>
-        <p>Approve, edit, or reject events. Paste Yoco links per tier and quantity — they save as you type.</p>
+        <p><strong>Payment links live here.</strong> Paste Yoco links per tier and quantity — they save automatically. Edit event details (title, cover, seating) from the Edit button, not from this page.</p>
       </div>
     </div>
 
@@ -513,7 +568,7 @@ function isValidYocoUrl(url){
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   SCHEMA HELPERS (defensive tier reads)
+   SCHEMA HELPERS
    ═══════════════════════════════════════════════════════════════ */
 var TIER_ORDER=['black','elite','gold','tier5','tier6','silver','cyan','standard'];
 var TIER_DEFAULT_NAMES={black:'Elite',elite:'Elite',gold:'VIP',silver:'Silver',cyan:'Standard',standard:'Standard',tier5:'Platinum',tier6:'Diamond'};
@@ -587,6 +642,16 @@ function getTierPrice(event,key){
   if(isObject(event.tierPrices)&&event.tierPrices[key]!==undefined)v=parseFloat(event.tierPrices[key]);
   if(isNaN(v)||v<0)return 0;
   return Math.round(v*100)/100;
+}
+
+/* Determine missing links for a given event.
+   Used to badge the card and show the warning banner. */
+function missingLinkTiers(ev){
+  var tiers=getActiveTierKeys(ev);
+  var links=normalizeLinks(ev.paymentLinks);
+  return tiers.filter(function(k){
+    return !links[k]||!links[k]['1'];
+  });
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -721,7 +786,10 @@ function renderList(){
    ═══════════════════════════════════════════════════════════════ */
 function buildCard(ev){
   var card=document.createElement('div');
-  card.className='review'+(openIds[ev.id]?' open':'');
+  var needsLinks=(ev.status==='pending_review'||ev.status==='pending')
+    && missingLinkTiers(ev).length>0;
+
+  card.className='review'+(openIds[ev.id]?' open':'')+(needsLinks?' needs-links':'');
   card.dataset.id=ev.id;
 
   var cover=ev.heroImage||ev.coverImage||'';
@@ -747,12 +815,19 @@ function buildCard(ev){
   var ownerName=ev.hostName||ev.ownerName||ev.ownerEmail||'Unknown';
   var isOwnerLineImportant=(statusCls==='pending'||statusCls==='rejected');
 
-  /* Quick action buttons — always visible */
+  /* Needs-links badge shown next to status */
+  var needsLinksBadge='';
+  if(needsLinks){
+    needsLinksBadge='<span class="review-status no-links"><i data-lucide="alert-triangle"></i> Links missing</span>';
+  }
+
+  /* Quick action buttons */
   var quickHTML='';
 
-  /* Edit — always available (admin can edit anyone's event) */
+  /* Edit — always available. Passes from=review so the wizard
+     knows to send the admin back here. */
   quickHTML+=
-    '<a href="create-event.html?edit='+encodeURIComponent(ev.id)+'" class="btn btn-purple btn-sm" title="Edit event" onclick="event.stopPropagation()">'+
+    '<a href="create-event.html?edit='+encodeURIComponent(ev.id)+'&from=review" class="btn btn-purple btn-sm" title="Edit event details (not payment links)" onclick="event.stopPropagation()">'+
       '<i data-lucide="pencil"></i>'+
     '</a>';
 
@@ -769,6 +844,7 @@ function buildCard(ev){
         '<div class="review-title-row">'+
           '<span class="review-title">'+esc(ev.eventName||'Untitled Event')+'</span>'+
           '<span class="review-status '+statusCls+'">'+esc(statusLabel)+'</span>'+
+          needsLinksBadge +
         '</div>'+
         '<div class="review-meta">'+
           '<span><i data-lucide="calendar"></i> '+esc(dateText)+'</span>'+
@@ -784,13 +860,11 @@ function buildCard(ev){
     '</div>'+
     '<div class="review-detail">'+buildDetail(ev)+'</div>';
 
-  /* Toggle expand on head click */
   card.querySelector('.review-head').addEventListener('click',function(e){
     if(e.target.closest('button')||e.target.closest('a'))return;
     toggle(ev.id);
   });
 
-  /* Wire quick-delete */
   var quickDel=card.querySelector('.quick-delete');
   if(quickDel){
     quickDel.addEventListener('click',function(e){
@@ -800,6 +874,21 @@ function buildCard(ev){
   }
 
   wireDetail(card,ev);
+
+  /* Auto-open pending events with missing links — draws admin straight
+     to the payment fields. */
+  if(needsLinks&&!openIds[ev.id]){
+    /* Small delay so the card exists in the DOM first */
+    setTimeout(function(){
+      var el=document.querySelector('.review[data-id="'+ev.id+'"]');
+      if(el&&!el.classList.contains('open')){
+        el.classList.add('open');
+        openIds[ev.id]=true;
+        refreshIcons();
+      }
+    },300);
+  }
+
   return card;
 }
 
@@ -818,12 +907,57 @@ function toggle(id){
 function buildDetail(ev){
   var html='';
 
-  /* Rejection reason if rejected */
-  if(ev.status==='rejected'&&ev.rejectionReason){
+  /* ── Payment links anchor — always first thing the admin sees ── */
+  var showLinks=(ev.status==='pending_review'||ev.status==='pending'||ev.status==='live');
+  if(showLinks){
+    var missing=missingLinkTiers(ev);
+    var linksAnchor='';
+
+    if(ev.status==='pending_review'||ev.status==='pending'){
+      if(missing.length){
+        var names=missing.map(function(k){return getTierName(ev,k);}).join(', ');
+        linksAnchor=
+          '<div class="links-anchor warning">'+
+            '<i data-lucide="alert-triangle"></i>'+
+            '<div>'+
+              '<div class="t">Payment links needed before you can approve</div>'+
+              '<div class="s">These tiers have no Yoco link for 1 ticket yet: <strong>'+esc(names)+'</strong>. Paste links below — they save automatically.</div>'+
+            '</div>'+
+          '</div>';
+      }else{
+        linksAnchor=
+          '<div class="links-anchor">'+
+            '<i data-lucide="badge-check"></i>'+
+            '<div>'+
+              '<div class="t">Payment links are set</div>'+
+              '<div class="s">All tiers have a link for 1 ticket. Review or update links below if needed.</div>'+
+            '</div>'+
+          '</div>';
+      }
+    }else if(ev.status==='live'){
+      linksAnchor=
+        '<div class="links-anchor live">'+
+          '<i data-lucide="check-circle"></i>'+
+          '<div>'+
+            '<div class="t">Event is live</div>'+
+            '<div class="s">Buyers are using these links right now. Updates save immediately.</div>'+
+          '</div>'+
+        '</div>';
+    }
+
+    html+=linksAnchor;
+
     html+=
-      '<div class="reject-note">'+
-        '<i data-lucide="alert-circle"></i>'+
-        '<div><strong>Previous rejection reason:</strong><br>'+esc(ev.rejectionReason)+'</div>'+
+      '<div class="detail-section">'+
+        '<h4><i data-lucide="tag"></i> Yoco payment links'+
+          '<span class="save-indicator" id="saveInd-'+esc(ev.id)+'"></span>'+
+        '</h4>'+
+        buildPaymentBlocks(ev)+
+        '<p class="link-note">'+
+          'Paste a Yoco link for each quantity. '+
+          '<strong>Links save automatically when you tab out or stop typing.</strong> '+
+          'The buyer\'s chosen quantity picks the right link. Max 5 tickets per purchase.'+
+        '</p>'+
       '</div>';
   }
 
@@ -848,6 +982,7 @@ function buildDetail(ev){
   if(ev.city)kvs.push({k:'City',v:ev.city});
   if(ev.startDate)kvs.push({k:'Date',v:ev.startDate});
   if(ev.startTime)kvs.push({k:'Time',v:ev.startTime});
+  if(ev.totalAttendees)kvs.push({k:'Capacity',v:String(ev.totalAttendees)});
 
   if(kvs.length){
     html+=
@@ -861,35 +996,26 @@ function buildDetail(ev){
       '</div>';
   }
 
-  /* Yoco payment links — only relevant for pending and live */
-  if(ev.status==='pending_review'||ev.status==='pending'||ev.status==='live'){
+  /* Rejection reason for rejected */
+  if(ev.status==='rejected'&&ev.rejectionReason){
     html+=
-      '<div class="detail-section">'+
-        '<h4><i data-lucide="tag"></i> Yoco payment links'+
-          '<span class="save-indicator" id="saveInd-'+esc(ev.id)+'"></span>'+
-        '</h4>'+
-        buildPaymentBlocks(ev)+
-        '<p class="link-note">'+
-          'Paste a Yoco link for each quantity you want to sell. '+
-          '<strong>Links save automatically when you tab out or stop typing.</strong> '+
-          'The buyer\'s chosen quantity picks the right link. Max 5 tickets per purchase.'+
-        '</p>'+
+      '<div class="reject-note">'+
+        '<i data-lucide="alert-circle"></i>'+
+        '<div><strong>Previous rejection reason:</strong><br>'+esc(ev.rejectionReason)+'</div>'+
       '</div>';
   }
 
   /* Actions */
   html+='<div class="review-actions">';
 
-  /* Preview — always */
   html+=
     '<a href="view-event.html?id='+encodeURIComponent(ev.id)+'" target="_blank" rel="noopener" class="btn btn-ghost">'+
       '<i data-lucide="external-link"></i> Preview'+
     '</a>';
 
-  /* Edit — always */
   html+=
-    '<a href="create-event.html?edit='+encodeURIComponent(ev.id)+'" class="btn btn-purple">'+
-      '<i data-lucide="pencil"></i> Edit event'+
+    '<a href="create-event.html?edit='+encodeURIComponent(ev.id)+'&from=review" class="btn btn-purple">'+
+      '<i data-lucide="pencil"></i> Edit details'+
     '</a>';
 
   if(ev.status==='pending_review'||ev.status==='pending'){
@@ -940,10 +1066,33 @@ function buildPaymentBlocks(ev){
     var price=getTierPrice(ev,k);
     var priceLabel=price>0?money(price)+' / ticket':'Free tier';
 
+    /* Per-tier completion indicator */
+    var hasOne=links[k]&&links[k]['1'];
+    var progressCls=hasOne?'tier-progress complete':'tier-progress';
+    var progressText=hasOne?'✓ 1-ticket link set':'⚠ 1-ticket link missing';
+
     var fields='';
     QTY_OPTIONS.forEach(function(q){
       var val=(links[k]&&links[k][String(q)])||'';
-      var cls='yoco-input'+(val&&isValidYocoUrl(val)?' ok':(val?' is-error':''));
+      var cls='yoco-input';
+      var helpCls='qty-help';
+      var helpText='Optional';
+
+      if(q===1){
+        helpText='Required';
+        helpCls='qty-help required';
+      }
+
+      if(val&&isValidYocoUrl(val)){
+        cls+=' ok';
+        helpCls='qty-help ok';
+        helpText='✓ Valid link';
+      }else if(val){
+        cls+=' is-error';
+        helpCls='qty-help error';
+        helpText='✗ Not a valid Yoco link';
+      }
+
       var label=q===1?'1 ticket':q+' tickets';
       fields+=
         '<div class="qty-field">'+
@@ -953,6 +1102,7 @@ function buildPaymentBlocks(ev){
             'placeholder="https://pay.yoco.com/..." '+
             'value="'+esc(val)+'" '+
             'autocomplete="off" spellcheck="false" />'+
+          '<div class="'+helpCls+'">'+helpText+'</div>'+
         '</div>';
     });
 
@@ -961,6 +1111,7 @@ function buildPaymentBlocks(ev){
         '<div class="tier-head">'+
           '<span class="tier-swatch" style="background:'+esc(colour)+'"></span>'+
           '<span class="tier-name">'+esc(name)+'</span>'+
+          '<span class="'+progressCls+'">'+esc(progressText)+'</span>'+
           '<span class="tier-price">'+esc(priceLabel)+'</span>'+
         '</div>'+
         '<div class="qty-grid">'+fields+'</div>'+
@@ -989,24 +1140,13 @@ function normalizeLinks(raw){
    AUTO-SAVE + INTERACTIONS
    ═══════════════════════════════════════════════════════════════ */
 function wireDetail(card,ev){
-  /* Yoco link inputs */
   card.querySelectorAll('.yoco-input').forEach(function(inp){
     var saveTimer=null;
 
     inp.addEventListener('input',function(){
       var val=normalizeYocoUrl(this.value);
-      if(val&&!isValidYocoUrl(val)){
-        this.classList.remove('ok');
-        this.classList.add('is-error');
-      }else if(val){
-        this.classList.remove('is-error');
-        this.classList.add('ok');
-      }else{
-        this.classList.remove('is-error','ok');
-      }
-
+      updateInputFeedback(this,val);
       setIndicator(ev.id,'unsaved','Unsaved…');
-
       clearTimeout(saveTimer);
       saveTimer=setTimeout(function(){
         autoSave(ev.id,card);
@@ -1017,17 +1157,15 @@ function wireDetail(card,ev){
       if(this.value.trim()){
         var normalized=normalizeYocoUrl(this.value);
         if(normalized!==this.value)this.value=normalized;
-        this.classList.toggle('ok',isValidYocoUrl(normalized));
-        this.classList.toggle('is-error',!isValidYocoUrl(normalized));
+        updateInputFeedback(this,normalized);
       }else{
-        this.classList.remove('is-error','ok');
+        updateInputFeedback(this,'');
       }
       clearTimeout(saveTimer);
       autoSave(ev.id,card);
     });
   });
 
-  /* Approve */
   var ap=card.querySelector('.approve-btn');
   if(ap){
     ap.addEventListener('click',function(e){
@@ -1036,7 +1174,6 @@ function wireDetail(card,ev){
     });
   }
 
-  /* Reject */
   var rj=card.querySelector('.reject-btn');
   if(rj){
     rj.addEventListener('click',function(e){
@@ -1045,7 +1182,6 @@ function wireDetail(card,ev){
     });
   }
 
-  /* Restore */
   var rs=card.querySelector('.restore-btn');
   if(rs){
     rs.addEventListener('click',function(e){
@@ -1055,13 +1191,45 @@ function wireDetail(card,ev){
     });
   }
 
-  /* Delete (from detail row) */
   var dl=card.querySelector('.delete-btn');
   if(dl){
     dl.addEventListener('click',function(e){
       e.stopPropagation();
       confirmDelete(ev);
     });
+  }
+}
+
+/* Update the visual state of a single input + its help text */
+function updateInputFeedback(inp,val){
+  var field=inp.closest('.qty-field');
+  if(!field)return;
+  var help=field.querySelector('.qty-help');
+  var qtyAttr=inp.dataset.qty;
+  var isRequired=(qtyAttr==='1');
+
+  inp.classList.remove('ok','is-error');
+
+  if(!val){
+    if(help){
+      help.className='qty-help'+(isRequired?' required':'');
+      help.textContent=isRequired?'Required':'Optional';
+    }
+    return;
+  }
+
+  if(isValidYocoUrl(val)){
+    inp.classList.add('ok');
+    if(help){
+      help.className='qty-help ok';
+      help.textContent='✓ Valid link';
+    }
+  }else{
+    inp.classList.add('is-error');
+    if(help){
+      help.className='qty-help error';
+      help.textContent='✗ Not a valid Yoco link';
+    }
   }
 }
 
@@ -1095,6 +1263,25 @@ function autoSave(eventId,card){
   }).then(function(){
     setIndicator(eventId,'saved','✓ Saved');
     setTimeout(function(){setIndicator(eventId,'','');},2200);
+
+    /* Refresh the tier progress badges in-place */
+    var ev=allEvents.find(function(e){return e.id===eventId;});
+    if(ev){
+      ev.paymentLinks=links;
+      card.querySelectorAll('.tier-block').forEach(function(block){
+        var tierKey=block.dataset.tierBlock;
+        var hasOne=links[tierKey]&&links[tierKey]['1'];
+        var badge=block.querySelector('.tier-progress');
+        if(badge){
+          badge.className=hasOne?'tier-progress complete':'tier-progress';
+          badge.textContent=hasOne?'✓ 1-ticket link set':'⚠ 1-ticket link missing';
+        }
+      });
+      /* If this was the last missing tier, remove the needs-links state
+         from the card. */
+      var stillMissing=missingLinkTiers(ev).length>0;
+      card.classList.toggle('needs-links',stillMissing&&(ev.status==='pending_review'||ev.status==='pending'));
+    }
   }).catch(function(err){
     console.error('[autosave]',err);
     setIndicator(eventId,'error','✗ Save failed');
@@ -1110,8 +1297,7 @@ function approveEvent(eventId,card){
   if(!ev)return;
 
   var links=collectLinks(card);
-  var tiers=getActiveTierKeys(ev);
-  var missing=tiers.filter(function(k){return !links[k]||!links[k]['1'];});
+  var missing=missingLinkTiers(Object.assign({},ev,{paymentLinks:links}));
 
   var go=function(){
     var btn=card.querySelector('.approve-btn');
@@ -1254,7 +1440,6 @@ document.addEventListener('DOMContentLoaded',function(){
   showLoading();
   wireTabs();
 
-  /* Reject modal */
   $('rejectClose').addEventListener('click',closeRejectModal);
   $('rejectCancelBtn').addEventListener('click',closeRejectModal);
   $('rejectModal').addEventListener('click',function(e){if(e.target===this)closeRejectModal();});
@@ -1277,11 +1462,6 @@ document.addEventListener('DOMContentLoaded',function(){
 
   window.addEventListener('beforeunload',function(){
     if(unsub){try{unsub();}catch(e){}}
-  });
-
-  /* Refresh when tab regains focus (admin might have changed state in another tab) */
-  document.addEventListener('visibilitychange',function(){
-    if(!document.hidden&&currentUser&&isAdmin(currentUser))return;
   });
 });
 
