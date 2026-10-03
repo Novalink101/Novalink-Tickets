@@ -5,815 +5,1037 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
 <meta name="theme-color" content="#0a0f14" />
 <title>Your Ticket · Novalink</title>
+
 <script src="https://unpkg.com/lucide@0.453.0/dist/umd/lucide.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+
 <style>
 :root{
-  --cy:#00FFFF;--cy2:#00CCCC;--cy3:#009999;--cyf:#e6ffff;
-  --bg:#f6f8fb;--sf:#ffffff;--sf2:#f1f4f8;
-  --bd:#e4e9f0;--bd2:#d3dbe5;
-  --tx:#0a0f14;--tx2:#2b3644;--mut:#6b7787;
-  --rd:14px;--font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
-  --dg:#dc2626;--dgf:#fef2f2;--sv:#059669;--svf:#ecfdf5;--nv:#1e2f4d;
-  --am:#f59e0b;--amf:#fffbeb;--pu:#7c3aed;--puf:#f5f3ff;
-  --ease:cubic-bezier(0.25,0.8,0.25,1);
+  --brand:#00E5E5;--brand-dark:#00B8B8;--brand-darker:#00999A;
+  --brand-soft:#E6FFFF;--brand-tint:#B3FFFF;--brand-ink:#04161C;
+  --ink:#0A0F14;--ink-2:#1A2129;--ink-3:#2B3644;
+  --slate:#6B7787;--slate-2:#94A3B8;
+  --line:#E4E9F0;--line-2:#D3DBE5;
+  --bg:#F6F8FB;--surface:#FFFFFF;--surface-2:#F1F4F8;
+  --success:#059669;--success-soft:#ECFDF5;--success-line:#A7F3D0;
+  --warning:#D97706;--warning-soft:#FFFBEB;--warning-line:#FDE68A;
+  --danger:#DC2626;--danger-soft:#FEF2F2;--danger-line:#FECACA;
+  --font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
+  --r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:22px;--r-full:999px;
+  --shadow-sm:0 1px 3px rgba(10,15,20,.06);
+  --shadow-md:0 4px 14px rgba(10,15,20,.06);
+  --shadow-lg:0 12px 32px rgba(10,15,20,.10);
+  --shadow-xl:0 24px 60px rgba(10,15,20,.14);
+  --ease:cubic-bezier(.25,.8,.25,1);
+  --ease-out:cubic-bezier(.22,.9,.3,1);
+  --container:560px;
+  /* ticket palette — overwritten by JS */
+  --tk-c1:#E6FFFF;
+  --tk-c2:#B3FFFF;
+  --tk-text:#0A0F14;
+  --tk-muted:rgba(0,0,0,.6);
+  --tk-logo:#1e2f4d;
+  --tk-badge-bg:rgba(0,0,0,.08);
+  --tk-badge-text:#4a5568;
 }
 *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-body{font-family:var(--font);background:var(--bg);color:var(--tx);line-height:1.6;min-height:100vh;display:flex;flex-direction:column;-webkit-font-smoothing:antialiased}
-.container{max-width:560px;margin:0 auto;padding:0 20px;width:100%}
-h1,h2,h3{line-height:1.15;font-weight:700}
+html{-webkit-text-size-adjust:100%}
+body{font-family:var(--font);font-size:14px;line-height:1.55;color:var(--ink);background:var(--bg);-webkit-font-smoothing:antialiased;min-height:100vh;display:flex;flex-direction:column}
+img,svg{display:block;max-width:100%}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer;background:none;border:none}
 a{color:inherit;text-decoration:none}
-button{font:inherit;font-family:inherit;cursor:pointer;touch-action:manipulation}
+h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
+::selection{background:var(--brand);color:var(--brand-ink)}
+.hidden{display:none!important}
 
-.logo{display:inline-flex;align-items:center;gap:10px;text-decoration:none}
-.logo .mark{width:32px;height:39px;flex-shrink:0}
-.logo .wm{font-weight:800;font-size:1.05rem;color:var(--nv)}
+/* Nav */
+.nav{position:sticky;top:0;z-index:50;background:rgba(255,255,255,.94);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-bottom:1px solid var(--line)}
+.nav-inner{max-width:var(--container);margin:0 auto;padding:12px 20px;display:flex;align-items:center;justify-content:space-between;gap:16px}
+.nav-brand{display:inline-flex;align-items:center;gap:10px;font-weight:900;font-size:15px;color:var(--ink-2);letter-spacing:.02em}
+.nav-brand svg{width:26px;height:32px;flex-shrink:0}
+@media (max-width:480px){.nav-inner{padding:10px 14px}.nav-brand span{display:none}.nav-brand svg{width:22px;height:27px}}
 
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:12px 20px;border-radius:12px;font-weight:600;font-size:14px;border:1px solid transparent;cursor:pointer;transition:all 0.2s var(--ease);white-space:nowrap;font-family:inherit;text-decoration:none}
-.btn svg,.btn i{width:17px;height:17px}
-.btn-accent{background:linear-gradient(135deg,var(--cy),var(--cy2));color:#04161c}
-.btn-accent:hover{transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,255,255,0.35)}
-.btn-whatsapp{background:#25D366;color:#fff;border-color:#25D366}
-.btn-whatsapp:hover{background:#1eb855;transform:translateY(-2px);box-shadow:0 8px 24px rgba(37,211,102,0.35)}
-.btn-ghost{background:transparent;color:var(--tx2);border:1px solid var(--bd2)}
-.btn-ghost:hover{background:var(--sf2);border-color:var(--cy);color:var(--cy3)}
-.btn-block{width:100%}
-.btn-lg{padding:15px 26px;font-size:15px}
+/* Container */
+.container{max-width:var(--container);margin:0 auto;padding:24px 20px 48px;width:100%}
+@media (max-width:560px){.container{padding:16px 14px 40px}}
 
-.site-header{position:sticky;top:0;z-index:50;background:rgba(255,255,255,0.94);backdrop-filter:blur(14px);border-bottom:1px solid var(--bd);padding:12px 0}
-.header-inner{display:flex;align-items:center;justify-content:space-between;gap:12px}
+/* States */
+.state{text-align:center;padding:60px 20px;max-width:420px;margin:0 auto}
+.state-icon{width:64px;height:64px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 16px;background:var(--surface-2);color:var(--slate)}
+.state-icon svg{width:28px;height:28px}
+.state-icon.danger{background:var(--danger-soft);color:var(--danger)}
+.state h2{font-size:20px;margin-bottom:8px;color:var(--ink-2)}
+.state p{color:var(--slate);font-size:14px;line-height:1.6;margin-bottom:20px}
+.state .actions{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.spinner{width:28px;height:28px;border:3px solid rgba(0,229,229,.2);border-top-color:var(--brand);border-radius:50%;animation:spin .8s linear infinite;display:inline-block}
+@keyframes spin{to{transform:rotate(360deg)}}
 
-.page{flex:1;padding:24px 0 64px;display:flex;align-items:flex-start}
-
-.state{text-align:center;padding:60px 24px;max-width:520px;margin:0 auto;width:100%}
-.state .ic{width:72px;height:72px;border-radius:50%;display:flex;align-items:center;justify-content:center;margin:0 auto 18px}
-.state .ic.danger{background:var(--dgf);color:var(--dg)}
-.state .ic.amber{background:var(--amf);color:var(--am)}
-.state .ic.cyan{background:var(--cyf);color:var(--cy3)}
-.state .ic i{width:32px;height:32px}
-.state h2{margin-bottom:8px;color:var(--nv)}
-.state p{color:var(--mut);margin-bottom:22px;font-size:14.5px;line-height:1.6}
-.state .actions{display:flex;gap:10px;justify-content:center;flex-wrap:wrap}
-.ls i{width:32px;height:32px;margin:0 auto 12px;color:var(--cy3);animation:sp 1.2s linear infinite;display:block}
-@keyframes sp{to{transform:rotate(360deg)}}
-
-.ticket{background:var(--sf);border:1px solid var(--bd);border-radius:22px;overflow:hidden;box-shadow:0 20px 60px rgba(10,15,20,0.12);margin-bottom:16px}
-.ticket-hero{background:linear-gradient(135deg,var(--tc-1,#0a0f14),var(--tc-2,#1a2129));color:var(--tc-text,#fff);padding:22px 24px;position:relative;overflow:hidden}
-.ticket-hero::after{content:'';position:absolute;right:-60px;top:-60px;width:200px;height:200px;background:radial-gradient(circle,rgba(0,255,255,0.18),transparent 70%);pointer-events:none}
-.ticket-hero .th-row{display:flex;justify-content:space-between;align-items:flex-start;gap:12px;position:relative;z-index:1}
-.ticket-hero .th-logo{font-size:11px;font-weight:900;letter-spacing:.15em;color:var(--tc-logo,#00FFFF)}
-.ticket-hero .th-status{display:inline-flex;align-items:center;gap:6px;padding:5px 12px;border-radius:99px;font-size:10.5px;font-weight:900;letter-spacing:.05em;text-transform:uppercase;backdrop-filter:blur(6px)}
-.ticket-hero .th-status.valid{background:rgba(5,150,105,.25);color:#6ee7b7;border:1px solid rgba(5,150,105,.55)}
-.ticket-hero .th-status.pending{background:rgba(245,158,11,.22);color:#fcd34d;border:1px solid rgba(245,158,11,.55)}
-.ticket-hero .th-status.used{background:rgba(139,92,246,.25);color:#c4b5fd;border:1px solid rgba(139,92,246,.55)}
-.ticket-hero .th-status.cancelled{background:rgba(220,38,38,.22);color:#fca5a5;border:1px solid rgba(220,38,38,.55)}
-.ticket-hero .th-status.expired{background:rgba(107,119,135,.25);color:#cbd5e1;border:1px solid rgba(107,119,135,.55)}
-.ticket-hero .th-event{font-size:22px;font-weight:900;line-height:1.15;letter-spacing:-0.02em;margin-top:14px;position:relative;z-index:1;word-break:break-word}
-.ticket-hero .th-meta{font-size:12.5px;color:var(--tc-muted,rgba(255,255,255,0.7));margin-top:8px;display:flex;flex-direction:column;gap:4px;position:relative;z-index:1}
-.ticket-hero .th-meta span{display:inline-flex;align-items:center;gap:7px}
-.ticket-hero .th-meta i{width:13px;height:13px;flex-shrink:0}
-
-.ticket-body{padding:24px}
-.ticket-ref-row{display:flex;flex-direction:column;gap:4px;padding:14px 16px;background:var(--sf2);border:1px solid var(--bd);border-radius:12px;margin-bottom:20px;text-align:center}
-.ticket-ref-label{font-size:10.5px;font-weight:900;letter-spacing:.1em;text-transform:uppercase;color:var(--mut)}
-.ticket-ref-value{font-family:var(--mono);font-size:20px;font-weight:900;color:var(--cy3);letter-spacing:.04em;word-break:break-all}
-
-.qr-wrap{text-align:center;padding:8px 0 20px}
-.qr-box{width:240px;height:240px;margin:0 auto;background:#fff;border-radius:16px;padding:12px;box-shadow:0 10px 30px rgba(10,15,20,0.1);display:flex;align-items:center;justify-content:center}
-.qr-box img,.qr-box canvas{display:block;width:100%!important;height:100%!important;border-radius:8px}
-.qr-hint{font-size:11.5px;color:var(--mut);margin-top:12px;line-height:1.5}
-
-.lock-wrap{text-align:center;padding:12px 0 20px}
-.lock-icon{width:140px;height:140px;margin:0 auto 16px;border-radius:50%;display:flex;align-items:center;justify-content:center}
-.lock-icon i{width:60px;height:60px;stroke-width:1.75}
-.lock-icon.amber{background:linear-gradient(135deg,var(--amf),#fef3c7);border:2px solid #fde68a;color:var(--am)}
-.lock-icon.purple{background:linear-gradient(135deg,var(--puf),#ede9fe);border:2px solid #c4b5fd;color:var(--pu)}
-.lock-icon.danger{background:linear-gradient(135deg,var(--dgf),#fee2e2);border:2px solid #fecaca;color:var(--dg)}
-.lock-icon.cyan{background:linear-gradient(135deg,var(--cyf),#cffafe);border:2px solid var(--cy);color:var(--cy3)}
-.lock-title{font-size:15px;font-weight:900;color:#92400e;margin-bottom:6px}
-.lock-title.purple{color:#5b21b6}
-.lock-title.danger{color:#991b1b}
-.lock-title.cyan{color:var(--cy3)}
-.lock-msg{font-size:13px;color:var(--tx2);line-height:1.6;max-width:340px;margin:0 auto 18px}
-
-.unlock-countdown{display:flex;justify-content:center;gap:10px;margin:14px 0 18px}
-.unlock-unit{background:var(--sf2);border:1px solid var(--bd);border-radius:12px;padding:10px 12px;min-width:70px;text-align:center}
-.unlock-unit .num{font-family:var(--mono);font-size:24px;font-weight:900;color:var(--nv);line-height:1;letter-spacing:-0.02em}
-.unlock-unit .lbl{font-size:9.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--mut);margin-top:5px}
-.unlock-note{font-size:11.5px;color:var(--mut);text-align:center;line-height:1.5;max-width:320px;margin:0 auto 18px}
-
-.ticket-info-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:20px}
-.ti{background:var(--sf2);border:1px solid var(--bd);border-radius:10px;padding:10px 12px}
-.ti .k{font-size:9.5px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;color:var(--mut);margin-bottom:2px}
-.ti .v{font-size:14px;font-weight:800;color:var(--tx);word-break:break-word}
-.ti .v.mono{font-family:var(--mono);font-size:13px;letter-spacing:.02em}
-.ti.full{grid-column:1 / -1}
-
-.dash-divider{height:1px;background:repeating-linear-gradient(90deg,var(--bd) 0,var(--bd) 6px,transparent 6px,transparent 12px);margin:0 -24px 20px;position:relative}
-.dash-divider::before,.dash-divider::after{content:'';position:absolute;top:50%;transform:translateY(-50%);width:22px;height:22px;border-radius:50%;background:var(--bg);border:1px solid var(--bd)}
-.dash-divider::before{left:-11px}
-.dash-divider::after{right:-11px}
-
-.barcode-wrap{background:#fff;border:1px solid var(--bd);border-radius:10px;padding:12px;display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:6px}
-.barcode{width:100%;height:44px;background:repeating-linear-gradient(to right,#000 0,#000 2px,#fff 2px,#fff 4px,#000 4px,#000 6px,#fff 6px,#fff 10px,#000 10px,#000 12px,#fff 12px,#fff 16px)}
-.barcode-num{font-family:var(--mono);font-size:11.5px;font-weight:700;color:#000;letter-spacing:2px;word-break:break-all}
-
-.guest-note{display:flex;gap:10px;padding:12px 14px;background:var(--cyf);border:1px solid var(--cy);border-radius:10px;font-size:12.5px;color:var(--tx2);line-height:1.55;margin-top:16px}
-.guest-note i{width:16px;height:16px;color:var(--cy3);flex-shrink:0;margin-top:2px}
-
-.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120%);background:#0a0f14;color:#fff;padding:12px 18px;border-radius:12px;font-size:13.5px;z-index:200;transition:transform 0.4s var(--ease),opacity 0.3s ease;display:flex;align-items:center;gap:10px;pointer-events:none;opacity:0;max-width:calc(100vw - 40px)}
-.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
-.toast.success{background:#065f46}
-.toast.error{background:#991b1b}
-.toast i{width:16px;height:16px;flex-shrink:0}
-
-.footer{background:#0a0f14;color:#c9d2dd;padding:24px 0 18px;margin-top:auto;font-size:12.5px}
-.fb{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;color:#6b7787;font-size:12px}
-
-@media (max-width:420px){
-  .unlock-countdown{gap:6px}
-  .unlock-unit{min-width:60px;padding:8px 10px}
-  .unlock-unit .num{font-size:20px}
+/* ═══════════════════════════════════════════════════════════════
+   TICKET
+   ═══════════════════════════════════════════════════════════════ */
+.ticket{
+  background:linear-gradient(135deg,var(--tk-c1),var(--tk-c2));
+  color:var(--tk-text);
+  border-radius:var(--r-xl);
+  padding:26px 24px;
+  box-shadow:var(--shadow-xl);
+  position:relative;
+  overflow:hidden;
+  border:1px solid rgba(0,0,0,.05);
+  display:flex;
+  flex-direction:column;
+  gap:18px;
+  transition:background .35s var(--ease),color .35s var(--ease);
 }
+.ticket::before{
+  content:'';
+  position:absolute;
+  inset:0;
+  background-image:radial-gradient(circle at 1px 1px,rgba(0,0,0,.05) 1px,transparent 0);
+  background-size:16px 16px;
+  opacity:.4;
+  pointer-events:none;
+}
+.ticket > *{position:relative;z-index:1}
+
+/* Status watermark */
+.ticket .watermark{
+  position:absolute;
+  top:50%;left:50%;
+  transform:translate(-50%,-50%) rotate(-18deg);
+  font-size:32px;font-weight:900;letter-spacing:6px;
+  padding:6px 20px;border-radius:8px;
+  white-space:nowrap;pointer-events:none;
+  z-index:2;
+}
+.ticket.used .watermark{
+  color:rgba(217,119,6,.75);
+  border:4px solid rgba(217,119,6,.75);
+  background:rgba(255,255,255,.15);
+}
+.ticket.cancelled .watermark,
+.ticket.expired .watermark{
+  color:rgba(220,38,38,.75);
+  border:4px solid rgba(220,38,38,.75);
+  background:rgba(255,255,255,.15);
+}
+.ticket.used{opacity:.92;filter:saturate(.85)}
+.ticket.cancelled,.ticket.expired{opacity:.82;filter:grayscale(.35)}
+
+/* Header row */
+.tk-head{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.tk-logo{font-size:13px;font-weight:900;letter-spacing:1.5px;color:var(--tk-logo)}
+.tk-badges{display:flex;gap:6px;flex-wrap:wrap}
+.tk-badge{
+  font-size:9.5px;font-weight:900;
+  padding:4px 9px;border-radius:5px;
+  text-transform:uppercase;letter-spacing:.06em;
+  background:var(--tk-badge-bg);color:var(--tk-badge-text);
+}
+.tk-badge.tier{font-weight:900;font-size:10px}
+
+/* Event name */
+.tk-event{
+  font-size:22px;font-weight:900;
+  line-height:1.1;
+  letter-spacing:-.01em;
+  text-transform:uppercase;
+  word-break:break-word;
+}
+.tk-meta{
+  font-size:11px;font-weight:700;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+  color:var(--tk-muted);
+  margin-top:4px;
+  word-break:break-word;
+}
+
+/* Divider with cutouts */
+.tk-divider{
+  position:relative;
+  height:1px;
+  background:repeating-linear-gradient(90deg,currentColor 0,currentColor 5px,transparent 5px,transparent 10px);
+  opacity:.35;
+  margin:2px -24px;
+}
+.tk-divider::before,
+.tk-divider::after{
+  content:'';
+  position:absolute;
+  top:50%;transform:translateY(-50%);
+  width:22px;height:22px;border-radius:50%;
+  background:var(--bg);
+}
+.tk-divider::before{left:-11px}
+.tk-divider::after{right:-11px}
+
+/* Info grid */
+.tk-info{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:14px 18px;
+}
+.tk-info .full{grid-column:1/-1}
+.tk-info .k{
+  font-size:9.5px;font-weight:900;
+  letter-spacing:.1em;
+  text-transform:uppercase;
+  color:var(--tk-muted);
+  margin-bottom:3px;
+}
+.tk-info .v{
+  font-size:15px;font-weight:800;
+  word-break:break-word;
+  line-height:1.25;
+}
+.tk-info .v.mono{font-family:var(--mono);font-size:13px;letter-spacing:.04em}
+
+/* QR + Barcode */
+.tk-scan{
+  background:#fff;
+  border-radius:var(--r-md);
+  padding:16px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:12px;
+}
+.tk-qr{
+  width:220px;height:220px;
+  max-width:100%;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  position:relative;
+}
+.tk-qr canvas,.tk-qr img{width:100%!important;height:100%!important;border-radius:6px}
+.tk-qr-hint{
+  font-size:11.5px;color:#4a5568;
+  font-weight:700;
+  text-align:center;
+  max-width:280px;
+  line-height:1.5;
+}
+.tk-barcode{
+  width:100%;
+  height:44px;
+  background:repeating-linear-gradient(to right,#000 0,#000 2px,#fff 2px,#fff 4px,#000 4px,#000 6px,#fff 6px,#fff 10px,#000 10px,#000 12px,#fff 12px,#fff 16px);
+}
+.tk-barcode-num{
+  font-family:var(--mono);
+  font-size:11.5px;font-weight:700;
+  color:#000;letter-spacing:2px;
+  word-break:break-all;
+  text-align:center;
+  margin-top:6px;
+}
+
+/* Locked state */
+.tk-locked{
+  background:rgba(255,255,255,.55);
+  border-radius:var(--r-md);
+  padding:22px 18px;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:14px;
+  text-align:center;
+}
+.tk-locked-icon{
+  width:60px;height:60px;border-radius:50%;
+  background:linear-gradient(135deg,#FFF7ED,#FED7AA);
+  border:2px solid #FDBA74;
+  color:#C2410C;
+  display:flex;align-items:center;justify-content:center;
+}
+.tk-locked-icon svg{width:28px;height:28px}
+.tk-locked-title{font-size:15px;font-weight:900;color:#92400E}
+.tk-locked-msg{font-size:12.5px;color:#78350F;line-height:1.55;max-width:320px;font-weight:600}
+
+/* Countdown */
+.tk-countdown{
+  display:flex;gap:8px;justify-content:center;
+  flex-wrap:wrap;
+  margin-top:4px;
+}
+.tk-cd-unit{
+  background:#fff;
+  border:1px solid var(--line);
+  border-radius:var(--r-sm);
+  padding:8px 10px;
+  min-width:60px;
+  text-align:center;
+}
+.tk-cd-num{
+  font-family:var(--mono);
+  font-size:20px;font-weight:900;
+  color:var(--ink);
+  line-height:1;
+}
+.tk-cd-lbl{
+  font-size:9px;font-weight:900;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--slate);
+  margin-top:4px;
+}
+
+/* Pending state (awaiting payment) */
+.tk-pending{
+  background:rgba(255,255,255,.6);
+  border-radius:var(--r-md);
+  padding:20px 18px;
+  display:flex;flex-direction:column;align-items:center;gap:12px;text-align:center;
+}
+.tk-pending-icon{
+  width:56px;height:56px;border-radius:50%;
+  background:linear-gradient(135deg,#FFFBEB,#FDE68A);
+  border:2px solid #FCD34D;
+  color:#D97706;
+  display:flex;align-items:center;justify-content:center;
+}
+.tk-pending-icon svg{width:26px;height:26px}
+.tk-pending-title{font-size:14.5px;font-weight:900;color:#92400E}
+.tk-pending-msg{font-size:12.5px;color:#78350F;line-height:1.55;max-width:320px;font-weight:600}
+
+/* Action buttons */
+.tk-actions{display:flex;flex-direction:column;gap:8px;margin-top:4px}
+.tk-actions .btn{width:100%}
+
+/* Buttons */
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 18px;border-radius:var(--r-md);font-weight:800;font-size:13.5px;border:1px solid transparent;transition:all .22s var(--ease);white-space:nowrap;line-height:1;min-height:44px;text-decoration:none}
+.btn svg,.btn i{width:15px;height:15px;flex-shrink:0}
+.btn-primary{background:var(--ink);color:#fff}
+.btn-primary:hover:not(:disabled){background:var(--ink-2);transform:translateY(-1px);box-shadow:var(--shadow-md)}
+.btn-accent{background:linear-gradient(135deg,var(--brand),var(--brand-dark));color:var(--brand-ink);font-weight:900}
+.btn-accent:hover:not(:disabled){transform:translateY(-1px);box-shadow:0 8px 22px rgba(0,229,229,.35)}
+.btn-ghost{background:var(--surface);color:var(--ink-2);border-color:var(--line-2)}
+.btn-ghost:hover:not(:disabled){border-color:var(--brand);color:var(--brand-darker)}
+.btn-block{width:100%}
+.btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important;box-shadow:none!important}
+
+/* Footer actions */
+.footer-actions{margin-top:16px;display:flex;gap:8px}
+.footer-actions .btn{flex:1}
+
+/* Footer */
+.footer{background:var(--ink);color:#C9D2DD;padding:24px 0 18px;margin-top:auto;font-size:13px}
+.footer-inner{max-width:var(--container);margin:0 auto;padding:0 20px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;color:#8A96A4;font-size:12px}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(120%);background:var(--ink);color:#fff;padding:12px 18px;border-radius:var(--r-full);font-size:13.5px;font-weight:700;z-index:200;transition:transform .4s var(--ease-out),opacity .22s var(--ease);display:flex;align-items:center;gap:10px;pointer-events:none;opacity:0;max-width:calc(100vw - 40px);box-shadow:var(--shadow-lg)}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+.toast.success{background:var(--success)}
+.toast.error{background:var(--danger)}
+.toast svg{width:16px;height:16px;flex-shrink:0}
 </style>
 </head>
 <body>
 
-<header class="site-header">
-  <div class="container header-inner">
-    <a href="index.html" class="logo">
-      <svg class="mark" viewBox="0 0 60 74"><path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/><path fill="#00FFFF" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/></svg>
-      <span class="wm">NOVALINK</span>
+<nav class="nav">
+  <div class="nav-inner">
+    <a href="index.html" class="nav-brand">
+      <svg viewBox="0 0 60 74" aria-hidden="true"><path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/><path fill="#00E5E5" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/></svg>
+      <span>NOVALINK</span>
     </a>
-    <a href="my-cards.html" class="btn btn-ghost btn-sm" style="font-size:13px;padding:8px 12px;"><i data-lucide="layout-grid"></i> My cards</a>
+    <a href="my-cards.html" class="btn btn-ghost" style="padding:8px 12px;font-size:13px;min-height:34px">
+      <i data-lucide="arrow-left"></i> My tickets
+    </a>
   </div>
-</header>
+</nav>
 
-<main class="page">
-  <div class="container">
+<div class="container">
 
-    <div id="loadingState" class="state ls">
-      <i data-lucide="loader-2"></i>
-      <p>Loading your ticket…</p>
+  <!-- LOADING -->
+  <div id="stateLoading" class="state">
+    <span class="spinner"></span>
+    <p style="margin-top:16px">Loading ticket…</p>
+  </div>
+
+  <!-- ERROR -->
+  <div id="stateError" class="state hidden">
+    <div class="state-icon danger"><i data-lucide="alert-circle"></i></div>
+    <h2 id="errorTitle">Could not load ticket</h2>
+    <p id="errorMsg">Something went wrong.</p>
+    <div class="actions">
+      <a href="my-cards.html" class="btn btn-accent"><i data-lucide="arrow-left"></i> My tickets</a>
     </div>
+  </div>
 
-    <div id="errorState" class="state" style="display:none">
-      <div class="ic danger"><i data-lucide="alert-circle"></i></div>
-      <h2 id="errorTitle">Could not load ticket</h2>
-      <p id="errorMsg">Something went wrong.</p>
-      <div class="actions">
-        <a href="my-cards.html" class="btn btn-accent"><i data-lucide="layout-grid"></i> My cards</a>
-      </div>
-    </div>
+  <!-- TICKET -->
+  <div id="stateContent" class="hidden">
+    <div class="ticket" id="ticketCard">
 
-    <div id="ticketContent" style="display:none">
-      <div class="ticket" id="ticketCard">
-        <div class="ticket-hero" id="ticketHero">
-          <div class="th-row">
-            <span class="th-logo">NOVALINK</span>
-            <span class="th-status" id="statusBadge">Valid</span>
-          </div>
-          <div class="th-event" id="eventName">Event Name</div>
-          <div class="th-meta">
-            <span><i data-lucide="calendar"></i> <span id="eventDate">Date TBA</span></span>
-            <span><i data-lucide="map-pin"></i> <span id="eventVenue">Venue TBA</span></span>
-          </div>
-        </div>
+      <!-- Watermark (used / cancelled / expired) -->
+      <div class="watermark hidden" id="watermark"></div>
 
-        <div class="ticket-body">
-
-          <div class="ticket-ref-row">
-            <span class="ticket-ref-label">Ticket reference</span>
-            <span class="ticket-ref-value" id="ticketRef">NL-XXXX-XXXX-XXXX</span>
-          </div>
-
-          <div id="qrSlot" style="display:none">
-            <div class="qr-wrap">
-              <div class="qr-box" id="qrBox"></div>
-              <p class="qr-hint">Show this QR to the scanner at the door.</p>
-            </div>
-          </div>
-
-          <div id="lockedSlot" style="display:none">
-            <div class="lock-wrap">
-              <div class="lock-icon purple"><i data-lucide="hourglass"></i></div>
-              <div class="lock-title purple">QR unlocks soon</div>
-              <div class="lock-msg">For security, your QR only appears <strong>2 hours before the event starts</strong>. Come back then — we'll also save it here.</div>
-              <div class="unlock-countdown" id="unlockCountdown">
-                <div class="unlock-unit"><div class="num" id="unlockDays">0</div><div class="lbl">Days</div></div>
-                <div class="unlock-unit"><div class="num" id="unlockHours">00</div><div class="lbl">Hours</div></div>
-                <div class="unlock-unit"><div class="num" id="unlockMinutes">00</div><div class="lbl">Mins</div></div>
-                <div class="unlock-unit"><div class="num" id="unlockSeconds">00</div><div class="lbl">Secs</div></div>
-              </div>
-              <div class="unlock-note" id="unlockNote">You'll be able to scan your ticket then.</div>
-            </div>
-          </div>
-
-          <div id="pendingSlot" style="display:none">
-            <div class="lock-wrap">
-              <div class="lock-icon amber"><i data-lucide="lock"></i></div>
-              <div class="lock-title">QR locked — awaiting payment</div>
-              <div class="lock-msg">Your seat is held. Once we confirm your Yoco payment, your QR unlocks automatically.</div>
-              <div style="display:flex;flex-direction:column;gap:10px;max-width:320px;margin:0 auto;">
-                <a href="#" class="btn btn-whatsapp" id="whatsappPendingBtn" target="_blank" rel="noopener">
-                  <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" style="flex-shrink:0"><path d="M20.5 3.5A11.8 11.8 0 0 0 12 0C5.4 0 0 5.4 0 12c0 2.1.5 4.1 1.6 5.9L0 24l6.3-1.6c1.7.9 3.7 1.4 5.7 1.4 6.6 0 12-5.4 12-12 0-3.2-1.2-6.2-3.5-8.3zM12 22c-1.8 0-3.5-.5-5-1.4l-.4-.2-3.7 1 1-3.6-.3-.4A9.9 9.9 0 0 1 2 12c0-5.5 4.5-10 10-10s10 4.5 10 10-4.5 10-10 10z"/></svg>
-                  I've paid — notify Novalink
-                </a>
-                <a href="#" class="btn btn-ghost" id="yocoRetryBtn" target="_blank" rel="noopener" style="display:none">
-                  <i data-lucide="external-link"></i> Pay on Yoco
-                </a>
-              </div>
-            </div>
-          </div>
-
-          <div id="deadSlot" style="display:none">
-            <div class="lock-wrap">
-              <div class="lock-icon danger"><i data-lucide="x-circle"></i></div>
-              <div class="lock-title danger" id="deadTitle">Ticket cancelled</div>
-              <div class="lock-msg" id="deadMsg">This ticket can no longer be used for entry.</div>
-              <div style="display:flex;flex-direction:column;gap:10px;max-width:320px;margin:0 auto;">
-                <a href="#" class="btn btn-whatsapp" id="whatsappDeadBtn" target="_blank" rel="noopener">
-                  <svg viewBox="0 0 24 24" width="17" height="17" fill="currentColor" style="flex-shrink:0"><path d="M20.5 3.5A11.8 11.8 0 0 0 12 0C5.4 0 0 5.4 0 12c0 2.1.5 4.1 1.6 5.9L0 24l6.3-1.6c1.7.9 3.7 1.4 5.7 1.4 6.6 0 12-5.4 12-12 0-3.2-1.2-6.2-3.5-8.3zM12 22c-1.8 0-3.5-.5-5-1.4l-.4-.2-3.7 1 1-3.6-.3-.4A9.9 9.9 0 0 1 2 12c0-5.5 4.5-10 10-10s10 4.5 10 10-4.5 10-10 10z"/></svg>
-                  Contact support
-                </a>
-              </div>
-            </div>
-          </div>
-
-          <div class="dash-divider"></div>
-
-          <div class="ticket-info-grid">
-            <div class="ti"><div class="k">Guest</div><div class="v" id="guestName">—</div></div>
-            <div class="ti"><div class="k">Tier</div><div class="v" id="tierName">—</div></div>
-            <div class="ti"><div class="k">Quantity</div><div class="v" id="quantity">—</div></div>
-            <div class="ti"><div class="k">Amount</div><div class="v" id="amount">—</div></div>
-            <div class="ti full" id="seatRow" style="display:none"><div class="k">Seat</div><div class="v mono" id="seatValue">—</div></div>
-            <div class="ti"><div class="k">Issued</div><div class="v" id="issuedValue">—</div></div>
-          </div>
-
-          <div class="barcode-wrap" id="barcodeWrap" style="display:none">
-            <div class="barcode"></div>
-            <div class="barcode-num" id="barcodeNum">0000 0000 0000 0000</div>
-          </div>
-
-          <div class="guest-note" id="guestNote">
-            <i data-lucide="info"></i>
-            <div id="guestNoteText">Screenshot or download this ticket. The scanner accepts the QR or the barcode at the door.</div>
-          </div>
-
+      <!-- Head -->
+      <div class="tk-head">
+        <div class="tk-logo">NOVALINK</div>
+        <div class="tk-badges">
+          <span class="tk-badge" id="badgeStatus">VALID</span>
+          <span class="tk-badge tier" id="badgeTier">STANDARD</span>
         </div>
       </div>
 
-      <a href="my-cards.html" class="btn btn-ghost btn-block" style="margin-top:8px;">
-        <i data-lucide="arrow-left"></i> All my cards
-      </a>
+      <!-- Event -->
+      <div>
+        <div class="tk-event" id="eventName">Event Name</div>
+        <div class="tk-meta" id="eventDate">Date TBA</div>
+      </div>
+
+      <div class="tk-divider"></div>
+
+      <!-- Info grid -->
+      <div class="tk-info">
+        <div>
+          <div class="k">Guest</div>
+          <div class="v" id="guestName">—</div>
+        </div>
+        <div>
+          <div class="k">Tier</div>
+          <div class="v" id="tierName">—</div>
+        </div>
+        <div class="full">
+          <div class="k">Reference</div>
+          <div class="v mono" id="ticketRef">NL-XXXX-XXXX-XXXX</div>
+        </div>
+        <div class="full" id="venueRow">
+          <div class="k">Venue</div>
+          <div class="v" id="venueName">—</div>
+        </div>
+      </div>
+
+      <div class="tk-divider"></div>
+
+      <!-- Slot: QR / Locked / Pending -->
+      <div id="qrSlot" class="hidden">
+        <div class="tk-scan">
+          <div class="tk-qr" id="qrBox"></div>
+          <div class="tk-qr-hint">Show this to the scanner at the door</div>
+          <div class="tk-barcode"></div>
+          <div class="tk-barcode-num" id="barcodeNum">0000 0000 0000 0000</div>
+        </div>
+      </div>
+
+      <div id="lockedSlot" class="hidden">
+        <div class="tk-locked">
+          <div class="tk-locked-icon"><i data-lucide="lock"></i></div>
+          <div class="tk-locked-title">QR unlocks soon</div>
+          <div class="tk-locked-msg">
+            For security, your QR only appears <strong>2 hours before the event starts</strong>.
+          </div>
+          <div class="tk-countdown" id="unlockCountdown">
+            <div class="tk-cd-unit"><div class="tk-cd-num" id="cdDays">0</div><div class="tk-cd-lbl">Days</div></div>
+            <div class="tk-cd-unit"><div class="tk-cd-num" id="cdHours">00</div><div class="tk-cd-lbl">Hrs</div></div>
+            <div class="tk-cd-unit"><div class="tk-cd-num" id="cdMins">00</div><div class="tk-cd-lbl">Min</div></div>
+            <div class="tk-cd-unit"><div class="tk-cd-num" id="cdSecs">00</div><div class="tk-cd-lbl">Sec</div></div>
+          </div>
+          <div class="tk-locked-msg" id="unlockNote">You'll be able to scan your ticket then.</div>
+        </div>
+      </div>
+
+      <div id="pendingSlot" class="hidden">
+        <div class="tk-pending">
+          <div class="tk-pending-icon"><i data-lucide="clock"></i></div>
+          <div class="tk-pending-title">Awaiting payment confirmation</div>
+          <div class="tk-pending-msg">
+            Your seat is reserved. Once we confirm your Yoco payment, your QR unlocks automatically.
+          </div>
+        </div>
+      </div>
+
+      <div id="deadSlot" class="hidden">
+        <div class="tk-pending" style="background:rgba(254,242,242,.75)">
+          <div class="tk-pending-icon" style="background:linear-gradient(135deg,#FEF2F2,#FECACA);border-color:#FCA5A5;color:#991B1B">
+            <i data-lucide="x-circle"></i>
+          </div>
+          <div class="tk-pending-title" id="deadTitle" style="color:#991B1B">Ticket cancelled</div>
+          <div class="tk-pending-msg" id="deadMsg" style="color:#7F1D1D">
+            This ticket can no longer be used for entry.
+          </div>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- Actions below ticket -->
+    <div class="footer-actions">
+      <button type="button" class="btn btn-ghost" id="copyRefBtn">
+        <i data-lucide="copy"></i> Copy reference
+      </button>
+      <button type="button" class="btn btn-ghost" id="shareBtn">
+        <i data-lucide="share-2"></i> Share
+      </button>
     </div>
 
   </div>
-</main>
+
+</div>
 
 <footer class="footer">
-  <div class="container">
-    <div class="fb">
-      <span>&copy; <span id="year"></span> Novalink. All rights reserved.</span>
-      <span>Johannesburg, South Africa</span>
-    </div>
+  <div class="footer-inner">
+    <span>© <span id="year"></span> Novalink. All rights reserved.</span>
+    <span>Johannesburg, South Africa</span>
   </div>
 </footer>
 
 <div class="toast" id="toast"></div>
 
+<!-- ═══════════════════ SCRIPTS ═══════════════════ -->
+
+<script>
+/* ═══════════════════════════════════════════════════════════════
+   INLINE SCHEMA HELPERS
+   ═══════════════════════════════════════════════════════════════ */
+(function(){
+  'use strict';
+  var V2_KEYS=['black','gold','cyan','tier5','tier6'];
+  var V1_KEYS=['elite','standard'];
+  var TIER_ORDER=['black','elite','gold','tier5','tier6','silver','cyan','standard'];
+  var TIER_DEFAULT_NAMES={black:'Elite',elite:'Elite',gold:'VIP',silver:'Silver',cyan:'Standard',standard:'Standard',tier5:'Platinum',tier6:'Diamond'};
+  var TIER_DEFAULT_COLOURS={black:'#1a202c',elite:'#1a202c',gold:'#ecc94b',silver:'#cbd5e1',cyan:'#00FFFF',standard:'#00FFFF',tier5:'#a855f7',tier6:'#f472b6'};
+
+  function isObject(v){return v!==null&&typeof v==='object'&&!Array.isArray(v);}
+  function isNonEmptyString(v){return typeof v==='string'&&v.trim().length>0;}
+
+  function collectTierKeys(event){
+    if(!isObject(event))return [];
+    var seen={};
+    [event.tierActive,event.tierNames,event.tierColours,event.tierColors,event.tierPrices].forEach(function(src){
+      if(!isObject(src))return;
+      Object.keys(src).forEach(function(k){seen[k]=true;});
+    });
+    return Object.keys(seen);
+  }
+  function sortTierKeys(keys){
+    return keys.slice().sort(function(a,b){
+      var ia=TIER_ORDER.indexOf(a),ib=TIER_ORDER.indexOf(b);
+      if(ia===-1&&ib===-1)return a.localeCompare(b);
+      if(ia===-1)return 1;if(ib===-1)return -1;return ia-ib;
+    });
+  }
+  function getTierKeys(event){
+    var keys=collectTierKeys(event);
+    if(!keys.length)return ['elite','silver','standard'];
+    return sortTierKeys(keys);
+  }
+  function getActiveTierKeys(event){
+    var all=getTierKeys(event);
+    if(!all.length)return [];
+    var activeMap=event&&event.tierActive;
+    var count=event&&parseInt(event.activeTierCount,10);
+    if(isObject(activeMap)&&Object.keys(activeMap).length>0){
+      var filtered=all.filter(function(k){
+        var f=activeMap[k];
+        return f===true||f===1||f==='true'||f==='1'||f==='yes';
+      });
+      if(filtered.length>=2)return filtered;
+      return all.slice(0,Math.max(2,filtered.length||2));
+    }
+    if(!isNaN(count)&&count>=1){
+      if(count>all.length)count=all.length;
+      return all.slice(0,count);
+    }
+    return all;
+  }
+  function getTierName(event,key){
+    if(!key)return '';
+    if(event&&isObject(event.tierNames)&&isNonEmptyString(event.tierNames[key]))return event.tierNames[key];
+    if(TIER_DEFAULT_NAMES[key])return TIER_DEFAULT_NAMES[key];
+    return String(key).charAt(0).toUpperCase()+String(key).slice(1);
+  }
+  function getTierColour(event,key){
+    if(!key)return TIER_DEFAULT_COLOURS.cyan;
+    var map=(event&&isObject(event.tierColours))?event.tierColours:(event&&isObject(event.tierColors))?event.tierColors:null;
+    if(map&&isNonEmptyString(map[key]))return map[key];
+    if(TIER_DEFAULT_COLOURS[key])return TIER_DEFAULT_COLOURS[key];
+    return TIER_DEFAULT_COLOURS.cyan;
+  }
+  function short4(s){
+    var t=String(s||'').replace(/[^A-Za-z0-9]/g,'').toUpperCase();
+    if(t.length<=4)return t.padStart(4,'0');
+    return t.slice(-4);
+  }
+  function rand4(){
+    var c='ABCDEFGHJKMNPQRSTUVWXYZ23456789',out='';
+    for(var i=0;i<4;i++)out+=c.charAt(Math.floor(Math.random()*c.length));
+    return out;
+  }
+  function buildTicketRef(eventId,ticketId,rand){
+    var e=short4(eventId),t=short4(ticketId);
+    var r=isNonEmptyString(rand)?String(rand).toUpperCase():rand4();
+    return 'NL-'+e+'-'+t+'-'+r;
+  }
+
+  // Colour helpers
+  function hexToRgb(hex){
+    var c=String(hex||'').replace('#','');
+    if(c.length===3)c=c[0]+c[0]+c[1]+c[1]+c[2]+c[2];
+    if(c.length!==6)return null;
+    return {r:parseInt(c.slice(0,2),16),g:parseInt(c.slice(2,4),16),b:parseInt(c.slice(4,6),16)};
+  }
+  function rgbToHex(c){
+    return '#'+[c.r,c.g,c.b].map(function(x){
+      return Math.max(0,Math.min(255,Math.round(x))).toString(16).padStart(2,'0');
+    }).join('');
+  }
+  function mixWhite(hex,r){
+    var c=hexToRgb(hex);if(!c)return hex;
+    return rgbToHex({r:c.r+(255-c.r)*r,g:c.g+(255-c.g)*r,b:c.b+(255-c.b)*r});
+  }
+  function mixBlack(hex,r){
+    var c=hexToRgb(hex);if(!c)return hex;
+    return rgbToHex({r:c.r*(1-r),g:c.g*(1-r),b:c.b*(1-r)});
+  }
+  function luminance(hex){
+    var c=hexToRgb(hex);if(!c)return .5;
+    var arr=[c.r,c.g,c.b].map(function(v){
+      v/=255;
+      return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4);
+    });
+    return .2126*arr[0]+.7152*arr[1]+.0722*arr[2];
+  }
+  function getPalette(hex){
+    var lum=luminance(hex);
+    if(lum<.35){
+      return {
+        c1:mixWhite(hex,.06),c2:mixBlack(hex,.45),
+        text:'#ffffff',muted:'rgba(255,255,255,.65)',
+        logo:'#00E5E5',
+        badgeBg:'rgba(255,255,255,.15)',badgeText:'#ffffff'
+      };
+    }
+    var c1=mixWhite(hex,.92);
+    var c2=mixWhite(hex,.4);
+    var text=luminance(c2)>.5?'#0a0f14':'#ffffff';
+    var isLight=text==='#ffffff';
+    return {
+      c1:c1,c2:c2,text:text,
+      muted:isLight?'rgba(255,255,255,.7)':'rgba(0,0,0,.6)',
+      logo:isLight?'#00E5E5':'#1e2f4d',
+      badgeBg:isLight?'rgba(255,255,255,.15)':'rgba(0,0,0,.08)',
+      badgeText:isLight?'#ffffff':'#4a5568'
+    };
+  }
+
+  // Time helpers (SAST)
+  function computeEventStartMs(event){
+    if(!event||!isNonEmptyString(event.startDate))return null;
+    var time=isNonEmptyString(event.startTime)?event.startTime:'00:00';
+    var iso=event.startDate+'T'+time+':00+02:00';
+    var ms=new Date(iso).getTime();
+    return isNaN(ms)?null:ms;
+  }
+  function getQrState(event){
+    var startMs=computeEventStartMs(event);
+    if(startMs===null)return {state:'open',unlockAt:null};
+    var unlockAt=startMs-2*60*60*1000;
+    var expiredAt=startMs+12*60*60*1000;
+    var now=Date.now();
+    if(now>=expiredAt)return {state:'expired',unlockAt:unlockAt};
+    if(now>=unlockAt)return {state:'open',unlockAt:unlockAt};
+    return {state:'locked',unlockAt:unlockAt};
+  }
+
+  window.NovalinkSchema={
+    getActiveTierKeys:getActiveTierKeys,
+    getTierName:getTierName,
+    getTierColour:getTierColour,
+    getTierPrice:function(){return 0;},
+    getPaymentLink:function(){return '';},
+    buildTicketRef:buildTicketRef,
+    getPalette:getPalette,
+    getQrState:getQrState,
+    computeEventStartMs:computeEventStartMs
+  };
+})();
+</script>
+
 <script>
 (function(){
 'use strict';
 
-var firebaseConfig = {
-  apiKey: "AIzaSyDSnns131jOlBXAqKo6qy7lTW4Rij-1oWU",
-  authDomain: "novalink-864cf.firebaseapp.com",
-  projectId: "novalink-864cf",
-  storageBucket: "novalink-864cf.firebasestorage.app",
-  messagingSenderId: "602780280140",
-  appId: "1:602780280140:web:5d9ff2351e5a7d5e66dbe9"
+/* ═══════════════════════════════════════════════════════════════
+   FIREBASE
+   ═══════════════════════════════════════════════════════════════ */
+var firebaseConfig={
+  apiKey:"AIzaSyDSnns131jOlBXAqKo6qy7lTW4Rij-1oWU",
+  authDomain:"novalink-864cf.firebaseapp.com",
+  projectId:"novalink-864cf",
+  storageBucket:"novalink-864cf.firebasestorage.app",
+  messagingSenderId:"602780280140",
+  appId:"1:602780280140:web:5d9ff2351e5a7d5e66dbe9"
 };
-if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
-var db = firebase.firestore();
-var auth = firebase.auth();
-var EVENTS = "events";
-var WHATSAPP_NUMBER = "27696835184";
-var UNLOCK_BEFORE_MS = 2 * 60 * 60 * 1000;
+if(!firebase.apps.length)firebase.initializeApp(firebaseConfig);
+var db=firebase.firestore();
+var auth=firebase.auth();
 
-var currentUser = null;
-var ticketData = null;
-var eventData = null;
-var eventId = null;
-var ticketId = null;
-var collectionName = "events";
-var unlockTimer = null;
-var eventStartMs = null;
-
-function $(id){ return document.getElementById(id); }
-function refreshIcons(){ if(window.lucide) lucide.createIcons(); }
-function esc(s){ return String(s == null ? "" : s).replace(/[&<>"']/g, function(c){ return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]; }); }
-function getParam(n){ try { return new URLSearchParams(window.location.search).get(n); } catch(e){ return null; } }
-
-function showToast(msg, type, ms){
-  type = type || "info"; ms = ms || 3200;
-  var t = $("toast");
-  var ic = type === "error" ? "alert-circle" : (type === "success" ? "check-circle" : "info");
-  t.className = "toast " + type;
-  t.innerHTML = '<i data-lucide="' + ic + '"></i><span>' + esc(msg) + '</span>';
+/* ═══════════════════════════════════════════════════════════════
+   HELPERS
+   ═══════════════════════════════════════════════════════════════ */
+function $(id){return document.getElementById(id);}
+function esc(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c];});}
+function refreshIcons(){if(window.lucide)lucide.createIcons();}
+function getParam(n){try{return new URLSearchParams(location.search).get(n);}catch(e){return null;}}
+function showToast(msg,type,ms){
+  type=type||'info';ms=ms||3200;
+  var t=$('toast');
+  var ic=type==='error'?'alert-circle':(type==='success'?'check-circle':'info');
+  t.className='toast '+type;
+  t.innerHTML='<i data-lucide="'+ic+'"></i><span>'+esc(msg)+'</span>';
   refreshIcons();
-  requestAnimationFrame(function(){ t.classList.add("show"); });
+  requestAnimationFrame(function(){t.classList.add('show');});
   clearTimeout(showToast._t);
-  showToast._t = setTimeout(function(){ t.classList.remove("show"); }, ms);
+  showToast._t=setTimeout(function(){t.classList.remove('show');},ms);
 }
-
-function formatMoney(v){
-  if (typeof v !== "number") v = parseFloat(v) || 0;
-  if (v <= 0) return "Free";
-  return "R " + v.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ",");
-}
-
-function formatDate(dateStr, timeStr){
-  if (!dateStr) return "Date TBA";
-  try {
-    var d = new Date(dateStr + "T" + (timeStr || "00:00"));
-    if (isNaN(d.getTime())) return dateStr;
-    var opts = { weekday: "short", day: "numeric", month: "short", year: "numeric" };
-    var out = d.toLocaleDateString("en-ZA", opts);
-    if (timeStr) out += " · " + timeStr;
+function formatEventDate(dateStr,timeStr){
+  if(!dateStr)return 'Date TBA';
+  try{
+    var d=new Date(dateStr+'T'+(timeStr||'00:00')+':00+02:00');
+    if(isNaN(d.getTime()))return dateStr;
+    var out=d.toLocaleDateString('en-ZA',{weekday:'short',day:'numeric',month:'short',year:'numeric'});
+    if(timeStr)out+=' · '+timeStr;
     return out;
-  } catch(e){ return dateStr; }
+  }catch(e){return dateStr;}
 }
-
-function formatTimestamp(ts){
-  if (!ts) return "—";
-  try {
-    var d = ts.toDate ? ts.toDate() : new Date(ts);
-    if (isNaN(d.getTime())) return "—";
-    return d.toLocaleDateString("en-ZA", { day: "numeric", month: "short", year: "numeric" });
-  } catch(e){ return "—"; }
-}
-
-function short4(s){
-  var t = String(s || "").replace(/[^A-Za-z0-9]/g, "").toUpperCase();
-  if (t.length <= 4) return t.padStart(4, "0");
-  return t.slice(-4);
-}
-function buildTicketRef(eId, tId, existingRand){
-  var rand = existingRand || "XXXX";
-  return "NL-" + short4(eId) + "-" + short4(tId) + "-" + rand;
-}
-
-var TIER_DEFAULTS = { elite: "#1a202c", silver: "#cbd5e1", standard: "#00FFFF" };
-var TIER_DEFAULT_NAMES = { elite: "Elite", silver: "Silver", standard: "Standard" };
-
-function getTierName(ev, tierKey){
-  if (!tierKey) tierKey = "standard";
-  if (ev && ev.tierNames && ev.tierNames[tierKey]) return ev.tierNames[tierKey];
-  return TIER_DEFAULT_NAMES[tierKey] || tierKey;
-}
-function getTierColour(ev, tierKey){
-  if (!tierKey) tierKey = "standard";
-  if (ev && ev.tierColours && ev.tierColours[tierKey]) return ev.tierColours[tierKey];
-  return TIER_DEFAULTS[tierKey] || "#00FFFF";
-}
-
-/* ═══ PAYMENT LINK — defensive, prepends https:// if missing, logs everything ═══ */
-function getPaymentLink(ev, tierKey, qty){
-  try {
-    if (!ev || !ev.paymentLinks){
-      console.log('[getPaymentLink] no paymentLinks on event');
-      return "";
-    }
-    var pl = ev.paymentLinks[tierKey];
-    if (!pl){
-      console.log('[getPaymentLink] no link for tier "' + tierKey + '"');
-      return "";
-    }
-    var q = String(qty || 1);
-    var url = "";
-    if (typeof pl === "object" && pl !== null){
-      if (pl[q]) url = String(pl[q]).trim();
-      else if (pl["1"]) url = String(pl["1"]).trim();
-    } else if (typeof pl === "string"){
-      url = String(pl).trim();
-    }
-    if (!url){
-      console.log('[getPaymentLink] empty for tier "' + tierKey + '" qty ' + q);
-      return "";
-    }
-    if (url.indexOf("http://") !== 0 && url.indexOf("https://") !== 0){
-      url = "https://" + url;
-    }
-    console.log('[getPaymentLink] returning ' + url);
-    return url;
-  } catch(e){
-    console.error('[getPaymentLink] error:', e);
-    return "";
+function formatSeat(t){
+  if(!t)return '';
+  if(t.generalAdmission)return 'General admission';
+  if(t.seatBlock||t.seatSection||t.seatTable||t.seatRow||t.seatNumber){
+    var p=[];
+    if(t.seatBlock)p.push(t.seatBlock);
+    if(t.seatSection)p.push(t.seatSection);
+    if(t.seatTable)p.push('Table '+t.seatTable);
+    if(t.seatRow)p.push('Row '+t.seatRow);
+    if(t.seatNumber)p.push('Seat '+t.seatNumber);
+    if(p.length)return p.join(' · ');
   }
+  return t.seat||'';
 }
 
-function formatSeatDisplay(t){
-  if (!t) return "";
-  if (t.generalAdmission) return "General admission";
-  if (t.seatBlock || t.seatSection || t.seatTable || t.seatRow || t.seatNumber){
-    var parts = [];
-    if (t.seatBlock)   parts.push(t.seatBlock);
-    if (t.seatSection) parts.push(t.seatSection);
-    if (t.seatTable)   parts.push("Table " + t.seatTable);
-    if (t.seatRow)     parts.push("Row " + t.seatRow);
-    if (t.seatNumber)  parts.push("Seat " + t.seatNumber);
-    if (parts.length) return parts.join(" · ");
-  }
-  return t.seat || "";
-}
+/* ═══════════════════════════════════════════════════════════════
+   STATE
+   ═══════════════════════════════════════════════════════════════ */
+var eventId=null;
+var ticketId=null;
+var collectionName='events';
+var eventData=null;
+var ticketData=null;
+var currentUser=null;
+var unlockTimer=null;
 
-function hexToRgbObj(hex){
-  var c = String(hex || "").replace("#","");
-  if (c.length === 3) c = c[0]+c[0]+c[1]+c[1]+c[2]+c[2];
-  if (c.length !== 6) return null;
-  return { r: parseInt(c.substring(0,2),16), g: parseInt(c.substring(2,4),16), b: parseInt(c.substring(4,6),16) };
-}
-function rgbObjToHex(c){
-  return "#" + [c.r,c.g,c.b].map(function(x){
-    return Math.max(0, Math.min(255, Math.round(x))).toString(16).padStart(2,"0");
-  }).join("");
-}
-function mixWithWhite(hex, ratio){
-  var c = hexToRgbObj(hex); if (!c) return hex;
-  return rgbObjToHex({ r: c.r+(255-c.r)*ratio, g: c.g+(255-c.g)*ratio, b: c.b+(255-c.b)*ratio });
-}
-function mixWithBlack(hex, ratio){
-  var c = hexToRgbObj(hex); if (!c) return hex;
-  return rgbObjToHex({ r: c.r*(1-ratio), g: c.g*(1-ratio), b: c.b*(1-ratio) });
-}
-function relativeLuminance(hex){
-  var c = hexToRgbObj(hex); if (!c) return 0;
-  var arr = [c.r, c.g, c.b].map(function(v){
-    v /= 255;
-    return v <= 0.03928 ? v / 12.92 : Math.pow((v + 0.055) / 1.055, 2.4);
-  });
-  return 0.2126 * arr[0] + 0.7152 * arr[1] + 0.0722 * arr[2];
-}
-function contrastTextOn(hex){ return relativeLuminance(hex) > 0.5 ? "#0a0f14" : "#ffffff"; }
-
-function applyHeroPalette(hex){
-  var hero = $("ticketHero");
-  if (!hero) return;
-  var lum = relativeLuminance(hex);
-  var isDark = lum < 0.35;
-  var c1, c2, text, muted, logo;
-  if (isDark){
-    c1 = mixWithWhite(hex, 0.06);
-    c2 = mixWithBlack(hex, 0.45);
-    text = "#ffffff";
-    muted = "rgba(255,255,255,0.65)";
-    logo = "#00FFFF";
-  } else {
-    c1 = mixWithWhite(hex, 0.92);
-    c2 = mixWithWhite(hex, 0.4);
-    text = contrastTextOn(c2);
-    var isLightText = text === "#ffffff";
-    muted = isLightText ? "rgba(255,255,255,0.7)" : "rgba(0,0,0,0.6)";
-    logo = isLightText ? "#00FFFF" : "#1e2f4d";
-  }
-  hero.style.setProperty("--tc-1", c1);
-  hero.style.setProperty("--tc-2", c2);
-  hero.style.setProperty("--tc-text", text);
-  hero.style.setProperty("--tc-muted", muted);
-  hero.style.setProperty("--tc-logo", logo);
-}
-
+/* ═══════════════════════════════════════════════════════════════
+   STATES
+   ═══════════════════════════════════════════════════════════════ */
 function showLoading(){
-  $("loadingState").style.display = "block";
-  $("errorState").style.display = "none";
-  $("ticketContent").style.display = "none";
+  $('stateLoading').classList.remove('hidden');
+  $('stateError').classList.add('hidden');
+  $('stateContent').classList.add('hidden');
 }
-function showError(title, msg){
-  $("loadingState").style.display = "none";
-  $("errorState").style.display = "block";
-  $("ticketContent").style.display = "none";
-  $("errorTitle").textContent = title || "Could not load ticket";
-  $("errorMsg").textContent = msg || "Something went wrong.";
+function showError(title,msg){
+  $('stateLoading').classList.add('hidden');
+  $('stateError').classList.remove('hidden');
+  $('stateContent').classList.add('hidden');
+  $('errorTitle').textContent=title||'Could not load ticket';
+  $('errorMsg').textContent=msg||'Please try again.';
   refreshIcons();
 }
 function showContent(){
-  $("loadingState").style.display = "none";
-  $("errorState").style.display = "none";
-  $("ticketContent").style.display = "block";
+  $('stateLoading').classList.add('hidden');
+  $('stateError').classList.add('hidden');
+  $('stateContent').classList.remove('hidden');
 }
 
-function hideAllSlots(){
-  $("qrSlot").style.display = "none";
-  $("lockedSlot").style.display = "none";
-  $("pendingSlot").style.display = "none";
-  $("deadSlot").style.display = "none";
-  $("barcodeWrap").style.display = "none";
-}
+/* ═══════════════════════════════════════════════════════════════
+   LOAD
+   ═══════════════════════════════════════════════════════════════ */
+function loadTicket(){
+  eventId=getParam('event');
+  ticketId=getParam('ticket');
+  collectionName=getParam('collection')||'events';
 
-function statusInfo(status){
-  var s = String(status || "valid").toLowerCase();
-  if (s === "pending") return { label: "Pending payment", cls: "pending", kind: "pending" };
-  if (s === "cancelled") return { label: "Cancelled", cls: "cancelled", kind: "dead" };
-  if (s === "checked-in" || s === "checked_in" || s === "used") return { label: "Checked in", cls: "used", kind: "used" };
-  if (s === "expired") return { label: "Expired", cls: "expired", kind: "dead" };
-  return { label: "Valid", cls: "valid", kind: "valid" };
-}
-
-function computeEventStartMs(){
-  if (!eventData) return null;
-  var dateStr = eventData.startDate || "";
-  var timeStr = eventData.startTime || "00:00";
-  if (!dateStr) return null;
-  var ms = new Date(dateStr + "T" + timeStr + ":00").getTime();
-  if (isNaN(ms)) return null;
-  return ms;
-}
-
-function isQrUnlocked(nowMs){
-  if (!eventStartMs) return true;
-  return nowMs >= (eventStartMs - UNLOCK_BEFORE_MS);
-}
-
-function renderTicket(){
-  if (!ticketData || !eventData) return;
-
-  var ev = eventData;
-  var t = ticketData;
-
-  var ref = t.paymentRef || buildTicketRef(eventId, ticketId, t.paymentRefRand);
-
-  $("eventName").textContent = ev.eventName || t.eventName || "Untitled Event";
-  $("eventDate").textContent = formatDate(ev.startDate, ev.startTime);
-  var venue = [ev.venueName || t.venueName, ev.city || t.city].filter(Boolean).join(", ") || "Venue TBA";
-  $("eventVenue").textContent = venue;
-
-  var tierColour = getTierColour(ev, t.tier);
-  applyHeroPalette(tierColour);
-
-  var info = statusInfo(t.status);
-  var badge = $("statusBadge");
-  badge.textContent = info.label;
-  badge.className = "th-status " + info.cls;
-
-  $("ticketRef").textContent = ref;
-
-  $("guestName").textContent = t.guestName || t.buyerName || "Guest";
-  $("tierName").textContent = getTierName(ev, t.tier);
-  $("quantity").textContent = t.quantity || 1;
-  $("amount").textContent = formatMoney(t.pricePaid || 0);
-
-  if (t.generalAdmission){
-    $("seatRow").style.display = "block";
-    $("seatValue").textContent = "General admission";
-  } else {
-    var seatDisplay = formatSeatDisplay(t);
-    if (seatDisplay){
-      $("seatRow").style.display = "block";
-      $("seatValue").textContent = seatDisplay;
-    } else {
-      $("seatRow").style.display = "none";
-    }
+  if(!eventId||!ticketId){
+    showError('Missing info','Open your ticket from My Tickets.');
+    return;
   }
 
-  $("issuedValue").textContent = formatTimestamp(t.createdAt);
+  db.collection(collectionName).doc(eventId).get()
+    .then(function(evSnap){
+      if(!evSnap.exists){
+        showError('Event not found','This event may have been removed.');
+        return;
+      }
+      eventData=evSnap.data()||{};
+      eventData.id=evSnap.id;
 
-  var barcodeNum = String(ref).replace(/[^0-9A-Z]/g, "").padEnd(16, "0").slice(0, 16);
-  barcodeNum = barcodeNum.replace(/(.{4})/g, "$1 ").trim();
-  $("barcodeNum").textContent = barcodeNum;
+      return db.collection(collectionName).doc(eventId).collection('tickets').doc(ticketId).get();
+    })
+    .then(function(tSnap){
+      if(!tSnap)return;
+      if(!tSnap.exists){
+        showError('Ticket not found',"We couldn't find this ticket.");
+        return;
+      }
+      ticketData=tSnap.data()||{};
+      ticketData.id=tSnap.id;
 
-  hideAllSlots();
+      renderTicket();
+      showContent();
+      refreshIcons();
+    })
+    .catch(function(err){
+      console.error('[load]',err);
+      showError('Could not load ticket',err.message||'Please refresh and try again.');
+    });
+}
 
-  if (info.kind === "pending"){
-    showPendingSlot(t, ev, ref);
-  } else if (info.kind === "dead"){
-    showDeadSlot(t, ev, ref, info.cls);
-  } else {
-    showValidOrLocked(t, ev, ref, info);
+/* ═══════════════════════════════════════════════════════════════
+   RENDER
+   ═══════════════════════════════════════════════════════════════ */
+function renderTicket(){
+  var ev=eventData;
+  var t=ticketData;
+
+  // Palette from tier colour
+  var tierColour=NovalinkSchema.getTierColour(ev,t.tier);
+  var palette=NovalinkSchema.getPalette(tierColour);
+  var card=$('ticketCard');
+  card.style.setProperty('--tk-c1',palette.c1);
+  card.style.setProperty('--tk-c2',palette.c2);
+  card.style.setProperty('--tk-text',palette.text);
+  card.style.setProperty('--tk-muted',palette.muted);
+  card.style.setProperty('--tk-logo',palette.logo);
+  card.style.setProperty('--tk-badge-bg',palette.badgeBg);
+  card.style.setProperty('--tk-badge-text',palette.badgeText);
+
+  // Status class + watermark
+  var status=String(t.status||'pending').toLowerCase();
+  card.classList.remove('used','cancelled','expired');
+  $('watermark').classList.add('hidden');
+
+  if(status==='checked-in'||status==='checked_in'||status==='used'){
+    card.classList.add('used');
+    $('watermark').textContent='USED';
+    $('watermark').classList.remove('hidden');
+  }else if(status==='cancelled'){
+    card.classList.add('cancelled');
+    $('watermark').textContent='CANCELLED';
+    $('watermark').classList.remove('hidden');
+  }else if(status==='expired'){
+    card.classList.add('expired');
+    $('watermark').textContent='EXPIRED';
+    $('watermark').classList.remove('hidden');
+  }
+
+  // Badges
+  var statusLabel='VALID';
+  if(status==='pending')statusLabel='PENDING';
+  else if(status==='cancelled')statusLabel='CANCELLED';
+  else if(status==='expired')statusLabel='EXPIRED';
+  else if(status==='checked-in'||status==='checked_in'||status==='used')statusLabel='USED';
+  $('badgeStatus').textContent=statusLabel;
+  $('badgeTier').textContent=NovalinkSchema.getTierName(ev,t.tier).toUpperCase();
+
+  // Event info
+  $('eventName').textContent=ev.eventName||t.eventName||'Untitled Event';
+  $('eventDate').textContent=formatEventDate(ev.startDate,ev.startTime);
+  $('guestName').textContent=t.guestName||t.buyerName||'Guest';
+  $('tierName').textContent=NovalinkSchema.getTierName(ev,t.tier);
+
+  // Reference — prefer what's stored, else build
+  var ref=t.paymentRef||NovalinkSchema.buildTicketRef(eventId,ticketId,t.paymentRefRand);
+  $('ticketRef').textContent=ref;
+
+  // Barcode number from reference
+  var barcodeNum=String(ref).replace(/[^0-9A-Z]/g,'').padEnd(16,'0').slice(0,16);
+  barcodeNum=barcodeNum.replace(/(.{4})/g,'$1 ').trim();
+  $('barcodeNum').textContent=barcodeNum;
+
+  // Venue
+  var venue=[ev.venueName||ev.venueAddress,ev.city].filter(Boolean).join(', ');
+  if(venue){
+    $('venueName').textContent=venue;
+    $('venueRow').classList.remove('hidden');
+  }else{
+    $('venueRow').classList.add('hidden');
+  }
+
+  // Hide all slots then show the right one
+  ['qrSlot','lockedSlot','pendingSlot','deadSlot'].forEach(function(id){
+    $(id).classList.add('hidden');
+  });
+
+  if(status==='pending'){
+    $('pendingSlot').classList.remove('hidden');
+  }else if(status==='cancelled'){
+    $('deadSlot').classList.remove('hidden');
+    $('deadTitle').textContent='Ticket cancelled';
+    $('deadMsg').textContent='This ticket has been cancelled and cannot be used for entry.';
+  }else if(status==='expired'){
+    $('deadSlot').classList.remove('hidden');
+    $('deadTitle').textContent='Ticket expired';
+    $('deadMsg').textContent='This reservation expired before payment was confirmed.';
+  }else{
+    // valid / checked-in / used
+    var qrState=NovalinkSchema.getQrState(ev);
+    if(qrState.state==='open'){
+      $('qrSlot').classList.remove('hidden');
+      renderQR(ref);
+    }else if(qrState.state==='locked'){
+      $('lockedSlot').classList.remove('hidden');
+      startUnlockCountdown(qrState.unlockAt);
+    }else{
+      // expired event — still show QR for record
+      $('qrSlot').classList.remove('hidden');
+      renderQR(ref);
+    }
   }
 
   refreshIcons();
 }
 
-function showPendingSlot(t, ev, ref){
-  $("pendingSlot").style.display = "block";
-  $("guestNoteText").textContent = "Your seat is held for 24 hours. Once we confirm payment, your QR unlocks automatically.";
-
-  var waMsg = buildPendingWhatsAppMessage(t, ev, ref);
-  $("whatsappPendingBtn").href = "https://wa.me/" + WHATSAPP_NUMBER + "?text=" + encodeURIComponent(waMsg);
-
-  /* Use group size as qty for link lookup */
-  var qty = t.groupSize || t.quantity || 1;
-  console.log('[pendingSlot] looking up link for tier=' + t.tier + ' qty=' + qty);
-
-  var link = getPaymentLink(ev, t.tier, qty);
-  if (!link){
-    link = getPaymentLink(ev, t.tier, 1);
-  }
-
-  var yocoBtn = $("yocoRetryBtn");
-  if (link){
-    yocoBtn.href = link;
-    yocoBtn.style.display = "inline-flex";
-    console.log('[pendingSlot] Yoco button set to ' + link);
-  } else {
-    yocoBtn.style.display = "none";
-    console.log('[pendingSlot] no link available — Yoco button hidden');
-  }
-}
-
-function showDeadSlot(t, ev, ref, cls){
-  $("deadSlot").style.display = "block";
-  var title = $("deadTitle");
-  var msg = $("deadMsg");
-
-  if (cls === "expired"){
-    title.textContent = "Ticket expired";
-    msg.textContent = "This reservation expired before payment was confirmed. The seat has been released.";
-  } else {
-    title.textContent = "Ticket cancelled";
-    msg.textContent = "This ticket has been cancelled and cannot be used for entry.";
-  }
-
-  var waMsg = "Hi Novalink — I need help with ticket " + ref;
-  $("whatsappDeadBtn").href = "https://wa.me/" + WHATSAPP_NUMBER + "?text=" + encodeURIComponent(waMsg);
-  $("guestNoteText").textContent = "Contact support if you think this is a mistake.";
-}
-
-function showValidOrLocked(t, ev, ref, info){
-  var now = Date.now();
-
-  if (isQrUnlocked(now)){
-    $("qrSlot").style.display = "block";
-    $("barcodeWrap").style.display = "flex";
-    $("guestNoteText").textContent = "Screenshot or download this ticket. The scanner accepts the QR or the barcode at the door.";
-    renderQR(ref);
-  } else {
-    $("lockedSlot").style.display = "block";
-    $("guestNoteText").textContent = "The QR unlocks 2 hours before the event starts. Come back then, or leave this page open.";
-    startUnlockCountdown();
-  }
-}
-
-function buildPendingWhatsAppMessage(t, ev, ref){
-  var lines = [
-    "Hi Novalink — I've paid for my ticket.",
-    "",
-    "Event: " + (ev.eventName || t.eventName || "Event"),
-    "Reference: " + ref,
-    "Tier: " + getTierName(ev, t.tier),
-    "Quantity: " + (t.quantity || 1),
-    "Amount: " + formatMoney(t.pricePaid || 0),
-    "Name: " + (t.guestName || t.buyerName || "Guest"),
-    "Email: " + (t.buyerEmail || ""),
-    ""
-  ];
-  var seatDisplay = formatSeatDisplay(t);
-  if (seatDisplay) lines.push("Seat: " + seatDisplay);
-  lines.push("Please confirm my payment and unlock my QR code.");
-  return lines.join("\n");
-}
-
+/* ═══════════════════════════════════════════════════════════════
+   QR RENDER
+   ═══════════════════════════════════════════════════════════════ */
 function renderQR(ref){
-  var box = $("qrBox");
-  if (!box) return;
-  box.innerHTML = "";
+  var box=$('qrBox');
+  if(!box)return;
+  box.innerHTML='';
 
-  if (window.QRCode && QRCode.toCanvas){
-    var canvas = document.createElement("canvas");
-    QRCode.toCanvas(canvas, ref, { width: 240, margin: 1, color: { dark: "#0a0f14", light: "#ffffff" } }, function(err){
-      if (err){
-        console.error("QR render failed:", err);
-        fallbackQRText(box, ref);
+  if(window.QRCode&&QRCode.toCanvas){
+    var canvas=document.createElement('canvas');
+    QRCode.toCanvas(canvas,ref,{
+      width:220,margin:1,
+      color:{dark:'#0A0F14',light:'#FFFFFF'}
+    },function(err){
+      if(err){
+        console.error('[qr]',err);
+        fallbackQR(box,ref);
         return;
       }
       box.appendChild(canvas);
     });
-  } else {
-    fallbackQRText(box, ref);
+  }else{
+    fallbackQR(box,ref);
   }
 }
-
-function fallbackQRText(box, ref){
-  var img = document.createElement("img");
-  img.alt = "QR code";
-  img.src = "https://api.qrserver.com/v1/create-qr-code/?size=240x240&data=" + encodeURIComponent(ref);
-  img.onerror = function(){
-    box.innerHTML = '<div style="text-align:center;color:var(--mut);font-size:12px;padding:20px;">QR unavailable — show reference at the door:<br><strong style="font-family:var(--mono);color:var(--cy3);font-size:14px;display:block;margin-top:6px;">' + esc(ref) + '</strong></div>';
+function fallbackQR(box,ref){
+  var img=document.createElement('img');
+  img.alt='QR code';
+  img.src='https://api.qrserver.com/v1/create-qr-code/?size=220x220&data='+encodeURIComponent(ref);
+  img.onerror=function(){
+    box.innerHTML='<div style="text-align:center;color:var(--slate);font-size:12px;padding:20px;line-height:1.5">QR unavailable — show this reference at the door:<br><strong style="font-family:var(--mono);color:var(--brand-darker);font-size:14px;display:block;margin-top:6px">'+esc(ref)+'</strong></div>';
   };
   box.appendChild(img);
 }
 
-function startUnlockCountdown(){
-  if (unlockTimer){ clearInterval(unlockTimer); unlockTimer = null; }
-  if (!eventStartMs) return;
-  var unlockAtMs = eventStartMs - UNLOCK_BEFORE_MS;
+/* ═══════════════════════════════════════════════════════════════
+   UNLOCK COUNTDOWN
+   ═══════════════════════════════════════════════════════════════ */
+function startUnlockCountdown(unlockAt){
+  if(unlockTimer)clearInterval(unlockTimer);
+  if(!unlockAt)return;
 
   function tick(){
-    var now = Date.now();
-    var left = unlockAtMs - now;
-
-    if (left <= 0){
-      if (unlockTimer){ clearInterval(unlockTimer); unlockTimer = null; }
-      showToast("QR unlocked — you can scan now.", "success", 3000);
-      hideAllSlots();
+    var left=unlockAt-Date.now();
+    if(left<=0){
+      clearInterval(unlockTimer);
+      unlockTimer=null;
       renderTicket();
       return;
     }
+    var totalSec=Math.floor(left/1000);
+    var d=Math.floor(totalSec/86400);
+    var h=Math.floor((totalSec%86400)/3600);
+    var m=Math.floor((totalSec%3600)/60);
+    var s=totalSec%60;
 
-    var totalSec = Math.floor(left / 1000);
-    var days = Math.floor(totalSec / 86400);
-    var hours = Math.floor((totalSec % 86400) / 3600);
-    var mins = Math.floor((totalSec % 3600) / 60);
-    var secs = totalSec % 60;
+    $('cdDays').textContent=d;
+    $('cdHours').textContent=String(h).padStart(2,'0');
+    $('cdMins').textContent=String(m).padStart(2,'0');
+    $('cdSecs').textContent=String(s).padStart(2,'0');
 
-    $("unlockDays").textContent = days;
-    $("unlockHours").textContent = String(hours).padStart(2, "0");
-    $("unlockMinutes").textContent = String(mins).padStart(2, "0");
-    $("unlockSeconds").textContent = String(secs).padStart(2, "0");
-
-    var noteEl = $("unlockNote");
-    if (days > 0){
-      noteEl.textContent = "Unlocks in " + days + " day" + (days === 1 ? "" : "s") + " on " +
-        new Date(unlockAtMs).toLocaleString("en-ZA", { day:"numeric", month:"short", hour:"2-digit", minute:"2-digit" });
-    } else {
-      noteEl.textContent = "Unlocks at " +
-        new Date(unlockAtMs).toLocaleTimeString("en-ZA", { hour:"2-digit", minute:"2-digit" }) +
-        " — come back then.";
+    var note=$('unlockNote');
+    if(d>0){
+      note.textContent='Unlocks in '+d+' day'+(d===1?'':'s')+
+        ' on '+new Date(unlockAt).toLocaleString('en-ZA',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+    }else{
+      note.textContent='Unlocks at '+new Date(unlockAt).toLocaleTimeString('en-ZA',{hour:'2-digit',minute:'2-digit'})+' — come back then.';
     }
   }
   tick();
-  unlockTimer = setInterval(tick, 1000);
+  unlockTimer=setInterval(tick,1000);
 }
 
-async function loadTicket(){
-  eventId = getParam("event") || getParam("id");
-  ticketId = getParam("ticket");
-  collectionName = getParam("collection") || "events";
-
-  if (!eventId || !ticketId){
-    showError("Missing info", "The link is incomplete. Open your ticket from My Cards.");
-    return;
+/* ═══════════════════════════════════════════════════════════════
+   ACTIONS
+   ═══════════════════════════════════════════════════════════════ */
+function copyRef(){
+  var ref=$('ticketRef').textContent;
+  if(navigator.clipboard&&navigator.clipboard.writeText){
+    navigator.clipboard.writeText(ref)
+      .then(function(){showToast('Reference copied','success',2000);})
+      .catch(function(){fallbackCopy(ref);});
+  }else{
+    fallbackCopy(ref);
   }
+}
+function fallbackCopy(text){
+  var ta=document.createElement('textarea');
+  ta.value=text;
+  ta.style.position='fixed';
+  ta.style.opacity='0';
+  document.body.appendChild(ta);
+  ta.select();
+  try{document.execCommand('copy');showToast('Reference copied','success',2000);}catch(e){showToast('Copy failed','error',2500);}
+  document.body.removeChild(ta);
+}
+function shareTicket(){
+  var ev=eventData||{};
+  var t=ticketData||{};
+  var ref=$('ticketRef').textContent;
+  var url=window.location.href;
+  var text=(ev.eventName||'Event')+' — '+(t.guestName||'Guest')+' — '+ref;
 
-  try {
-    var evSnap = await db.collection(collectionName).doc(eventId).get();
-    if (!evSnap.exists){
-      showError("Event not found", "This event may have been removed.");
-      return;
-    }
-    eventData = evSnap.data() || {};
-    eventData.id = evSnap.id;
-    eventStartMs = computeEventStartMs();
-
-    var tSnap = await db.collection(collectionName).doc(eventId).collection("tickets").doc(ticketId).get();
-    if (!tSnap.exists){
-      showError("Ticket not found", "We couldn't find this ticket. Check My Cards.");
-      return;
-    }
-    ticketData = tSnap.data() || {};
-    ticketData.id = tSnap.id;
-
-    if (currentUser){
-      var isOwner = ticketData.buyerUid === currentUser.uid;
-      var isAdmin = ["nylnathan340@gmail.com", "customerservicesnovalink@gmail.com"]
-        .map(function(e){ return e.toLowerCase(); })
-        .indexOf(String(currentUser.email || "").toLowerCase()) !== -1;
-      if (!isOwner && !isAdmin && ticketData.buyerUid){
-        showError("Not your ticket", "This ticket belongs to another account.");
-        return;
-      }
-    }
-
-    renderTicket();
-    showContent();
-    refreshIcons();
-  } catch(err){
-    console.error("loadTicket error:", err);
-    showError("Could not load ticket", err.message || "Please refresh and try again.");
+  if(navigator.share){
+    navigator.share({title:ev.eventName||'My Ticket',text:text,url:url})
+      .catch(function(){/* user cancelled */});
+  }else{
+    fallbackCopy(url);
+    showToast('Link copied','success',2000);
   }
 }
 
-document.addEventListener("DOMContentLoaded", function(){
-  $("year").textContent = new Date().getFullYear();
+/* ═══════════════════════════════════════════════════════════════
+   BOOT
+   ═══════════════════════════════════════════════════════════════ */
+document.addEventListener('DOMContentLoaded',function(){
+  $('year').textContent=new Date().getFullYear();
   refreshIcons();
   showLoading();
 
+  $('copyRefBtn').addEventListener('click',copyRef);
+  $('shareBtn').addEventListener('click',shareTicket);
+
   auth.onAuthStateChanged(function(user){
-    currentUser = user;
+    currentUser=user;
     loadTicket();
+  });
+
+  window.addEventListener('beforeunload',function(){
+    if(unlockTimer)clearInterval(unlockTimer);
   });
 });
 
-window.addEventListener("beforeunload", function(){
-  if (unlockTimer){ clearInterval(unlockTimer); unlockTimer = null; }
-});
 })();
 </script>
+
 </body>
-              </html>
+      </html>
