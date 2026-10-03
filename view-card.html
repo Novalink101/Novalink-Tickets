@@ -324,10 +324,7 @@ h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
    PRINT / SAVE AS PDF
    ═══════════════════════════════════════════════════════════════ */
 @media print{
-  /* Hide chrome */
   .nav,.footer,.footer-actions,.toast,.state,.hidden{display:none!important}
-
-  /* Reset page */
   body{
     background:#fff!important;
     padding:0!important;
@@ -341,7 +338,6 @@ h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
   }
   #stateContent{padding:0!important;margin:0!important}
 
-  /* Ticket styled for print */
   .ticket{
     box-shadow:none!important;
     border:1.5px solid #000!important;
@@ -351,14 +347,12 @@ h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
     max-width:480px;
     margin:16px auto!important;
     padding:22px!important;
-    /* keep background colours in the PDF */
     -webkit-print-color-adjust:exact;
     print-color-adjust:exact;
     color-adjust:exact;
   }
   .ticket::before{display:none!important}
 
-  /* Keep scan block intact */
   .tk-scan{
     border:1px solid #ddd!important;
     page-break-inside:avoid;
@@ -368,17 +362,14 @@ h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
   .tk-barcode-wrap{page-break-inside:avoid;break-inside:avoid}
   .tk-barcode{page-break-inside:avoid;break-inside:avoid}
 
-  /* Watermark should still print (used/cancelled/expired) */
   .watermark{display:block!important}
 
-  /* Colours on badges */
   .tk-badge{
     -webkit-print-color-adjust:exact;
     print-color-adjust:exact;
     color-adjust:exact;
   }
 
-  /* Page setup */
   @page{
     margin:12mm;
     size:auto;
@@ -587,14 +578,24 @@ function formatEventDate(dateStr,timeStr){
   }catch(e){return dateStr;}
 }
 
-/* Schema helpers */
+/* ═══════════════════════════════════════════════════════════════
+   SCHEMA HELPERS
+   ═══════════════════════════════════════════════════════════════ */
 var TIER_DEFAULT_NAMES={black:'Elite',elite:'Elite',gold:'VIP',silver:'Silver',cyan:'Standard',standard:'Standard',tier5:'Platinum',tier6:'Diamond'};
 var TIER_DEFAULT_COLOURS={black:'#1a202c',elite:'#1a202c',gold:'#ecc94b',silver:'#cbd5e1',cyan:'#00FFFF',standard:'#00FFFF',tier5:'#a855f7',tier6:'#f472b6'};
 function isObject(v){return v!==null&&typeof v==='object'&&!Array.isArray(v);}
 function isNonEmptyString(v){return typeof v==='string'&&v.trim().length>0;}
+
+/* getTierName — reads the tierNames map first, then a tiers array,
+   then falls back to the built-in defaults. Covers every wizard
+   variant we've seen in the wild. */
 function getTierName(ev,key){
   if(!key)return '';
   if(ev&&isObject(ev.tierNames)&&isNonEmptyString(ev.tierNames[key]))return ev.tierNames[key];
+  if(ev&&Array.isArray(ev.tiers)){
+    var t=ev.tiers.find(function(x){return x&&(x.key===key||x.id===key);});
+    if(t&&isNonEmptyString(t.name))return t.name;
+  }
   if(TIER_DEFAULT_NAMES[key])return TIER_DEFAULT_NAMES[key];
   return String(key).charAt(0).toUpperCase()+String(key).slice(1);
 }
@@ -602,6 +603,11 @@ function getTierColour(ev,key){
   if(!key)return TIER_DEFAULT_COLOURS.cyan;
   var map=(ev&&isObject(ev.tierColours))?ev.tierColours:(ev&&isObject(ev.tierColors))?ev.tierColors:null;
   if(map&&isNonEmptyString(map[key]))return map[key];
+  if(ev&&Array.isArray(ev.tiers)){
+    var t=ev.tiers.find(function(x){return x&&(x.key===key||x.id===key);});
+    if(t&&isNonEmptyString(t.colour))return t.colour;
+    if(t&&isNonEmptyString(t.color))return t.color;
+  }
   if(TIER_DEFAULT_COLOURS[key])return TIER_DEFAULT_COLOURS[key];
   return TIER_DEFAULT_COLOURS.cyan;
 }
@@ -612,9 +618,25 @@ function buildTicketRef(eventId,ticketId,rand){
   var r=isNonEmptyString(rand)?String(rand).toUpperCase():rand4();
   return 'NL-'+e+'-'+t+'-'+r;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   formatSeat
+   ─────────────────────────────────────────────────────────────
+   We now PREFER the full label the ticket was created with.
+   That label already contains the Row/Table/Seat info built by
+   view-event.html at purchase time — it is the ground truth.
+
+   We only rebuild from individual fields if t.seat is missing
+   (older tickets, or a bad write).
+   ═══════════════════════════════════════════════════════════════ */
 function formatSeat(t){
   if(!t)return '';
   if(t.generalAdmission)return 'General admission';
+
+  /* Preferred: the full label saved at ticket creation */
+  if(isNonEmptyString(t.seat))return t.seat;
+
+  /* Fallback: rebuild from individual fields */
   var parts=[];
   if(isNonEmptyString(t.seatBlock))parts.push(t.seatBlock);
   if(isNonEmptyString(t.seatSection)&&t.seatSection!==t.seatBlock)parts.push(t.seatSection);
@@ -622,7 +644,8 @@ function formatSeat(t){
   if(isNonEmptyString(t.seatRow))parts.push('Row '+t.seatRow);
   if(t.seatNumber)parts.push('Seat '+t.seatNumber);
   if(parts.length)return parts.join(' · ');
-  return t.seat||'';
+
+  return '';
 }
 function computeEventStartMs(event){
   if(!event||!isNonEmptyString(event.startDate))return null;
@@ -748,7 +771,6 @@ function renderTicket(){
   var ev=eventData;
   var t=ticketData;
 
-  // Palette from tier
   var tierColour=getTierColour(ev,t.tier);
   var palette=getPalette(tierColour);
   var card=$('ticketCard');
@@ -760,7 +782,7 @@ function renderTicket(){
   card.style.setProperty('--tk-badge-bg',palette.badgeBg);
   card.style.setProperty('--tk-badge-text',palette.badgeText);
 
-  // Status
+  /* Status */
   var status=String(t.status||'pending').toLowerCase();
   card.classList.remove('used','cancelled','expired');
   $('watermark').classList.add('hidden');
@@ -779,7 +801,7 @@ function renderTicket(){
     $('watermark').classList.remove('hidden');
   }
 
-  // Badges
+  /* Badges */
   var statusLabel='VALID';
   if(status==='pending')statusLabel='PENDING';
   else if(status==='cancelled')statusLabel='CANCELLED';
@@ -788,22 +810,22 @@ function renderTicket(){
   $('badgeStatus').textContent=statusLabel;
   $('badgeTier').textContent=getTierName(ev,t.tier).toUpperCase();
 
-  // Event info
+  /* Event info */
   $('eventName').textContent=ev.eventName||t.eventName||'Untitled Event';
   $('eventDate').textContent=formatEventDate(ev.startDate,ev.startTime);
   $('guestName').textContent=t.guestName||t.buyerName||'Guest';
   $('tierName').textContent=getTierName(ev,t.tier);
 
-  // Reference
+  /* Reference */
   var ref=t.paymentRef||buildTicketRef(eventId,ticketId,t.paymentRefRand);
   $('ticketRef').textContent=ref;
 
-  // Barcode
+  /* Barcode */
   var barcodeNum=String(ref).replace(/[^0-9A-Z]/g,'').padEnd(16,'0').slice(0,16);
   barcodeNum=barcodeNum.replace(/(.{4})/g,'$1 ').trim();
   $('barcodeNum').textContent=barcodeNum;
 
-  // Seat
+  /* Seat — uses formatSeat which prefers the saved label */
   var seatDisplay=formatSeat(t);
   if(seatDisplay){
     $('seatValue').textContent=seatDisplay;
@@ -812,7 +834,7 @@ function renderTicket(){
     $('seatRow').style.display='none';
   }
 
-  // Venue
+  /* Venue */
   var venue=[ev.venueName||ev.venueAddress,ev.city].filter(Boolean).join(', ');
   if(venue){
     $('venueName').textContent=venue;
@@ -821,7 +843,7 @@ function renderTicket(){
     $('venueRow').classList.add('hidden');
   }
 
-  // Slots
+  /* Slots */
   ['qrSlot','lockedSlot','pendingSlot','deadSlot'].forEach(function(id){
     $(id).classList.add('hidden');
   });
@@ -979,4 +1001,4 @@ document.addEventListener('DOMContentLoaded',function(){
 </script>
 
 </body>
-      </html>
+          </html>
