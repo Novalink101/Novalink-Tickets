@@ -39,13 +39,10 @@ img{max-width:100%;display:block}
 .btn-accent:hover:not(:disabled){transform:translateY(-2px);box-shadow:0 8px 24px rgba(0,255,255,0.35)}
 .btn-ghost{background:transparent;color:var(--tx2);border:1px solid var(--bd2)}
 .btn-ghost:hover:not(:disabled){background:var(--sf2);border-color:var(--cy);color:var(--cy3)}
-.btn-whatsapp{background:#25D366;color:#fff;border-color:#25D366}
-.btn-whatsapp:hover{background:#1eb855;transform:translateY(-2px);box-shadow:0 8px 24px rgba(37,211,102,0.35)}
 .btn-block{width:100%}
 .btn-lg{padding:15px 26px;font-size:15px}
 .btn:disabled{opacity:0.55;cursor:not-allowed;transform:none!important}
 
-/* Yoco branded button */
 .btn-yoco{
   position:relative;
   background:linear-gradient(135deg,var(--cy),var(--cy2));
@@ -197,7 +194,6 @@ img{max-width:100%;display:block}
 .signin-note{display:flex;gap:10px;padding:12px 14px;background:var(--amf);border:1px solid #fde68a;border-radius:10px;margin-top:14px;font-size:12.5px;color:#92400e;line-height:1.55;font-weight:600}
 .signin-note i{width:16px;height:16px;flex-shrink:0;margin-top:2px}
 
-/* Sales closed state */
 .sales-closed-box{
   background:linear-gradient(135deg,var(--amf),#fff);
   border:1.5px solid #fde68a;
@@ -211,7 +207,6 @@ img{max-width:100%;display:block}
 .scb-msg{font-size:12.5px;color:#78350f;line-height:1.6;font-weight:500}
 .scb-msg strong{color:#92400e;font-weight:900}
 
-/* How it works block */
 .how-it-works{background:linear-gradient(135deg,var(--cyf),#fff);border:1px solid var(--cy);border-radius:12px;padding:14px 16px;margin-top:14px}
 .hiw-title{font-size:10.5px;font-weight:900;letter-spacing:.08em;text-transform:uppercase;color:var(--cy3);margin-bottom:10px;display:flex;align-items:center;gap:7px}
 .hiw-title i{width:13px;height:13px}
@@ -491,7 +486,7 @@ img{max-width:100%;display:block}
   </div>
 </main>
 
-<!-- ═══════════════ BUY MODAL ═══════════════ -->
+<!-- BUY MODAL -->
 <div class="modal-overlay" id="buyModal">
   <div class="modal">
     <div id="step1">
@@ -602,7 +597,7 @@ img{max-width:100%;display:block}
   </div>
 </div>
 
-<!-- ═══════════════ AUTH MODAL ═══════════════ -->
+<!-- AUTH MODAL -->
 <div class="modal-overlay" id="authModal">
   <div class="modal" style="max-width:420px;">
     <button class="modal-close" id="authClose" type="button"><i data-lucide="x"></i></button>
@@ -655,7 +650,7 @@ var firebaseConfig = {
   authDomain: "novalink-864cf.firebaseapp.com",
   projectId: "novalink-864cf",
   storageBucket: "novalink-864cf.firebasestorage.app",
-  messagingServer: "602780280140",
+  messagingSenderId: "602780280140",
   appId: "1:602780280140:web:5d9ff2351e5a7d5e66dbe9"
 };
 if (!firebase.apps.length) firebase.initializeApp(firebaseConfig);
@@ -720,7 +715,6 @@ function formatEventDate(dateStr, timeStr){
   } catch(e){ return dateStr; }
 }
 
-/* ═══ Sales cutoff helpers ═══ */
 function getEventStartMs(){
   if (!eventData) return null;
   var dateStr = eventData.startDate || "";
@@ -801,7 +795,6 @@ function applySalesStatusToSidebar(){
   var totalRow = $("totalRow");
   var qtyHint = $("qtyMaxHint");
 
-  /* Hide "sales closing soon" hero warning banner */
   var heroWarn = $("heroWarn");
   if (heroWarn) heroWarn.style.display = status.state === "warn" ? "inline-flex" : "none";
 
@@ -847,7 +840,6 @@ function applySalesStatusToSidebar(){
   refreshIcons();
 }
 
-/* ═══ Tier helpers ═══ */
 var ALL_TIER_KEYS = ["elite","silver","standard"];
 var TIER_FB_NAMES = { elite:"Elite", silver:"Silver", standard:"Standard" };
 var TIER_FB_COLORS = { elite:"#1a202c", silver:"#cbd5e1", standard:"#00FFFF" };
@@ -901,19 +893,34 @@ function getPaymentLink(key, quantity){
   }
 }
 
-function isTierActive(key){
-  if (!eventData || !eventData.tierActive) return true;
-  return eventData.tierActive[key] !== false;
-}
+/* ═══ FIXED: read active tiers from tierActive map first, fallback to count ═══ */
 function getActiveTierKeys(){
   if (!eventData) return ALL_TIER_KEYS.slice();
+
+  if (eventData.tierActive && typeof eventData.tierActive === "object"){
+    var fromMap = Object.keys(eventData.tierActive).filter(function(k){
+      return eventData.tierActive[k] === true && ALL_TIER_KEYS.indexOf(k) !== -1;
+    });
+    if (fromMap.length) return fromMap;
+  }
+
   var count = parseInt(eventData.activeTierCount, 10);
   if (isNaN(count) || count < 1) count = ALL_TIER_KEYS.length;
   if (count > ALL_TIER_KEYS.length) count = ALL_TIER_KEYS.length;
-  var keys = ALL_TIER_KEYS.slice(0, count);
-  var filtered = keys.filter(isTierActive);
-  if (!filtered.length && eventData.tierActive) return keys;
-  return filtered;
+  return ALL_TIER_KEYS.slice(0, count);
+}
+
+/* ═══ FIXED: no seating → all active tiers have "seats" ═══ */
+function tierHasSeats(tierKey){
+  if (!seatingEnabled) return true;
+
+  if (gaEnabled){
+    var hasGA = blocks.some(function(b){
+      return (b.tier || "standard") === tierKey && b.preset === "general-admission";
+    });
+    if (hasGA) return true;
+  }
+  return allTierUnits.some(function(u){ return u.tier === tierKey; });
 }
 
 function getCheapestAvailableTier(){
@@ -938,7 +945,6 @@ function hasTwoWords(name){
   return String(name).trim().split(/\s+/).filter(Boolean).length >= 2;
 }
 
-/* ═══ Seating ═══ */
 function buildAllUnits(){
   allTierUnits = [];
   if (!seatingEnabled || !blocks.length) return;
@@ -1007,16 +1013,6 @@ function buildAllUnits(){
       }
     }
   });
-}
-
-function tierHasSeats(tierKey){
-  if (gaEnabled){
-    var hasGA = blocks.some(function(b){
-      return (b.tier || "standard") === tierKey && b.preset === "general-admission";
-    });
-    if (hasGA) return true;
-  }
-  return allTierUnits.some(function(u){ return u.tier === tierKey; });
 }
 
 function maxRowSizeInTier(tierKey){
@@ -1652,10 +1648,6 @@ async function createPendingTickets(){
   var orderQty = pendingOrder.qty;
   var totalAmount = price * orderQty;
 
-  if (price <= 0 && totalAmount <= 0){
-    console.warn('[reserve] WARNING: price is 0 or undefined. Check eventData.tierPrices.');
-  }
-
   var nowMs = Date.now();
   var expiresAtMs = nowMs + PENDING_TTL_MS;
   var buyerUid = currentUser.uid;
@@ -1845,7 +1837,6 @@ function renderPaymentStep(bundle){
     missing.style.display = "flex";
   }
 
-  /* Support link — replaces the old "I've paid" button */
   var supportLink = $("supportLink");
   if (supportLink){
     var supportMsg = "Hi Novalink, I need help paying for my ticket.\n\n"
