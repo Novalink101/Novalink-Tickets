@@ -163,6 +163,12 @@ img{max-width:100%;display:block}
 .field-error-msg{font-size:11.5px;color:var(--dg);font-weight:700;margin-top:5px;display:none;line-height:1.4}
 .field-error-msg.show{display:block}
 
+.auth-divider{display:flex;align-items:center;gap:12px;margin:16px 0;color:var(--mut);font-size:11px;text-transform:uppercase;font-weight:800;letter-spacing:0.08em}
+.auth-divider::before,.auth-divider::after{content:'';flex:1;height:1px;background:var(--bd)}
+.btn-google{background:#fff;color:#1f2937;border:1.5px solid var(--bd2);justify-content:center;font-weight:700}
+.btn-google:hover:not(:disabled){background:#f9fafb;border-color:var(--cy);transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,0,0,0.06)}
+.btn-google svg{width:18px;height:18px;flex-shrink:0}
+
 .step-indicator{display:flex;gap:6px;margin-bottom:22px}
 .step-dot{flex:1;height:4px;border-radius:99px;background:var(--bd);transition:background 0.3s ease}
 .step-dot.active{background:var(--cy3)}
@@ -218,6 +224,8 @@ img{max-width:100%;display:block}
 
 .footer{background:#0a0f14;color:#c9d2dd;padding:28px 0 20px;margin-top:auto;font-size:13px}
 .fb{display:flex;justify-content:space-between;flex-wrap:wrap;gap:12px;color:#6b7787;font-size:12px}
+
+.spinner{width:16px;height:16px;border:2px solid rgba(0,0,0,0.2);border-top-color:#04161c;border-radius:50%;animation:sp .7s linear infinite;display:inline-block}
 
 @media (max-width:520px){
   .hero-inner{padding:20px}
@@ -375,6 +383,7 @@ img{max-width:100%;display:block}
   </div>
 </main>
 
+<!-- ═══════════════ BUY MODAL ═══════════════ -->
 <div class="modal-overlay" id="buyModal">
   <div class="modal">
     <div id="step1">
@@ -389,7 +398,7 @@ img{max-width:100%;display:block}
       <div class="guest-list" id="guestList"></div>
 
       <div class="field" style="margin-top:16px;" id="emailField">
-        <label for="guestEmailInput">Your email (for confirmation) <span class="required-star">*</span></label>
+        <label for="guestEmailInput">Your email (for confirmation) <span class="required-star" style="color:var(--dg)">*</span></label>
         <input type="email" id="guestEmailInput" placeholder="e.g., jane@example.com" autocomplete="email" />
         <div class="field-error-msg" id="emailError">Please enter a valid email address.</div>
       </div>
@@ -461,6 +470,39 @@ img{max-width:100%;display:block}
       </p>
     </div>
 
+  </div>
+</div>
+
+<!-- ═══════════════ AUTH MODAL (inline sign-in) ═══════════════ -->
+<div class="modal-overlay" id="authModal">
+  <div class="modal" style="max-width:420px;">
+    <button class="modal-close" id="authClose" type="button"><i data-lucide="x"></i></button>
+    <div style="text-align:center;margin-bottom:18px;">
+      <svg viewBox="0 0 60 74" style="width:48px;height:59px;margin:0 auto;display:block;"><path fill="#3a5a8c" d="M34.5 4.2c-8.1 0-14.7 6.6-14.7 14.7v3.4c0 1.6 1.3 2.9 2.9 2.9s2.9-1.3 2.9-2.9v-3.4c0-4.9 4-8.9 8.9-8.9 4.9 0 8.9 4 8.9 8.9 0 3-1.5 5.7-3.9 7.3-1.4.9-1.8 2.8-.9 4.2.9 1.4 2.8 1.8 4.2.9 4.3-2.7 6.9-7.4 6.9-12.4 0-8.1-6.6-14.7-14.7-14.7z"/><path fill="#00FFFF" d="M25.5 69.8c8.1 0 14.7-6.6 14.7-14.7v-3.4c0-1.6-1.3-2.9-2.9-2.9s-2.9 1.3-2.9 2.9v3.4c0 4.9-4 8.9-8.9 8.9-4.9 0-8.9-4-8.9-8.9 0-3 1.5-5.7 3.9-7.3 1.4-.9 1.8-2.8.9-4.2-.9-1.4-2.8-1.8-4.2-.9-4.3 2.7-6.9 7.4-6.9 12.4 0 8.1 6.6 14.7 14.7 14.7z"/></svg>
+    </div>
+    <h2 style="text-align:center;">Sign in to reserve</h2>
+    <p class="subtitle" style="text-align:center;">You need an account to hold your seats. Takes 5 seconds with Google.</p>
+
+    <button type="button" class="btn btn-google btn-block" id="googleBtn" style="margin-bottom:14px;">
+      <svg viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg>
+      Continue with Google
+    </button>
+
+    <div class="auth-divider">or</div>
+
+    <form id="authForm" novalidate>
+      <div class="field">
+        <label for="authEmail">Email</label>
+        <input type="email" id="authEmail" placeholder="you@example.com" autocomplete="email" required />
+      </div>
+      <div class="field">
+        <label for="authPassword">Password</label>
+        <input type="password" id="authPassword" placeholder="••••••••" autocomplete="current-password" required minlength="6" />
+      </div>
+      <button type="submit" class="btn btn-accent btn-block btn-lg" id="authSubmit" style="margin-top:6px;">
+        <i data-lucide="log-in"></i> Sign in &amp; Reserve
+      </button>
+    </form>
   </div>
 </div>
 
@@ -951,7 +993,6 @@ function renderTiers(){
 function selectTier(tierKey, silent){
   /* If tier changed and no modal is open, clear the pending order */
   if (selectedTier && selectedTier !== tierKey && !$("buyModal").classList.contains("open")){
-    console.log('[selectTier] tier changed — clearing pending order');
     pendingOrder = null;
   }
   selectedTier = tierKey;
@@ -1122,13 +1163,13 @@ function renderAssignmentSummary(){
 
 /* ═══════════════════════════════════════════════════════════════
    OPEN BUY MODAL
-   If a pendingOrder.bundle exists, jump to step 2 with it.
-   Otherwise create a new pendingOrder.
+   If not signed in → open inline auth modal (no page redirect).
+   After signing in, user is re-routed back here automatically.
    ═══════════════════════════════════════════════════════════════ */
 function openBuyModal(){
   if (!currentUser){
-    showToast("Please sign in to reserve tickets.", "error", 3500);
-    setTimeout(function(){ window.location.href = "index.html#signin"; }, 1200);
+    // Open the inline sign-in modal instead of redirecting away.
+    openAuthModal();
     return;
   }
   if (!selectedTier){
@@ -1200,6 +1241,30 @@ function closeBuyModal(){
   $("buyModal").classList.remove("open");
   document.body.style.overflow = "";
   if (countdownTimer){ clearInterval(countdownTimer); countdownTimer = null; }
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   INLINE AUTH MODAL
+   ═══════════════════════════════════════════════════════════════ */
+function openAuthModal(){
+  var m = $("authModal");
+  if (!m) return;
+  m.classList.add("open");
+  document.body.style.overflow = "hidden";
+  refreshIcons();
+  // Prefill email if we know it
+  setTimeout(function(){
+    var em = $("authEmail");
+    if (em && !em.value && currentUser && currentUser.email) em.value = currentUser.email;
+    if (em) try { em.focus(); } catch(e){}
+  }, 200);
+}
+
+function closeAuthModal(){
+  var m = $("authModal");
+  if (!m) return;
+  m.classList.remove("open");
+  document.body.style.overflow = "";
 }
 
 function setFieldError(id, errId, msg){
@@ -1519,7 +1584,6 @@ async function goToPaymentStep(){
     console.error('[renderPaymentStep] failed:', renderErr);
     try {
       $("refValue").textContent = bundle.reference || "—";
-      $("refInline").textContent = bundle.reference || "—";
       $("amountToPay").textContent = formatMoney(bundle.amount || 0);
     } catch(e2){}
   }
@@ -1532,7 +1596,6 @@ async function goToPaymentStep(){
 
 function renderPaymentStep(bundle){
   $("refValue").textContent = bundle.reference || "—";
-  $("refInline").textContent = bundle.reference || "—";
 
   /* ═══ Amount — recompute from price × qty if bundle.amount is missing/0 ═══ */
   var amount = (typeof bundle.amount === "number" && bundle.amount > 0) ? bundle.amount : 0;
@@ -1737,8 +1800,84 @@ document.addEventListener("DOMContentLoaded", function(){
     clearFieldError("guestEmailInput", "emailError");
   });
 
+  // ── AUTH MODAL WIRING ──
+  $("authClose").addEventListener("click", closeAuthModal);
+  $("authModal").addEventListener("click", function(e){
+    if (e.target === $("authModal")) closeAuthModal();
+  });
+
+  $("googleBtn").addEventListener("click", function(){
+    var btn = this;
+    btn.disabled = true;
+    var p = new firebase.auth.GoogleAuthProvider();
+    auth.signInWithPopup(p).then(function(){
+      closeAuthModal();
+      showToast("Signed in!", "success");
+      // Small delay to let auth state settle, then continue the buy flow
+      setTimeout(function(){
+        if (selectedTier) openBuyModal();
+      }, 250);
+    }).catch(function(err){
+      console.error('Google sign-in error:', err);
+      showToast(err.message || "Google sign-in failed", "error", 4000);
+    }).then(function(){
+      btn.disabled = false;
+    });
+  });
+
+  $("authForm").addEventListener("submit", function(e){
+    e.preventDefault();
+    var email = ($("authEmail").value || "").trim();
+    var pw = $("authPassword").value;
+    if (!email || !pw){
+      showToast("Please enter your email and password.", "error");
+      return;
+    }
+    if (pw.length < 6){
+      showToast("Password must be at least 6 characters.", "error");
+      return;
+    }
+    var btn = $("authSubmit");
+    var orig = btn.innerHTML;
+    btn.disabled = true;
+    btn.innerHTML = '<span class="spinner"></span> Signing in…';
+
+    auth.signInWithEmailAndPassword(email, pw).then(function(){
+      closeAuthModal();
+      showToast("Signed in!", "success");
+      setTimeout(function(){
+        if (selectedTier) openBuyModal();
+      }, 250);
+    }).catch(function(err){
+      console.error('Email sign-in error:', err);
+      // If the account doesn't exist, create it automatically
+      if (err && err.code === 'auth/user-not-found'){
+        auth.createUserWithEmailAndPassword(email, pw).then(function(){
+          closeAuthModal();
+          showToast("Account created!", "success");
+          setTimeout(function(){
+            if (selectedTier) openBuyModal();
+          }, 250);
+        }).catch(function(err2){
+          showToast(err2.message || "Could not create account.", "error", 4000);
+        }).then(function(){
+          btn.disabled = false;
+          btn.innerHTML = orig;
+        });
+        return;
+      }
+      showToast(err.message || "Sign-in failed.", "error", 4000);
+      btn.disabled = false;
+      btn.innerHTML = orig;
+    });
+  });
+
+  // Escape closes whichever modal is open
   document.addEventListener("keydown", function(e){
-    if (e.key === "Escape" && $("buyModal").classList.contains("open")) closeBuyModal();
+    if (e.key === "Escape"){
+      if ($("authModal").classList.contains("open")) closeAuthModal();
+      else if ($("buyModal").classList.contains("open")) closeBuyModal();
+    }
   });
 
   auth.onAuthStateChanged(function(user){
@@ -1755,4 +1894,4 @@ window.addEventListener("beforeunload", function(){
 })();
 </script>
 </body>
-                </html>
+                  </html>
