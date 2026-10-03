@@ -87,25 +87,57 @@ h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
 .btn-lg{padding:14px 26px;font-size:15px;min-height:48px;border-radius:var(--r-lg)}
 .btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important;box-shadow:none!important}
 
-/* ── HERO ── */
+/* ── HERO with carousel ── */
 .hero{
+  background:#0A0F14;
+  color:#fff;
+  padding:64px 0 72px;
+  position:relative;
+  overflow:hidden;
+  margin-bottom:40px;
+  min-height:520px;
+}
+@media (max-width:560px){.hero{padding:48px 0 60px;min-height:460px}}
+
+/* Carousel layer */
+.hero-bg{position:absolute;inset:0;z-index:0;overflow:hidden}
+.hero-slide{
+  position:absolute;
+  inset:0;
+  background-size:cover;
+  background-position:center;
+  background-repeat:no-repeat;
+  opacity:0;
+  transition:opacity 1.4s ease-in-out;
+  will-change:opacity;
+}
+.hero-slide.active{opacity:.28}
+
+/* Dark overlay on top of images */
+.hero-overlay{
+  position:absolute;
+  inset:0;
+  z-index:1;
   background:
     radial-gradient(circle at 78% 30%, rgba(0,229,229,.14), transparent 55%),
     radial-gradient(circle at 12% 82%, rgba(0,229,229,.08), transparent 45%),
-    linear-gradient(160deg, #0A0F14 0%, #0F172A 45%, #0A0F14 100%);
-  color: #fff;
-  padding: 64px 0 72px;
-  position: relative;
-  overflow: hidden;
-  margin-bottom: 40px;
+    linear-gradient(160deg, rgba(10,15,20,.85) 0%, rgba(15,23,42,.72) 45%, rgba(10,15,20,.92) 100%);
+  pointer-events:none;
 }
-.hero::after{content:'';position:absolute;inset:0;background-image:radial-gradient(circle at 1px 1px, rgba(255,255,255,.035) 1px, transparent 0);background-size:24px 24px;pointer-events:none}
-.hero-in{position:relative;z-index:1;max-width:var(--container);margin:0 auto;padding:0 20px}
-.hero-tag{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(0,229,229,.42);background:rgba(0,229,229,.1);color:var(--brand);font-size:11px;font-weight:900;letter-spacing:.11em;text-transform:uppercase;padding:7px 14px;border-radius:var(--r-full);margin-bottom:22px}
+.hero-overlay::after{
+  content:'';
+  position:absolute;
+  inset:0;
+  background-image:radial-gradient(circle at 1px 1px, rgba(255,255,255,.035) 1px, transparent 0);
+  background-size:24px 24px;
+}
+
+.hero-in{position:relative;z-index:2;max-width:var(--container);margin:0 auto;padding:0 20px}
+.hero-tag{display:inline-flex;align-items:center;gap:8px;border:1px solid rgba(0,229,229,.42);background:rgba(0,229,229,.1);color:var(--brand);font-size:11px;font-weight:900;letter-spacing:.11em;text-transform:uppercase;padding:7px 14px;border-radius:var(--r-full);margin-bottom:22px;backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px)}
 .hero-tag svg{width:13px;height:13px}
-.hero h1{font-size:clamp(2rem,5vw,3.4rem);font-weight:900;line-height:1.05;letter-spacing:-.03em;margin-bottom:16px;max-width:760px}
+.hero h1{font-size:clamp(2rem,5vw,3.4rem);font-weight:900;line-height:1.05;letter-spacing:-.03em;margin-bottom:16px;max-width:760px;text-shadow:0 4px 24px rgba(0,0,0,.5)}
 .hero h1 span{background:linear-gradient(135deg,#67E8F9,#22D3EE,#0891B2);-webkit-background-clip:text;background-clip:text;color:transparent}
-.hero p{color:rgba(255,255,255,.85);font-size:clamp(1rem,1.5vw,1.15rem);max-width:620px;line-height:1.6;margin-bottom:32px}
+.hero p{color:rgba(255,255,255,.88);font-size:clamp(1rem,1.5vw,1.15rem);max-width:620px;line-height:1.6;margin-bottom:32px;text-shadow:0 2px 12px rgba(0,0,0,.4)}
 
 .hero-ctas{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;max-width:900px}
 @media (max-width:720px){.hero-ctas{grid-template-columns:1fr;gap:10px}}
@@ -135,6 +167,30 @@ h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
 .hero-card.streams{--hc-accent:#00E5E5;--hc-bg:rgba(0,229,229,.14)}
 .hero-card.tickets{--hc-accent:#A78BFA;--hc-bg:rgba(167,139,250,.15)}
 
+/* Carousel dots */
+.hero-dots{
+  position:absolute;
+  bottom:24px;
+  left:50%;
+  transform:translateX(-50%);
+  display:flex;
+  gap:8px;
+  z-index:3;
+}
+.hero-dot{
+  width:28px;
+  height:4px;
+  border-radius:2px;
+  background:rgba(255,255,255,.25);
+  border:none;
+  padding:0;
+  cursor:pointer;
+  transition:all .3s var(--ease);
+}
+.hero-dot:hover{background:rgba(255,255,255,.5)}
+.hero-dot.active{background:var(--brand);width:44px;box-shadow:0 0 12px rgba(0,229,229,.6)}
+@media (max-width:560px){.hero-dots{bottom:16px}}
+
 /* ── SECTIONS ── */
 .section{padding:44px 0}
 .section + .section{padding-top:0}
@@ -150,7 +206,6 @@ h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
 /* ── CARD GRID ── */
 .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(260px,1fr));gap:16px}
 
-/* Card */
 .card-item{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden;box-shadow:var(--shadow-sm);transition:transform .25s var(--ease),box-shadow .25s var(--ease),border-color .25s;display:flex;flex-direction:column;cursor:pointer;text-align:left;font-family:inherit;padding:0;border-width:1px}
 .card-item:hover{transform:translateY(-4px);box-shadow:var(--shadow-lg);border-color:var(--brand)}
 .card-img{aspect-ratio:16/9;background:linear-gradient(135deg,#0A0F14,#1A2129);background-size:cover;background-position:center;position:relative;overflow:hidden}
@@ -158,7 +213,6 @@ h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
 .card-badge{position:absolute;top:10px;left:10px;background:var(--ink);color:#fff;padding:4px 10px;border-radius:6px;font-size:9.5px;font-weight:900;letter-spacing:.06em;text-transform:uppercase;z-index:2}
 .card-badge.live{background:#DC2626;display:inline-flex;align-items:center;gap:5px}
 .card-badge.live::before{content:'';width:6px;height:6px;border-radius:50%;background:#fff;animation:pulse 1.5s infinite}
-.card-badge.upcoming{background:rgba(10,15,20,.85);color:#67E8F9;border:1px solid rgba(103,232,249,.35)}
 @keyframes pulse{0%,100%{opacity:1}50%{opacity:.35}}
 .card-body{padding:14px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
 .card-title{font-size:15px;font-weight:800;line-height:1.3;color:var(--ink);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;letter-spacing:-.005em}
@@ -171,13 +225,11 @@ h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
 .card-foot .cta svg{width:12px;height:12px;transition:transform .2s}
 .card-item:hover .cta svg{transform:translateX(3px)}
 
-/* Empty state inside a section */
 .empty{grid-column:1/-1;text-align:center;padding:44px 20px;background:var(--surface);border:1px dashed var(--line-2);border-radius:var(--r-lg);color:var(--slate)}
 .empty svg{width:36px;height:36px;color:var(--line-2);margin:0 auto 10px}
 .empty p{font-size:13.5px;line-height:1.5;max-width:340px;margin:0 auto}
 .empty a{color:var(--brand-darker);font-weight:800}
 
-/* Loading skeleton */
 .skeleton{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-lg);overflow:hidden}
 .sk-img{aspect-ratio:16/9;background:linear-gradient(90deg,#EEF2F7,#E2E8F0,#EEF2F7);background-size:200% 100%;animation:sk 1.4s ease-in-out infinite}
 .sk-body{padding:16px;display:flex;flex-direction:column;gap:10px}
@@ -227,6 +279,12 @@ h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
 .toast.success{background:var(--success)}
 .toast.error{background:var(--danger)}
 .toast svg{width:16px;height:16px;flex-shrink:0}
+
+/* ── REDUCED MOTION ── */
+@media (prefers-reduced-motion: reduce){
+  .hero-slide{transition:none}
+  *{animation-duration:.01ms!important;transition-duration:.01ms!important}
+}
 </style>
 </head>
 <body>
@@ -269,6 +327,13 @@ h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
 
 <!-- HERO -->
 <section class="hero">
+  <div class="hero-bg" id="heroBg">
+    <div class="hero-slide" id="heroSlide1"></div>
+    <div class="hero-slide" id="heroSlide2"></div>
+    <div class="hero-slide" id="heroSlide3"></div>
+  </div>
+  <div class="hero-overlay"></div>
+
   <div class="hero-in">
     <span class="hero-tag"><i data-lucide="sparkles"></i> Watch · Book · Travel</span>
     <h1>Everything you need<br><span>in one platform.</span></h1>
@@ -287,13 +352,19 @@ h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
         <span class="hc-s">Live sports, concerts and shows. Free, no account needed.</span>
         <span class="hc-go">Watch now <i data-lucide="arrow-right"></i></span>
       </a>
-      <a href="my-cards.html" class="hero-card tickets">
-        <span class="hc-icon"><i data-lucide="ticket"></i></span>
-        <span class="hc-t">My Tickets</span>
-        <span class="hc-s">Your QR codes and seats, ready for the door.</span>
-        <span class="hc-go">Open <i data-lucide="arrow-right"></i></span>
+      <a href="trips.html" class="hero-card tickets">
+        <span class="hc-icon"><i data-lucide="bus"></i></span>
+        <span class="hc-t">Browse Trips</span>
+        <span class="hc-s">Long-distance journeys, tours, and transport across South Africa.</span>
+        <span class="hc-go">Explore <i data-lucide="arrow-right"></i></span>
       </a>
     </div>
+  </div>
+
+  <div class="hero-dots" id="heroDots" role="tablist" aria-label="Hero background">
+    <button type="button" class="hero-dot active" data-slide="0" aria-label="Trips"></button>
+    <button type="button" class="hero-dot" data-slide="1" aria-label="Events"></button>
+    <button type="button" class="hero-dot" data-slide="2" aria-label="Streams"></button>
   </div>
 </section>
 
@@ -362,20 +433,21 @@ h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
         <h4>Product</h4>
         <a href="events.html">All events</a>
         <a href="streams.html">All streams</a>
+        <a href="trips.html">All trips</a>
         <a href="my-cards.html">My tickets</a>
-        <a href="create-event.html">Create event</a>
       </div>
       <div class="footer-col">
-        <h4>Support</h4>
+        <h4>For organisers</h4>
+        <a href="create-event.html">Create an event</a>
+        <a href="my-events.html">My events</a>
+        <a href="scanner.html">Scanner</a>
+      </div>
+      <div class="footer-col">
+        <h4>Support & legal</h4>
         <a href="https://wa.me/message/HHM76GQU6PKGI1" target="_blank" rel="noopener">WhatsApp</a>
         <a href="mailto:customerservicesnovalink@gmail.com">Email</a>
-        <a href="tel:+27696835184">Phone</a>
-      </div>
-      <div class="footer-col">
-        <h4>Legal</h4>
         <a href="terms.html">Terms</a>
         <a href="privacy.html">Privacy</a>
-        <a href="popia.html">POPIA</a>
       </div>
     </div>
     <div class="footer-bottom">
@@ -460,6 +532,103 @@ function gradientFor(id){
 }
 
 /* ═══════════════════════════════════════════════════════════════
+   HERO CAROUSEL
+   Change these 3 URLs to swap the hero backgrounds.
+   Format: one per product area.
+   ═══════════════════════════════════════════════════════════════ */
+var HERO_IMAGES = [
+  // 1. Trips — bus / road
+  'https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?w=1600&q=70&auto=format&fit=crop',
+  // 2. Events — concert / stadium
+  'https://images.unsplash.com/photo-1493225457124-a3eb161ffa5f?w=1600&q=70&auto=format&fit=crop',
+  // 3. Streams — camera / broadcast
+  'https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?w=1600&q=70&auto=format&fit=crop'
+];
+
+var HERO_INTERVAL_MS = 6000;
+var heroIndex = 0;
+var heroTimer = null;
+var heroSlides = [];
+
+function initHeroCarousel(){
+  heroSlides = [
+    $('heroSlide1'),
+    $('heroSlide2'),
+    $('heroSlide3')
+  ];
+
+  // Set backgrounds
+  heroSlides.forEach(function(slide, i){
+    if(!slide) return;
+    var url = HERO_IMAGES[i];
+    if(!url) return;
+    slide.style.backgroundImage = "url('" + url + "')";
+  });
+
+  // First slide active immediately
+  if(heroSlides[0]) heroSlides[0].classList.add('active');
+
+  // Preload the other two after a beat so they don't block the first paint
+  setTimeout(function(){
+    HERO_IMAGES.slice(1).forEach(function(url){
+      var img = new Image();
+      img.src = url;
+    });
+  }, 1500);
+
+  // Only start auto-rotate if motion is allowed
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  if(!reduceMotion){
+    startHeroTimer();
+  }
+
+  // Wire up dots
+  document.querySelectorAll('.hero-dot').forEach(function(dot){
+    dot.addEventListener('click', function(){
+      var idx = parseInt(this.dataset.slide, 10);
+      if(!isNaN(idx)) goToHeroSlide(idx);
+    });
+  });
+
+  // Pause when tab is hidden
+  document.addEventListener('visibilitychange', function(){
+    if(document.hidden){
+      stopHeroTimer();
+    } else if(!reduceMotion){
+      startHeroTimer();
+    }
+  });
+}
+
+function startHeroTimer(){
+  stopHeroTimer();
+  heroTimer = setInterval(nextHeroSlide, HERO_INTERVAL_MS);
+}
+function stopHeroTimer(){
+  if(heroTimer){ clearInterval(heroTimer); heroTimer = null; }
+}
+function nextHeroSlide(){
+  var next = (heroIndex + 1) % heroSlides.length;
+  goToHeroSlide(next);
+}
+function goToHeroSlide(i){
+  if(i === heroIndex) return;
+  heroSlides.forEach(function(s, idx){
+    if(!s) return;
+    s.classList.toggle('active', idx === i);
+  });
+  document.querySelectorAll('.hero-dot').forEach(function(d, idx){
+    d.classList.toggle('active', idx === i);
+  });
+  heroIndex = i;
+  // Reset the timer so the user gets a full 6s on their chosen slide
+  if(heroTimer){
+    stopHeroTimer();
+    startHeroTimer();
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════
    SCHEMA HELPERS — inline
    ═══════════════════════════════════════════════════════════════ */
 var TIER_ORDER=['black','elite','gold','tier5','tier6','silver','cyan','standard'];
@@ -532,7 +701,6 @@ function loadEvents(){
         var d=doc.data()||{};d.id=doc.id;
         events.push(d);
       });
-      // Sort soonest first
       events.sort(function(a,b){
         return String(a.startDate||'').localeCompare(String(b.startDate||''));
       });
@@ -659,6 +827,8 @@ document.addEventListener('DOMContentLoaded',function(){
   $('year').textContent=new Date().getFullYear();
   refreshIcons();
 
+  initHeroCarousel();
+
   $('signinBtn').addEventListener('click',openSignin);
   $('signinClose').addEventListener('click',closeSignin);
   $('signinModal').addEventListener('click',function(e){if(e.target===this)closeSignin();});
@@ -706,4 +876,4 @@ document.addEventListener('DOMContentLoaded',function(){
 </script>
 
 </body>
-</html>
+  </html>
