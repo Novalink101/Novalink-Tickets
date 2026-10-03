@@ -22,6 +22,7 @@
   --success:#059669;--success-soft:#ECFDF5;--success-line:#A7F3D0;
   --warning:#D97706;--warning-soft:#FFFBEB;--warning-line:#FDE68A;
   --danger:#DC2626;--danger-soft:#FEF2F2;--danger-line:#FECACA;
+  --purple:#7C3AED;--purple-soft:#EDE9FE;--purple-line:#C4B5FD;
   --font:'Inter',system-ui,-apple-system,'Segoe UI',Roboto,sans-serif;
   --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,monospace;
   --r-sm:8px;--r-md:12px;--r-lg:16px;--r-xl:20px;--r-full:999px;
@@ -62,12 +63,14 @@ h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
 .page-head p{color:var(--slate);font-size:14px;max-width:640px}
 
 /* Stats */
-.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:12px;margin-bottom:20px}
-@media (max-width:560px){.stats{grid-template-columns:1fr;gap:8px}}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin-bottom:20px}
+@media (max-width:760px){.stats{grid-template-columns:repeat(2,1fr);gap:8px}}
+@media (max-width:400px){.stats{grid-template-columns:1fr}}
 .stat{background:var(--surface);border:1px solid var(--line);border-radius:var(--r-md);padding:14px 16px;position:relative;overflow:hidden}
 .stat::before{content:'';position:absolute;left:0;top:0;bottom:0;width:4px;background:var(--warning)}
 .stat.live::before{background:var(--success)}
 .stat.rejected::before{background:var(--danger)}
+.stat.all::before{background:var(--ink)}
 .stat .lbl{font-size:10.5px;font-weight:900;color:var(--slate);text-transform:uppercase;letter-spacing:.06em;margin-bottom:4px}
 .stat .val{font-size:24px;font-weight:900;color:var(--ink);font-family:var(--mono);letter-spacing:-.02em;line-height:1}
 .stat.live .val{color:var(--success)}
@@ -75,7 +78,7 @@ h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
 
 /* Filter tabs */
 .tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:20px}
-.tab{padding:8px 14px;border-radius:var(--r-full);font-size:12.5px;font-weight:800;background:var(--surface);border:1px solid var(--line);color:var(--ink-3);transition:all .22s var(--ease);display:inline-flex;align-items:center;gap:6px}
+.tab{padding:8px 14px;border-radius:var(--r-full);font-size:12.5px;font-weight:800;background:var(--surface);border:1px solid var(--line);color:var(--ink-3);transition:all .22s var(--ease);display:inline-flex;align-items:center;gap:6px;font-family:inherit}
 .tab:hover{border-color:var(--brand)}
 .tab.active{background:var(--ink);color:#fff;border-color:var(--ink)}
 .tab .cnt{font-size:10.5px;font-weight:900;background:rgba(0,0,0,.08);padding:1px 7px;border-radius:var(--r-full);font-family:var(--mono)}
@@ -127,9 +130,13 @@ h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
 .review-status.rejected{background:var(--danger-soft);color:#991B1B;border:1px solid var(--danger-line)}
 
 .review-meta{display:flex;gap:14px;flex-wrap:wrap;font-size:12px;color:var(--slate);font-weight:600}
-.review-meta span{display:inline-flex;align-items:center;gap:5px}
+.review-meta span{display:inline-flex;align-items:center;gap:5px;min-width:0}
 .review-meta svg{width:12px;height:12px;flex-shrink:0}
+.review-meta .owner{color:var(--purple);font-weight:800}
+.review-meta .owner svg{color:var(--purple)}
 
+/* Quick actions on the head row — visible always, don't need to expand */
+.review-quick{display:flex;gap:6px;flex-shrink:0;align-items:center}
 .review-toggle{
   width:34px;height:34px;border-radius:var(--r-sm);
   background:var(--surface-2);border:1px solid var(--line);
@@ -158,6 +165,11 @@ h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
   border-radius:var(--r-md);padding:12px 14px;
   white-space:pre-wrap;word-break:break-word;
 }
+
+/* Rejection note */
+.reject-note{display:flex;gap:10px;padding:12px 14px;background:var(--danger-soft);border:1px solid var(--danger-line);color:#991B1B;border-radius:var(--r-md);font-size:13px;line-height:1.55;margin-top:16px}
+.reject-note svg{width:16px;height:16px;flex-shrink:0;margin-top:2px}
+.reject-note strong{font-weight:800}
 
 /* KV grid */
 .kv-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:10px}
@@ -212,7 +224,7 @@ h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
 .review-actions .btn{flex:1;min-width:120px}
 
 /* Buttons */
-.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 18px;border-radius:var(--r-md);font-weight:800;font-size:13.5px;border:1px solid transparent;transition:all .22s var(--ease);white-space:nowrap;line-height:1;min-height:44px;text-decoration:none}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;padding:11px 18px;border-radius:var(--r-md);font-weight:800;font-size:13.5px;border:1px solid transparent;transition:all .22s var(--ease);white-space:nowrap;line-height:1;min-height:44px;text-decoration:none;font-family:inherit}
 .btn svg,.btn i{width:15px;height:15px;flex-shrink:0}
 .btn-primary{background:var(--ink);color:#fff}
 .btn-primary:hover:not(:disabled){background:var(--ink-2);transform:translateY(-1px);box-shadow:var(--shadow-md)}
@@ -224,6 +236,8 @@ h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
 .btn-success:hover:not(:disabled){background:var(--success);color:#fff;border-color:var(--success)}
 .btn-danger{background:var(--danger-soft);color:var(--danger);border-color:var(--danger-line)}
 .btn-danger:hover:not(:disabled){background:var(--danger);color:#fff;border-color:var(--danger)}
+.btn-purple{background:var(--purple-soft);color:#5B21B6;border-color:var(--purple-line);font-weight:900}
+.btn-purple:hover:not(:disabled){background:var(--purple);color:#fff;border-color:var(--purple)}
 .btn-sm{padding:8px 14px;font-size:12.5px;min-height:36px}
 .btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important;box-shadow:none!important}
 
@@ -246,8 +260,12 @@ h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
 .modal-close{position:absolute;top:12px;right:12px;width:36px;height:36px;border-radius:var(--r-md);background:var(--surface-2);border:1px solid var(--line);display:flex;align-items:center;justify-content:center;transition:all .22s var(--ease)}
 .modal-close:hover{background:var(--danger-soft);color:var(--danger);transform:rotate(90deg)}
 .modal-close svg{width:16px;height:16px}
-.modal h2{font-size:19px;font-weight:900;margin-bottom:6px;padding-right:40px}
+.modal h2{font-size:19px;font-weight:900;margin-bottom:6px;padding-right:40px;display:flex;align-items:center;gap:10px}
+.modal h2 svg{width:22px;height:22px}
 .modal .sub{font-size:13.5px;color:var(--slate);margin-bottom:18px;line-height:1.55}
+.modal textarea{width:100%;min-height:100px;padding:12px 14px;background:var(--surface-2);border:1px solid var(--line-2);border-radius:var(--r-md);font-size:14px;font-family:inherit;resize:vertical;line-height:1.55;margin-bottom:12px}
+.modal textarea:focus{outline:none;border-color:var(--brand);background:#fff;box-shadow:0 0 0 3px rgba(0,229,229,.15)}
+.modal .btn{width:100%;margin-top:8px}
 </style>
 </head>
 <body>
@@ -260,6 +278,9 @@ h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
       <span class="admin-tag">Admin</span>
     </a>
     <div class="nav-actions">
+      <a href="my-events.html" class="btn btn-ghost btn-sm" style="padding:8px 12px;min-height:34px">
+        <i data-lucide="layout-grid"></i> All events
+      </a>
       <a href="admin-payments.html" class="btn btn-ghost btn-sm" style="padding:8px 12px;min-height:34px">
         <i data-lucide="credit-card"></i> Payments
       </a>
@@ -320,7 +341,7 @@ h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
     <div class="page-head">
       <div>
         <h1>Event review</h1>
-        <p>Paste Yoco links per tier and quantity. Links save automatically as you type.</p>
+        <p>Approve, edit, or reject events. Paste Yoco links per tier and quantity — they save as you type.</p>
       </div>
     </div>
 
@@ -336,6 +357,10 @@ h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
       <div class="stat rejected">
         <div class="lbl">Rejected</div>
         <div class="val" id="statRejected">0</div>
+      </div>
+      <div class="stat all">
+        <div class="lbl">Total events</div>
+        <div class="val" id="statAll">0</div>
       </div>
     </div>
 
@@ -372,92 +397,20 @@ h1,h2,h3{line-height:1.15;font-weight:700;letter-spacing:-.01em}
 
 <div class="toast" id="toast"></div>
 
-<!-- ═══════════════════ SCRIPTS ═══════════════════ -->
-
-<script>
-/* ═══════════════════════════════════════════════════════════════
-   INLINE SCHEMA HELPERS
-   ═══════════════════════════════════════════════════════════════ */
-(function(){
-  'use strict';
-  var V2_KEYS=['black','gold','cyan','tier5','tier6'];
-  var V1_KEYS=['elite','standard'];
-  var TIER_ORDER=['black','elite','gold','tier5','tier6','silver','cyan','standard'];
-  var TIER_DEFAULT_NAMES={black:'Elite',elite:'Elite',gold:'VIP',silver:'Silver',cyan:'Standard',standard:'Standard',tier5:'Platinum',tier6:'Diamond'};
-  var TIER_DEFAULT_COLOURS={black:'#1a202c',elite:'#1a202c',gold:'#ecc94b',silver:'#cbd5e1',cyan:'#00FFFF',standard:'#00FFFF',tier5:'#a855f7',tier6:'#f472b6'};
-
-  function isObject(v){return v!==null&&typeof v==='object'&&!Array.isArray(v);}
-  function isNonEmptyString(v){return typeof v==='string'&&v.trim().length>0;}
-
-  function collectTierKeys(event){
-    if(!isObject(event))return [];
-    var seen={};
-    [event.tierActive,event.tierNames,event.tierColours,event.tierColors,event.tierPrices].forEach(function(src){
-      if(!isObject(src))return;
-      Object.keys(src).forEach(function(k){seen[k]=true;});
-    });
-    return Object.keys(seen);
-  }
-  function sortTierKeys(keys){
-    return keys.slice().sort(function(a,b){
-      var ia=TIER_ORDER.indexOf(a),ib=TIER_ORDER.indexOf(b);
-      if(ia===-1&&ib===-1)return a.localeCompare(b);
-      if(ia===-1)return 1;if(ib===-1)return -1;return ia-ib;
-    });
-  }
-  function getTierKeys(event){
-    var keys=collectTierKeys(event);
-    if(!keys.length)return ['elite','silver','standard'];
-    return sortTierKeys(keys);
-  }
-  function getActiveTierKeys(event){
-    var all=getTierKeys(event);
-    if(!all.length)return [];
-    var activeMap=event&&event.tierActive;
-    var count=event&&parseInt(event.activeTierCount,10);
-    if(isObject(activeMap)&&Object.keys(activeMap).length>0){
-      var filtered=all.filter(function(k){
-        var f=activeMap[k];
-        return f===true||f===1||f==='true'||f==='1'||f==='yes';
-      });
-      if(filtered.length>=2)return filtered;
-      return all.slice(0,Math.max(2,filtered.length||2));
-    }
-    if(!isNaN(count)&&count>=1){
-      if(count>all.length)count=all.length;
-      return all.slice(0,count);
-    }
-    return all;
-  }
-  function getTierName(event,key){
-    if(!key)return '';
-    if(event&&isObject(event.tierNames)&&isNonEmptyString(event.tierNames[key]))return event.tierNames[key];
-    if(TIER_DEFAULT_NAMES[key])return TIER_DEFAULT_NAMES[key];
-    return String(key).charAt(0).toUpperCase()+String(key).slice(1);
-  }
-  function getTierColour(event,key){
-    if(!key)return TIER_DEFAULT_COLOURS.cyan;
-    var map=(event&&isObject(event.tierColours))?event.tierColours:(event&&isObject(event.tierColors))?event.tierColors:null;
-    if(map&&isNonEmptyString(map[key]))return map[key];
-    if(TIER_DEFAULT_COLOURS[key])return TIER_DEFAULT_COLOURS[key];
-    return TIER_DEFAULT_COLOURS.cyan;
-  }
-  function getTierPrice(event,key){
-    if(!key||!event)return 0;
-    var v;
-    if(isObject(event.tierPrices)&&event.tierPrices[key]!==undefined)v=parseFloat(event.tierPrices[key]);
-    if(isNaN(v)||v<0)return 0;
-    return Math.round(v*100)/100;
-  }
-
-  window.NovalinkSchema={
-    getActiveTierKeys:getActiveTierKeys,
-    getTierName:getTierName,
-    getTierColour:getTierColour,
-    getTierPrice:getTierPrice
-  };
-})();
-</script>
+<!-- REJECT MODAL -->
+<div class="modal-bg" id="rejectModal">
+  <div class="modal">
+    <button class="modal-close" id="rejectClose" aria-label="Close"><i data-lucide="x"></i></button>
+    <h2><i data-lucide="x-circle" style="color:var(--danger)"></i> Reject event?</h2>
+    <p class="sub" id="rejectModalSub">This event will be marked rejected. The host can fix issues and resubmit.</p>
+    <label style="display:block;font-size:11px;font-weight:900;color:var(--ink-3);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px">Reason (optional — visible to admin only)</label>
+    <textarea id="rejectReason" placeholder="e.g., Duplicate event, missing venue details, inappropriate description…"></textarea>
+    <button class="btn btn-danger" id="rejectConfirmBtn" type="button">
+      <i data-lucide="x"></i> Reject event
+    </button>
+    <button class="btn btn-ghost" id="rejectCancelBtn" type="button">Cancel</button>
+  </div>
+</div>
 
 <script>
 (function(){
@@ -536,9 +489,7 @@ function isAdmin(user){
 }
 
 /* ═══════════════════════════════════════════════════════════════
-   YOCO URL VALIDATION
-   Accepts: pay.yoco.com, checkout.yoco.com, or any https URL
-   that looks like a payment link. Rejects typos like "hhttps://"
+   YOCO URL HELPERS
    ═══════════════════════════════════════════════════════════════ */
 function normalizeYocoUrl(raw){
   var url=String(raw||'').trim();
@@ -554,12 +505,88 @@ function isValidYocoUrl(url){
     var u=new URL(url);
     if(u.protocol!=='https:'&&u.protocol!=='http:')return false;
     var host=u.hostname.toLowerCase();
-    // Must be yoco.com or have /pay/ /checkout/ in path
     if(host.indexOf('yoco.com')!==-1)return true;
     if(u.pathname.indexOf('/pay')!==-1)return true;
     if(u.pathname.indexOf('/checkout')!==-1)return true;
     return false;
   }catch(e){return false;}
+}
+
+/* ═══════════════════════════════════════════════════════════════
+   SCHEMA HELPERS (defensive tier reads)
+   ═══════════════════════════════════════════════════════════════ */
+var TIER_ORDER=['black','elite','gold','tier5','tier6','silver','cyan','standard'];
+var TIER_DEFAULT_NAMES={black:'Elite',elite:'Elite',gold:'VIP',silver:'Silver',cyan:'Standard',standard:'Standard',tier5:'Platinum',tier6:'Diamond'};
+var TIER_DEFAULT_COLOURS={black:'#1a202c',elite:'#1a202c',gold:'#ecc94b',silver:'#cbd5e1',cyan:'#00FFFF',standard:'#00FFFF',tier5:'#a855f7',tier6:'#f472b6'};
+function isObject(v){return v!==null&&typeof v==='object'&&!Array.isArray(v);}
+function isNonEmptyString(v){return typeof v==='string'&&v.trim().length>0;}
+
+function collectTierKeys(event){
+  if(!isObject(event))return [];
+  var seen={};
+  [event.tierActive,event.tierNames,event.tierColours,event.tierColors,event.tierPrices].forEach(function(src){
+    if(!isObject(src))return;
+    Object.keys(src).forEach(function(k){seen[k]=true;});
+  });
+  return Object.keys(seen);
+}
+function sortTierKeys(keys){
+  return keys.slice().sort(function(a,b){
+    var ia=TIER_ORDER.indexOf(a),ib=TIER_ORDER.indexOf(b);
+    if(ia===-1&&ib===-1)return a.localeCompare(b);
+    if(ia===-1)return 1;if(ib===-1)return -1;return ia-ib;
+  });
+}
+function getActiveTierKeys(event){
+  var keys=collectTierKeys(event);
+  if(!keys.length)return ['elite','silver','standard'];
+  var sorted=sortTierKeys(keys);
+
+  var activeMap=event&&event.tierActive;
+  var count=event&&parseInt(event.activeTierCount,10);
+
+  if(isObject(activeMap)&&Object.keys(activeMap).length>0){
+    var filtered=sorted.filter(function(k){
+      var f=activeMap[k];
+      return f===true||f===1||f==='true'||f==='1'||f==='yes';
+    });
+    if(filtered.length>=1)return filtered;
+    return sorted.slice(0,Math.max(1,filtered.length||1));
+  }
+  if(!isNaN(count)&&count>=1){
+    if(count>sorted.length)count=sorted.length;
+    return sorted.slice(0,count);
+  }
+  return sorted;
+}
+function getTierName(event,key){
+  if(!key)return '';
+  if(event&&isObject(event.tierNames)&&isNonEmptyString(event.tierNames[key]))return event.tierNames[key];
+  if(event&&Array.isArray(event.tiers)){
+    var t=event.tiers.find(function(x){return x&&(x.key===key||x.id===key);});
+    if(t&&isNonEmptyString(t.name))return t.name;
+  }
+  if(TIER_DEFAULT_NAMES[key])return TIER_DEFAULT_NAMES[key];
+  return String(key).charAt(0).toUpperCase()+String(key).slice(1);
+}
+function getTierColour(event,key){
+  if(!key)return TIER_DEFAULT_COLOURS.cyan;
+  var map=(event&&isObject(event.tierColours))?event.tierColours:(event&&isObject(event.tierColors))?event.tierColors:null;
+  if(map&&isNonEmptyString(map[key]))return map[key];
+  if(event&&Array.isArray(event.tiers)){
+    var t=event.tiers.find(function(x){return x&&(x.key===key||x.id===key);});
+    if(t&&isNonEmptyString(t.colour))return t.colour;
+    if(t&&isNonEmptyString(t.color))return t.color;
+  }
+  if(TIER_DEFAULT_COLOURS[key])return TIER_DEFAULT_COLOURS[key];
+  return TIER_DEFAULT_COLOURS.cyan;
+}
+function getTierPrice(event,key){
+  if(!key||!event)return 0;
+  var v;
+  if(isObject(event.tierPrices)&&event.tierPrices[key]!==undefined)v=parseFloat(event.tierPrices[key]);
+  if(isNaN(v)||v<0)return 0;
+  return Math.round(v*100)/100;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -570,7 +597,7 @@ var allEvents=[];
 var activeFilter='pending_review';
 var openIds={};
 var unsub=null;
-var autoSaveTimers={};
+var rejectTargetId=null;
 
 /* ═══════════════════════════════════════════════════════════════
    STATES
@@ -618,7 +645,7 @@ function attachListener(){
         allEvents.push(d);
       });
 
-      // Sort: pending first, then live, then rejected, then by created time
+      /* Sort: pending first, then live, then rejected, then by created time */
       var order={pending_review:0,pending:0,live:1,rejected:2};
       allEvents.sort(function(a,b){
         var oa=order[a.status]!=null?order[a.status]:3;
@@ -641,8 +668,9 @@ function attachListener(){
    STATS
    ═══════════════════════════════════════════════════════════════ */
 function renderStats(){
-  var counts={pending:0,live:0,rejected:0};
+  var counts={pending:0,live:0,rejected:0,all:0};
   allEvents.forEach(function(ev){
+    counts.all++;
     if(ev.status==='pending_review'||ev.status==='pending')counts.pending++;
     else if(ev.status==='live')counts.live++;
     else if(ev.status==='rejected')counts.rejected++;
@@ -650,10 +678,11 @@ function renderStats(){
   $('statPending').textContent=counts.pending;
   $('statLive').textContent=counts.live;
   $('statRejected').textContent=counts.rejected;
+  $('statAll').textContent=counts.all;
   $('cntPending').textContent=counts.pending;
   $('cntLive').textContent=counts.live;
   $('cntRejected').textContent=counts.rejected;
-  $('cntAll').textContent=allEvents.length;
+  $('cntAll').textContent=counts.all;
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -687,6 +716,9 @@ function renderList(){
   refreshIcons();
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   BUILD CARD
+   ═══════════════════════════════════════════════════════════════ */
 function buildCard(ev){
   var card=document.createElement('div');
   card.className='review'+(openIds[ev.id]?' open':'');
@@ -712,6 +744,23 @@ function buildCard(ev){
 
   var venue=[ev.venueName,ev.city].filter(Boolean).join(', ')||'Venue TBA';
   var dateText=formatDate(ev.startDate,ev.startTime);
+  var ownerName=ev.hostName||ev.ownerName||ev.ownerEmail||'Unknown';
+  var isOwnerLineImportant=(statusCls==='pending'||statusCls==='rejected');
+
+  /* Quick action buttons — always visible */
+  var quickHTML='';
+
+  /* Edit — always available (admin can edit anyone's event) */
+  quickHTML+=
+    '<a href="create-event.html?edit='+encodeURIComponent(ev.id)+'" class="btn btn-purple btn-sm" title="Edit event" onclick="event.stopPropagation()">'+
+      '<i data-lucide="pencil"></i>'+
+    '</a>';
+
+  /* Quick delete */
+  quickHTML+=
+    '<button type="button" class="btn btn-danger btn-sm quick-delete" data-id="'+esc(ev.id)+'" title="Delete event">'+
+      '<i data-lucide="trash-2"></i>'+
+    '</button>';
 
   card.innerHTML=
     '<div class="review-head">'+
@@ -724,18 +773,31 @@ function buildCard(ev){
         '<div class="review-meta">'+
           '<span><i data-lucide="calendar"></i> '+esc(dateText)+'</span>'+
           '<span><i data-lucide="map-pin"></i> '+esc(venue)+'</span>'+
-          '<span><i data-lucide="user"></i> '+esc(ev.hostName||ev.ownerName||'—')+'</span>'+
+          (isOwnerLineImportant?'<span class="owner"><i data-lucide="user"></i> '+esc(ownerName)+'</span>':'')+
           '<span><i data-lucide="clock"></i> '+esc(timeAgo(ev.createdAt))+'</span>'+
         '</div>'+
       '</div>'+
-      '<div class="review-toggle"><i data-lucide="chevron-down"></i></div>'+
+      '<div class="review-quick">'+
+        quickHTML +
+        '<div class="review-toggle"><i data-lucide="chevron-down"></i></div>'+
+      '</div>'+
     '</div>'+
     '<div class="review-detail">'+buildDetail(ev)+'</div>';
 
+  /* Toggle expand on head click */
   card.querySelector('.review-head').addEventListener('click',function(e){
-    if(e.target.closest('button'))return;
+    if(e.target.closest('button')||e.target.closest('a'))return;
     toggle(ev.id);
   });
+
+  /* Wire quick-delete */
+  var quickDel=card.querySelector('.quick-delete');
+  if(quickDel){
+    quickDel.addEventListener('click',function(e){
+      e.stopPropagation();
+      confirmDelete(ev);
+    });
+  }
 
   wireDetail(card,ev);
   return card;
@@ -750,10 +812,22 @@ function toggle(id){
   }
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   DETAIL BODY
+   ═══════════════════════════════════════════════════════════════ */
 function buildDetail(ev){
   var html='';
 
-  // Description
+  /* Rejection reason if rejected */
+  if(ev.status==='rejected'&&ev.rejectionReason){
+    html+=
+      '<div class="reject-note">'+
+        '<i data-lucide="alert-circle"></i>'+
+        '<div><strong>Previous rejection reason:</strong><br>'+esc(ev.rejectionReason)+'</div>'+
+      '</div>';
+  }
+
+  /* Description */
   if(ev.eventDescription&&ev.eventDescription.trim()){
     html+=
       '<div class="detail-section">'+
@@ -762,13 +836,13 @@ function buildDetail(ev){
       '</div>';
   }
 
-  // Event details
+  /* Event details */
   var kvs=[];
+  kvs.push({k:'Owner',v:ev.ownerEmail||ev.ownerName||'—'});
   if(ev.hostName)kvs.push({k:'Host',v:ev.hostName});
   if(ev.hostEmail)kvs.push({k:'Host email',v:ev.hostEmail});
-  if(ev.ownerEmail&&ev.ownerEmail!==ev.hostEmail)kvs.push({k:'Owner email',v:ev.ownerEmail});
   if(ev.eventType)kvs.push({k:'Type',v:ev.eventType.charAt(0).toUpperCase()+ev.eventType.slice(1)});
-  if(ev.cost!==undefined)kvs.push({k:'Base price',v:money(ev.cost)});
+  if(ev.cost!==undefined&&ev.cost!==null)kvs.push({k:'Base price',v:money(ev.cost)});
   if(ev.venueName)kvs.push({k:'Venue',v:ev.venueName});
   if(ev.venueAddress)kvs.push({k:'Address',v:ev.venueAddress});
   if(ev.city)kvs.push({k:'City',v:ev.city});
@@ -787,27 +861,39 @@ function buildDetail(ev){
       '</div>';
   }
 
-  // Yoco payment links
-  html+=
-    '<div class="detail-section">'+
-      '<h4><i data-lucide="tag"></i> Yoco payment links'+
-        '<span class="save-indicator" id="saveInd-'+esc(ev.id)+'"></span>'+
-      '</h4>'+
-      buildPaymentBlocks(ev)+
-      '<p class="link-note">'+
-        'Paste a Yoco link for each quantity you want to sell. '+
-        '<strong>Links save automatically when you tab out or stop typing.</strong> '+
-        'The buyer\'s chosen quantity picks the right link. Max 5 tickets per purchase.'+
-      '</p>'+
-    '</div>';
+  /* Yoco payment links — only relevant for pending and live */
+  if(ev.status==='pending_review'||ev.status==='pending'||ev.status==='live'){
+    html+=
+      '<div class="detail-section">'+
+        '<h4><i data-lucide="tag"></i> Yoco payment links'+
+          '<span class="save-indicator" id="saveInd-'+esc(ev.id)+'"></span>'+
+        '</h4>'+
+        buildPaymentBlocks(ev)+
+        '<p class="link-note">'+
+          'Paste a Yoco link for each quantity you want to sell. '+
+          '<strong>Links save automatically when you tab out or stop typing.</strong> '+
+          'The buyer\'s chosen quantity picks the right link. Max 5 tickets per purchase.'+
+        '</p>'+
+      '</div>';
+  }
 
-  // Actions
+  /* Actions */
   html+='<div class="review-actions">';
+
+  /* Preview — always */
+  html+=
+    '<a href="view-event.html?id='+encodeURIComponent(ev.id)+'" target="_blank" rel="noopener" class="btn btn-ghost">'+
+      '<i data-lucide="external-link"></i> Preview'+
+    '</a>';
+
+  /* Edit — always */
+  html+=
+    '<a href="create-event.html?edit='+encodeURIComponent(ev.id)+'" class="btn btn-purple">'+
+      '<i data-lucide="pencil"></i> Edit event'+
+    '</a>';
+
   if(ev.status==='pending_review'||ev.status==='pending'){
     html+=
-      '<a href="view-event.html?id='+encodeURIComponent(ev.id)+'" target="_blank" rel="noopener" class="btn btn-ghost">'+
-        '<i data-lucide="external-link"></i> Preview'+
-      '</a>'+
       '<button type="button" class="btn btn-danger reject-btn" data-id="'+esc(ev.id)+'">'+
         '<i data-lucide="x"></i> Reject'+
       '</button>'+
@@ -816,10 +902,7 @@ function buildDetail(ev){
       '</button>';
   }else if(ev.status==='live'){
     html+=
-      '<a href="view-event.html?id='+encodeURIComponent(ev.id)+'" target="_blank" rel="noopener" class="btn btn-ghost">'+
-        '<i data-lucide="external-link"></i> Open public page'+
-      '</a>'+
-      '<button type="button" class="btn btn-ghost reject-btn" data-id="'+esc(ev.id)+'">'+
+      '<button type="button" class="btn btn-danger reject-btn" data-id="'+esc(ev.id)+'">'+
         '<i data-lucide="pause-circle"></i> Take offline'+
       '</button>';
   }else if(ev.status==='rejected'){
@@ -828,17 +911,22 @@ function buildDetail(ev){
         '<i data-lucide="rotate-ccw"></i> Restore to review'+
       '</button>';
   }
+
   html+=
     '<button type="button" class="btn btn-danger delete-btn" data-id="'+esc(ev.id)+'">'+
       '<i data-lucide="trash-2"></i> Delete'+
     '</button>';
+
   html+='</div>';
 
   return html;
 }
 
+/* ═══════════════════════════════════════════════════════════════
+   PAYMENT BLOCKS
+   ═══════════════════════════════════════════════════════════════ */
 function buildPaymentBlocks(ev){
-  var tiers=NovalinkSchema.getActiveTierKeys(ev);
+  var tiers=getActiveTierKeys(ev);
   var links=normalizeLinks(ev.paymentLinks);
 
   if(!tiers.length){
@@ -847,9 +935,9 @@ function buildPaymentBlocks(ev){
 
   var html='';
   tiers.forEach(function(k){
-    var name=NovalinkSchema.getTierName(ev,k);
-    var colour=NovalinkSchema.getTierColour(ev,k);
-    var price=NovalinkSchema.getTierPrice(ev,k);
+    var name=getTierName(ev,k);
+    var colour=getTierColour(ev,k);
+    var price=getTierPrice(ev,k);
     var priceLabel=price>0?money(price)+' / ticket':'Free tier';
 
     var fields='';
@@ -901,7 +989,7 @@ function normalizeLinks(raw){
    AUTO-SAVE + INTERACTIONS
    ═══════════════════════════════════════════════════════════════ */
 function wireDetail(card,ev){
-  // Yoco link inputs
+  /* Yoco link inputs */
   card.querySelectorAll('.yoco-input').forEach(function(inp){
     var saveTimer=null;
 
@@ -926,7 +1014,6 @@ function wireDetail(card,ev){
     });
 
     inp.addEventListener('blur',function(){
-      // Normalize on blur
       if(this.value.trim()){
         var normalized=normalizeYocoUrl(this.value);
         if(normalized!==this.value)this.value=normalized;
@@ -940,7 +1027,7 @@ function wireDetail(card,ev){
     });
   });
 
-  // Approve
+  /* Approve */
   var ap=card.querySelector('.approve-btn');
   if(ap){
     ap.addEventListener('click',function(e){
@@ -949,25 +1036,16 @@ function wireDetail(card,ev){
     });
   }
 
-  // Reject
+  /* Reject */
   var rj=card.querySelector('.reject-btn');
   if(rj){
     rj.addEventListener('click',function(e){
       e.stopPropagation();
-      var isLive=ev.status==='live';
-      var msg=isLive?'Take this event offline?':'Reject this event?';
-      var reason='';
-      if(!isLive){
-        reason=prompt('Reason for rejection (optional):')||'';
-        if(reason===null)return;
-      }
-      var confirmed=confirm(msg+'\n\n"'+(ev.eventName||'Untitled')+'"'+(isLive?' will be hidden from the public site.':' will be marked rejected.'));
-      if(!confirmed)return;
-      rejectEvent(ev.id,reason,card);
+      openRejectModal(ev);
     });
   }
 
-  // Restore
+  /* Restore */
   var rs=card.querySelector('.restore-btn');
   if(rs){
     rs.addEventListener('click',function(e){
@@ -977,13 +1055,12 @@ function wireDetail(card,ev){
     });
   }
 
-  // Delete
+  /* Delete (from detail row) */
   var dl=card.querySelector('.delete-btn');
   if(dl){
     dl.addEventListener('click',function(e){
       e.stopPropagation();
-      if(!confirm('DELETE "'+(ev.eventName||'Untitled')+'" permanently?\n\nThis cannot be undone.'))return;
-      deleteEvent(ev.id,card);
+      confirmDelete(ev);
     });
   }
 }
@@ -1033,9 +1110,7 @@ function approveEvent(eventId,card){
   if(!ev)return;
 
   var links=collectLinks(card);
-
-  // Warn if any tier is missing qty=1
-  var tiers=NovalinkSchema.getActiveTierKeys(ev);
+  var tiers=getActiveTierKeys(ev);
   var missing=tiers.filter(function(k){return !links[k]||!links[k]['1'];});
 
   var go=function(){
@@ -1059,7 +1134,7 @@ function approveEvent(eventId,card){
   };
 
   if(missing.length){
-    var names=missing.map(function(k){return NovalinkSchema.getTierName(ev,k);}).join(', ');
+    var names=missing.map(function(k){return getTierName(ev,k);}).join(', ');
     if(confirm('These tiers have no payment link for 1 ticket:\n\n'+names+'\n\nBuyers will see "contact us to pay". Approve anyway?')){
       go();
     }
@@ -1070,12 +1145,32 @@ function approveEvent(eventId,card){
   }
 }
 
-function rejectEvent(eventId,reason,card){
-  var btn=card.querySelector('.reject-btn');
-  var orig=btn?btn.innerHTML:'';
-  if(btn){btn.disabled=true;btn.innerHTML='<span class="spinner" style="width:14px;height:14px;border-width:2px"></span>';}
+function openRejectModal(ev){
+  rejectTargetId=ev.id;
+  var isLive=ev.status==='live';
+  $('rejectModalSub').textContent=isLive
+    ? 'This event will be taken offline. Buyers can no longer purchase tickets.'
+    : 'This event will be marked rejected. The host can fix issues and resubmit.';
+  $('rejectReason').value='';
+  $('rejectModal').classList.add('open');
+  document.body.style.overflow='hidden';
+  refreshIcons();
+  setTimeout(function(){$('rejectReason').focus();},100);
+}
+function closeRejectModal(){
+  $('rejectModal').classList.remove('open');
+  document.body.style.overflow='';
+  rejectTargetId=null;
+}
+function confirmReject(){
+  if(!rejectTargetId)return;
+  var reason=$('rejectReason').value.trim();
+  var id=rejectTargetId;
+  var btn=$('rejectConfirmBtn');
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner" style="width:14px;height:14px;border-width:2px"></span> Rejecting…';
 
-  db.collection(EVENTS).doc(eventId).update({
+  db.collection(EVENTS).doc(id).update({
     status:'rejected',
     rejectionReason:reason||'',
     rejectedAt:firebase.firestore.FieldValue.serverTimestamp(),
@@ -1084,10 +1179,13 @@ function rejectEvent(eventId,reason,card){
     updatedAt:firebase.firestore.FieldValue.serverTimestamp()
   }).then(function(){
     showToast('Event rejected.','success',3000);
+    closeRejectModal();
   }).catch(function(err){
     console.error('[reject]',err);
     showToast('Could not reject: '+(err.message||'unknown'),'error',5000);
-    if(btn){btn.disabled=false;btn.innerHTML=orig;refreshIcons();}
+    btn.disabled=false;
+    btn.innerHTML='<i data-lucide="x"></i> Reject event';
+    refreshIcons();
   });
 }
 
@@ -1112,11 +1210,16 @@ function restoreEvent(eventId,card){
   });
 }
 
-function deleteEvent(eventId,card){
-  var btn=card.querySelector('.delete-btn');
-  var orig=btn?btn.innerHTML:'';
-  if(btn){btn.disabled=true;btn.innerHTML='<span class="spinner" style="width:14px;height:14px;border-width:2px"></span> Deleting…';}
+function confirmDelete(ev){
+  var msg='DELETE "'+(ev.eventName||'Untitled')+'" permanently?\n\nThis cannot be undone.';
+  if(ev.status==='live'){
+    msg+='\n\n⚠ This event is LIVE. Any tickets already sold will become orphaned.';
+  }
+  if(!confirm(msg))return;
+  deleteEvent(ev.id);
+}
 
+function deleteEvent(eventId){
   db.collection(EVENTS).doc(eventId).delete()
     .then(function(){
       showToast('Event deleted.','success',3000);
@@ -1124,7 +1227,6 @@ function deleteEvent(eventId,card){
     .catch(function(err){
       console.error('[delete]',err);
       showToast('Could not delete: '+(err.message||'unknown'),'error',5000);
-      if(btn){btn.disabled=false;btn.innerHTML=orig;refreshIcons();}
     });
 }
 
@@ -1152,8 +1254,18 @@ document.addEventListener('DOMContentLoaded',function(){
   showLoading();
   wireTabs();
 
+  /* Reject modal */
+  $('rejectClose').addEventListener('click',closeRejectModal);
+  $('rejectCancelBtn').addEventListener('click',closeRejectModal);
+  $('rejectModal').addEventListener('click',function(e){if(e.target===this)closeRejectModal();});
+  $('rejectConfirmBtn').addEventListener('click',confirmReject);
+
   $('retryBtn').addEventListener('click',function(){
     if(isAdmin(currentUser))attachListener();
+  });
+
+  document.addEventListener('keydown',function(e){
+    if(e.key==='Escape')closeRejectModal();
   });
 
   auth.onAuthStateChanged(function(user){
@@ -1166,10 +1278,15 @@ document.addEventListener('DOMContentLoaded',function(){
   window.addEventListener('beforeunload',function(){
     if(unsub){try{unsub();}catch(e){}}
   });
+
+  /* Refresh when tab regains focus (admin might have changed state in another tab) */
+  document.addEventListener('visibilitychange',function(){
+    if(!document.hidden&&currentUser&&isAdmin(currentUser))return;
+  });
 });
 
 })();
 </script>
 
 </body>
-    </html>
+  </html>
