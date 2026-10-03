@@ -126,6 +126,7 @@ main{flex:1;padding:40px 0 64px}
 .tk-qr-wrap{background:#fff;border-radius:var(--r-md);padding:14px;display:flex;flex-direction:column;align-items:center;gap:10px}
 .tk-qr{width:180px;height:180px;max-width:100%;display:flex;align-items:center;justify-content:center}
 .tk-qr canvas,.tk-qr img{width:100%!important;height:100%!important;border-radius:6px}
+.tk-qr-fallback{text-align:center;color:var(--slate);font-size:12px;padding:20px;line-height:1.5}
 .tk-qr-hint{font-size:11px;color:#4a5568;font-weight:700;text-align:center}
 
 .tk-barcode{width:100%;height:40px;background:repeating-linear-gradient(to right,#000 0,#000 2px,#fff 2px,#fff 4px,#000 4px,#000 6px,#fff 6px,#fff 10px,#000 10px,#000 12px,#fff 12px,#fff 16px)}
@@ -311,15 +312,21 @@ function formatEventDate(dateStr,timeStr){
   }catch(e){return dateStr;}
 }
 
-/* Schema helpers */
-var TIER_ORDER=['black','elite','gold','tier5','tier6','silver','cyan','standard'];
+/* ═══════════════════════════════════════════════════════════════
+   SCHEMA HELPERS
+   ═══════════════════════════════════════════════════════════════ */
 var TIER_DEFAULT_NAMES={black:'Elite',elite:'Elite',gold:'VIP',silver:'Silver',cyan:'Standard',standard:'Standard',tier5:'Platinum',tier6:'Diamond'};
 var TIER_DEFAULT_COLOURS={black:'#1a202c',elite:'#1a202c',gold:'#ecc94b',silver:'#cbd5e1',cyan:'#00FFFF',standard:'#00FFFF',tier5:'#a855f7',tier6:'#f472b6'};
 function isObject(v){return v!==null&&typeof v==='object'&&!Array.isArray(v);}
 function isNonEmptyString(v){return typeof v==='string'&&v.trim().length>0;}
+
 function getTierName(ev,key){
   if(!key)return '';
   if(ev&&isObject(ev.tierNames)&&isNonEmptyString(ev.tierNames[key]))return ev.tierNames[key];
+  if(ev&&Array.isArray(ev.tiers)){
+    var t=ev.tiers.find(function(x){return x&&(x.key===key||x.id===key);});
+    if(t&&isNonEmptyString(t.name))return t.name;
+  }
   if(TIER_DEFAULT_NAMES[key])return TIER_DEFAULT_NAMES[key];
   return String(key).charAt(0).toUpperCase()+String(key).slice(1);
 }
@@ -327,12 +334,24 @@ function getTierColour(ev,key){
   if(!key)return TIER_DEFAULT_COLOURS.cyan;
   var map=(ev&&isObject(ev.tierColours))?ev.tierColours:(ev&&isObject(ev.tierColors))?ev.tierColors:null;
   if(map&&isNonEmptyString(map[key]))return map[key];
+  if(ev&&Array.isArray(ev.tiers)){
+    var t=ev.tiers.find(function(x){return x&&(x.key===key||x.id===key);});
+    if(t&&isNonEmptyString(t.colour))return t.colour;
+    if(t&&isNonEmptyString(t.color))return t.color;
+  }
   if(TIER_DEFAULT_COLOURS[key])return TIER_DEFAULT_COLOURS[key];
   return TIER_DEFAULT_COLOURS.cyan;
 }
+
+/* ═══════════════════════════════════════════════════════════════
+   formatSeat — prefers the saved full label
+   ═══════════════════════════════════════════════════════════════ */
 function formatSeat(t){
   if(!t)return '';
   if(t.generalAdmission)return 'General admission';
+
+  if(isNonEmptyString(t.seat))return t.seat;
+
   var parts=[];
   if(isNonEmptyString(t.seatBlock))parts.push(t.seatBlock);
   if(isNonEmptyString(t.seatSection)&&t.seatSection!==t.seatBlock)parts.push(t.seatSection);
@@ -340,10 +359,10 @@ function formatSeat(t){
   if(isNonEmptyString(t.seatRow))parts.push('Row '+t.seatRow);
   if(t.seatNumber)parts.push('Seat '+t.seatNumber);
   if(parts.length)return parts.join(' · ');
-  return t.seat||'';
+  return '';
 }
 
-/* Colour palette */
+/* Palette helpers */
 function hexToRgb(hex){
   var c=String(hex||'').replace('#','');
   if(c.length===3)c=c[0]+c[0]+c[1]+c[1]+c[2]+c[2];
@@ -353,7 +372,11 @@ function hexToRgb(hex){
 function rgbToHex(c){return '#'+[c.r,c.g,c.b].map(function(x){return Math.max(0,Math.min(255,Math.round(x))).toString(16).padStart(2,'0');}).join('');}
 function mixWhite(hex,r){var c=hexToRgb(hex);if(!c)return hex;return rgbToHex({r:c.r+(255-c.r)*r,g:c.g+(255-c.g)*r,b:c.b+(255-c.b)*r});}
 function mixBlack(hex,r){var c=hexToRgb(hex);if(!c)return hex;return rgbToHex({r:c.r*(1-r),g:c.g*(1-r),b:c.b*(1-r)});}
-function luminance(hex){var c=hexToRgb(hex);if(!c)return .5;var arr=[c.r,c.g,c.b].map(function(v){v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4);});return .2126*arr[0]+.7152*arr[1]+.0722*arr[2];}
+function luminance(hex){
+  var c=hexToRgb(hex);if(!c)return .5;
+  var arr=[c.r,c.g,c.b].map(function(v){v/=255;return v<=.03928?v/12.92:Math.pow((v+.055)/1.055,2.4);});
+  return .2126*arr[0]+.7152*arr[1]+.0722*arr[2];
+}
 function getPalette(hex){
   var c=hexToRgb(hex);
   if(!c)return {c1:'#E6FFFF',c2:'#B3FFFF',text:'#0A0F14',muted:'rgba(0,0,0,.6)',logo:'#1e2f4d',badgeBg:'rgba(0,0,0,.08)',badgeText:'#4a5568'};
@@ -372,10 +395,19 @@ function getPalette(hex){
   };
 }
 
-/* Reference normalisation */
+/* ═══════════════════════════════════════════════════════════════
+   REFERENCE NORMALISATION
+   ─────────────────────────────────────────────────────────────
+   Accepts any of these forms and normalises to NL-XXXX-XXXX-XXXX:
+     NLA3F9K27CM44Q
+     NL-A3F9-K27C-M44Q
+     NL A3F9 K27C M44Q
+     nl-a3f9-k27c-m44q
+   Rejects anything that isn't exactly 12 alphanumeric chars after
+   stripping the leading NL.
+   ═══════════════════════════════════════════════════════════════ */
 function normaliseRef(raw){
   var t=String(raw||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
-  // Rebuild NL-XXXX-XXXX-XXXX
   if(t.indexOf('NL')===0)t=t.slice(2);
   if(t.length!==12)return null;
   return 'NL-'+t.slice(0,4)+'-'+t.slice(4,8)+'-'+t.slice(8,12);
@@ -384,14 +416,17 @@ function formatRefInput(el){
   var cursor=el.selectionStart||0;
   var before=el.value.length;
   var t=String(el.value||'').toUpperCase().replace(/[^A-Z0-9]/g,'');
-  if(t.length>14)t=t.slice(0,14);
+
+  /* Strip leading NL so we never double it up */
+  if(t.indexOf('NL')===0)t=t.slice(2);
+  if(t.length>12)t=t.slice(0,12);
+
   var out='';
   if(t.length>0){
     out='NL';
-    var rest=t.indexOf('NL')===0?t.slice(2):t;
-    if(rest.length>0)out+='-'+rest.slice(0,4);
-    if(rest.length>4)out+='-'+rest.slice(4,8);
-    if(rest.length>8)out+='-'+rest.slice(8,12);
+    if(t.length>0)out+='-'+t.slice(0,4);
+    if(t.length>4)out+='-'+t.slice(4,8);
+    if(t.length>8)out+='-'+t.slice(8,12);
   }
   el.value=out;
   var after=out.length;
@@ -402,7 +437,6 @@ function formatRefInput(el){
 
 /* State */
 var currentUser=null;
-var lastQuery=null;
 
 /* Sign in */
 function openSignin(){$('signinModal').classList.add('open');refreshIcons();}
@@ -444,7 +478,6 @@ function lookup(){
   btn.disabled=true;
   btn.innerHTML='<span class="spinner"></span> Searching…';
 
-  // Query across all tickets owned by this user (collection group)
   db.collectionGroup('tickets')
     .where('buyerUid','==',currentUser.uid)
     .where('paymentRef','==',ref)
@@ -461,7 +494,6 @@ function lookup(){
         return;
       }
 
-      // Found — pull tickets + parent events
       var tickets=[];
       var eventIds={};
       snap.forEach(function(doc){
@@ -509,7 +541,6 @@ function loadParentEvents(tickets,eventIds){
    RENDER RESULT
    ═══════════════════════════════════════════════════════════════ */
 function showResults(tickets){
-  lastQuery=tickets;
   $('resultCount').textContent=tickets.length+(tickets.length===1?' ticket':' tickets');
   $('resultTitle').textContent=tickets.length===1?'Ticket found':'Tickets found';
 
@@ -551,7 +582,6 @@ function buildTicket(t){
   var seat=formatSeat(t)||'General admission';
   var dateStr=formatEventDate(ev.startDate,ev.startTime);
   var venue=[ev.venueName||ev.venueAddress,ev.city].filter(Boolean).join(', ')||'Venue TBA';
-  var price=parseFloat(t.pricePaid)||0;
 
   var barcodeNum=String(ref).replace(/[^0-9A-Z]/g,'').padEnd(16,'0').slice(0,16);
   barcodeNum=barcodeNum.replace(/(.{4})/g,'$1 ').trim();
@@ -583,25 +613,22 @@ function buildTicket(t){
       '<div class="tk-barcode-num">'+esc(barcodeNum)+'</div>'+
     '</div>';
 
-  // Render QR after element is in DOM
+  /* Render QR after element is in DOM */
   setTimeout(function(){
     var qrBox=el.querySelector('.tk-qr');
     if(!qrBox)return;
     if(window.QRCode&&QRCode.toCanvas){
       var canvas=document.createElement('canvas');
       QRCode.toCanvas(canvas,ref,{width:200,margin:1,color:{dark:'#0A0F14',light:'#FFFFFF'}},function(err){
-        if(err){return;}
+        if(err){fallbackQR(qrBox,ref);return;}
         qrBox.appendChild(canvas);
       });
     }else{
-      var img=document.createElement('img');
-      img.alt='QR';
-      img.src='https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='+encodeURIComponent(ref);
-      qrBox.appendChild(img);
+      fallbackQR(qrBox,ref);
     }
   },30);
 
-  // Wrap with actions
+  /* Wrap with actions */
   var wrap=document.createElement('div');
   wrap.appendChild(el);
 
@@ -615,11 +642,13 @@ function buildTicket(t){
   wrap.appendChild(actions);
   refreshIcons();
 
-  // Wire actions
+  /* Wire actions */
   actions.querySelector('[data-action="print"]').addEventListener('click',function(){window.print();});
   actions.querySelector('[data-action="copy"]').addEventListener('click',function(){
     if(navigator.clipboard&&navigator.clipboard.writeText){
-      navigator.clipboard.writeText(ref).then(function(){showToast('Reference copied','success',2000);}).catch(function(){showToast('Copy failed','error');});
+      navigator.clipboard.writeText(ref)
+        .then(function(){showToast('Reference copied','success',2000);})
+        .catch(function(){showToast('Copy failed','error');});
     }else{
       showToast('Copy not supported','error');
     }
@@ -630,12 +659,27 @@ function buildTicket(t){
       navigator.share({title:'My ticket',text:ref,url:url}).catch(function(){});
     }else{
       if(navigator.clipboard&&navigator.clipboard.writeText){
-        navigator.clipboard.writeText(url).then(function(){showToast('Link copied','success',2000);});
+        navigator.clipboard.writeText(url)
+          .then(function(){showToast('Link copied','success',2000);})
+          .catch(function(){showToast('Copy failed','error');});
       }
     }
   });
 
   return wrap;
+}
+
+function fallbackQR(box,ref){
+  var img=document.createElement('img');
+  img.alt='QR code';
+  img.src='https://api.qrserver.com/v1/create-qr-code/?size=200x200&data='+encodeURIComponent(ref);
+  img.onerror=function(){
+    box.innerHTML=
+      '<div class="tk-qr-fallback">QR unavailable — show this reference at the door:<br>'+
+        '<strong style="font-family:var(--mono);color:#04161C;font-size:13px;display:block;margin-top:6px">'+esc(ref)+'</strong>'+
+      '</div>';
+  };
+  box.appendChild(img);
 }
 
 /* ═══════════════════════════════════════════════════════════════
@@ -664,7 +708,7 @@ document.addEventListener('DOMContentLoaded',function(){
       .then(function(){
         closeSignin();
         showToast('Signed in!','success');
-        // If they had typed a reference, search now
+        /* If they had typed a reference, search now */
         if($('refInput').value.trim())lookup();
       })
       .catch(function(err){
